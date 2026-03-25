@@ -9,3 +9,7 @@ build/
 *.egg
 .venv/
 venv/
+
+# NRC VAD Lexicon data files (downloaded, not committed)
+benchmarks/nrc_vad_lexicon_v1.txt
+benchmarks/nrc_vad_lexicon_v2.txt
