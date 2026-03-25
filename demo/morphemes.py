@@ -591,21 +591,21 @@ def decompose_word(word: str) -> dict:
             d = int(d + d * p["d"])
             a = int(a + abs(a) * p["a"])
             u = int(u + 10 * p["u"])
-            g = int(g + g * p["g"])  # negate flips gravity direction
+            g = int(g + g * p.get("g", 0))  # negate flips gravity direction
             trace.append(f"    PREFIX '{found_prefix}' NEGATES: V{old_v:+} \u2192 V{v:+}, D adjusted, G adjusted")
         elif p["rule"] == "amplify":
             v = int(v + v * p["v"])
             a = int(a + abs(a) * p["a"])
             d = int(d + d * p["d"])
             u = int(u + 10 * p["u"])
-            g = int(g + g * p["g"])
+            g = int(g + g * p.get("g", 0))
             trace.append(f"    PREFIX '{found_prefix}' AMPLIFIES")
         elif p["rule"] in ("reduce", "modify"):
             v = int(v + 10 * p["v"])
             a = int(a + 10 * p["a"])
             d = int(d + 10 * p["d"])
             u = int(u + 10 * p["u"])
-            g = int(g + 10 * p["g"])
+            g = int(g + 10 * p.get("g", 0))
             trace.append(f"    PREFIX '{found_prefix}' MODIFIES")
 
     # Apply suffix modifier
@@ -616,19 +616,19 @@ def decompose_word(word: str) -> dict:
             v = int(v * s["v"])
             d = int(d + d * s["d"])
             a = int(a + abs(a) * s["a"])
-            g = int(g + g * s["g"])  # -less makes things heavier
+            g = int(g + g * s.get("g", 0))  # -less makes things heavier
             trace.append(f"    SUFFIX '{found_suffix}' NEGATES: V{old_v:+} \u2192 V{v:+}")
         elif s["rule"] == "amplify":
             v = int(v + v * s["v"])
             a = int(a + abs(a) * s["a"])
             d = int(d + d * s["d"])
-            g = int(g + g * s["g"])  # -ful makes things lighter
+            g = int(g + g * s.get("g", 0))  # -ful makes things lighter
             trace.append(f"    SUFFIX '{found_suffix}' AMPLIFIES")
         elif s["rule"] in ("reduce", "modify"):
             v = int(v + 10 * s["v"])
             a = int(a + 10 * s["a"])
             d = int(d + 10 * s["d"])
-            g = int(g + 10 * s["g"])
+            g = int(g + 10 * s.get("g", 0))
             trace.append(f"    SUFFIX '{found_suffix}' MODIFIES")
 
     # Clamp to -100..+100
