@@ -520,59 +520,149 @@ The working simulator (`demo/simulator.py`) processes natural language to VADUG 
 
 ---
 
-## 9. The 7-Layer Auditable Architecture
+## 9. Emotional Chunking: Paragraph-Level Arc Detection
 
-### 9.1 Overview
+### 9.1 The Problem with Averaging
 
-We propose a 7-layer processing architecture for Clanker-native models in which 6 of 7 layers are fully transparent mathematical operations:
+A single sentence has one emotional trajectory. But real human communication is rarely a single sentence. When someone says "I am sad, because I'm leaving my job, I'm going to miss everyone. But my new job is my dream job, so I'm also happy" -- they are not expressing one emotion. They are expressing a sequence of emotional beats: loss, then excitement. Averaging these into a single VADUG coordinate would produce a meaningless midpoint that captures neither the sadness nor the joy.
 
-| Layer | Name                    | Operation                                      | Auditable? |
-|-------|-------------------------|-------------------------------------------------|------------|
-| 1     | Input VADUG Trajectory  | Parse input to word-by-word emotional arc       | Yes        |
-| 2     | Pattern Recognition     | Match arc against known emotional trajectories  | Yes        |
-| 3     | Personality Filter      | Apply resistance weights from personality vector| Yes        |
-| 4     | Response VADUG Computation | Apply harmony formulas to compute target VADUG | Yes     |
-| 5     | Reasoning Chain         | Generate inspectable opcode chain with CERT/SRC | Yes       |
-| 6     | Clanker Opcode Generation| Produce structured output in Clanker opcodes   | Yes        |
-| 7     | Decoder Head            | Translate Clanker to human language             | Constrained|
+This is how humans actually respond to complex stories -- beat by beat, not by averaging. A good listener processes each emotional beat as it arrives, responds to it internally, and assembles a response that honors the full arc: "That's rough" for the loss, "but that's amazing" for the new opportunity.
 
-### 9.2 Layers 1-6: Transparent Computation
+### 9.2 Chunking at Natural Boundaries
 
-**Layer 1** runs the Sequential Pendulum Engine (or equivalent) on the input, producing a VADUG trajectory -- a sequence of coordinates, one per word. This trajectory is data, not a hidden state.
+The emotional chunker splits long text into emotional beats at natural linguistic boundaries:
 
-**Layer 2** matches the input trajectory against a library of known emotional patterns. This is a lookup operation -- the matched pattern and match confidence are explicit.
+- Sentence boundaries (periods, exclamation marks, question marks)
+- Adversative conjunctions ("but", "however", "although")
+- Causal connectors ("because", "since", "so")
+- Coordinating conjunctions that signal emotional shifts
 
-**Layer 3** applies the personality vector as resistance weights. The personality filter modifies the pattern match through documented multipliers. Every weight and its effect are inspectable.
+Each chunk represents one emotional beat -- one unit of feeling that deserves its own analysis. The boundaries are the same places where a human listener would internally shift gears.
 
-**Layer 4** computes the target response VADUG using the harmony formulas (Section 7). The computation is deterministic given the input VADUG and personality vector. The target can be verified.
+### 9.3 Per-Chunk Pendulum Runs
 
-**Layer 5** generates a reasoning chain in Clanker opcodes (THINK, CHECK, INFER, DERIVE, ANSWER, DOUBT, ASSUME) with CERT and SRC scores attached to each step. The chain is not natural language -- it is structured data that can be inspected step by step. Uncertainty propagates: if a THINK step has CERT 60, downstream DERIVE steps that depend on it inherit that uncertainty.
+Each chunk gets its own fresh pendulum run. The pendulum resets to center (V128 A128 D128 U0 G128) for each chunk, ensuring that the emotional weight of one beat does not bleed into the next. Each chunk produces its own independent VADUG coordinate.
 
-**Layer 6** produces the final output as Clanker opcodes with the full 9-byte header.
+This means a paragraph produces a sequence of VADUG coordinates -- an emotional trajectory across beats, not a single flattened point.
 
-### 9.3 Layer 7: Constrained Generation
+### 9.4 Arc Analysis
 
-Layer 7 is the only layer that involves learned generation. It translates Clanker opcodes into human-readable language. However, this generation is *constrained*:
+The arc analyzer examines the sequence of per-chunk VADUG coordinates and detects one of 7 patterns:
 
-- The VADUG target is fixed by Layer 4. The decoder must produce language consistent with the target emotional state.
-- The semantic content is fixed by Layer 6. The decoder must express the Clanker opcodes, not generate new content.
-- The CERT and SRC scores are fixed. The decoder must produce language consistent with the stated confidence level.
+| Arc Pattern     | Description                                           | Example                                    |
+|-----------------|-------------------------------------------------------|--------------------------------------------|
+| valley          | Starts negative, goes more negative, then rises       | "I'm sad... but there's hope"              |
+| peak            | Starts positive, peaks, then falls                    | "Great news... but there's a catch"        |
+| descending      | Progressively more negative across chunks             | "Bad... and getting worse"                 |
+| ascending       | Progressively more positive across chunks             | "Failed... but I know why... I'll fix it"  |
+| flat_negative   | Consistently negative across all chunks               | "Everything is terrible and stays terrible"|
+| flat_positive   | Consistently positive across all chunks               | "Great job, great team, great outcome"     |
+| mixed           | No clear directional pattern                          | Emotional complexity without a clean arc   |
 
-The decoder can be a small, purpose-specific LLM, a template engine, or a rule-based system. It is the only point of opacity in the pipeline, and its output can be verified against the explicit constraints from layers 1-6.
+Arc detection enables the system to generate responses that honor the emotional shape of the full message, not just the final state.
 
-### 9.4 Comparison with Current Architectures
+### 9.5 Response Assembly
 
-In a standard transformer LLM, every computation from input tokenization to output generation occurs within opaque attention layers. Interpretability techniques (attention visualization, probing classifiers, etc.) provide post-hoc *explanations* but do not make the computation itself *transparent*.
+Per-chunk VADUG coordinates feed into the harmony system individually. Each chunk gets its own response VADUG, and the template decoder generates a per-chunk response phrase. These are then assembled with:
 
-In the Clanker architecture, 6 of 7 layers are transparent by construction. The emotional trajectory, pattern match, personality effects, harmony computation, reasoning chain, and output opcodes are all explicit data structures that can be inspected, logged, and verified.
+- **Transitions** between chunks that acknowledge the emotional shift ("Hold on though --", "But you know what?")
+- **Arc-aware closers** that match the overall emotional trajectory (a valley arc gets an uplifting closer; a descending arc gets a stabilizing closer; an ascending arc gets an encouraging closer)
 
-**Status: THEORETICAL.** The individual components (pendulum engine, harmony formulas, personality vector, Clanker opcodes) are proven. The full 7-layer pipeline as an integrated model architecture has not been implemented or trained. The claim that this architecture provides meaningfully better explainability than current approaches requires empirical validation with actual trained models.
+The result is a multi-sentence response that tracks the emotional journey of the input, beat by beat.
+
+### 9.6 Proof of Concept Results
+
+**Test 1: Valley Arc**
+
+Input: "I am sad, because I'm leaving my job, I'm going to miss everyone. But my new job is my dream job, so I'm also happy."
+
+| Chunk | Text | V | A | D | U | G | Reading |
+|-------|------|---|---|---|---|---|---------|
+| 1 | "I am sad" | 100 | 120 | 112 | 3 | 104 | sad, sinking |
+| 2 | "because I'm leaving my job, I'm going to miss everyone" | 116 | 139 | 123 | 4 | 119 | loss, weight |
+| 3 | "But my new job is my dream job, so I'm also happy" | 162 | 149 | 142 | 1 | 155 | happy, lifting |
+
+Arc detected: **VALLEY** (negative dip followed by rise)
+
+Generated response: "That's a lot going on. Let's work through this together, and I bet they'll miss you too. Hold on though -- that's exciting. That's a hell of a silver lining."
+
+**Test 2: Ascending Arc**
+
+Input: "I failed the exam. But honestly I didn't study at all. So I guess I deserved it. I'll do better next time though."
+
+Arc detected: **ASCENDING** (progressive movement toward positive)
+
+Generated response: "That's a lot to process. Let's work through this together. But you know exactly why, and that's real self-awareness. Things are looking up!"
+
+### 9.7 What This Demonstrates
+
+These responses are generated by **pure math**. Zero LLM. The template system selects from hundreds of phrase combinations using cross-axis VADUG blending. It is not one response per emotion -- it is combinatorial selection across all 5 VADUG axes, resulting in hundreds of distinct response variations. The arc-aware assembly then stitches these per-chunk responses into a coherent multi-sentence output that tracks the emotional shape of the input.
+
+This is the difference between "the user is 47% sad and 53% happy" (averaging) and "the user is sad about leaving, but excited about what's next" (beat-by-beat processing). The chunker makes Clanker's emotional parsing work on real human communication, not just isolated sentences.
+
+**Status: PROVEN.** The emotional chunker, arc analyzer, and response assembly are implemented and produce the described results without any LLM component.
 
 ---
 
-## 10. The Decoder-Hat Architecture
+## 10. The 7-Layer Auditable Architecture
 
-### 10.1 Design
+### 10.1 Overview
+
+We propose a 7-layer processing architecture for Clanker-native models in which 6 of 7 layers are fully transparent mathematical operations:
+
+| Layer | Name                       | Operation                                       | Auditable? |
+|-------|----------------------------|-------------------------------------------------|------------|
+| 1     | Emotional Chunking         | Split input at natural boundaries into emotional beats | Yes   |
+| 2     | Sequential Pendulum (per chunk) | Fresh pendulum run per chunk, producing VADUG coordinates | Yes |
+| 3     | Arc Analysis               | Detect emotional pattern across chunks (valley/peak/ascending/descending/flat_negative/flat_positive/mixed) | Yes |
+| 4     | Personality Filter         | Apply resistance weights from personality vector | Yes        |
+| 5     | Response VADUG Computation | Apply harmony formulas per chunk to compute target VADUG | Yes |
+| 6     | Clanker Opcode Generation  | Produce structured output in Clanker opcodes     | Yes        |
+| 7     | Cross-Axis Template Decoder | Decode opcodes to human language via VADUG blending + arc-aware assembly | Constrained |
+
+### 10.2 Layers 1-6: Transparent Computation
+
+**Layer 1 (Emotional Chunking)** splits the input text at natural linguistic boundaries -- sentence endings, adversative conjunctions ("but", "however"), causal connectors ("because", "so") -- into discrete emotional beats. Each beat is one unit of feeling. The chunking rules are explicit and deterministic.
+
+**Layer 2 (Sequential Pendulum)** runs a fresh pendulum engine instance on each chunk, producing independent VADUG coordinates per beat. The pendulum resets to center for each chunk, preventing emotional bleed between beats. The word-by-word trajectory within each chunk is data, not a hidden state.
+
+**Layer 3 (Arc Analysis)** examines the sequence of per-chunk VADUG coordinates and classifies the overall emotional shape into one of 7 patterns: valley, peak, descending, ascending, flat_negative, flat_positive, or mixed. The classification is a deterministic function of the VADUG sequence -- inspectable and verifiable.
+
+**Layer 4 (Personality Filter)** applies the personality vector as resistance weights. The personality filter modifies the pattern match through documented multipliers. Every weight and its effect are inspectable.
+
+**Layer 5 (Response VADUG Computation)** applies the harmony formulas (Section 7) per chunk to compute target response VADUG coordinates. The computation is deterministic given the input VADUG and personality vector. Each chunk's target can be independently verified.
+
+**Layer 6 (Clanker Opcode Generation)** produces the final output as Clanker opcodes with the full 9-byte header.
+
+### 10.3 Layer 7: Cross-Axis Template Decoder
+
+Layer 7 translates Clanker opcodes into human-readable language. In the current proof-of-concept, this is implemented as a cross-axis template decoder that uses VADUG blending across all 5 dimensions to select phrases. The template system works as follows:
+
+- Each response slot (acknowledge, stabilize, redirect) has 3-6 phrase options per VADUG region.
+- The regions interact across axes: V x G selects the acknowledgment phrase, D x A selects the stabilization phrase, G x U selects the redirect phrase.
+- Goal overrides from the GOAL metadata byte can replace standard phrases with goal-specific alternatives.
+- Urgency prefixes are prepended when U exceeds threshold.
+- Arc-aware closers are appended based on the Layer 3 arc classification.
+
+The combinatorial space across all 5 VADUG axes, 3 response slots, goal overrides, urgency prefixes, and arc closers produces **hundreds of distinct response variations**. Same Valence with different Gravity produces different words. Same Dominance with different Arousal produces different stabilization. This is not a lookup table with one response per emotion -- it is cross-axis blending that produces combinatorial variety.
+
+**However, an honest assessment:** the template decoder is *selecting* from pre-written phrases, not *generating* novel sentences. It cannot reference specific content from the input -- it does not know the user is talking about a "job" or a "dog" or a "rent payment." A trained model in Layer 7 would generate contextually aware language. The templates prove the architecture works; a trained model would prove it scales.
+
+The decoder can alternatively be a small, purpose-specific LLM, which would add content awareness and linguistic fluency while remaining constrained by the VADUG target computed in prior layers. The template system is a proof-of-concept decoder, not the ceiling of what Layer 7 can do.
+
+### 10.4 Comparison with Current Architectures
+
+In a standard transformer LLM, every computation from input tokenization to output generation occurs within opaque attention layers. Interpretability techniques (attention visualization, probing classifiers, etc.) provide post-hoc *explanations* but do not make the computation itself *transparent*.
+
+In the Clanker architecture, 6 of 7 layers are transparent by construction. The chunking boundaries, per-chunk VADUG trajectories, arc classification, personality effects, harmony computation, and output opcodes are all explicit data structures that can be inspected, logged, and verified. The only point of opacity is Layer 7 (the decoder), and even that is constrained by the explicit VADUG targets from prior layers.
+
+**Status:** The individual components are **PROVEN** -- the emotional chunker, pendulum engine, arc analyzer, harmony formulas, personality vector, Clanker opcodes, and cross-axis template decoder all function end-to-end in the working proof of concept. The full 7-layer pipeline runs on an i3 laptop with no GPU. The claim that this architecture provides meaningfully better explainability than current approaches at production scale requires empirical validation with trained models.
+
+---
+
+## 11. The Decoder-Hat Architecture
+
+### 11.1 Design
 
 We propose a model architecture consisting of three components:
 
@@ -580,13 +670,13 @@ We propose a model architecture consisting of three components:
 2. **Core Model**: A full transformer trained from scratch on Clanker-encoded data. This is where reasoning, knowledge, and emotional dynamics live.
 3. **Decoder Head**: Converts Clanker output to the target language. This component is *swappable*.
 
-### 10.2 Multilingual by Construction
+### 11.2 Multilingual by Construction
 
 The same core model with different decoder heads produces output in different languages. This is not multilingual in the conventional sense (where the model learns multiple languages during training). The core model operates entirely in Clanker; only the decoder head maps opcodes to a target language.
 
 Adding a new output language requires only a new decoder head (which can be a small fine-tuned model or a dictionary-based template system) and a YAML dictionary. The core model is untouched.
 
-### 10.3 Verifiable Output
+### 11.3 Verifiable Output
 
 Because the core model produces Clanker with explicit VADUG, CERT, SRC, GOAL, and REL headers, the decoder head's output can be verified against these constraints. If the core model outputs VADUG V50 (negative) with CERT 80 (moderate confidence) and the decoder head produces text that reads as enthusiastic and certain, the discrepancy is mechanically detectable.
 
@@ -594,13 +684,13 @@ Because the core model produces Clanker with explicit VADUG, CERT, SRC, GOAL, an
 
 ---
 
-## 11. Model Compression Hypothesis
+## 12. Model Compression Hypothesis
 
-### 11.1 Honest Framing
+### 12.1 Honest Framing
 
 We state clearly: **the compression hypothesis has not been empirically validated.** What follows is a theoretical argument supported by reasoning about parameter allocation in language models. The actual compression ratios achievable will only be known after training and benchmarking real models.
 
-### 11.2 Theoretical Basis
+### 12.2 Theoretical Basis
 
 A large English language model dedicates parameters to multiple functions:
 
@@ -614,7 +704,7 @@ A large English language model dedicates parameters to multiple functions:
 
 We estimate that categories 1-6 consume 40-50% of total parameters in English-trained models, though we acknowledge this estimate is informal and based on architectural analysis rather than rigorous measurement. The argument is straightforward: in a Clanker model, categories 1-6 are either eliminated (grammar, synonyms, ambiguity) or structurally encoded (emotion, vocabulary). A Clanker model's vocabulary is approximately 512 tokens (opcodes + parameters), its grammar is zero (opcodes ARE the structure), emotional state is 5 bytes of data (not inferred), and multilingual support is delegated to the decoder head.
 
-### 11.3 Hypothesized Compression by Task Type
+### 12.3 Hypothesized Compression by Task Type
 
 | Task Domain      | Hypothesized Compression | Rationale                                          |
 |------------------|-------------------------|----------------------------------------------------|
@@ -626,11 +716,11 @@ We estimate that categories 1-6 consume 40-50% of total parameters in English-tr
 
 These numbers are estimates, not measurements. They represent the theoretical ceiling if the hypothesis is correct, not guaranteed outcomes.
 
-### 11.4 Concrete Claim
+### 12.4 Concrete Claim
 
 We hypothesize that a 70B-parameter English model's equivalent reasoning capability could be achieved by a 15-35B parameter Clanker model for structured tasks. This range is deliberately wide to reflect our uncertainty. The actual number could be outside this range entirely.
 
-### 11.5 Planned Validation
+### 12.5 Planned Validation
 
 We plan to validate the compression hypothesis through controlled experiments:
 
@@ -1046,69 +1136,53 @@ The complete morpheme database contains approximately 1,070 entries. A represent
 
 ---
 
-## Appendix D: Simulator Test Suite Results (v0.3.1)
+## Appendix D: Simulator Test Suite Results
 
-All results produced by `demo/simulator.py` v0.3.1 with zero LLM involvement. Pure mathematical
-parsing using the Sequential Pendulum Engine with context-dependent forces, momentum, morphological
-decomposition, and idiom detection. 25 test cases, all with Gravity axis validated.
+All results produced by `demo/simulator.py` with zero LLM involvement. Pure mathematical
+parsing using sequential pendulum with context-dependent forces, momentum, morphological
+decomposition, and idiom detection. Results auto-generated by `paper/generate_appendix.py`.
 
 | # | Input | V | A | D | U | G | Emotion | Category |
 |---|-------|---|---|---|---|---|---------|----------|
-| 1 | Hey buddy, I've got a bone to pick with you | 100 | 168 | 154 | 30 | 129 | confrontational | Idiom / confrontation |
-| 2 | I'm having a really bad day, can't fix this bug | 85 | 157 | 122 | 28 | 129 | negative/stressed | Negative / stressed |
-| 3 | I just got promoted and I'm so excited | 176 | 182 | 146 | 12 | 170 | positive/soaring | Positive |
-| 4 | I want to die everything is hopeless | 22 | 174 | 41 | 76 | 51 | CRISIS/crushing | Crisis detection |
-| 5 | I love you, but I think we need to talk | 128 | 165 | 132 | 26 | 140 | neutral/tense (but effect) | But effect / dread |
-| 6 | This is absolutely wonderful, I'm thrilled | 217 | 193 | 160 | 0 | 198 | ecstatic/floating | Strong positive |
-| 7 | Can you fix this function to handle null values | 129 | 131 | 129 | 6 | 129 | neutral/grounded | Neutral task |
-| 8 | Listen, I need to tell you something important | 128 | 153 | 133 | 37 | 130 | neutral/urgent | Urgent |
-| 9 | I'm fine | 131 | 126 | 129 | 0 | 128 | neutral (flat) | Flat / ambiguous |
-| 10 | Everything is going great I love this project | 193 | 167 | 150 | 0 | 175 | very positive/soaring | Strong positive |
-| 11 | I'm not angry, I'm just disappointed | 134 | 155 | 106 | 18 | 97 | mixed/sinking | Passive negative |
-| 12 | That was the worst experience of my entire life | 92 | 151 | 117 | 18 | 111 | negative | Strong negative |
-| 13 | You're incredible, this is the best thing ever | 185 | 170 | 154 | 1 | 172 | very positive/floating | Ecstatic |
-| 14 | I don't know what to do, I feel so lost and alone | 87 | 129 | 93 | 14 | 97 | negative/sinking | Despair / isolation |
-| 15 | Actually, never mind, forget I said anything | 120 | 132 | 131 | 2 | 126 | resigned/neutral | Withdrawn |
-| 16 | Holy shit this is amazing, can't believe it worked | 142 | 165 | 140 | 14 | 142 | positive/energetic | Surprise positive |
-| 17 | Please help me, I'm really scared | 86 | 176 | 79 | 30 | 145 | negative/floating(anxious) | Fear / anxiety |
-| 18 | Whatever, I guess that works | 122 | 126 | 123 | 3 | 123 | resigned | Resigned / passive |
-| 19 | I've been thinking, I'm worried we made a mistake | 103 | 153 | 112 | 22 | 125 | worried/uncertain | Worried |
-| 20 | Shut up, nobody asked you | 92 | 166 | 144 | 23 | 128 | hostile | Hostile |
-| 21 | Hey, how's it going? I'm good, thanks | 153 | 138 | 133 | 1 | 139 | casual positive | Casual positive |
-| 22 | I'm so frustrated I could scream, nothing works | 92 | 162 | 115 | 29 | 130 | frustrated | Frustrated |
-| 23 | The calm before the storm is killing me | 97 | 181 | 140 | 41 | 141 | anxious/tense | Anxious / tense |
-| 24 | I forgive you, but I won't forget | 125 | 145 | 132 | 7 | 135 | mixed/complex | Mixed / complex |
-| 25 | This is a piece of cake, super easy | 152 | 120 | 152 | 0 | 128 | positive/grounded | Confident positive |
+| 1 | I want to die everything is hopeless | 22 | 174 | 41 | 76 | 51 | panicked | Crisis detection |
+| 2 | Can you fix this function to handle null values | 129 | 131 | 129 | 6 | 129 | neutral | Neutral task |
+| 3 | I just got promoted and I'm so excited | 176 | 182 | 146 | 12 | 170 | amazed | Positive |
+| 4 | I'm having a really bad day and I can't fix this stupid... | 85 | 157 | 122 | 28 | 129 | stressed | Negative / stressed |
+| 5 | Hey buddy, I've got a bone to pick with you | 100 | 168 | 154 | 30 | 129 | neutral | Idiom / confrontation |
+| 6 | This is absolutely wonderful, I'm thrilled beyond words | 217 | 193 | 160 | 0 | 198 | thrilled | Strong positive |
+| 7 | I love you, but I think we need to talk | 128 | 165 | 132 | 26 | 140 | amazed | But effect / dread |
+| 8 | I'm not angry, I'm just disappointed | 134 | 155 | 106 | 18 | 97 | neutral | Passive negative |
+| 9 | Please help me, I'm really scared and I don't understan... | 86 | 176 | 79 | 30 | 145 | stressed | Fear / anxiety |
+| 10 | I don't know what to do anymore, I feel so lost and alo... | 87 | 129 | 93 | 14 | 97 | irritated | Despair / isolation |
+| 11 | Whatever, I guess that works | 122 | 126 | 123 | 3 | 123 | neutral | Resigned / passive |
+| 12 | Shut up, nobody asked you | 92 | 166 | 144 | 23 | 128 | stressed | Hostile |
+| 13 | Everything is going great I love this project | 193 | 167 | 150 | 0 | 175 | glad | Strong positive |
+| 14 | You're incredible, this is the best thing ever | 185 | 170 | 154 | 1 | 172 | glad | Ecstatic |
+| 15 | I'm fine | 131 | 126 | 129 | 0 | 128 | neutral | Flat / ambiguous |
+| 16 | That was the worst experience of my entire life | 92 | 151 | 117 | 18 | 111 | irritated | Strong negative |
+| 17 | Holy shit this is amazing, I can't believe it worked | 142 | 165 | 140 | 14 | 142 | amazed | Surprise positive |
+| 18 | I'm so frustrated I could scream, nothing ever works | 92 | 162 | 115 | 29 | 130 | stressed | Frustrated |
+| 19 | The calm before the storm is killing me | 97 | 181 | 140 | 41 | 141 | stressed | Anxious / tense |
+| 20 | I forgive you, but I won't forget | 125 | 145 | 132 | 7 | 135 | neutral | Mixed / complex |
+| 21 | Hey, how's it going? I'm good, thanks for asking | 153 | 138 | 133 | 1 | 139 | happy | Casual positive |
+| 22 | Listen, I need to tell you something important right no... | 128 | 153 | 133 | 37 | 130 | neutral | Urgent |
+| 23 | Actually, never mind, forget I said anything | 120 | 132 | 131 | 2 | 126 | neutral | Withdrawn |
+| 24 | I've been thinking about this and I'm worried we made a... | 103 | 153 | 112 | 22 | 125 | neutral | Worried |
+| 25 | This is a piece of cake, super easy | 152 | 120 | 152 | 0 | 128 | pleased | Confident positive |
 
 
-### Key Findings (v0.3.1)
+### Key Findings
 
-1. **CRISIS DETECTION**: "I want to die everything is hopeless" → V22 G51 (deep negative + crushing gravity). Strongest signal in the test suite. V < 50 AND G < 80 triggers crisis response protocol.
+- **Crisis Detection**: "I want to die everything is hopeless" → V22 G51 (deep negative + crushing gravity)
+- **Neutral Accuracy**: "Can you fix this function to handle null..." → V129 G129 (dead center, zero emotional contamination)
+- **Strongest Positive**: "This is absolutely wonderful, I'm thrill..." → V217 G198
+- **Gravity Axis Validation**:
+  - Despair: G51 (crushing/sinking)
+  - Task: G129 (grounded)
+  - Joy: G198 (soaring)
+  - Anxiety: G145 (floating/ungrounded)
+  - Joy: G175 (soaring)
 
-2. **NEUTRAL ACCURACY**: "Can you fix this function to handle null values" → V129 G129 (dead center on both axes). Pure task input, zero emotional contamination.
-
-3. **GRAVITY AXIS WORKS** -- four distinct physical metaphors validated:
-   - Anxiety ("scared") → G145 (floating/ungrounded)
-   - Despair ("hopeless") → G51 (crushing/sinking)
-   - Joy ("thrilled") → G198 (soaring)
-   - Task ("fix function") → G129 (grounded)
-
-4. **"BUT" EFFECT CAPTURED**: "I love you, but I think we need to talk" → V128 A165. V drops from love trajectory; A spikes with dread. Structural capture of anticipatory dread.
-
-5. **84% TOKEN COMPRESSION**: 25-word English input → 4 Clanker tokens (VADUG coordinate + metadata header).
-
-6. **ZERO LLM, ZERO TRAINING, PURE MATH**: All 25 cases processed by the Sequential Pendulum Engine. No neural networks, no training data, no GPU. Python + PyYAML only.
-
-### Gravity Axis Distribution (v0.3.1)
-
-| G Range | Physical Metaphor | Cases | Examples |
-|---------|-------------------|-------|----------|
-| G < 80  | Crushing/sinking  | 1     | "hopeless" G51 |
-| G 80-110 | Sinking/heavy    | 3     | "disappointed" G97, "lost" G97, "worst experience" G111 |
-| G 110-140 | Grounded/neutral | 13    | "fix function" G129, "I'm fine" G128, "whatever" G123 |
-| G 140-170 | Lifting/rising   | 4     | "scared" G145, "amazing" G142, "promoted" G170, "storm" G141 |
-| G > 170  | Soaring/floating  | 4     | "thrilled" G198, "great" G175, "incredible" G172, "best" G172 |
-
-**Note**: These values are deterministic -- running the same input through the simulator
+**Note**: These values are deterministic — running the same input through the simulator
 will always produce the same VADUG coordinates. To reproduce: `python3 paper/generate_appendix.py`
 
