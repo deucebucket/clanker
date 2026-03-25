@@ -578,8 +578,9 @@ def decompose_word(word: str) -> dict:
             "trace": trace, "found": False
         }
 
-    # Start with root values
-    v, a, d, u, g = best_root
+    # Start with root values (handle both 4-tuple and 5-tuple roots)
+    v, a, d, u = best_root[0], best_root[1], best_root[2], best_root[3]
+    g = best_root[4] if len(best_root) > 4 else 0
 
     # Apply prefix modifier
     if found_prefix and found_prefix in PREFIXES:
