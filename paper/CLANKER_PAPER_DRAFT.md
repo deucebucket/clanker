@@ -18,11 +18,11 @@ Each Clanker message carries a 9-byte metadata header (VADUG + Certainty + Sourc
 
 We present the Sequential Pendulum Engine, a reference implementation that parses natural language word-by-word into VADUG coordinates using context-dependent forces, emotional momentum, idiom detection, and morphological decomposition of approximately 1,070 morpheme entries. This engine produces emotionally coherent coordinates from raw English text with zero reliance on any large language model.
 
-The full Clanker architecture comprises a 7-layer auditable processing pipeline in which layers 1 through 6 are transparent mathematical operations, with only the final decoder layer (layer 7) requiring constrained language generation. We contrast this with current transformer architectures in which all layers from input to output are opaque.
+The full Clanker architecture comprises a 7-layer auditable processing pipeline in which layers 1 through 6 are transparent mathematical operations, with only the final decoder layer (layer 7) requiring constrained language generation. We contrast this with current transformer architectures in which all layers from input to output are opaque. This pipeline is now implemented end-to-end, including an emotional chunker that splits paragraphs into emotional beats at natural boundaries, runs independent pendulum passes per chunk, detects arc patterns (valley, peak, ascending, descending, mixed), and assembles beat-by-beat responses with transitions and arc-aware closers -- all without any LLM.
 
 We hypothesize that training from scratch on Clanker-encoded data may enable 2-5x parameter reduction for structured tasks by eliminating the linguistic overhead (grammar, synonyms, ambiguity resolution, multilingual redundancy) that consumes a substantial fraction of parameters in English-trained models. We are explicit that this compression hypothesis is theoretical and requires empirical validation.
 
-A working proof-of-concept simulator demonstrates emotional parsing, metadata tagging, response harmony computation, and Clanker opcode generation without any LLM component. The key insight motivating this work is that human cognition is emotion-first and language-second: the word "but" after "I love you" triggers dread before the next word arrives. Clanker models this directly.
+A working proof-of-concept demonstrates the complete 7-layer pipeline: emotional chunking, per-chunk pendulum parsing, arc analysis, personality filtering, harmony computation, Clanker opcode generation, and cross-axis template decoding -- producing emotionally coherent, arc-aware multi-sentence responses from pure math on an i3 laptop with no GPU. The key insight motivating this work is that human cognition is emotion-first and language-second: the word "but" after "I love you" triggers dread before the next word arrives. Clanker models this directly.
 
 ---
 
@@ -51,9 +51,11 @@ This paper makes the following contributions:
 3. **Personality vector** [PROVEN]: An 8-byte engineered personality definition with structural safety floors, implemented and demonstrated.
 4. **VADUG Response Harmony** [PROVEN]: Mathematical formulas for deriving emotionally appropriate responses from input state, implemented and tested.
 5. **Sequential Pendulum Engine** [PROVEN]: A word-by-word emotional parsing engine with context-dependent forces, momentum, and morphological decomposition, validated across a 25-case test suite (v0.3.1) with full Gravity axis confirmation, crisis detection, and 84% token compression -- without any LLM.
-6. **7-layer auditable architecture** [THEORETICAL]: A processing pipeline in which 6 of 7 layers are fully transparent, proposed as an alternative to fully opaque transformer architectures.
-7. **Decoder-hat model architecture** [THEORETICAL]: A training architecture with swappable decoder heads for multilingual output from a single core model.
-8. **Model compression hypothesis** [THEORETICAL]: The claim that Clanker-native models may achieve 2-5x parameter reduction for structured tasks. This requires empirical validation.
+6. **Emotional Chunking and Arc Detection** [PROVEN]: Paragraph-level beat splitting at natural boundaries, per-chunk pendulum runs, and arc analysis detecting 7 emotional patterns (valley, peak, ascending, descending, flat_negative, flat_positive, mixed), with beat-by-beat response generation and arc-aware assembly.
+7. **Cross-Axis Template Decoder** [PROVEN]: A Layer 7 decoder using VADUG blending across all 5 dimensions (V x G, D x A, G x U) with goal overrides, urgency prefixes, and arc closers, producing hundreds of distinct response variations from pure math -- no LLM.
+8. **7-layer auditable architecture** [PROVEN]: A processing pipeline in which 6 of 7 layers are fully transparent, now implemented end-to-end in working code on consumer hardware.
+9. **Decoder-hat model architecture** [THEORETICAL]: A training architecture with swappable decoder heads for multilingual output from a single core model.
+10. **Model compression hypothesis** [THEORETICAL]: The claim that Clanker-native models may achieve 2-5x parameter reduction for structured tasks. This requires empirical validation.
 
 We adopt the convention throughout this paper of marking claims as PROVEN (working code demonstrates the capability), THEORETICAL (supported by reasoning and design but not yet empirically validated), or PLANNED (future work with a defined approach).
 
@@ -83,13 +85,13 @@ Clanker applies this principle to natural language and emotional communication. 
 
 The demand for explainable AI (XAI) has grown as LLMs are deployed in high-stakes domains (Arrieta et al., 2020). Current approaches include attention visualization, feature attribution, and chain-of-thought prompting. However, these provide *explanations of* the model's behavior, not *transparency of* the model's computation. The internal activations remain opaque.
 
-Clanker's 7-layer architecture (Section 9) proposes a different approach: design the computation itself to be auditable. Layers 1 through 6 are deterministic mathematical operations on explicit data structures. Only layer 7 (the decoder) involves learned generation, and that generation is constrained by the VADUG target computed in prior layers.
+Clanker's 7-layer architecture (Section 10) proposes a different approach: design the computation itself to be auditable. Layers 1 through 6 are deterministic mathematical operations on explicit data structures. Only layer 7 (the decoder) involves learned generation, and that generation is constrained by the VADUG target computed in prior layers.
 
 ### 2.5 Knowledge Distillation and Model Compression
 
 Knowledge distillation (Hinton et al., 2015) transfers learned representations from a large "teacher" model to a smaller "student" model. Mixture of Experts (MoE) architectures (Shazeer et al., 2017) achieve parameter efficiency by activating only relevant subnetworks for each input. Quantization and pruning further reduce model sizes.
 
-Clanker proposes a complementary compression mechanism: reducing the *representational overhead* of the language itself. A model trained on English dedicates parameters to grammar, synonym disambiguation, and vocabulary encoding. A model trained on Clanker's 512-opcode vocabulary could theoretically dedicate those parameters to reasoning instead. This hypothesis (Section 11) requires empirical validation.
+Clanker proposes a complementary compression mechanism: reducing the *representational overhead* of the language itself. A model trained on English dedicates parameters to grammar, synonym disambiguation, and vocabulary encoding. A model trained on Clanker's 512-opcode vocabulary could theoretically dedicate those parameters to reasoning instead. This hypothesis (Section 12) requires empirical validation.
 
 ### 2.6 Sentiment Analysis Limitations
 
@@ -737,15 +739,15 @@ Target hardware: consumer GPUs (RTX 3090-class), making results reproducible by 
 
 ---
 
-## 12. Training Strategy
+## 13. Training Strategy
 
-### 12.1 From-Scratch Training
+### 13.1 From-Scratch Training
 
 We advocate training from scratch rather than fine-tuning an existing English model. The rationale: fine-tuning preserves the English model's architectural overhead (vocabulary embeddings, grammar encodings). A from-scratch Clanker model would allocate parameters differently from the ground up, dedicating them to Clanker's smaller vocabulary and explicit emotional structures.
 
 This is a stronger hypothesis than "Clanker fine-tuning works." If from-scratch training fails to produce capable models, fine-tuning remains a fallback.
 
-### 12.2 Tokenizer Design
+### 13.2 Tokenizer Design
 
 A custom 512-token tokenizer for the Clanker vocabulary:
 - 256 opcodes
@@ -755,7 +757,7 @@ A custom 512-token tokenizer for the Clanker vocabulary:
 
 This is approximately 100x smaller than a typical English tokenizer (50,000+ tokens), which directly reduces the vocabulary embedding table.
 
-### 12.3 Training Data
+### 13.3 Training Data
 
 Training data would be generated via knowledge distillation from large language models:
 
@@ -766,7 +768,7 @@ Training data would be generated via knowledge distillation from large language 
 
 The training data is synthetic but structured. Quality depends on the teacher model's understanding of the Clanker specification. This is a bootstrapping approach: early models produce training data for later, better models.
 
-### 12.4 What the Model Learns
+### 13.4 What the Model Learns
 
 A Clanker model trained on pendulum traces and VADUG trajectories would learn emotional physics:
 - Given this emotional trajectory from this personality type, produce this response trajectory.
@@ -775,7 +777,7 @@ A Clanker model trained on pendulum traces and VADUG trajectories would learn em
 
 These are not learned "behaviors" in the RLHF sense. They are mathematical relationships encoded in the training data structure.
 
-### 12.5 Planned Model Sizes
+### 13.5 Planned Model Sizes
 
 | Size   | Parameters | Purpose                                          |
 |--------|-----------|--------------------------------------------------|
@@ -789,9 +791,9 @@ All sizes should be trainable on consumer GPUs (RTX 3090 with 24GB VRAM).
 
 ---
 
-## 13. Proof of Concept: The Pendulum Simulator
+## 14. Proof of Concept: The Pendulum Simulator
 
-### 13.1 Implementation
+### 14.1 Implementation
 
 The working proof of concept is implemented in `demo/simulator.py` (Python, approximately 600 lines). Dependencies are limited to PyYAML and the Python standard library. No LLM, no GPU, no training data, no external APIs.
 
@@ -803,7 +805,7 @@ The simulator implements:
 5. Clanker opcode generation with full 9-byte headers
 6. Dictionary-based decoding to English
 
-### 13.2 Test Suite Results (v0.3.1 -- 25 Cases, All With G Axis)
+### 14.2 Test Suite Results (v0.3.1 -- 25 Cases, All With G Axis)
 
 The simulator has been tested across 25 inputs designed to exercise different aspects of the emotional parsing pipeline. All results include the Gravity axis, validated for the first time in this test run.
 
@@ -846,21 +848,25 @@ The simulator has been tested across 25 inputs designed to exercise different as
 **Mixed/complex emotion:**
 - "I forgive you, but I won't forget" produces V125 A145 D132 U7 G135 -- near-neutral valence masking emotional complexity. The "but" effect partially reverses the forgiveness signal.
 
-### 13.3 What This Proves
+### 14.3 What This Proves
 
-The v0.3.1 test suite (25 cases) proves that:
+The proof of concept now demonstrates:
 
-1. Emotional parsing is possible without any LLM -- pure mathematical rules on morphological data produce coherent VADUG coordinates across all five dimensions.
-2. Context-dependent forces, momentum, and idiom detection produce qualitatively different results from bag-of-words sentiment analysis.
-3. The Gravity axis adds genuine discriminative power: anxiety (G145), despair (G51), joy (G198), and neutral task (G129) occupy distinct regions that V/A/D alone cannot distinguish.
-4. Crisis detection works structurally: V < 50 AND G < 80 reliably identifies crushing despair without any classification model.
-5. The "but" effect is captured mathematically: adversative conjunctions reverse emotional trajectory mid-sentence, producing measurable A spikes and V drops.
-6. Token compression of approximately 84% is achieved: 25-word English inputs encode to 4 Clanker tokens.
-7. The 9-byte metadata header is a viable encoding format.
-8. VADUG Response Harmony produces therapeutically appropriate response coordinates.
-9. The full pipeline from English input to Clanker opcodes to English output functions end-to-end.
+1. **Single sentence emotional parsing** -- pure mathematical rules on morphological data produce coherent VADUG coordinates across all five dimensions, validated across 25 cases (v0.3.1).
+2. **Paragraph-level arc detection** -- the emotional chunker splits multi-sentence input into beats, runs independent pendulum passes, and classifies the emotional arc (valley, peak, ascending, descending, flat_negative, flat_positive, mixed).
+3. **Beat-by-beat response generation** -- per-chunk harmony computation produces per-chunk response VADUG coordinates, and the template decoder generates per-chunk responses that are assembled with transitions and arc-aware closers.
+4. **Full 7-layer pipeline end-to-end without any LLM** -- from English input through chunking, pendulum, arc analysis, personality filter, harmony, opcode generation, and cross-axis template decoding to English output. All pure math.
+5. **Cross-axis template decoding** -- same Valence with different Gravity produces different words; same Dominance with different Arousal produces different stabilization. The combinatorial space across V x G, D x A, G x U, goal overrides, urgency prefixes, and arc closers yields hundreds of distinct response variations.
+6. **Content-aware keyword detection** -- the system detects contextual keywords ("sick", "broke", "rent", "job", "dog") and routes to appropriate response categories, adding a layer of content sensitivity to the VADUG-driven response selection.
+7. **Context-dependent forces, momentum, and idiom detection** produce qualitatively different results from bag-of-words sentiment analysis.
+8. **The Gravity axis adds genuine discriminative power**: anxiety (G145), despair (G51), joy (G198), and neutral task (G129) occupy distinct regions that V/A/D alone cannot distinguish.
+9. **Crisis detection works structurally**: V < 50 AND G < 80 reliably identifies crushing despair without any classification model.
+10. **The "but" effect is captured mathematically**: adversative conjunctions reverse emotional trajectory mid-sentence, producing measurable A spikes and V drops.
+11. **Token compression of approximately 84%** is achieved: 25-word English inputs encode to 4 Clanker tokens.
+12. **The 9-byte metadata header** is a viable encoding format.
+13. **VADUG Response Harmony** produces therapeutically appropriate response coordinates.
 
-### 13.4 What This Does Not Prove
+### 14.4 What This Does Not Prove
 
 The simulator does not prove that:
 
@@ -875,9 +881,9 @@ These remain open questions requiring empirical validation.
 
 ---
 
-## 14. Reasoning Chain Encoding
+## 15. Reasoning Chain Encoding
 
-### 14.1 Structured Chain-of-Thought
+### 15.1 Structured Chain-of-Thought
 
 Clanker encodes reasoning as structured opcode sequences rather than natural language chain-of-thought:
 
@@ -896,7 +902,7 @@ CLANKER REASONING CHAIN (~12 tokens):
   ANSWER [impl="quicksort" CERT200]
 ```
 
-### 14.2 Properties
+### 15.2 Properties
 
 Each reasoning step is an opcode with explicit metadata:
 
@@ -906,7 +912,7 @@ Each reasoning step is an opcode with explicit metadata:
 - **Source provenance**: Each step declares where its knowledge came from (SRC_TRAINED, SRC_RAG, SRC_INFERRED).
 - **Expressible doubt**: The DOUBT opcode (0x25) explicitly flags uncertainty about a previous step, with an optional alternative conclusion. The ASSUME opcode (0x26) explicitly states assumptions and their potential impact if wrong.
 
-### 14.3 Seven Reasoning Opcodes
+### 15.3 Seven Reasoning Opcodes
 
 | Opcode | Name   | Purpose                                        |
 |--------|--------|------------------------------------------------|
@@ -922,7 +928,7 @@ Each reasoning step is an opcode with explicit metadata:
 
 ---
 
-## 15. Error State VADUG Auto-Escalation
+## 16. Error State VADUG Auto-Escalation
 
 When an opcode faults inside a TRY block, the Clanker runtime automatically adjusts the VADUG vector:
 
@@ -936,43 +942,45 @@ This auto-escalation is mandatory for conforming runtimes and provides emotional
 
 ---
 
-## 16. Limitations and Future Work
+## 17. Limitations and Future Work
 
 We present Clanker's limitations candidly, organized by component.
 
-### 16.1 Layer 7 Decoder
+### 17.1 Template Decoder Ceiling
 
-The decoder head (Layer 7) remains the least solved component. For structured outputs (code generation, API calls, data transformations), dictionary-based template decoding works well. For nuanced natural language output -- empathetic conversation, creative expression, culturally appropriate phrasing -- either a small LLM or a substantially more sophisticated template system is required.
+The cross-axis template decoder (Layer 7) proves the architecture works but has a clear ceiling. It can produce hundreds of variations through VADUG blending across 5 axes, goal overrides, urgency prefixes, and arc closers -- but it is fundamentally *selecting* from pre-written phrases, not *generating* novel sentences.
 
-This is not a fundamental limitation (the decoder head is swappable by design), but it means that Clanker's explainability advantage is strongest for structured tasks and weakest for open-ended natural language generation.
+The critical limitation: **the template decoder cannot reference specific content from the input**. It does not know the user is talking about a "job" or a "dog" or a "rent payment." It responds to the *emotional shape* of the input, not its *semantic content*. A user saying "I lost my job" and a user saying "I lost my dog" will receive emotionally appropriate but generically worded responses. A human (or a trained model) would say "That job meant a lot to you" or "Tell me about your dog."
 
-### 16.2 Pendulum Engine Language Specificity
+This is the gap between proof-of-concept and production. The templates prove that VADUG-driven response selection works -- that pure math can produce emotionally coherent, varied responses without any LLM. A trained model in Layer 7 would add content awareness and linguistic fluency while remaining constrained by the VADUG targets from Layers 1-6. The decoder head is swappable by design; replacing the template system with a small, purpose-specific LLM is the planned next step for production-quality output.
+
+### 17.2 Pendulum Engine Language Specificity
 
 The current Pendulum Engine implementation is English-specific. The morpheme database (approximately 1,070 entries), idiom library, and anticipation patterns are all built for English. Extending to other languages requires per-language morpheme databases, idiom libraries, and language-specific rules for context-dependent forces.
 
 The VADUG coordinate system itself is language-independent (by design), but the mechanism for *deriving* VADUG coordinates from text is language-dependent. This is an implementation limitation, not an architectural one.
 
-### 16.3 Compression Claims
+### 17.3 Compression Claims
 
-The model compression hypothesis (Section 11) is entirely theoretical. We have not trained any Clanker model. We have not measured any compression ratios. The estimated ranges (2-5x) are based on architectural reasoning, not empirical data. The actual achievable compression could be higher, lower, or effectively zero for certain task types.
+The model compression hypothesis (Section 12) is entirely theoretical. We have not trained any Clanker model. We have not measured any compression ratios. The estimated ranges (2-5x) are based on architectural reasoning, not empirical data. The actual achievable compression could be higher, lower, or effectively zero for certain task types.
 
-### 16.4 Creative and Abstract Tasks
+### 17.4 Creative and Abstract Tasks
 
 Clanker is designed for structured communication. Its strengths -- zero ambiguity, compact encoding, explicit metadata -- are maximally useful for tasks like code generation, factual QA, system orchestration, and structured reasoning. Whether Clanker provides advantages for creative writing, abstract philosophical reasoning, or open-ended exploration is an open question. Creative tasks may require the very ambiguity and richness that Clanker eliminates.
 
-### 16.5 Personality Vector Simplification
+### 17.5 Personality Vector Simplification
 
 The 8-byte personality vector is a pragmatic engineering choice, not a psychologically complete model. Eight dimensions cannot capture the full complexity of human personality. The chosen dimensions (gullibility, suggestibility, etc.) are oriented toward AI behavioral control rather than psychological theory. This is by design -- the personality vector controls model behavior, not models human personality -- but it should not be misrepresented as a personality theory.
 
-### 16.6 VADUG Dimensionality
+### 17.6 VADUG Dimensionality
 
 Five dimensions yield 1.1 trillion states, which is substantial. However, the question of whether five dimensions *suffice* to capture all emotionally relevant variation is empirical. There may be important emotional distinctions that VADUG conflates. We chose five dimensions as a pragmatic balance between expressiveness and compactness (5 bytes per coordinate). Future work may identify cases where additional dimensions are warranted.
 
-### 16.7 Evaluation Gap
+### 17.7 Evaluation Gap
 
 The most significant limitation is the absence of comparative evaluation. We have not benchmarked the Pendulum Engine against state-of-the-art neural sentiment analysis systems. We have not compared Clanker-trained models against English-trained models at equivalent scales. We have not conducted user studies to validate that VADUG coordinates correspond to human emotional perception. These evaluations are essential future work.
 
-### 16.8 Future Work
+### 17.8 Future Work
 
 **Near-term (planned):**
 - Generate 300,000+ parallel English-to-Clanker training pairs
@@ -994,17 +1002,31 @@ The most significant limitation is the absence of comparative evaluation. We hav
 
 ---
 
-## 17. Conclusion
+## 18. Conclusion
 
 Clanker proposes a fundamental architectural shift for AI communication: emotion-first, language-second. Rather than training a language model and hoping that emotional intelligence, certainty calibration, source tracking, and safe behavior emerge from the training data, Clanker encodes all of these as structural properties of the representation itself.
 
-The working proof of concept demonstrates that emotional parsing from natural language is achievable without any LLM -- the Sequential Pendulum Engine produces coherent VADUG coordinates using pure mathematical rules over a morpheme database. The 9-byte message metadata header makes explicit what current models leave implicit. The personality vector provides engineered alignment with structural safety floors. The harmony formulas produce mathematically verifiable emotional responses.
+The project now has a **working end-to-end 7-layer pipeline**, all proven in code, all pure math, all running on an i3 laptop with no GPU:
+
+| Layer | Function | Status |
+|-------|----------|--------|
+| 1 | Emotional chunking -- split input at natural boundaries into emotional beats | PROVEN |
+| 2 | Sequential pendulum per chunk -- fresh VADUG coordinates for each beat | PROVEN |
+| 3 | Arc analysis -- detect valley/peak/ascending/descending/flat/mixed patterns | PROVEN |
+| 4 | Personality filter -- apply resistance weights from personality vector | PROVEN |
+| 5 | Harmony response VADUG computation -- mathematically derived target per chunk | PROVEN |
+| 6 | Clanker opcode generation -- structured output with 9-byte headers | PROVEN |
+| 7 | Cross-axis template decoder + arc-aware assembly -- hundreds of response variations via VADUG blending | PROVEN |
+
+This is not a theoretical architecture diagram. Every layer runs. The emotional chunker splits paragraphs into beats. The pendulum engine parses each beat into VADUG coordinates. The arc analyzer classifies the emotional shape. The harmony formulas compute response targets. The cross-axis template decoder selects from hundreds of phrase combinations using V x G, D x A, and G x U blending, with goal overrides, urgency prefixes, and arc-aware closers. The result is multi-sentence responses that track the emotional journey of the input beat by beat.
+
+The template decoder is honest about its ceiling: it selects from pre-written phrases rather than generating novel sentences, and it cannot reference specific content from the input. A trained model in Layer 7 would add content awareness and fluency. The templates prove the architecture works; a trained model would prove it scales. This is the gap between proof-of-concept and production -- and it is a clearly defined, tractable gap.
 
 If the compression hypothesis validates -- and we stress that this is an empirical question, not a proven claim -- Clanker could democratize AI by enabling powerful models on consumer hardware. A 500M-parameter Clanker model that matches a 2B-parameter English model on structured tasks would be a meaningful advance for accessibility.
 
-Even if the compression hypothesis does not validate, the protocol contributions stand on their own. VADUG provides a richer emotional encoding than any existing sentiment system. The 9-byte header provides structural auditability. The 7-layer architecture offers a concrete path toward explainable AI that is transparent by construction rather than explained post-hoc.
+Even if the compression hypothesis does not validate, the protocol contributions stand on their own. VADUG provides a richer emotional encoding than any existing sentiment system. The 9-byte header provides structural auditability. The 7-layer architecture is no longer theoretical -- it is a working pipeline that produces emotionally coherent, arc-aware responses from pure mathematical operations.
 
-The 7-layer auditable pipeline addresses the black-box problem that is the central concern of explainable AI research. In Clanker's architecture, 6 of 7 processing layers are fully transparent. This does not eliminate opacity (the decoder head remains a learned component), but it reduces opacity from 100% to approximately 14% of the pipeline -- a qualitative improvement over architectures where every layer is opaque.
+The 7-layer auditable pipeline addresses the black-box problem that is the central concern of explainable AI research. In Clanker's architecture, 6 of 7 processing layers are fully transparent. This does not eliminate opacity (the decoder head remains a constrained component), but it reduces opacity from 100% to approximately 14% of the pipeline -- a qualitative improvement over architectures where every layer is opaque.
 
 All code, specifications, and research plans are open source under the MIT license at https://github.com/deucebucket/clanker-lang. We invite scrutiny, criticism, and collaboration.
 
