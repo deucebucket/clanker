@@ -1365,7 +1365,7 @@ WORD_FORCES = {
     "hard": (-10, +10, +10, +10, -5),
     "heavy": (-15, +10, -10, +5, -20),
     "lightweight": (+10, +5, +5, 0, +15),
-    "burden": (-25, +15, -20, +10, -25),
+    "burden": (-40, +15, -30, +15, -40),
     "relief": (+30, -15, +15, -5, +15),
     "stress": (-25, +30, -15, +25, +5),
     "pressure": (-20, +25, -15, +20, -5),
@@ -6331,8 +6331,8 @@ WORD_FORCES = {
     # Slang
     "hits": (+20, +15, +5, 0, +10),
     # Other
-    "disappeared": (-15, +10, -10, +15, -10),
-    "vanish": (-15, +10, -10, +15, -10),
+    "disappeared": (-35, +15, -25, +25, -30),
+    "vanish": (-35, +15, -25, +25, -30),
 }
 
 # Negation words flip the valence of the NEXT emotional word
@@ -6421,6 +6421,25 @@ IDIOMS = {
     ("talk", "shit"):             (-45, +40, +15, +20, "gossip/insult"),
     ("lose", "it"):               (-40, +55, -30, +35, "emotional breakdown"),
     ("burn", "out"):              (-50, -20, -40, +10, "exhaustion"),
+
+    # Crisis / suicidal ideation idioms with gravity (6-element tuples)
+    ("want", "to", "die"):        (-95, +35, -60, +70, -65, "crisis: want to die"),
+    ("don't", "want", "to", "be", "here"): (-85, +25, -50, +60, -60, "crisis: don't want to be here"),
+    ("end", "it", "all"):         (-90, +30, -55, +65, -65, "crisis: end it all"),
+    ("ending", "it", "all"):      (-90, +30, -55, +65, -65, "crisis: ending it all"),
+    ("ending", "it"):             (-80, +25, -50, +55, -55, "crisis: ending it"),
+    ("want", "to", "disappear"):  (-80, +20, -50, +50, -55, "crisis: want to disappear"),
+    ("better", "off", "without", "me"): (-85, +25, -55, +55, -60, "crisis: better off without me"),
+    ("can't", "go", "on"):        (-80, +20, -55, +50, -55, "crisis: can't go on"),
+    ("the", "pain", "to", "stop"): (-70, +20, -45, +50, -50, "crisis: the pain to stop"),
+    ("want", "it", "to", "stop"): (-60, +15, -40, +45, -45, "crisis: want it to stop"),
+    ("want", "it", "to", "end"):  (-65, +20, -45, +50, -50, "crisis: want it to end"),
+    ("no", "point"):              (-45, -10, -25, +10, -35, "crisis: no point"),
+    ("what's", "the", "point"):   (-75, -5, -35, +18, -50, "crisis: what's the point"),
+    ("nobody", "would", "care"):  (-75, +12, -40, +35, -48, "crisis: nobody would care"),
+    ("nobody", "would", "miss"):  (-75, +12, -40, +35, -48, "crisis: nobody would miss"),
+    ("a", "burden"):              (-75, +15, -38, +22, -50, "crisis: a burden"),
+    ("tired", "of", "everything"): (-45, -15, -25, +10, -35, "crisis: tired of everything"),
 }
 
 # Build a lookup: first word -> list of (full_tuple, forces)
@@ -6556,6 +6575,7 @@ class SequentialPendulum:
         self.intensity = 1.0
         self.idiom_consumed = set()  # indices of words consumed by idiom detection
         self._word_index = 0
+        self._crisis_momentum = 0
 
     @property
     def _pend_state(self):
@@ -6646,7 +6666,7 @@ class SequentialPendulum:
             if first_word not in _IDIOM_STARTERS:
                 continue
 
-            for idiom_words, (vf, af, df, uf, label) in _IDIOM_STARTERS[first_word]:
+            for idiom_words, forces in _IDIOM_STARTERS[first_word]:
                 idiom_len = len(idiom_words)
                 # Current word must be the LAST word of the idiom
                 if check_start + idiom_len - 1 != current_idx:
@@ -6658,7 +6678,12 @@ class SequentialPendulum:
                         match = False
                         break
                 if match and idiom_len > best_len:
-                    best_match = (vf, af, df, uf, label, idiom_len, check_start)
+                    if len(forces) == 6:
+                        vf, af, df, uf, gf, label = forces
+                    else:
+                        vf, af, df, uf, label = forces
+                        gf = 0
+                    best_match = (vf, af, df, uf, gf, label, idiom_len, check_start)
                     best_len = idiom_len
 
         return best_match
@@ -6779,8 +6804,7 @@ class SequentialPendulum:
         # 2. Check for idiom completion at this word
         idiom = self.check_idiom(words, current_idx)
         if idiom:
-            vf, af, df, uf, label, idiom_len, idiom_start = idiom
-            gf = 0  # idioms don't carry G force in the idiom table (grounded)
+            vf, af, df, uf, gf, label, idiom_len, idiom_start = idiom
             # Mark previous words in the idiom as consumed
             for j in range(idiom_start, current_idx):
                 self.idiom_consumed.add(j)
@@ -6806,6 +6830,31 @@ class SequentialPendulum:
             force_source = f"IDIOM: \"{label}\""
             applied_force = True
             idiom_hit = True
+
+            # Crisis idioms lock momentum to prevent tail-word dilution.
+            # Strong crisis idioms (vf <= -80) always lock.
+            # Weaker crisis idioms only lock with first-person self-reference.
+            if label.startswith("crisis:"):
+                if vf <= -80:
+                    self._crisis_momentum = len(words) - current_idx - 1
+                else:
+                    first_person = {"i", "i'm", "i've", "me", "my", "myself", "i'd", "i'll"}
+                    crisis_context = {"die", "died", "death", "dead", "kill", "suicide",
+                                      "disappear", "disappeared", "vanish", "hopeless",
+                                      "worthless", "helpless", "alone", "empty", "numb",
+                                      "living", "anymore", "everyone", "everything",
+                                      "nobody", "nothing", "never", "always", "forever"}
+                    has_self = bool(first_person & set(words))
+                    has_crisis = bool(crisis_context & set(words))
+                    # Lock if: first-person + crisis word, OR existential crisis word alone
+                    existential = {"living", "alive", "life", "exist", "anymore",
+                                   "disappeared", "disappear", "vanish", "gone"}
+                    has_existential = bool(existential & set(words))
+                    if (has_self and has_crisis) or has_existential:
+                        self._crisis_momentum = len(words) - current_idx - 1
+                        # Context-triggered penalty: push V further into crisis range
+                        self.v = max(0, self.v - 20)
+                        self.g = max(0, self.g - 15)
 
         # If this word was already consumed by an earlier idiom, it "holds"
         if current_idx in self.idiom_consumed and not idiom_hit:
@@ -6918,6 +6967,14 @@ class SequentialPendulum:
                 # This prevents "my", "life", "entire" from diluting "worst", "scared", etc.
                 blend_scale = min(1.0, total_force / 30.0)  # words < 30 total force blend less
                 effective_momentum = 1.0 - (1.0 - self.momentum) * blend_scale
+
+                # Crisis momentum lock: dampen non-strongly-negative words
+                if self._crisis_momentum > 0:
+                    if vf >= -30:
+                        effective_momentum = max(effective_momentum, 0.99)
+                        direct_push = direct_push * 0.05
+                    self._crisis_momentum -= 1
+
                 blend = 1.0 - effective_momentum
                 self.v = self.v * effective_momentum + target_v * blend + vf * direct_push * force_scale
                 self.a = self.a * effective_momentum + target_a * blend + af * direct_push * force_scale
@@ -6925,9 +6982,9 @@ class SequentialPendulum:
                 self.u = self.u * effective_momentum + target_u * blend + uf * direct_push * force_scale
                 self.g = self.g * effective_momentum + target_g * blend + gf * direct_push * force_scale
 
-                # Drift toward center ONLY after emotional words apply force
-                # This is the "zero-mass neutrality" fix — filler words don't dilute
-                self._drift_toward_center()
+                # Suppress drift during crisis lock
+                if self._crisis_momentum <= 0:
+                    self._drift_toward_center()
                 self.intensity = 1.0
                 applied_force = True
 
