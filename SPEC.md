@@ -17,7 +17,7 @@ Each instruction is encoded as:
 | Field        | Size   | Description                                  |
 |-------------|--------|----------------------------------------------|
 | opcode      | u8     | Operation code (0x00-0xFF)                   |
-| target      | u8     | Target variable slot ($0-$31) or 0xFF (none) |
+| target      | u8     | Target variable slot ($0-$255) or 0xFF (none)|
 | src_var     | u8     | Source variable slot or 0xFF (none)           |
 | dst_var     | u8     | Destination variable slot or 0xFF (none)      |
 | param_count | u8     | Number of parameters (0-15)                  |
@@ -31,7 +31,7 @@ The human-readable text format uses `@` as the instruction prefix:
 @ <opcode> <target> <src> <param_count> {key: "value"} {key: "value"} ...
 ```
 
-Variables are written as `$0` through `$31`. Unused slots are written as `$_`.
+Variables are written as `$0` through `$255`. Unused slots are written as `$_`.
 
 Example:
 ```
@@ -56,18 +56,28 @@ Each parameter is type-tagged:
 | 0x5       | duration | 4 bytes (ms)          | Duration in milliseconds       |
 | 0x6       | bytes    | u16 length follows    | Raw byte array                 |
 | 0x7       | list     | item count            | Nested parameter list          |
-| 0x8       | varref   | 1 byte (slot number)  | Reference to variable $0-$31   |
+| 0x8       | varref   | 1 byte (slot number)  | Reference to variable $0-$255  |
 | 0x9       | map      | pair count            | Key-value pairs                |
 | 0xA-0xF   | reserved | -                     | Reserved for future types      |
 
 ## 3. Variable Store
 
-Clanker provides 32 variable slots: `$0` through `$31`.
+Clanker provides 256 variable slots: `$0` through `$255` (one byte addressing).
+
+### 3.1 Register Tiers
+
+| Range     | Tier               | Description                                          |
+|-----------|--------------------|------------------------------------------------------|
+| $0-$31    | General Purpose    | Fast-access registers for primary computation        |
+| $32-$127  | Extended Registers | Additional storage for complex scripts               |
+| $128-$255 | Stack/Heap Space   | Reserved for stack frames, heap allocations, and complex operations |
 
 - Variables are **untyped** at the opcode level; the dictionary determines how they render.
 - Variables persist for the duration of the script execution.
 - `$0` is conventionally the "current context" or "self" reference.
 - `$_` represents an unused/ignored slot.
+- General purpose registers ($0-$31) SHOULD be preferred for simple scripts. Runtimes MAY optimize access to this tier.
+- Stack/heap space ($128-$255) is intended for runtime-managed allocation (call stacks, temporary objects, nested data structures).
 
 ## 4. Opcode Ranges
 
@@ -96,13 +106,30 @@ Certain opcodes open a block scope that must be closed with `END` (0x0F):
 
 ### 5.2 Nesting
 
-- Blocks may be nested to a maximum depth of **4**.
+- Blocks may be nested to a maximum depth of **16**.
 - Each nested block inherits the variable scope of its parent.
 - Variables set inside a block remain visible after the block closes.
+- Depth 16 supports production-level agent pipelines with complex data validation and nested control flow.
 
 ### 5.3 Execution Order
 
 Instructions execute sequentially, top to bottom, unless a branching opcode (WHEN, MATCH, REPEAT) redirects flow.
+
+### 5.4 Error State VADU Auto-Escalation
+
+When an opcode faults inside a `TRY` block (0xE3), the runtime MUST automatically adjust the VADU vector on the error response:
+
+- **Urgency (U):** Set to `max(current_U, 200)`. This ensures downstream models immediately know something went wrong without parsing error details.
+- **Valence (V):** Reduce by at least 30, clamped to 0: `max(current_V - 30, 0)`. This signals negative state.
+- **Arousal (A) and Dominance (D):** Unchanged — they reflect the context of the error, not the error itself.
+
+Example: Normal execution at `V128 A128 D128 U40` triggers a fault inside TRY:
+```
+Before: V128 A128 D128 U40
+After:  V98  A128 D128 U200
+```
+
+This auto-escalation is mandatory for conforming runtimes. Application code MAY further adjust VADU after catching the error, but the initial escalation MUST occur before the catch block executes.
 
 ## 6. Runtime Extension
 
@@ -436,104 +463,14 @@ The harmony formulas produce a *target* VADU. The personality vector modifies ho
 - High ASSERTIVENESS increases stability_boost (more dominance in response).
 - High PLAYFULNESS dampens urgency more aggressively (lighter tone even in tense situations — within safety limits).
 
-## 13. Sequential Emotional Parsing (The Pendulum Engine)
+## 13. Sequential Emotional Parsing
 
-### 13.1 Overview
+The Clanker specification defines VADU as the emotional encoding format. How VADU coordinates are DERIVED from natural language input is an implementation concern, not a language specification.
 
-Clanker processes natural language input through a sequential pendulum that tracks emotional state word by word. Unlike traditional sentiment analysis which averages word scores, the pendulum models emotional DYNAMICS — how each word shifts the trajectory based on what came before it.
+The reference implementation uses a Sequential Pendulum Engine that processes text word-by-word with context-dependent forces, momentum, idiom detection, and morphological decomposition.
 
-### 13.2 How It Works
-
-1. The pendulum starts at center (V128 A128 D128 U0 — neutral).
-2. Each word applies a force vector that SHIFTS the pendulum.
-3. The force depends on:
-   - The word's base emotional weight (from morphological roots).
-   - The pendulum's CURRENT position (context-dependent force).
-   - Recent word history (idiom detection, anticipation patterns).
-4. The pendulum has MOMENTUM — it resists sudden changes.
-5. Neutral words barely move it; strong emotional words can yank it.
-6. The final position after all words = the VADU coordinate for the message.
-
-### 13.3 Context-Dependent Forces
-
-The same word applies different force depending on current state:
-
-- **"buddy"** when pendulum is positive → friendly (V+15)
-- **"buddy"** when pendulum is negative/tense → confrontational (V-10, A+20)
-- **"you"** in high-arousal context → targeted/threatening (V-15, A+20)
-- **"but"** after positive trajectory → dread, reversal incoming (V-40, A+20)
-- **"but"** after negative trajectory → relief possible (V+10, A-5)
-
-### 13.4 Momentum and Inertia
-
-The pendulum maintains 85-90% of its current state between words. This means:
-
-- Once swinging negative, neutral words don't reset it — it drifts slowly.
-- Strong emotional words can override momentum.
-- Emotional trajectories build over sentences, not just sum individual words.
-
-### 13.5 Idiom Recognition
-
-Multi-word expressions that carry compound emotional meaning:
-
-| Idiom            | V   | A   | D   | U   | Meaning      |
-|------------------|-----|-----|-----|-----|--------------|
-| "bone to pick"   | -25 | +30 | +25 | +25 | grievance    |
-| "piece of cake"  | +20 | -15 | +20 | —   | easy         |
-| "fed up"         | -30 | +25 | -10 | +15 | frustrated   |
-| "break a leg"    | +25 | +20 | +10 | —   | good luck    |
-
-### 13.6 Morphological Fallback
-
-When a word isn't in the direct dictionary, it decomposes into prefix + root + suffix:
-
-- ~30 prefix modifiers (un-, dis-, over-, mis-...)
-- ~1000 root morphemes with emotional weights
-- ~40 suffix modifiers (-less, -ful, -ous, -ive, -ness...)
-- ~1070 entries covering millions of words through composition
-
-Example: `"hopelessness"` = hope(V+55) + -less(negate → V-55) + -ness(state → V-55)
-
-### 13.7 Anticipation Patterns
-
-Certain word sequences build tension before the payload arrives:
-
-- **"I've got"** → something coming, arousal builds
-- **"I need to tell you"** → serious incoming, urgency rises
-- **"listen"** → attention demanded, dominance shifts
-- **"actually"** → correction coming, slight negative shift
-
-### 13.8 The Emotional Arc
-
-The pendulum doesn't produce a single score — it produces a TRAJECTORY:
-
-```
-"I love you, but I broke your vase"
-  "I"     → V128 (neutral)
-  "love"  → V200 (soaring positive)
-  "you"   → V205 (warm, directed)
-  "but"   → V150 (YANK — dread, something bad coming)
-  "I"     → V148 (holds tense)
-  "broke" → V100 (negative, guilt)
-  "your"  → V95  (directed at you — makes it personal)
-  "vase"  → V90  (object, slight recovery from abstract)
-
-  Arc: neutral → love → DREAD → guilt → settling
-  Final: V90 A160 D85 U40
-```
-
-The model trained on these arcs learns emotional PHYSICS — how emotions flow, build, crash, and recover through language.
-
-### 13.9 Why This Matters for Clanker Models
-
-A Clanker model trained on sequential pendulum traces learns to predict emotional trajectories, not just next tokens. It can:
-
-- Anticipate when someone is about to get angry (rising A, falling V).
-- Model how different responses will shift the user's emotional state.
-- Plan multi-turn emotional arcs for therapeutic or de-escalation purposes.
-- Understand that "I'm fine" after bad news means the opposite of "I'm fine" in isolation.
-
-This is emotional dynamics, not sentiment classification.
+See [ENGINE.md](ENGINE.md) for the full Pendulum Engine specification.
+See [demo/simulator.py](demo/simulator.py) for the working implementation.
 
 ## 14. Reasoning Chain Encoding
 
@@ -588,7 +525,7 @@ opcode      = "0x" 2HEXDIG
 target      = varref
 source      = varref
 paramcount  = 2HEXDIG
-varref      = "$" ("_" / 1*2DIGIT)
+varref      = "$" ("_" / 1*3DIGIT)
 param       = "{" key ":" SP value "}"
 key         = 1*ALPHA
 value       = quoted-string / number / boolean / varref
@@ -612,5 +549,5 @@ A conforming Clanker encoder MUST:
 
 1. Emit only valid opcodes (defined in the spec or registered at runtime).
 2. Provide all required parameters for each opcode.
-3. Use valid variable references ($0-$31 or $_).
+3. Use valid variable references ($0-$255 or $_).
 4. Prefix compiled binary output with the magic bytes `CLK\x01`.
