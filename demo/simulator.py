@@ -7349,16 +7349,18 @@ class ResponseBuilder:
     # Curated adjective sets -- words that work in "That sounds X" / "That's really X"
     # These are all present in WORD_FORCES and selected for natural sentence fit
     NEGATIVE_ADJECTIVES = {
+        # These all work as situation descriptors: "That sounds X" / "That's really X"
         "tough", "hard", "heavy", "rough", "painful", "awful", "terrible", "horrible",
         "devastating", "exhausting", "overwhelming", "difficult", "sad", "lonely",
         "scary", "stressful", "heartbreaking", "harsh", "brutal", "draining",
         "crushing", "intense", "deep", "frustrating", "agonizing", "dreadful",
-        "miserable", "wretched", "hopeless", "helpless", "exhausted", "broken",
-        "uncomfortable", "uneasy", "anxious", "frightened", "terrified",
-        "disappointed", "embarrassed", "ashamed", "guilty", "stuck", "lost",
-        "worried", "stressed", "tired", "sick", "numb", "unfair", "unbearable",
+        "miserable", "wretched", "hopeless", "helpless", "broken",
+        "uncomfortable", "uneasy", "stuck", "lost",
+        "sick", "numb", "unfair", "unbearable",
         "meaningless", "pointless", "useless", "bleak", "grim", "somber",
         "melancholy", "bittersweet", "isolating", "toxic", "chaotic",
+        "disappointing", "embarrassing", "terrifying", "frightening",
+        "worrying", "exhausting", "tiring", "draining",
     }
 
     POSITIVE_ADJECTIVES = {
