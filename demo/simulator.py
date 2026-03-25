@@ -6307,6 +6307,32 @@ WORD_FORCES = {
     "yet": (-10, 40, 15, 65, 10),
     "zero": (-15, -55, -45, 15, 50),
     "zipper": (10, 20, 15, 15, 0),
+
+    # ── Added: missing emotional words (benchmark fixes) ──
+    # Strong negative
+    "disgusted": (-50, +20, +10, +10, +15),
+    "revolting": (-50, +20, +10, +10, +15),
+    "repulsive": (-50, +20, +10, +10, +15),
+    "livid": (-55, +55, +30, +20, +25),
+    "raging": (-60, +60, +35, +25, +30),
+    "panicking": (-50, +55, -45, +50, -20),
+    # Moderate negative
+    "jealousy": (-30, +25, -15, +10, +5),
+    "envious": (-30, +25, -15, +10, +5),
+    "numbness": (-25, -30, -20, 0, -25),
+    "burdened": (-30, +10, -20, +10, -35),
+    # Mild negative
+    "paperwork": (-10, -10, -5, +5, -5),
+    "ugh": (-20, -10, -10, 0, -10),
+    # Positive
+    "relieved": (+25, -15, +15, -10, +10),
+    "euphoric": (+50, +45, +25, +5, +40),
+    "delightful": (+30, +15, +10, 0, +20),
+    # Slang
+    "hits": (+20, +15, +5, 0, +10),
+    # Other
+    "disappeared": (-15, +10, -10, +15, -10),
+    "vanish": (-15, +10, -10, +15, -10),
 }
 
 # Negation words flip the valence of the NEXT emotional word
