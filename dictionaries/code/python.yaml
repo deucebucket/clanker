@@ -1,0 +1,150 @@
+# Python code dictionary for Phin-Lang
+language: python
+name: Python
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: code
+
+opcodes:
+  # Core (0x00-0x15)
+  0x00:
+    template: "pass"
+    with_param: "print(\"{message}\")"
+  0x01:
+    template: "time.sleep({duration})"
+    imports: ["import time"]
+  0x02:
+    template: "{name} = {value}"
+  0x03:
+    template: "print({value})"
+  0x04:
+    template: "logging.{level}(\"{message}\")"
+    imports: ["import logging"]
+  0x05:
+    template: "{function}()"
+    with_param: "{function}({args})"
+  0x06:
+    template: "return"
+    with_param: "return {value}"
+  0x07:
+    template: "import {source}"
+    with_param: "import {source} as {alias}"
+  0x08:
+    template: "store[{key}] = {value}"
+  0x09:
+    template: "del store[{key}]"
+  0x0A:
+    template: "assert {condition}"
+    with_param: "assert {condition}, \"{message}\""
+  0x0B:
+    template: "def {name}():"
+    with_param: "def {name}({params}):"
+  0x0C:
+    template: "# label: {name}"
+  0x0D:
+    template: "# goto {label}  (not supported in Python)"
+  0x0E:
+    template: "opcodes[{opcode}] = {name}"
+  0x0F:
+    template: ""
+    block_close: "# end block"
+  0x10:
+    template: "# {text}"
+  0x11:
+    template: "yield"
+    with_param: "yield {value}"
+  0x12:
+    template: "asyncio.create_task({function}())"
+    with_param: "asyncio.create_task({function}({args}))"
+    imports: ["import asyncio"]
+  0x13:
+    template: "await {task}"
+  0x14:
+    template: "await {target}.send(\"{message}\")"
+  0x15:
+    template: "msg = await {channel}.receive()"
+    with_param: "msg = await asyncio.wait_for({channel}.receive(), timeout={timeout})"
+
+  # Hardware (0xA0-0xAB)
+  0xA0:
+    template: "GPIO.output({pin}, GPIO.{'HIGH' if {state} else 'LOW'})"
+    imports: ["import RPi.GPIO as GPIO"]
+  0xA1:
+    template: "GPIO.input({pin})"
+    imports: ["import RPi.GPIO as GPIO"]
+  0xA2:
+    template: "pwm_{pin}.ChangeDutyCycle({duty})"
+  0xA3:
+    template: "bus.write_byte_data({address}, {register}, {data})"
+    imports: ["import smbus2"]
+  0xA4:
+    template: "bus.read_i2c_block_data({address}, {register}, {length})"
+    imports: ["import smbus2"]
+  0xA5:
+    template: "spi.xfer2({data})"
+    imports: ["import spidev"]
+  0xA6:
+    template: "serial.Serial({port}, {baud}).write({data}.encode())"
+    imports: ["import serial"]
+  0xA7:
+    template: "serial.Serial({port}).read({length})"
+    imports: ["import serial"]
+  0xA8:
+    template: "adc.read({channel})"
+  0xA9:
+    template: "sensor.read({sensor})"
+  0xAA:
+    template: "motor_{motor}.set_speed({speed})"
+  0xAB:
+    template: "display_{display}.write(\"{content}\")"
+
+  # Web (0xC0-0xC7)
+  0xC0:
+    template: "@app.route(\"{path}\", methods=[\"{method}\"])\ndef handle_{path}():"
+    imports: ["from flask import Flask, request, jsonify"]
+  0xC1:
+    template: "return \"\", {status}"
+    with_param: "return {body}, {status}"
+  0xC2:
+    template: "requests.{method}(\"{url}\")"
+    with_param: "requests.{method}(\"{url}\", json={body})"
+    imports: ["import requests"]
+  0xC3:
+    template: "headers[\"{name}\"] = \"{value}\""
+  0xC4:
+    template: "@app.before_request\ndef {name}():"
+  0xC5:
+    template: "@socketio.on(\"connect\", namespace=\"{path}\")"
+    imports: ["from flask_socketio import SocketIO"]
+  0xC6:
+    template: "@login_required"
+    with_param: "@roles_required(\"{role}\")"
+  0xC7:
+    template: "@limiter.limit(\"{max_requests} per {window}\")"
+    imports: ["from flask_limiter import Limiter"]
+
+  # Data (0xD0-0xD4)
+  0xD0:
+    template: "db.query(\"{source}\")"
+    with_param: "db.query(\"{source}\").filter({filter})"
+  0xD1:
+    template: "data = {operation}(data)"
+    with_param: "data[\"{field}\"] = {operation}(data[\"{field}\"])"
+  0xD2:
+    template: "validate(data, schema=\"{schema}\")"
+  0xD3:
+    template: "result = list(map({function}, collection))"
+  0xD4:
+    template: "result = list(filter(lambda x: {predicate}, collection))"
+
+  # Logic (0xE0-0xE3)
+  0xE0:
+    template: "if {condition}:"
+  0xE1:
+    template: "match {value}:"
+  0xE2:
+    template: "for _ in range({count}):"
+    with_param: "while {condition}:"
+  0xE3:
+    template: "try:"
+    block_close: "except Exception as e:"

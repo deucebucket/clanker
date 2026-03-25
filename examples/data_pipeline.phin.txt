@@ -1,0 +1,38 @@
+# data_pipeline.phin.txt
+# A data processing pipeline that queries records, filters and transforms them,
+# then stores results with error handling.
+#
+# Decoded to English:
+#   # Data pipeline: process active users
+#   log [info] starting pipeline
+#   query users where status=active
+#   filter where age >= 18
+#   map to_uppercase over collection
+#   transform: sort_by_name
+#   try (catch in $5):
+#     store results = processed_data
+#     log [info] pipeline complete
+#   end
+#   done
+#
+# This demonstrates: data opcodes, logic opcodes (try/catch),
+# core opcodes (log, store), and composition patterns.
+
+@ 0x10 $_ $_ 01 {text: "Data pipeline: process active users"}
+@ 0x04 $_ $_ 02 {level: "info"} {message: "starting pipeline"}
+
+# Query and filter data
+@ 0xD0 $1 $_ 02 {source: "users"} {filter: "status=active"}
+@ 0xD4 $1 $2 01 {predicate: "age >= 18"}
+
+# Transform data
+@ 0xD3 $2 $3 01 {function: "to_uppercase"}
+@ 0xD1 $3 $4 01 {operation: "sort_by_name"}
+
+# Store with error handling
+@ 0xE3 $_ $_ 01 {error_var: "$5"}
+@ 0x08 $4 $_ 02 {key: "results"} {value: "processed_data"}
+@ 0x04 $_ $_ 02 {level: "info"} {message: "pipeline complete"}
+@ 0x0F
+
+@ 0x00

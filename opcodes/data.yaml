@@ -1,0 +1,39 @@
+# Data opcodes: 0xD0-0xDF
+# Data transformation, querying, and storage operations
+
+opcodes:
+  0xD0:
+    name: QUERY
+    description: "Execute a query against a data source."
+    params:
+      - {name: source, type: str, required: true}
+      - {name: filter, type: str, optional: true}
+      - {name: fields, type: list, optional: true}
+
+  0xD1:
+    name: TRANSFORM
+    description: "Apply a transformation to data."
+    params:
+      - {name: operation, type: str, required: true}
+      - {name: field, type: str, optional: true}
+
+  0xD2:
+    name: VALIDATE
+    description: "Validate data against a schema or constraint."
+    params:
+      - {name: schema, type: str, required: true}
+      - {name: data, type: varref, optional: true}
+
+  0xD3:
+    name: MAP
+    description: "Apply a function to each element of a collection."
+    params:
+      - {name: function, type: str, required: true}
+      - {name: collection, type: varref, optional: true}
+
+  0xD4:
+    name: FILTER
+    description: "Filter a collection by a predicate."
+    params:
+      - {name: predicate, type: str, required: true}
+      - {name: collection, type: varref, optional: true}

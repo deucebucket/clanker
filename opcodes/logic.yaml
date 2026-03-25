@@ -1,0 +1,29 @@
+# Logic opcodes: 0xE0-0xEF
+# Branching, matching, loops, and error handling
+
+opcodes:
+  0xE0:
+    name: WHEN
+    description: "Conditional branch. Opens a block that executes if the condition is true."
+    params:
+      - {name: condition, type: str, required: true}
+
+  0xE1:
+    name: MATCH
+    description: "Pattern match against a value. Opens a block with CASE sub-blocks."
+    params:
+      - {name: value, type: varref, required: true}
+
+  0xE2:
+    name: REPEAT
+    description: "Loop. Opens a block that repeats based on count, condition, or collection."
+    params:
+      - {name: count, type: int, optional: true}
+      - {name: condition, type: str, optional: true}
+      - {name: collection, type: varref, optional: true}
+
+  0xE3:
+    name: TRY
+    description: "Try/catch error handling. Opens a block; errors jump to CATCH sub-block."
+    params:
+      - {name: error_var, type: varref, optional: true}

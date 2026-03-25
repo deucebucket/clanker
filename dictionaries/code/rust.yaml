@@ -1,0 +1,145 @@
+# Rust code dictionary for Phin-Lang
+language: rust
+name: Rust
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: code
+
+opcodes:
+  # Core (0x00-0x15)
+  0x00:
+    template: "// done"
+    with_param: "println!(\"{message}\");"
+  0x01:
+    template: "std::thread::sleep(std::time::Duration::from_millis({duration}));"
+  0x02:
+    template: "let {name} = {value};"
+  0x03:
+    template: "println!(\"{{}}\", {value});"
+  0x04:
+    template: "{level}!(\"{message}\");"
+    imports: ["use log::{level};"]
+  0x05:
+    template: "{function}();"
+    with_param: "{function}({args});"
+  0x06:
+    template: "return;"
+    with_param: "return {value};"
+  0x07:
+    template: "use {source};"
+    with_param: "use {source} as {alias};"
+  0x08:
+    template: "store.insert(\"{key}\", {value});"
+  0x09:
+    template: "store.remove(\"{key}\");"
+  0x0A:
+    template: "assert!({condition});"
+    with_param: "assert!({condition}, \"{message}\");"
+  0x0B:
+    template: "fn {name}() {{"
+    with_param: "fn {name}({params}) {{"
+  0x0C:
+    template: "// label: {name}"
+  0x0D:
+    template: "// goto {label} (use loop/break in Rust)"
+  0x0E:
+    template: "opcodes.insert({opcode}, \"{name}\");"
+  0x0F:
+    template: "}}"
+  0x10:
+    template: "// {text}"
+  0x11:
+    template: "yield_now().await;"
+    imports: ["use tokio::task::yield_now;"]
+  0x12:
+    template: "tokio::spawn(async {{ {function}().await }});"
+    with_param: "tokio::spawn(async {{ {function}({args}).await }});"
+    imports: ["use tokio;"]
+  0x13:
+    template: "{task}.await.unwrap();"
+  0x14:
+    template: "{target}.send(\"{message}\").await.unwrap();"
+  0x15:
+    template: "let msg = {channel}.recv().await.unwrap();"
+
+  # Hardware (0xA0-0xAB)
+  0xA0:
+    template: "gpio.set_value({pin}, {state}).unwrap();"
+    imports: ["use gpio_cdev::*;"]
+  0xA1:
+    template: "let val = gpio.get_value({pin}).unwrap();"
+    imports: ["use gpio_cdev::*;"]
+  0xA2:
+    template: "pwm.set_duty_cycle({pin}, {duty}).unwrap();"
+  0xA3:
+    template: "i2c.write({address}, &[{register}, {data}]).unwrap();"
+    imports: ["use i2cdev::core::*;"]
+  0xA4:
+    template: "let mut buf = [0u8; {length}]; i2c.read({address}, &mut buf).unwrap();"
+    imports: ["use i2cdev::core::*;"]
+  0xA5:
+    template: "spi.transfer(&mut {data}).unwrap();"
+    imports: ["use spidev::*;"]
+  0xA6:
+    template: "serial.write_all({data}.as_bytes()).unwrap();"
+    imports: ["use serialport;"]
+  0xA7:
+    template: "let mut buf = vec![0u8; {length}]; serial.read_exact(&mut buf).unwrap();"
+    imports: ["use serialport;"]
+  0xA8:
+    template: "let val = adc.read_channel({channel}).unwrap();"
+  0xA9:
+    template: "let val = sensor.read(\"{sensor}\").unwrap();"
+  0xAA:
+    template: "motor_{motor}.set_speed({speed});"
+  0xAB:
+    template: "display_{display}.write_str(\"{content}\").unwrap();"
+
+  # Web (0xC0-0xC7)
+  0xC0:
+    template: "#[{method}(\"{path}\")]\nasync fn handle() -> impl Responder {{"
+    imports: ["use actix_web::{get, post, put, delete, HttpResponse, Responder};"]
+  0xC1:
+    template: "HttpResponse::Ok().status({status}).finish()"
+    with_param: "HttpResponse::Ok().status({status}).body({body})"
+  0xC2:
+    template: "reqwest::Client::new().{method}(\"{url}\").send().await.unwrap();"
+    with_param: "reqwest::Client::new().{method}(\"{url}\").json(&{body}).send().await.unwrap();"
+    imports: ["use reqwest;"]
+  0xC3:
+    template: "headers.insert(\"{name}\", \"{value}\".parse().unwrap());"
+  0xC4:
+    template: "// middleware: {name}"
+  0xC5:
+    template: "// websocket at {path}"
+  0xC6:
+    template: "#[require_auth(\"{scheme}\")]"
+    with_param: "#[require_role(\"{role}\")]"
+  0xC7:
+    template: "#[rate_limit({max_requests}, \"{window}\")]"
+
+  # Data (0xD0-0xD4)
+  0xD0:
+    template: "let results = db.query(\"{source}\").fetch_all().await?;"
+    with_param: "let results = db.query(\"{source}\").filter(\"{filter}\").fetch_all().await?;"
+  0xD1:
+    template: "let data = {operation}(data);"
+    with_param: "data.{field} = {operation}(data.{field});"
+  0xD2:
+    template: "validate(&data, \"{schema}\")?;"
+  0xD3:
+    template: "let result: Vec<_> = collection.iter().map(|x| {function}(x)).collect();"
+  0xD4:
+    template: "let result: Vec<_> = collection.iter().filter(|x| {predicate}).collect();"
+
+  # Logic (0xE0-0xE3)
+  0xE0:
+    template: "if {condition} {{"
+  0xE1:
+    template: "match {value} {{"
+  0xE2:
+    template: "for _ in 0..{count} {{"
+    with_param: "while {condition} {{"
+  0xE3:
+    template: "match (|| -> Result<_, Box<dyn std::error::Error>> {{"
+    block_close: "}})() {{ Ok(v) => v, Err(e) => {{ /* handle error */ }} }}"

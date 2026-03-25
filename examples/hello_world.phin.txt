@@ -1,0 +1,19 @@
+# hello_world.phin.txt
+# A simple Phin script that sets a greeting variable and outputs it.
+#
+# Decoded to English:
+#   # Hello World in Phin
+#   set greeting to Hello, World!
+#   emit greeting
+#   done: "program complete"
+#
+# Decoded to Python:
+#   # Hello World in Phin
+#   greeting = Hello, World!
+#   print(greeting)
+#   print("program complete")
+
+@ 0x10 $_ $_ 01 {text: "Hello World in Phin"}
+@ 0x02 $0 $_ 02 {name: "greeting"} {value: "Hello, World!"}
+@ 0x03 $0 $_ 01 {value: "greeting"}
+@ 0x00 $_ $_ 01 {message: "program complete"}

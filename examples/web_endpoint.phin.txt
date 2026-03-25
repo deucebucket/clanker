@@ -1,0 +1,44 @@
+# web_endpoint.phin.txt
+# Defines a REST API with two endpoints: a health check and a user lookup.
+#
+# Decoded to English:
+#   # REST API example
+#   load flask as app
+#   define GET endpoint at /health
+#     respond with status 200: "ok"
+#   end
+#   define GET endpoint at /users
+#     require bearer auth
+#     query users
+#     respond with status 200
+#   end
+#   done
+#
+# Decoded to Python:
+#   # REST API example
+#   import flask as app
+#   @app.route("/health", methods=["GET"])
+#   def handle_/health():
+#     return "ok", 200
+#   # end block
+#   @app.route("/users", methods=["GET"])
+#   def handle_/users():
+#     @login_required
+#     ...
+
+@ 0x10 $_ $_ 01 {text: "REST API example"}
+@ 0x07 $_ $_ 02 {source: "flask"} {alias: "app"}
+
+# Health check endpoint
+@ 0xC0 $0 $1 02 {method: "GET"} {path: "/health"}
+@ 0xC1 $1 $2 02 {status: 200} {body: "ok"}
+@ 0x0F
+
+# User listing endpoint with auth
+@ 0xC0 $0 $1 02 {method: "GET"} {path: "/users"}
+@ 0xC6 $_ $_ 01 {scheme: "bearer"}
+@ 0xD0 $2 $_ 01 {source: "users"}
+@ 0xC1 $1 $2 01 {status: 200}
+@ 0x0F
+
+@ 0x00

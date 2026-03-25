@@ -1,0 +1,140 @@
+# English dictionary for Phin-Lang
+language: en
+name: English
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: human
+
+opcodes:
+  # Core (0x00-0x15)
+  0x00:
+    template: "done"
+    with_param: "done: \"{message}\""
+  0x01:
+    template: "wait {duration}"
+  0x02:
+    template: "set {name} to {value}"
+  0x03:
+    template: "emit {value}"
+  0x04:
+    template: "log [{level}] {message}"
+  0x05:
+    template: "call {function}"
+    with_param: "call {function} with {args}"
+  0x06:
+    template: "return"
+    with_param: "return {value}"
+  0x07:
+    template: "load {source}"
+    with_param: "load {source} as {alias}"
+  0x08:
+    template: "store {key} = {value}"
+  0x09:
+    template: "delete {key}"
+  0x0A:
+    template: "assert {condition}"
+    with_param: "assert {condition}: \"{message}\""
+  0x0B:
+    template: "define {name}"
+    with_param: "define {name}({params})"
+  0x0C:
+    template: "label {name}"
+  0x0D:
+    template: "goto {label}"
+  0x0E:
+    template: "register opcode {opcode} as {name}"
+  0x0F:
+    template: "end"
+  0x10:
+    template: "# {text}"
+  0x11:
+    template: "yield"
+    with_param: "yield {value}"
+  0x12:
+    template: "spawn {function}"
+    with_param: "spawn {function} with {args}"
+  0x13:
+    template: "join {task}"
+  0x14:
+    template: "send {message} to {target}"
+  0x15:
+    template: "receive from {channel}"
+    with_param: "receive from {channel} (timeout {timeout})"
+
+  # Hardware (0xA0-0xAB)
+  0xA0:
+    template: "set GPIO pin {pin} to {state}"
+  0xA1:
+    template: "read GPIO pin {pin}"
+  0xA2:
+    template: "set PWM on pin {pin} to {duty}%"
+    with_param: "set PWM on pin {pin} to {duty}% at {frequency}Hz"
+  0xA3:
+    template: "write {data} to I2C device {address} register {register}"
+  0xA4:
+    template: "read {length} bytes from I2C device {address} register {register}"
+  0xA5:
+    template: "SPI transfer to device {device}: {data}"
+  0xA6:
+    template: "send \"{data}\" over UART {port}"
+  0xA7:
+    template: "receive {length} bytes from UART {port}"
+  0xA8:
+    template: "read ADC channel {channel}"
+  0xA9:
+    template: "read sensor {sensor}"
+    with_param: "read sensor {sensor} in {unit}"
+  0xAA:
+    template: "set motor {motor} speed to {speed}"
+    with_param: "set motor {motor} speed to {speed} direction {direction}"
+  0xAB:
+    template: "write \"{content}\" to display {display}"
+
+  # Web (0xC0-0xC7)
+  0xC0:
+    template: "define {method} endpoint at {path}"
+  0xC1:
+    template: "respond with status {status}"
+    with_param: "respond with status {status}: {body}"
+  0xC2:
+    template: "{method} request to {url}"
+    with_param: "{method} request to {url} with body {body}"
+  0xC3:
+    template: "set header {name}: {value}"
+  0xC4:
+    template: "use middleware {name}"
+    with_param: "use middleware {name} at {phase} phase"
+  0xC5:
+    template: "websocket at {path}"
+    with_param: "websocket at {path} on {event}"
+  0xC6:
+    template: "require {scheme} auth"
+    with_param: "require {scheme} auth with role {role}"
+  0xC7:
+    template: "rate limit: {max_requests} requests per {window}"
+
+  # Data (0xD0-0xD4)
+  0xD0:
+    template: "query {source}"
+    with_param: "query {source} where {filter}"
+  0xD1:
+    template: "transform: {operation}"
+    with_param: "transform {field}: {operation}"
+  0xD2:
+    template: "validate against {schema}"
+  0xD3:
+    template: "map {function} over collection"
+  0xD4:
+    template: "filter where {predicate}"
+
+  # Logic (0xE0-0xE3)
+  0xE0:
+    template: "when {condition}:"
+  0xE1:
+    template: "match {value}:"
+  0xE2:
+    template: "repeat {count} times:"
+    with_param: "repeat while {condition}:"
+  0xE3:
+    template: "try:"
+    with_param: "try (catch in {error_var}):"
