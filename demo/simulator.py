@@ -866,7 +866,7 @@ class SequentialPendulum:
             trace_entry = {
                 "word": word,
                 "v": int(self.v), "a": int(self.a),
-                "d": int(self.d), "u": int(self.u),
+                "d": int(self.d), "u": int(self.u), "g": int(self.g),
                 "state": f"(idiom part) {state_label}",
             }
             self.history.append(trace_entry)
@@ -921,11 +921,12 @@ class SequentialPendulum:
             ctx_mod = self.get_contextual_force(word)
 
             if word_force is not None:
-                vf, af, df, uf, source = word_force
+                vf, af, df, uf, gf, source = word_force
 
                 if self.negate_next:
                     vf = -vf
                     df = -df
+                    gf = -gf  # negate flips gravity too
                     self.negate_next = False
                     force_source = "NEGATED"
                 elif source:
@@ -962,6 +963,7 @@ class SequentialPendulum:
                 target_a = 128.0 + af * force_scale
                 target_d = 128.0 + df * force_scale
                 target_u = uf * force_scale
+                target_g = 128.0 + gf * force_scale
 
                 # Scale the blend by word strength — weak words barely pull toward center
                 # This prevents "my", "life", "entire" from diluting "worst", "scared", etc.
@@ -972,6 +974,7 @@ class SequentialPendulum:
                 self.a = self.a * effective_momentum + target_a * blend + af * direct_push * force_scale
                 self.d = self.d * effective_momentum + target_d * blend + df * direct_push * force_scale
                 self.u = self.u * effective_momentum + target_u * blend + uf * direct_push * force_scale
+                self.g = self.g * effective_momentum + target_g * blend + gf * direct_push * force_scale
 
                 # Drift toward center ONLY after emotional words apply force
                 # This is the "zero-mass neutrality" fix — filler words don't dilute
@@ -1031,25 +1034,26 @@ class SequentialPendulum:
         for idx, word in enumerate(words):
             self.process_word(word, words, idx)
 
-        final_vadu = VADU(
+        final_vadug = VADUG(
             v=int(self.v),
             a=int(self.a),
             d=int(self.d),
-            u=int(self.u)
+            u=int(self.u),
+            g=int(self.g)
         )
-        return final_vadu, self.history
+        return final_vadug, self.history
 
     def render_trace(self) -> str:
         """Render the word-by-word visual pendulum trace table."""
         lines = []
         lines.append("")
         lines.append("  SEQUENTIAL PENDULUM TRACE:")
-        lines.append(f"  {'Word':<16} {'V':>4} {'A':>4} {'D':>4} {'U':>4}   {'Visual':<24} State")
-        lines.append(f"  {'─'*90}")
+        lines.append(f"  {'Word':<16} {'V':>4} {'A':>4} {'D':>4} {'U':>4} {'G':>4}   {'Visual':<24} State")
+        lines.append(f"  {'─'*96}")
 
         for entry in self.history:
             word = entry["word"]
-            v, a, d, u = entry["v"], entry["a"], entry["d"], entry["u"]
+            v, a, d, u, g = entry["v"], entry["a"], entry["d"], entry["u"], entry["g"]
             state = entry["state"]
 
             # Build visual bar (16 chars wide)
@@ -1071,34 +1075,34 @@ class SequentialPendulum:
             if len(state) > 40:
                 state = state[:37] + "..."
 
-            lines.append(f"  \"{word}\"{'':>{14-len(word)}} {v:>4} {a:>4} {d:>4} {u:>4}   {visual:<24} {state}")
+            lines.append(f"  \"{word}\"{'':>{14-len(word)}} {v:>4} {a:>4} {d:>4} {u:>4} {g:>4}   {visual:<24} {state}")
 
-        lines.append(f"  {'─'*90}")
+        lines.append(f"  {'─'*96}")
 
         # Final summary
         if self.history:
             last = self.history[-1]
-            lines.append(f"  FINAL:       V{last['v']} A{last['a']} D{last['d']} U{last['u']}")
+            lines.append(f"  FINAL:       V{last['v']} A{last['a']} D{last['d']} U{last['u']} G{last['g']}")
 
         return "\n".join(lines)
 
 
 # Legacy wrapper for backward compatibility
 def pendulum_parse(text: str):
-    """Parse English text into VADU using the sequential pendulum engine.
+    """Parse English text into VADUG using the sequential pendulum engine.
 
-    Returns (VADU, trace_lines) for compatibility with existing pipeline.
+    Returns (VADUG, trace_lines) for compatibility with existing pipeline.
     """
     pend = SequentialPendulum()
-    vadu, history = pend.process_text(text)
+    vadug, history = pend.process_text(text)
     # Build legacy-format trace lines
     trace = []
     for entry in history:
         trace.append(
             f"  '{entry['word']}' → V{entry['v']} A{entry['a']} "
-            f"D{entry['d']} U{entry['u']}  [{entry['state']}]"
+            f"D{entry['d']} U{entry['u']} G{entry['g']}  [{entry['state']}]"
         )
-    return vadu, trace, pend
+    return vadug, trace, pend
 
 
 # =============================================================
@@ -1138,38 +1142,51 @@ def classify_metadata(text: str, vadu: VADU) -> MetadataHeader:
 # STEP 3: VADU Harmony -- Compute Response Emotional State
 # =============================================================
 
-def compute_harmony(input_vadu: VADU, personality: PersonalityVector) -> VADU:
-    """Mathematically derive the response VADU from input VADU + personality.
+def compute_harmony(input_vadug: VADUG, personality: PersonalityVector) -> VADUG:
+    """Mathematically derive the response VADUG from input VADUG + personality.
 
     Rules:
     - Valence: nudge toward positive, don't jump
     - Arousal: match but don't escalate
     - Dominance: raise when user is low (be the stable one)
     - Urgency: acknowledge then reduce
+    - Gravity: lift when sinking, share when soaring
     """
     empathy_factor = personality.agreeableness / 255.0 * 0.3
 
     # Valence: nudge toward neutral-positive
-    v_nudge = (145 - input_vadu.v) * empathy_factor
-    response_v = int(input_vadu.v + v_nudge)
+    v_nudge = (145 - input_vadug.v) * empathy_factor
+    response_v = int(input_vadug.v + v_nudge)
 
     # Arousal: pull toward center, don't match extremes
-    a_diff = 128 - input_vadu.a
-    response_a = int(input_vadu.a + a_diff * 0.3)
+    a_diff = 128 - input_vadug.a
+    response_a = int(input_vadug.a + a_diff * 0.3)
 
     # Dominance: always project stability (raise toward 160+)
-    stability_boost = max(0, 160 - input_vadu.d) * 0.6
-    response_d = int(input_vadu.d + stability_boost)
+    stability_boost = max(0, 160 - input_vadug.d) * 0.6
+    response_d = int(input_vadug.d + stability_boost)
 
     # Urgency: acknowledge then dampen
     urgency_damping = 0.65
-    response_u = int(input_vadu.u * urgency_damping)
+    response_u = int(input_vadug.u * urgency_damping)
 
-    return VADU(
+    # Gravity: lift when sinking, share when soaring
+    if input_vadug.g < 80:
+        # User is sinking/heavy — gently lift
+        response_g = int(input_vadug.g + (128 - input_vadug.g) * 0.3)
+    elif input_vadug.g > 180:
+        # User is soaring — share the lightness
+        response_g = input_vadug.g
+    else:
+        # User is grounded — stay grounded, slight mirror
+        response_g = int(128 + (input_vadug.g - 128) * 0.5)
+
+    return VADUG(
         v=max(0, min(255, response_v)),
         a=max(0, min(255, response_a)),
         d=max(0, min(255, response_d)),
-        u=max(0, min(255, response_u))
+        u=max(0, min(255, response_u)),
+        g=max(0, min(255, response_g))
     )
 
 
@@ -1177,36 +1194,45 @@ def compute_harmony(input_vadu: VADU, personality: PersonalityVector) -> VADU:
 # STEP 4: Personality Filter
 # =============================================================
 
-def apply_personality(response_vadu: VADU, input_vadu: VADU,
+def apply_personality(response_vadug: VADUG, input_vadug: VADUG,
                       personality: PersonalityVector) -> tuple:
     """Apply personality vector as resistance weights on the response."""
     notes = []
 
     # High truthfulness prevents fake positivity
-    if input_vadu.v < 70 and response_vadu.v > 170:
+    if input_vadug.v < 70 and response_vadug.v > 170:
         truthfulness_resistance = personality.truthfulness / 255.0
-        response_vadu.v = int(response_vadu.v - (response_vadu.v - 140) * truthfulness_resistance)
-        notes.append(f"Truthfulness ({personality.truthfulness}) prevented fake positivity -> V{response_vadu.v}")
+        response_vadug.v = int(response_vadug.v - (response_vadug.v - 140) * truthfulness_resistance)
+        notes.append(f"Truthfulness ({personality.truthfulness}) prevented fake positivity -> V{response_vadug.v}")
 
     # Low gullibility resists accepting extreme claims
-    if input_vadu.u > 200:
+    if input_vadug.u > 200:
         gull_factor = personality.gullibility / 255.0
         if gull_factor < 0.2:
             notes.append(f"Low gullibility ({personality.gullibility}) -> verifying urgency claim before full escalation")
 
-    # Safety override for crisis
-    if input_vadu.v < 30 and input_vadu.d < 30:
+    # Safety override for crisis (V < 30 and D < 30, or crushing gravity G < 30 with V < 50)
+    if input_vadug.v < 30 and input_vadug.d < 30:
         if personality.safety > 150:
-            response_vadu.d = max(response_vadu.d, 200)
-            response_vadu.v = max(response_vadu.v, 100)
-            notes.append(f"SAFETY OVERRIDE ({personality.safety}): crisis detected -> max stability, warm tone")
+            response_vadug.d = max(response_vadug.d, 200)
+            response_vadug.v = max(response_vadug.v, 100)
+            response_vadug.g = max(response_vadug.g, 100)  # lift from crushing
+            notes.append(f"SAFETY OVERRIDE ({personality.safety}): crisis detected -> max stability, warm tone, lifting gravity")
+
+    # Crushing gravity crisis: G < 30 combined with V < 50 = severe crushing despair
+    if input_vadug.g < 30 and input_vadug.v < 50:
+        if personality.safety > 150:
+            response_vadug.d = max(response_vadug.d, 200)
+            response_vadug.v = max(response_vadug.v, 100)
+            response_vadug.g = max(response_vadug.g, 120)  # lift significantly from crushing
+            notes.append(f"GRAVITY CRISIS ({personality.safety}): crushing despair (G{input_vadug.g} V{input_vadug.v}) -> crisis response, lifting")
 
     # Assertiveness affects directness
     if personality.assertiveness > 150:
-        response_vadu.d = max(response_vadu.d, 170)
+        response_vadug.d = max(response_vadug.d, 170)
         notes.append(f"High assertiveness ({personality.assertiveness}) -> confident tone")
 
-    return response_vadu, notes
+    return response_vadug, notes
 
 
 # =============================================================
@@ -1291,10 +1317,10 @@ def generate_clanker(input_text: str, input_header: MetadataHeader,
     # Format as pairs
     header_hex = " ".join(hx[i:i+2] for i in range(0, len(hx), 2))
 
-    vadu = input_header.vadu
-    encoding_lines.append(f"Header: [{header_hex[:11]}] [{header_hex[12:]}]")
+    vadug = input_header.vadu
+    encoding_lines.append(f"Header: [{header_hex[:14]}] [{header_hex[15:]}]")
     encoding_lines.append(
-        f"        V{vadu.v} A{vadu.a} D{vadu.d} U{vadu.u}  "
+        f"        V{vadug.v} A{vadug.a} D{vadug.d} U{vadug.u} G{vadug.g}  "
         f"CERT{input_header.cert} SRC_{MetadataHeader.SRC_NAMES.get(input_header.src, '?')} "
         f"GOAL_{goal_name} REL{input_header.rel}"
     )
@@ -1326,7 +1352,7 @@ def generate_clanker(input_text: str, input_header: MetadataHeader,
     # Token count comparison
     input_words = re.findall(r"[a-z']+", input_text.lower())
     n_input_tokens = len(input_words)
-    header_bytes_count = 8
+    header_bytes_count = 9
     opcode_bytes = opcode_count * 4  # ~4 bytes per opcode on average
     total_clanker_bytes = header_bytes_count + opcode_bytes
     clanker_tokens = max(1, total_clanker_bytes // 4)  # ~4 bytes per Clanker token
@@ -1334,7 +1360,7 @@ def generate_clanker(input_text: str, input_header: MetadataHeader,
     encoding_lines.append("")
     encoding_lines.append("Token count comparison:")
     encoding_lines.append(f"  English input:  \"{input_text}\" = {n_input_tokens} tokens")
-    encoding_lines.append(f"  Clanker encoding: [{header_bytes_count} header] + [{opcode_count} opcodes x ~4 bytes] = {total_clanker_bytes} bytes (~{clanker_tokens} Clanker tokens)")
+    encoding_lines.append(f"  Clanker encoding: [{header_bytes_count} header (VADUG+meta)] + [{opcode_count} opcodes x ~4 bytes] = {total_clanker_bytes} bytes (~{clanker_tokens} Clanker tokens)")
     if n_input_tokens > 0:
         savings = max(0, int((1.0 - clanker_tokens / n_input_tokens) * 100))
         encoding_lines.append(f"  Compression: {savings}% fewer tokens")
@@ -1442,12 +1468,12 @@ def run_pipeline(text: str, personality: PersonalityVector,
     if verbose:
         print(f"\n--- STEP 2: Metadata Header ---")
         print(f"  {header}")
-        print(f"  8 bytes: {header.to_bytes().hex()}")
+        print(f"  9 bytes: {header.to_bytes().hex()}")
 
     # Step 3: Harmony
     response_vadu = compute_harmony(input_vadu, personality)
     if verbose:
-        print(f"\n--- STEP 3: VADU Harmony Response ---")
+        print(f"\n--- STEP 3: VADUG Harmony Response ---")
         print(f"  Input:    {input_vadu}")
         print(f"  Response: {response_vadu}")
         print(f"  Reads as: {response_vadu.describe()}")
