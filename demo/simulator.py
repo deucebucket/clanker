@@ -1709,9 +1709,21 @@ class ChunkedPipeline:
             response_vadug = compute_harmony(cr['vadug'], personality)
             response_vadug, _ = apply_personality(response_vadug, cr['vadug'], personality)
 
-            is_negative = cr['vadug'].v < 118
+            is_negative = cr['vadug'].v < 135
             is_reversal = self._is_reversal_chunk(cr['text'])
             is_last = (i == len(chunk_results) - 1)
+
+            # Also check for content-based negativity: if the chunk contains
+            # clearly negative content words, treat it as negative even if
+            # the pendulum averaged out above 135
+            chunk_lower = cr['text'].lower()
+            negative_content_words = {"sick", "broke", "broken", "died", "lost",
+                                       "hurt", "failed", "crash", "fire", "rent",
+                                       "raising", "can't take", "much more",
+                                       "don't know", "struggle", "pain"}
+            has_negative_content = any(w in chunk_lower for w in negative_content_words)
+            if has_negative_content and cr['vadug'].v < 155:
+                is_negative = True
 
             response_text = self._decode_chunk_response(
                 cr, response_vadug, personality,
@@ -1760,7 +1772,9 @@ class ChunkedPipeline:
         g_values = [c['vadug'].g for c in chunks]
 
         # Threshold for "negative" vs "positive"
-        neg_threshold = 118
+        # Using 135 instead of 118 because pendulum averaging dilutes
+        # negative signals over multi-word chunks
+        neg_threshold = 135
         pos_threshold = 148
 
         # Check flat patterns
@@ -1795,10 +1809,25 @@ class ChunkedPipeline:
                 return "flat_positive"
             return "mixed"
 
-        if min_idx < max_idx and v_values[-1] > v_values[0] + 15:
+        min_val = min(v_values)
+        max_val = max(v_values)
+
+        # Valley: starts negative/low, ends positive — check both averages
+        # and the final value (which carries the most weight for how the
+        # person is FEELING at the end)
+        n = len(v_values)
+        mid = n // 2
+        early_avg = sum(v_values[:mid + 1]) / (mid + 1)
+        late_vals = v_values[mid:]
+        late_avg = sum(late_vals) / max(1, len(late_vals))
+        final_v = v_values[-1]
+
+        if early_avg < neg_threshold and (late_avg > pos_threshold or final_v > pos_threshold):
             return "valley"
 
-        if max_idx < min_idx and v_values[-1] < v_values[0] - 15:
+        # Peak: starts positive, ends negative/low
+        first_v = v_values[0]
+        if (early_avg > pos_threshold or first_v > pos_threshold) and (late_avg < neg_threshold or final_v < neg_threshold):
             return "peak"
 
         # Check monotonic patterns
@@ -1806,6 +1835,18 @@ class ChunkedPipeline:
             return "descending"
         if self._is_monotonic_increasing(v_values):
             return "ascending"
+
+        # Valley with clear dip: minimum is in the first portion, maximum in second
+        if (min_idx < max_idx and
+            v_values[-1] > v_values[0] + 15 and
+            min_val < v_values[-1] - 20):
+            return "valley"
+
+        # Peak with clear rise: maximum in first portion, minimum in second
+        if (max_idx < min_idx and
+            v_values[-1] < v_values[0] - 15 and
+            max_val > v_values[-1] + 20):
+            return "peak"
 
         return "mixed"
 
@@ -1875,6 +1916,7 @@ class ChunkedPipeline:
 
         if is_reversal:
             # Match the energy of the new direction
+            chunk_lower = chunk_result['text'].lower()
             if input_v > 148:
                 # Reversal to positive
                 return random.choice([
@@ -1883,6 +1925,13 @@ class ChunkedPipeline:
                     "Now that changes everything.",
                     "But wait — that's actually great.",
                     "Hold on though — that's exciting!",
+                ])
+            elif any(w in chunk_lower for w in ["honest", "study", "prepare", "admit", "fault"]):
+                # Reversal to self-awareness/honesty
+                return random.choice([
+                    "But hey, at least you're honest about it.",
+                    "But you know exactly why.",
+                    "But you're being real about it.",
                 ])
             else:
                 # Reversal to negative
@@ -1893,8 +1942,15 @@ class ChunkedPipeline:
                 ])
 
         if is_first_negative:
-            # Full acknowledge + stabilize using decoder_templates
-            ack = self._get_acknowledge(v, g, input_v, chunk_result['vadug'].g)
+            # Full acknowledge + stabilize
+            # If the content is clearly negative but pendulum diluted it,
+            # use content-aware acknowledgment
+            chunk_lower = chunk_result['text'].lower()
+            if input_v > 130:
+                # Pendulum says borderline — use content-aware response
+                ack = self._get_content_aware_acknowledge(chunk_lower, input_v)
+            else:
+                ack = self._get_acknowledge(v, g, input_v, chunk_result['vadug'].g)
             stab = self._get_stabilize(d, a)
             return f"{ack} {stab}".strip()
 
@@ -1903,7 +1959,7 @@ class ChunkedPipeline:
             return self._get_short_acknowledge(input_v, chunk_result['vadug'].g,
                                                 chunk_result['text'])
 
-        if input_v > 148:
+        if input_v > 150:
             # Positive chunk — brief or skip if not notable
             if input_v > 190:
                 return random.choice([
@@ -1916,6 +1972,39 @@ class ChunkedPipeline:
 
         # Neutral — skip
         return ""
+
+    def _get_content_aware_acknowledge(self, chunk_lower, input_v):
+        """Generate acknowledgment based on content words when pendulum is borderline."""
+        if any(w in chunk_lower for w in ["sick", "ill", "health", "hospital"]):
+            return random.choice([
+                "That's stressful.",
+                "That's worrying.",
+                "Dealing with sickness is tough.",
+            ])
+        if any(w in chunk_lower for w in ["broke", "broken", "car", "rent", "money"]):
+            return random.choice([
+                "That's the last thing you needed.",
+                "That's one thing after another.",
+                "That kind of stuff piles up fast.",
+            ])
+        if any(w in chunk_lower for w in ["fail", "failed", "exam", "test"]):
+            return random.choice([
+                "That stings.",
+                "That's disappointing.",
+                "That's a tough one.",
+            ])
+        if any(w in chunk_lower for w in ["don't know", "can't take", "much more"]):
+            return random.choice([
+                "That's a lot.",
+                "I can hear it's piling up.",
+                "That's overwhelming.",
+            ])
+        # Generic content-aware
+        return random.choice([
+            "That's a lot going on.",
+            "I hear you.",
+            "That's not easy.",
+        ])
 
     def _get_acknowledge(self, resp_v, resp_g, input_v, input_g):
         """Get an acknowledgment phrase based on input emotional state."""
@@ -1946,11 +2035,12 @@ class ChunkedPipeline:
                     "That's frustrating.",
                     "That's not what you were hoping for.",
                 ])
-        elif input_v < 118:
+        elif input_v < 135:
             return random.choice([
                 "That's a big transition.",
                 "That's a lot to process.",
                 "I hear you on that.",
+                "That's a lot going on.",
             ])
         else:
             return random.choice(["I see.", "Got it."])
@@ -2072,8 +2162,7 @@ class ChunkedPipeline:
                 parts.append(curr_resp)
             else:
                 # Same polarity — use additive transition
-                # Lowercase the first letter of the joined response
-                joined = curr_resp[0].lower() + curr_resp[1:] if curr_resp else curr_resp
+                joined = self._lowercase_start(curr_resp) if curr_resp else curr_resp
                 parts.append(joined)
 
         # Join parts with appropriate connectors
@@ -2082,16 +2171,30 @@ class ChunkedPipeline:
             part = parts[i]
             part_lower = part.lower()
             if part_lower.startswith(("but ", "hold on", "now that", "though ")):
-                assembled = assembled.rstrip('.') + ". " + part
+                assembled = self._rstrip_punct(assembled) + ". " + part
             elif self._response_is_positive(part) != self._response_is_positive(assembled.split('.')[-1]):
-                assembled = assembled.rstrip('.') + ". " + part
+                assembled = self._rstrip_punct(assembled) + ". " + part
             else:
-                assembled = assembled.rstrip('.') + ", and " + part[0].lower() + part[1:]
+                joined = self._lowercase_start(part)
+                assembled = self._rstrip_punct(assembled) + ", and " + joined
 
         # Append closer
-        assembled = assembled.rstrip('.') + ". " + closer
+        assembled = self._rstrip_punct(assembled) + ". " + closer
 
         return assembled
+
+    def _rstrip_punct(self, text: str) -> str:
+        """Strip trailing sentence punctuation (. ! ?) from text."""
+        return text.rstrip('.!?')
+
+    def _lowercase_start(self, text: str) -> str:
+        """Lowercase the first character, but NOT if it's 'I' standing alone."""
+        if not text:
+            return text
+        # Don't lowercase "I" when it starts a sentence as a pronoun
+        if text[0] == 'I' and (len(text) == 1 or not text[1].isalpha()):
+            return text
+        return text[0].lower() + text[1:]
 
     def _response_is_positive(self, text: str) -> bool:
         """Rough check if a response text is positive in tone."""
