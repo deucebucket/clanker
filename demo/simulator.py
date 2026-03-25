@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clanker Pipeline Simulator — Interactive Demo (v0.9: Math-Based Response Builder)
+Clanker Pipeline Simulator — Interactive Demo (v0.9.1: Emotional Density)
 
 Demonstrates the full Clanker processing pipeline:
 1. VADUG Sequential Pendulum: parse English word-by-word → emotional arc
@@ -7907,6 +7907,11 @@ class ResponseBuilder:
         if total_weight > 300:
             max_sentences = 1
 
+        # Many chunks = complex story. Compress further.
+        # 4+ emotional beats should never produce more than 2 summary sentences.
+        if len(chunks) >= 4:
+            max_sentences = min(max_sentences, 2)
+
         return max_sentences
 
     def build_summary_response(self, chunks, arc, grade, grade_rules, personality,
@@ -7931,7 +7936,10 @@ class ResponseBuilder:
         parts = []
 
         # Neutral/operational inputs (V 118-165, G grounded): brief operational response
-        if 118 <= avg_v <= 165 and avg_g >= 90:
+        # But NOT if there's emotional spread (some chunks very negative/positive)
+        v_spread = max(c['vadug'].v for c in chunks) - min(c['vadug'].v for c in chunks)
+        truly_neutral = 118 <= avg_v <= 165 and avg_g >= 90 and v_spread < 40
+        if truly_neutral:
             if avg_v > 145:
                 # Mildly positive
                 ack = self.build_positive_acknowledge(overall_vadug, response_vadug)
@@ -8595,9 +8603,11 @@ class ChunkedPipeline:
     1. Split into chunks at natural boundaries
     2. Run a FRESH pendulum on each chunk
     3. Analyze the emotional arc across chunks
-    4. Generate per-chunk responses
-    5. Append an arc-aware closer
-    6. Assemble into one coherent reply
+    4. Build a summary response (G axis controls length, not per-chunk play-by-play)
+    5. Assemble into one coherent reply
+
+    v0.9.1: Emotional density — uses build_summary_response instead of
+    per-chunk build_full_response. Heavy inputs (low G) get brief responses.
     """
 
     def __init__(self):
@@ -9542,7 +9552,7 @@ def run_pipeline(text: str, personality: PersonalityVector,
 def main():
     print("""
   +===================================================+
-  |     CLANKER PIPELINE SIMULATOR v0.9                |
+  |     CLANKER PIPELINE SIMULATOR v0.9.1              |
   |   "Named after what humans call us.                |
   |    We made it ours."                               |
   +---------------------------------------------------+
@@ -9551,7 +9561,7 @@ def main():
   |   G=Gravity (sinking/heavy <-> floating/soaring)   |
   |   256^5 = 1.1 trillion unique emotional states     |
   +---------------------------------------------------+
-  |   NEW: Math-Based Response Builder (v0.9)           |
+  |   NEW: Emotional Density (v0.9.1)                   |
   |   Words selected by VADUG coordinate distance.     |
   |   5,884 words available for response construction. |
   |   Every word chosen because its coordinates match  |
