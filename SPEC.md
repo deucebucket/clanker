@@ -161,28 +161,56 @@ CLK\x01
 - `CLK` identifies the file as Clanker bytecode.
 - `\x01` is the binary format version.
 
-## 9. Emotional Vector Encoding
+## 9. Emotional Vector Encoding (VADU)
 
 ### 9.1 Overview
 
-Every Clanker instruction can optionally carry emotional context via a 4-byte Emotional Vector suffix. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
+VADU compresses a model's high-dimensional emotional understanding into a standardized 4-byte header for inter-model communication. It's not teaching machines to feel — it's giving them a compact way to transmit emotional state with zero token overhead.
 
-### 9.2 Format
+Every Clanker instruction can optionally carry emotional context via a 4-byte VADU coordinate — a point in continuous 4-dimensional emotional space. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
 
-An optional 4-byte suffix may follow any instruction's parameters:
+### 9.2 The Continuous Coordinate System
+
+VADU is a 4-byte coordinate in continuous 4D emotional space. Each byte (0-255) represents a position on a continuous axis:
 
 ```
-[valence: i8] [arousal: i8] [dominance: i8] [urgency: u8]
+[valence: u8] [arousal: u8] [dominance: u8] [urgency: u8]
 ```
 
-| Field     | Type | Range       | Normalized       | Description                              |
-|-----------|------|-------------|------------------|------------------------------------------|
-| valence   | i8   | -128 to 127 | -1.0 to +1.0    | Negative (disgust, anger) to positive (joy, trust) |
-| arousal   | i8   | -128 to 127 | -1.0 to +1.0    | Calm/bored to excited/alert              |
-| dominance | i8   | -128 to 127 | -1.0 to +1.0    | Submissive/uncertain to dominant/confident |
-| urgency   | u8   | 0 to 255    | 0.0 to 1.0      | Routine to critical/immediate            |
+| Field     | Type | Range   | Neutral | Description                              |
+|-----------|------|---------|---------|------------------------------------------|
+| valence   | u8   | 0-255   | 128     | Negative (disgust, anger) to positive (joy, trust) |
+| arousal   | u8   | 0-255   | 128     | Calm/bored to excited/alert              |
+| dominance | u8   | 0-255   | 128     | Submissive/uncertain to dominant/confident |
+| urgency   | u8   | 0-255   | 0       | Routine to critical/immediate            |
 
-### 9.3 Presence Flag
+- **Valence, Arousal, Dominance:** 128 is the neutral center. Below 128 is the negative direction, above 128 is positive.
+- **Urgency:** 0 is minimum (routine), 255 is maximum (critical). There is no "neutral" urgency — all messages have some urgency level.
+- **Total space:** 256^4 = **4,294,967,296 unique emotional states** — 4.3 billion distinct coordinates in a single 4-byte header.
+
+### 9.3 Emotions as Coordinates, Not Categories
+
+Named emotions are **landmarks** in VADU space — recognizable peaks in a continuous landscape. But every point between landmarks is a valid emotional state, even if no single word describes it.
+
+A person can be sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADU coordinate captures the full cocktail:
+
+| Named Landmark | V   | A   | D   | U   | Description                                     |
+|----------------|-----|-----|-----|-----|-------------------------------------------------|
+| Calm success   | 200 | 108 | 188 | 10  | Happy, relaxed, confident, routine              |
+| Urgent error   | 28  | 248 | 88  | 240 | Frustrated, alert, uncertain, critical          |
+| Neutral ack    | 128 | 128 | 128 | 0   | No emotional context (dead center)              |
+| Excited discovery | 248 | 238 | 208 | 60 | Joyful, energized, confident, moderate         |
+| Sad + angry + desperate | 40 | 180 | 30 | 200 | Between sadness and anger, with helplessness |
+
+The point (V=40, A=180, D=30, U=200) doesn't map cleanly to any single English word. It's a cocktail of sadness, anger, and desperation with high urgency. The decoder maps coordinates to the **nearest word in the target language** — different languages carve up the emotional plane differently. German might have a single word for it. English might need three. The coordinate is the truth; the word is the approximation.
+
+### 9.4 Heritage: PAD Model + Urgency
+
+VADU is a compression of the **PAD emotional model** (Pleasure-Arousal-Dominance), a well-validated framework from 1970s psychology research by Mehrabian and Russell. The first three axes (Valence, Arousal, Dominance) map directly to PAD's three dimensions, which have decades of empirical validation in affective computing and psychology.
+
+The fourth axis, **Urgency**, is Clanker's addition — extending the psychological model with a system-routing dimension. PAD describes *what* the emotion is; Urgency describes *how quickly it needs to be handled*. This makes VADU simultaneously a psychological model and a routing header.
+
+### 9.5 Presence Flag
 
 In binary format, the presence of an emotional vector is indicated by a flag bit in the param_count byte:
 
@@ -192,25 +220,27 @@ In binary format, the presence of an emotional vector is indicated by a flag bit
 In text format, emotional vectors are written as a trailing `!` annotation:
 
 ```
-@ 0xC1 $1 $2 01 {status: 500} ![v:-64 a:80 d:-32 u:200]
+@ 0xC1 $1 $2 01 {status: 500} ![v:28 a:248 d:88 u:240]
 ```
 
-### 9.4 Normalization
+### 9.6 Normalization
 
 To convert raw bytes to normalized floats:
-- Valence/Arousal/Dominance: `value / 127.0` (clamped to [-1.0, +1.0])
+- Valence/Arousal/Dominance: `(value - 128) / 127.0` (clamped to [-1.0, +1.0])
 - Urgency: `value / 255.0` (clamped to [0.0, 1.0])
 
-### 9.5 Examples
+### 9.7 VADU as a Routing Header
 
-| Emotion        | V    | A    | D    | U   | Meaning                            |
-|---------------|------|------|------|-----|------------------------------------|
-| Calm success  | +100 | -20  | +60  | 10  | Happy, relaxed, confident, routine |
-| Urgent error  | -100 | +120 | -40  | 240 | Frustrated, alert, uncertain, critical |
-| Neutral ack   | 0    | 0    | 0    | 0   | No emotional context               |
-| Excited discovery | +120 | +110 | +80 | 60 | Joyful, energized, confident, moderate |
+Beyond emotional expression, VADU serves as a real-time routing header for orchestration systems like Octobrain:
 
-### 9.6 Design Philosophy
+- **Critical urgency (U > 200):** Triggers interrupt sequences. Current arm work can be preempted for priority handling.
+- **High arousal + low dominance (A > 180, D < 60):** User is distressed or overwhelmed. Route to empathetic response mode.
+- **High arousal + high dominance (A > 180, D > 180):** User is assertive or angry. Route to direct, concise response mode.
+- **Low arousal + low valence (A < 60, V < 60):** User is disengaged or despondent. Trigger re-engagement or check-in.
+
+This enables **emotional-aware routing without the overhead of sentiment analysis**. The brain doesn't need to run NLP on the message to understand emotional state — it reads 4 bytes and routes accordingly. The emotional context travels with the instruction at wire speed.
+
+### 9.8 Design Philosophy
 
 Every Clanker expression can carry emotional context in just 4 bytes. This enables:
 
@@ -218,6 +248,8 @@ Every Clanker expression can carry emotional context in just 4 bytes. This enabl
 - Emotional continuity across multi-agent conversations
 - Training data that preserves emotional intent alongside semantic content
 - Machine empathy as a protocol feature, not an application hack
+- Real-time emotional routing without NLP overhead
+- Cross-language emotional fidelity (the coordinate is language-independent; the word is not)
 
 ## 10. Text Format Grammar (ABNF)
 
