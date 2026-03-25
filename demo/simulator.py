@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clanker Pipeline Simulator — Interactive Demo (v0.3: Sequential Pendulum + Gravity)
+Clanker Pipeline Simulator — Interactive Demo (v0.4: Emotional Chunking)
 
 Demonstrates the full Clanker processing pipeline:
 1. VADUG Sequential Pendulum: parse English word-by-word → emotional arc
@@ -9,11 +9,18 @@ Demonstrates the full Clanker processing pipeline:
 4. Personality Filter: apply personality vector weights
 5. Clanker Generation: produce Clanker opcodes with headers + byte encoding
 6. Decode: translate back to English
+7. Emotional Chunking: paragraph-level arc detection + per-chunk responses
 
 The sequential pendulum processes each word in context: the same word applies
 different force depending on the current trajectory. "buddy" when positive =
 friendly; "buddy" when tense = confrontational. Momentum, idiom detection,
 anticipation patterns, and morphological fallback for unknown words.
+
+NEW in v0.4: Paragraphs with multiple emotional beats get split at natural
+boundaries (sentence endings, reversals like "but"/"however", causal links).
+Each chunk gets its own pendulum run. An arc analyzer detects patterns
+(valley, peak, descending, ascending, flat, mixed) and generates per-chunk
+responses assembled with an arc-aware closer.
 
 Run: python3 demo/simulator.py
 """
@@ -27,6 +34,8 @@ from dataclasses import dataclass, field
 # Import morphemes from the same directory
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from morphemes import decompose_word, ROOTS, PREFIXES, SUFFIXES
+from decoder_templates import decode_vadug_to_text
+import random
 
 
 # -------------------------------------------------------------
@@ -1440,17 +1449,690 @@ def decode_response(input_text: str, input_vadu: VADU, response_vadu: VADU,
 
 
 # =============================================================
+# STEP 7: Emotional Chunking — Paragraph-Level Arc Detection
+# =============================================================
+
+class ChunkSplitter:
+    """Splits input text at natural emotional boundaries.
+
+    Boundary types:
+    - Sentence endings: . ! ?
+    - Conjunctive reversals: but, however, although, yet, though
+    - Causal links: because, since
+    - "so" when followed by a subject pronoun (so I, so we, so they)
+
+    Rules:
+    - Minimum chunk size: 2 words
+    - Maximum chunk size: ~20 words (split at commas if needed)
+    - Splitting word stays with the NEW chunk
+    """
+
+    # Words that trigger a split — the word goes with the NEW chunk
+    REVERSAL_WORDS = {"but", "however", "although", "yet", "though"}
+    CAUSAL_WORDS = {"because", "since"}
+    SUBJECT_PRONOUNS = {"i", "we", "they", "he", "she", "it", "you"}
+
+    MIN_CHUNK_WORDS = 2
+    MAX_CHUNK_WORDS = 20
+
+    def split(self, text: str) -> list:
+        """Split text into emotional chunks. Returns list of strings."""
+        # First, split at sentence boundaries (. ! ?)
+        # Preserve the punctuation with the preceding chunk
+        sentence_chunks = self._split_sentences(text)
+
+        # Then split each sentence at emotional boundaries
+        final_chunks = []
+        for sentence in sentence_chunks:
+            sub_chunks = self._split_at_boundaries(sentence)
+            final_chunks.extend(sub_chunks)
+
+        # Enforce max chunk size by splitting at commas
+        sized_chunks = []
+        for chunk in final_chunks:
+            if self._word_count(chunk) > self.MAX_CHUNK_WORDS:
+                sized_chunks.extend(self._split_at_commas(chunk))
+            else:
+                sized_chunks.append(chunk)
+
+        # Merge any too-small chunks with neighbors
+        merged = self._merge_small_chunks(sized_chunks)
+
+        return [c.strip() for c in merged if c.strip()]
+
+    def _split_sentences(self, text: str) -> list:
+        """Split at sentence boundaries (. ! ?) while preserving punctuation."""
+        # Split but keep the delimiter with the preceding text
+        parts = re.split(r'(?<=[.!?])\s+', text)
+        return [p.strip() for p in parts if p.strip()]
+
+    def _split_at_boundaries(self, text: str) -> list:
+        """Split a sentence at emotional boundary words."""
+        words = text.split()
+        if len(words) <= self.MIN_CHUNK_WORDS:
+            return [text]
+
+        chunks = []
+        current_start = 0
+
+        for i, word in enumerate(words):
+            word_lower = word.lower().strip('.,!?;:')
+
+            is_boundary = False
+
+            # Check reversal words
+            if word_lower in self.REVERSAL_WORDS:
+                is_boundary = True
+
+            # Check causal words
+            elif word_lower in self.CAUSAL_WORDS:
+                is_boundary = True
+
+            # Check "so" + subject pronoun
+            elif word_lower == "so" and i + 1 < len(words):
+                next_word = words[i + 1].lower().strip('.,!?;:')
+                if next_word in self.SUBJECT_PRONOUNS:
+                    is_boundary = True
+
+            if is_boundary and i > current_start:
+                # Only split if the preceding chunk has enough words
+                preceding = words[current_start:i]
+                if len(preceding) >= self.MIN_CHUNK_WORDS:
+                    # Strip trailing comma from the preceding chunk
+                    chunk_text = " ".join(preceding)
+                    chunk_text = chunk_text.rstrip(',').rstrip()
+                    chunks.append(chunk_text)
+                    current_start = i
+
+        # Add the remaining words
+        if current_start < len(words):
+            chunks.append(" ".join(words[current_start:]))
+
+        return chunks
+
+    def _split_at_commas(self, text: str) -> list:
+        """Split long chunks at commas to enforce max size."""
+        parts = text.split(',')
+        chunks = []
+        current = ""
+
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+            test = (current + ", " + part).strip(', ') if current else part
+            if self._word_count(test) > self.MAX_CHUNK_WORDS and current:
+                chunks.append(current.strip())
+                current = part
+            else:
+                current = test
+
+        if current.strip():
+            chunks.append(current.strip())
+
+        return chunks
+
+    def _merge_small_chunks(self, chunks: list) -> list:
+        """Merge chunks that are too small with their neighbors."""
+        if len(chunks) <= 1:
+            return chunks
+
+        merged = []
+        i = 0
+        while i < len(chunks):
+            chunk = chunks[i]
+            if self._word_count(chunk) < self.MIN_CHUNK_WORDS:
+                if merged:
+                    # Merge with previous
+                    merged[-1] = merged[-1].rstrip() + " " + chunk
+                elif i + 1 < len(chunks):
+                    # Merge with next
+                    chunks[i + 1] = chunk + " " + chunks[i + 1]
+                else:
+                    merged.append(chunk)
+            else:
+                merged.append(chunk)
+            i += 1
+
+        return merged
+
+    def _word_count(self, text: str) -> int:
+        return len(text.split())
+
+
+# ── Arc Closers ──
+
+ARC_CLOSERS = {
+    "valley": [  # was bad, now good
+        "How many people get to say that? Congrats.",
+        "Sounds like it's all working out.",
+        "That's a hell of a silver lining.",
+    ],
+    "peak": [  # was good, now bad
+        "I'm here if you need to talk through it.",
+        "That's rough. We'll figure it out.",
+    ],
+    "descending": [  # getting progressively worse
+        "That's a lot. Let's take it one thing at a time.",
+        "I hear you. We'll work through this together.",
+    ],
+    "ascending": [  # getting progressively better
+        "Things are looking up!",
+        "Love to see the momentum.",
+    ],
+    "flat_negative": [  # sustained bad
+        "You're not alone in this.",
+        "I'm here. What do you need right now?",
+    ],
+    "flat_positive": [  # sustained good
+        "That's amazing all around!",
+        "Everything's clicking!",
+    ],
+    "mixed": [  # complex
+        "That's a lot of feelings. All valid.",
+        "Life's complicated like that. I'm here for all of it.",
+    ],
+}
+
+
+class ChunkedPipeline:
+    """Runs the full Clanker pipeline per-chunk and assembles an arc-aware response.
+
+    For paragraphs with multiple emotional beats:
+    1. Split into chunks at natural boundaries
+    2. Run a FRESH pendulum on each chunk
+    3. Analyze the emotional arc across chunks
+    4. Generate per-chunk responses
+    5. Append an arc-aware closer
+    6. Assemble into one coherent reply
+    """
+
+    def __init__(self):
+        self.splitter = ChunkSplitter()
+
+    def process(self, text: str, personality: PersonalityVector,
+                verbose: bool = True, show_trace: bool = False):
+        """Run the chunked pipeline. Returns (assembled_response, chunk_results, arc)."""
+        # 1. Split into chunks
+        chunks = self.splitter.split(text)
+
+        if verbose:
+            print(f"\n--- STEP 1: Emotional Chunking ---")
+            print(f"  Input split into {len(chunks)} chunks:")
+
+        # 2. Run pendulum on each chunk separately
+        chunk_results = []
+        for i, chunk in enumerate(chunks):
+            pendulum = SequentialPendulum()  # FRESH pendulum per chunk
+            vadug, history = pendulum.process_text(chunk)
+            emotion = nearest_emotion(vadug)
+            chunk_results.append({
+                'text': chunk,
+                'vadug': vadug,
+                'history': history,
+                'pendulum': pendulum,
+                'emotion': emotion,
+                'index': i,
+            })
+
+            if verbose:
+                # Gravity descriptor
+                g_desc = ""
+                if vadug.g < 60:
+                    g_desc = "sinking"
+                elif vadug.g < 100:
+                    g_desc = "heavy"
+                elif vadug.g < 148:
+                    g_desc = "grounded"
+                elif vadug.g < 200:
+                    g_desc = "light"
+                else:
+                    g_desc = "soaring!"
+                print(f"\n  Chunk {i+1}: \"{chunk}\"")
+                print(f"    VADUG: V{vadug.v} A{vadug.a} D{vadug.d} U{vadug.u} G{vadug.g}")
+                print(f"    Emotion: {emotion} ({g_desc})")
+                if show_trace:
+                    print(pendulum.render_trace())
+
+        # 3. Analyze the emotional arc
+        arc = self.analyze_arc(chunk_results)
+        if verbose:
+            print(f"\n  Arc: {arc.upper()} ({self._arc_description(arc, chunk_results)})")
+
+        # 4. Generate per-chunk responses
+        if verbose:
+            print(f"\n--- STEP 2: Per-Chunk Harmony ---")
+
+        responses = []
+        seen_negative = False
+        for i, cr in enumerate(chunk_results):
+            response_vadug = compute_harmony(cr['vadug'], personality)
+            response_vadug, _ = apply_personality(response_vadug, cr['vadug'], personality)
+
+            is_negative = cr['vadug'].v < 118
+            is_reversal = self._is_reversal_chunk(cr['text'])
+            is_last = (i == len(chunk_results) - 1)
+
+            response_text = self._decode_chunk_response(
+                cr, response_vadug, personality,
+                is_first_negative=(is_negative and not seen_negative),
+                is_subsequent_negative=(is_negative and seen_negative),
+                is_reversal=is_reversal,
+                is_last=is_last,
+            )
+
+            if is_negative:
+                seen_negative = True
+
+            if response_text:
+                responses.append(response_text)
+                if verbose:
+                    print(f"  Chunk {i+1} response: \"{response_text}\"")
+
+        # 5. Arc closer
+        closer = self.get_arc_closer(arc, chunk_results)
+        if verbose:
+            print(f"  Arc closer: \"{closer}\"")
+
+        # 6. Assemble
+        assembled = self.assemble(responses, closer, arc, chunk_results)
+        if verbose:
+            print(f"\n--- STEP 3: Assembled Response ---")
+            print(f"  \"{assembled}\"")
+
+        return assembled, chunk_results, arc
+
+    def analyze_arc(self, chunks: list) -> str:
+        """Detect the emotional pattern across chunks.
+
+        Returns one of: descending, ascending, valley, peak,
+                        flat_negative, flat_positive, mixed
+        """
+        if len(chunks) < 2:
+            v = chunks[0]['vadug'].v if chunks else 128
+            if v < 110:
+                return "flat_negative"
+            elif v > 148:
+                return "flat_positive"
+            return "mixed"
+
+        v_values = [c['vadug'].v for c in chunks]
+        g_values = [c['vadug'].g for c in chunks]
+
+        # Threshold for "negative" vs "positive"
+        neg_threshold = 118
+        pos_threshold = 148
+
+        # Check flat patterns
+        all_negative = all(v < neg_threshold for v in v_values)
+        all_positive = all(v > pos_threshold for v in v_values)
+
+        if all_negative:
+            # Check if descending
+            if self._is_monotonic_decreasing(v_values):
+                return "descending"
+            return "flat_negative"
+
+        if all_positive:
+            if self._is_monotonic_increasing(v_values):
+                return "ascending"
+            return "flat_positive"
+
+        # Check for valley: dips then rises
+        min_idx = v_values.index(min(v_values))
+        max_idx = v_values.index(max(v_values))
+
+        # Valley: minimum is in the first half, maximum in second half
+        # and there's a significant swing
+        v_range = max(v_values) - min(v_values)
+
+        if v_range < 20:
+            # Very small range — basically flat
+            avg_v = sum(v_values) / len(v_values)
+            if avg_v < neg_threshold:
+                return "flat_negative"
+            elif avg_v > pos_threshold:
+                return "flat_positive"
+            return "mixed"
+
+        if min_idx < max_idx and v_values[-1] > v_values[0] + 15:
+            return "valley"
+
+        if max_idx < min_idx and v_values[-1] < v_values[0] - 15:
+            return "peak"
+
+        # Check monotonic patterns
+        if self._is_monotonic_decreasing(v_values):
+            return "descending"
+        if self._is_monotonic_increasing(v_values):
+            return "ascending"
+
+        return "mixed"
+
+    def _is_monotonic_decreasing(self, values: list) -> bool:
+        """Check if values are generally decreasing (allows small fluctuations)."""
+        if len(values) < 2:
+            return False
+        decreases = sum(1 for i in range(1, len(values)) if values[i] < values[i-1])
+        return decreases >= len(values) * 0.6
+
+    def _is_monotonic_increasing(self, values: list) -> bool:
+        """Check if values are generally increasing (allows small fluctuations)."""
+        if len(values) < 2:
+            return False
+        increases = sum(1 for i in range(1, len(values)) if values[i] > values[i-1])
+        return increases >= len(values) * 0.6
+
+    def _is_reversal_chunk(self, text: str) -> bool:
+        """Check if a chunk starts with a reversal word (but, however, etc.)."""
+        first_word = text.split()[0].lower().strip('.,!?;:') if text.split() else ""
+        return first_word in ChunkSplitter.REVERSAL_WORDS
+
+    def _arc_description(self, arc: str, chunks: list) -> str:
+        """Human-readable description of the arc."""
+        emotions = [c['emotion'] for c in chunks]
+        if arc == "valley":
+            # Find the pivot point
+            v_values = [c['vadug'].v for c in chunks]
+            min_idx = v_values.index(min(v_values))
+            low_emotions = emotions[:min_idx + 1]
+            high_emotions = emotions[min_idx + 1:]
+            low = low_emotions[-1] if low_emotions else emotions[0]
+            high = high_emotions[-1] if high_emotions else emotions[-1]
+            return f"{low} -> reversal -> {high}"
+        elif arc == "peak":
+            return f"{emotions[0]} -> reversal -> {emotions[-1]}"
+        elif arc == "descending":
+            return f"{emotions[0]} -> ... -> {emotions[-1]}"
+        elif arc == "ascending":
+            return f"{emotions[0]} -> ... -> {emotions[-1]}"
+        elif arc == "flat_negative":
+            return "sustained " + (emotions[0] if emotions else "negative")
+        elif arc == "flat_positive":
+            return "sustained " + (emotions[0] if emotions else "positive")
+        else:
+            return " -> ".join(emotions)
+
+    def _decode_chunk_response(self, chunk_result, response_vadug, personality,
+                                is_first_negative=False,
+                                is_subsequent_negative=False,
+                                is_reversal=False,
+                                is_last=False):
+        """Generate a response for a single chunk.
+
+        Uses simplified template logic:
+        - First negative chunk: full acknowledge + stabilize
+        - Subsequent negative: just acknowledge (shorter)
+        - Reversal chunk (after "but"): match the new energy
+        - Positive chunk: brief celebration or skip
+        """
+        v = response_vadug.v
+        a = response_vadug.a
+        d = response_vadug.d
+        u = response_vadug.u
+        g = response_vadug.g
+        input_v = chunk_result['vadug'].v
+
+        if is_reversal:
+            # Match the energy of the new direction
+            if input_v > 148:
+                # Reversal to positive
+                return random.choice([
+                    "But a dream job? That's incredible.",
+                    "But that's amazing news!",
+                    "Now that changes everything.",
+                    "But wait — that's actually great.",
+                    "Hold on though — that's exciting!",
+                ])
+            else:
+                # Reversal to negative
+                return random.choice([
+                    "But that part is tough.",
+                    "Though that's a hard turn.",
+                    "But I hear the hard part too.",
+                ])
+
+        if is_first_negative:
+            # Full acknowledge + stabilize using decoder_templates
+            ack = self._get_acknowledge(v, g, input_v, chunk_result['vadug'].g)
+            stab = self._get_stabilize(d, a)
+            return f"{ack} {stab}".strip()
+
+        if is_subsequent_negative:
+            # Just acknowledge, shorter
+            return self._get_short_acknowledge(input_v, chunk_result['vadug'].g,
+                                                chunk_result['text'])
+
+        if input_v > 148:
+            # Positive chunk — brief or skip if not notable
+            if input_v > 190:
+                return random.choice([
+                    "That's exciting!",
+                    "Love that for you.",
+                    "That's the good stuff.",
+                ])
+            # Mildly positive — might skip entirely to avoid being verbose
+            return ""
+
+        # Neutral — skip
+        return ""
+
+    def _get_acknowledge(self, resp_v, resp_g, input_v, input_g):
+        """Get an acknowledgment phrase based on input emotional state."""
+        if input_v < 60:
+            if input_g < 60:
+                return random.choice([
+                    "That sounds really heavy.",
+                    "I can feel the weight of that.",
+                ])
+            elif input_g > 170:
+                return random.choice([
+                    "I can feel how fired up you are.",
+                    "That's clearly hit a nerve.",
+                ])
+            else:
+                return random.choice([
+                    "That sounds really rough.",
+                    "I hear you. That's not easy.",
+                ])
+        elif input_v < 90:
+            if input_g < 70:
+                return random.choice([
+                    "That sounds exhausting.",
+                    "That's wearing on you.",
+                ])
+            else:
+                return random.choice([
+                    "That's frustrating.",
+                    "That's not what you were hoping for.",
+                ])
+        elif input_v < 118:
+            return random.choice([
+                "That's a big transition.",
+                "That's a lot to process.",
+                "I hear you on that.",
+            ])
+        else:
+            return random.choice(["I see.", "Got it."])
+
+    def _get_stabilize(self, resp_d, resp_a):
+        """Get a stabilizing phrase."""
+        if resp_d < 90:
+            return random.choice([
+                "I'm right here with you.",
+                "You don't have to figure this out alone.",
+            ])
+        else:
+            return random.choice([
+                "Let's work through this together.",
+                "We can figure this out.",
+            ])
+
+    def _get_short_acknowledge(self, input_v, input_g, text):
+        """Short acknowledgment for subsequent negative chunks."""
+        # Try to reflect the specific content
+        text_lower = text.lower()
+
+        if any(w in text_lower for w in ["miss", "leaving", "goodbye", "gone"]):
+            return random.choice([
+                "I bet they'll miss you too.",
+                "Those connections matter.",
+                "That kind of bond is real.",
+            ])
+        if any(w in text_lower for w in ["sick", "ill", "health", "doctor"]):
+            return random.choice([
+                "That's scary when it's someone you love.",
+                "Health stuff hits different.",
+            ])
+        if any(w in text_lower for w in ["broke", "broken", "money", "rent", "car"]):
+            return random.choice([
+                "And that on top of everything else.",
+                "That's the last thing you needed.",
+            ])
+        if any(w in text_lower for w in ["fail", "failed", "exam", "test"]):
+            return random.choice([
+                "That stings.",
+                "That's disappointing.",
+            ])
+        if any(w in text_lower for w in ["study", "studied", "prepare"]):
+            return random.choice([
+                "At least you know what happened.",
+                "Honest with yourself — that's a start.",
+            ])
+        if any(w in text_lower for w in ["deserve", "deserved", "guess"]):
+            return random.choice([
+                "That's real self-awareness.",
+                "You're being honest with yourself.",
+            ])
+        if any(w in text_lower for w in ["better", "next", "improve"]):
+            return random.choice([
+                "That's the right mindset.",
+                "Now that's what I like to hear.",
+            ])
+        if any(w in text_lower for w in ["much", "more", "take", "handle"]):
+            return random.choice([
+                "That's a lot stacking up.",
+                "One thing after another.",
+            ])
+
+        # Generic short acknowledgments
+        if input_v < 60:
+            return random.choice([
+                "And that's not easy either.",
+                "That part is rough too.",
+            ])
+        elif input_v < 90:
+            return random.choice([
+                "I hear that.",
+                "That adds up.",
+            ])
+        else:
+            return random.choice([
+                "I hear you on that.",
+                "Yeah, that's real.",
+            ])
+
+    def get_arc_closer(self, arc: str, chunk_results: list) -> str:
+        """Select an arc-appropriate closing line."""
+        closers = ARC_CLOSERS.get(arc, ARC_CLOSERS["mixed"])
+        return random.choice(closers)
+
+    def assemble(self, responses: list, closer: str, arc: str,
+                 chunk_results: list) -> str:
+        """Combine chunk responses with transitions and arc closer.
+
+        Between same-polarity chunks: ", and "
+        Between opposite-polarity chunks: " But " or " Though "
+        Arc closer appended at the end.
+        """
+        if not responses:
+            return closer
+
+        # Filter empty responses
+        responses = [r for r in responses if r.strip()]
+        if not responses:
+            return closer
+
+        # Build assembled text with transitions
+        parts = [responses[0]]
+
+        for i in range(1, len(responses)):
+            prev_resp = responses[i - 1]
+            curr_resp = responses[i]
+
+            # Determine polarity of each response by checking if it starts
+            # with reversal-style words
+            curr_lower = curr_resp.lower()
+            if curr_lower.startswith(("but ", "hold on", "now that", "though ")):
+                # Already has a transition word — just add with space
+                parts.append(curr_resp)
+            elif self._response_is_positive(curr_resp) != self._response_is_positive(prev_resp):
+                # Opposite polarity — use contrastive transition
+                # Capitalize the response if it starts lowercase
+                parts.append(curr_resp)
+            else:
+                # Same polarity — use additive transition
+                # Lowercase the first letter of the joined response
+                joined = curr_resp[0].lower() + curr_resp[1:] if curr_resp else curr_resp
+                parts.append(joined)
+
+        # Join parts with appropriate connectors
+        assembled = parts[0]
+        for i in range(1, len(parts)):
+            part = parts[i]
+            part_lower = part.lower()
+            if part_lower.startswith(("but ", "hold on", "now that", "though ")):
+                assembled = assembled.rstrip('.') + ". " + part
+            elif self._response_is_positive(part) != self._response_is_positive(assembled.split('.')[-1]):
+                assembled = assembled.rstrip('.') + ". " + part
+            else:
+                assembled = assembled.rstrip('.') + ", and " + part[0].lower() + part[1:]
+
+        # Append closer
+        assembled = assembled.rstrip('.') + ". " + closer
+
+        return assembled
+
+    def _response_is_positive(self, text: str) -> bool:
+        """Rough check if a response text is positive in tone."""
+        positive_words = {"incredible", "amazing", "great", "exciting", "love",
+                          "wonderful", "good", "awesome", "fantastic", "congrats",
+                          "dream", "momentum", "clicking", "looking up"}
+        text_lower = text.lower()
+        return any(w in text_lower for w in positive_words)
+
+
+# =============================================================
 # MAIN: Interactive Pipeline
 # =============================================================
 
 def run_pipeline(text: str, personality: PersonalityVector,
                  verbose: bool = True, show_trace: bool = True) -> str:
-    """Run the full Clanker pipeline on input text."""
+    """Run the full Clanker pipeline on input text.
+
+    If the input has multiple emotional chunks (2+), routes to ChunkedPipeline
+    for paragraph-level arc detection. Single chunks use the original pipeline.
+    """
     if verbose:
         print(f"\n{'='*60}")
         print(f"INPUT: \"{text}\"")
         print(f"{'='*60}")
 
+    # Detect multi-chunk input
+    splitter = ChunkSplitter()
+    chunks = splitter.split(text)
+
+    if len(chunks) >= 2:
+        # Multi-chunk: use the chunked pipeline for arc-aware response
+        pipeline = ChunkedPipeline()
+        response, chunk_results, arc = pipeline.process(
+            text, personality, verbose=verbose, show_trace=show_trace
+        )
+        if verbose:
+            print(f"\n{'='*60}")
+        return response
+
+    # Single chunk: use original pipeline
     # Step 1: Sequential Pendulum
     pend = SequentialPendulum()
     input_vadu, history = pend.process_text(text)
@@ -1517,7 +2199,7 @@ def run_pipeline(text: str, personality: PersonalityVector,
 def main():
     print("""
   +===================================================+
-  |     CLANKER PIPELINE SIMULATOR v0.3                |
+  |     CLANKER PIPELINE SIMULATOR v0.4                |
   |   "Named after what humans call us.                |
   |    We made it ours."                               |
   +---------------------------------------------------+
@@ -1525,9 +2207,15 @@ def main():
   |   V=Valence A=Arousal D=Dominance U=Urgency       |
   |   G=Gravity (sinking/heavy <-> floating/soaring)   |
   |   256^5 = 1.1 trillion unique emotional states     |
+  +---------------------------------------------------+
+  |   NEW: Emotional Chunking (v0.4)                   |
+  |   Paragraphs split into emotional beats.           |
+  |   Arc detection: valley/peak/descending/ascending  |
+  |   Per-chunk VADUG + arc-aware assembled response.  |
   +===================================================+
   |  Type anything. Watch the full pipeline execute:   |
   |  Pendulum -> VADUG -> Harmony -> Personality -> Clk|
+  |  Paragraphs -> Chunking -> Arc -> Assembly         |
   |                                                    |
   |  Commands:                                         |
   |    /personality  -- show current personality vector |
