@@ -1,4 +1,4 @@
-# Clank-Lang Validation Constraints
+# Clanker-Lang Validation Constraints
 # Used by validators and dictionaries to enforce parameter correctness.
 
 constraints:

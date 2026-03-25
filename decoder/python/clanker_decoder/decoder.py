@@ -1,7 +1,7 @@
 """
-Clank-Lang Decoder — Core decoding logic.
+Clanker-Lang Decoder — Core decoding logic.
 
-Takes Clank text-format scripts (@ lines) and decodes them to any
+Takes Clanker text-format scripts (@ lines) and decodes them to any
 loaded dictionary language using template substitution.
 """
 
@@ -10,8 +10,8 @@ from typing import Optional
 from .loader import DictionaryLoader
 
 
-class ClankDecoder:
-    """Decodes Clank text-format scripts using dictionary lookup."""
+class ClankerDecoder:
+    """Decodes Clanker text-format scripts using dictionary lookup."""
 
     # Regex for parsing a Clank instruction line
     # Format: @ <opcode> <target> <src> <param_count> {key: "value"} ...
@@ -35,7 +35,7 @@ class ClankDecoder:
 
     def decode(self, clank_text: str, lang: str) -> str:
         """
-        Decode a Clank text-format script to the specified language.
+        Decode a Clanker text-format script to the specified language.
 
         Args:
             clank_text: Clank script as a string (lines starting with @).
@@ -160,7 +160,7 @@ _default_decoder = None
 
 def decode(clank_text: str, lang: str, loader: Optional[DictionaryLoader] = None) -> str:
     """
-    Decode a Clank text-format script to the specified language.
+    Decode a Clanker text-format script to the specified language.
 
     Convenience function that uses a module-level decoder instance.
 
@@ -174,9 +174,9 @@ def decode(clank_text: str, lang: str, loader: Optional[DictionaryLoader] = None
     """
     global _default_decoder
     if loader:
-        decoder = ClankDecoder(loader)
+        decoder = ClankerDecoder(loader)
         return decoder.decode(clank_text, lang)
 
     if _default_decoder is None:
-        _default_decoder = ClankDecoder()
+        _default_decoder = ClankerDecoder()
     return _default_decoder.decode(clank_text, lang)

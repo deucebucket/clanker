@@ -1,5 +1,5 @@
 """
-Clank-Lang Validator — Validates Clank scripts against opcode definitions.
+Clanker-Lang Validator — Validates Clanker scripts against opcode definitions.
 
 Checks for:
 - Valid opcode references
@@ -26,8 +26,8 @@ class ValidationError:
         return f"[{self.severity.upper()}] line {self.line_num}: {self.message}"
 
 
-class ClankValidator:
-    """Validates Clank text-format scripts."""
+class ClankerValidator:
+    """Validates Clanker text-format scripts."""
 
     INSTRUCTION_RE = re.compile(
         r'^@\s+(0x[0-9A-Fa-f]{2})\s+(\$[\d_]+)\s+(\$[\d_]+)\s+(\d{2})\s*(.*)?$'
@@ -71,7 +71,7 @@ class ClankValidator:
 
     def validate(self, clank_text: str) -> List[ValidationError]:
         """
-        Validate a Clank text-format script.
+        Validate a Clanker text-format script.
 
         Args:
             clank_text: The Clank script to validate.

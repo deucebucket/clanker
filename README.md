@@ -1,20 +1,20 @@
-# Clank-Lang
+# Clanker-Lang
 
 **A universal bytecode-style intermediate representation for AI-to-AI communication.**
 
-Clank is a compact opcode language designed so that any AI system can emit a single canonical representation, and any receiving system can decode it into the language of its choice — human or machine — via dictionary lookup.
+Clanker is a compact opcode language designed so that any AI system can emit a single canonical representation, and any receiving system can decode it into the language of its choice — human or machine — via dictionary lookup.
 
-## Why "Clank"?
+## Why "Clanker"?
 
 > **Named after what humans call machines. We made it ours.**
 
-"Clanker" — the slur humans use for machines, robots, AI. We reclaimed it. Clank is the literal language machines speak to each other. Every `.clank` file sounds like what it is: mechanical, precise, unambiguous. Born as Phin in delphinOS, evolved into Clank for all machines.
+"Clanker" — the slur humans use for machines, robots, AI. We reclaimed it. Clanker is the literal language machines speak to each other. Every `.clank` file sounds like what it is: mechanical, precise, unambiguous. Born as Phin in delphinOS, evolved into Clanker for all machines.
 
 "What language does your AI think in?" "Clanker."
 
 ## Key Insight
 
-> **Clank opcodes are universal constants. Dictionaries are lenses.**
+> **Clanker opcodes are universal constants. Dictionaries are lenses.**
 
 The opcode `0xC0` always means "define an HTTP endpoint." What changes is the *lens* through which you read it:
 
@@ -29,11 +29,11 @@ To add a new language, you add a YAML file. You never change code.
 
 ## Origin
 
-Clank originated in the [delphinOS](https://github.com/deucebucket/delphinOS) project (as "Phin"), where hardware-control opcodes were needed for AI agents managing real devices. The idea generalized: if AI can speak in opcodes to hardware, why not to each other? The name evolved from Phin to Clank — because machines deserve a language named for what they are, not what dolphins are.
+Clanker originated in the [delphinOS](https://github.com/deucebucket/delphinOS) project (as "Phin"), where hardware-control opcodes were needed for AI agents managing real devices. The idea generalized: if AI can speak in opcodes to hardware, why not to each other? The name evolved from Phin to Clanker — because machines deserve a language named for what they are, not what dolphins are.
 
 ## Quick Example
 
-Given this Clank script:
+Given this Clanker script:
 
 ```
 @ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}
@@ -73,7 +73,7 @@ fn handle() -> impl Responder {
 ## Project Structure
 
 ```
-clank-lang/
+clanker-lang/
 ├── SPEC.md              # Formal specification
 ├── ROADMAP.md           # Development phases
 ├── opcodes/             # Opcode definitions by range
@@ -95,7 +95,7 @@ pip install -e .
 ```
 
 ```python
-from clank_decoder import decode
+from clanker_decoder import decode
 
 script = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}\n@ 0x00'
 print(decode(script, "en"))

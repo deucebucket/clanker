@@ -1,4 +1,4 @@
-# Clank-Lang Composition Rules
+# Clanker-Lang Composition Rules
 # How opcodes compose into programs, nesting, and scope.
 
 blocks:

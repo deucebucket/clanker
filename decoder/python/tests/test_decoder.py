@@ -1,5 +1,5 @@
 """
-Tests for the Clank-Lang decoder.
+Tests for the Clanker-Lang decoder.
 
 Verifies that decoding works correctly for English, Chinese, and Python dictionaries.
 """
@@ -11,7 +11,7 @@ import pytest
 # Add the package to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from clank_decoder import decode, ClankDecoder, DictionaryLoader
+from clanker_decoder import decode, ClankerDecoder, DictionaryLoader
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def loader():
 @pytest.fixture
 def decoder(loader):
     """Create a decoder with the test loader."""
-    return ClankDecoder(loader)
+    return ClankerDecoder(loader)
 
 
 class TestDictionaryLoader:
@@ -83,7 +83,7 @@ class TestDictionaryLoader:
 
 
 class TestDecoder:
-    """Tests for the ClankDecoder."""
+    """Tests for the ClankerDecoder."""
 
     def test_nop_done_english(self, decoder):
         result = decoder.decode("@ 0x00", "en")
@@ -214,7 +214,7 @@ class TestConvenienceFunction:
 
 
 class TestFullScript:
-    """Tests for complete Clank scripts end-to-end."""
+    """Tests for complete Clanker scripts end-to-end."""
 
     def test_hello_world_english(self, decoder):
         clank = """@ 0x10 $_ $_ 01 {text: "Hello World example"}

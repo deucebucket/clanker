@@ -1,4 +1,4 @@
-# Clank-Lang Type System
+# Clanker-Lang Type System
 # Defines all valid parameter types for opcode definitions.
 
 types:

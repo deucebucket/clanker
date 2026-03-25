@@ -1,5 +1,5 @@
 """
-Dictionary loader for Clank-Lang.
+Dictionary loader for Clanker-Lang.
 
 Loads YAML dictionary files and caches them for repeated use.
 Searches standard dictionary paths relative to the project root.

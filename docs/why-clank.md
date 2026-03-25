@@ -43,7 +43,7 @@ Consider a simple web endpoint definition. In various representations:
 | English | "Define a GET endpoint at /health that returns 200 OK" = ~12 tokens | 52 bytes |
 | Python | `@app.route("/health", methods=["GET"])\ndef handle():\n    return "", 200` = ~20 tokens | 72 bytes |
 | JSON | `{"action": "endpoint", "method": "GET", "path": "/health", ...}` = ~18 tokens | 82 bytes |
-| Clank text | `@ 0xC0 $0 $1 02 {method: "GET"} {path: "/health"}\n@ 0xC1 $1 $2 01 {status: 200}` = ~16 tokens | 80 bytes |
+| Clanker text | `@ 0xC0 $0 $1 02 {method: "GET"} {path: "/health"}\n@ 0xC1 $1 $2 01 {status: 200}` = ~16 tokens | 80 bytes |
 | Clank binary | 10 bytes (2 instructions, raw encoding) | 10 bytes |
 
 The text format is competitive with natural language. The binary format is an order of magnitude smaller. For AI-to-AI communication where millions of messages flow, this adds up.

@@ -1,8 +1,8 @@
-# Clank-Lang Specification v0.1
+# Clanker-Lang Specification v0.1
 
 ## 1. Overview
 
-Clank is a bytecode-style intermediate representation for structured communication between AI systems. A Clank program is a sequence of instructions. Each instruction is an opcode with optional target, source, destination, and parameters. Clank programs can be decoded to any language (human or machine) via dictionary lookup.
+Clanker is a bytecode-style intermediate representation for structured communication between AI systems. A Clanker program is a sequence of instructions. Each instruction is an opcode with optional target, source, destination, and parameters. Clanker programs can be decoded to any language (human or machine) via dictionary lookup.
 
 ## 2. Instruction Encoding
 
@@ -62,7 +62,7 @@ Each parameter is type-tagged:
 
 ## 3. Variable Store
 
-Clank provides 32 variable slots: `$0` through `$31`.
+Clanker provides 32 variable slots: `$0` through `$31`.
 
 - Variables are **untyped** at the opcode level; the dictionary determines how they render.
 - Variables persist for the duration of the script execution.
@@ -152,20 +152,20 @@ dictionary_version: "1.0"
 
 ## 8. Magic Bytes
 
-Compiled Clank binary files begin with the magic bytes:
+Compiled Clanker binary files begin with the magic bytes:
 
 ```
 CLK\x01
 ```
 
-- `CLK` identifies the file as Clank bytecode.
+- `CLK` identifies the file as Clanker bytecode.
 - `\x01` is the binary format version.
 
 ## 9. Emotional Vector Encoding
 
 ### 9.1 Overview
 
-Every Clank instruction can optionally carry emotional context via a 4-byte Emotional Vector suffix. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
+Every Clanker instruction can optionally carry emotional context via a 4-byte Emotional Vector suffix. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
 
 ### 9.2 Format
 
@@ -212,7 +212,7 @@ To convert raw bytes to normalized floats:
 
 ### 9.6 Design Philosophy
 
-Every Clank expression can carry emotional context in just 4 bytes. This enables:
+Every Clanker expression can carry emotional context in just 4 bytes. This enables:
 
 - Sentiment-aware routing (escalate messages with high urgency + negative valence)
 - Emotional continuity across multi-agent conversations
@@ -240,15 +240,15 @@ emotion     = "![" "v:" int SP "a:" int SP "d:" int SP "u:" uint "]"
 
 ## 11. Conformance
 
-A conforming Clank decoder MUST:
+A conforming Clanker decoder MUST:
 
-1. Accept any valid text-format Clank program.
+1. Accept any valid text-format Clanker program.
 2. Load at least one dictionary.
 3. Produce output by substituting opcode parameters into dictionary templates.
 4. Reject opcodes not present in the loaded dictionary with a clear error.
 5. Validate parameter types against the opcode definition.
 
-A conforming Clank encoder MUST:
+A conforming Clanker encoder MUST:
 
 1. Emit only valid opcodes (defined in the spec or registered at runtime).
 2. Provide all required parameters for each opcode.

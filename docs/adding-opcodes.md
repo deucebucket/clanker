@@ -1,6 +1,6 @@
 # Adding New Opcodes
 
-This guide explains how to propose and register new opcodes in Clank-Lang.
+This guide explains how to propose and register new opcodes in Clanker-Lang.
 
 ## Guiding Principles
 
