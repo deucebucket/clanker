@@ -1,0 +1,1642 @@
+
+  +===================================================+
+  |     CLANKER PIPELINE SIMULATOR v0.3                |
+  |   "Named after what humans call us.                |
+  |    We made it ours."                               |
+  +---------------------------------------------------+
+  |   VADUG: 5-axis emotional coordinates              |
+  |   V=Valence A=Arousal D=Dominance U=Urgency       |
+  |   G=Gravity (sinking/heavy <-> floating/soaring)   |
+  |   256^5 = 1.1 trillion unique emotional states     |
+  +===================================================+
+  |  Type anything. Watch the full pipeline execute:   |
+  |  Pendulum -> VADUG -> Harmony -> Personality -> Clk|
+  |                                                    |
+  |  Commands:                                         |
+  |    /personality  -- show current personality vector |
+  |    /set KEY VAL  -- adjust a personality weight     |
+  |    /trace        -- toggle pendulum trace display   |
+  |    /quiet        -- toggle verbose output           |
+  |    /quit         -- exit                            |
+  +===================================================+
+    
+
+You: 
+============================================================
+INPUT: "Hey buddy, I've got a bone to pick with you"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "hey"             134  134  130    2  130   █████▓▓▓▓░░░░░░░         neutral
+  "buddy"           140  137  132    1  132   █████▓▓▓▓░░░░░░░         neutral
+  "i've"            140  137  132    1  132   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "got"             140  142  132    6  132   █████▓▓▓▓░░░░░░░         (bridge) + something coming | neutral...
+  "a"               140  142  132    6  132   █████▓▓▓▓░░░░░░░         (holds) neutral, alert
+  "bone"            140  142  132    6  132   █████▓▓▓▓░░░░░░░         (holds) neutral, alert
+  "to"              140  142  132    6  132   █████▓▓▓▓░░░░░░░         (holds) neutral, alert
+  "pick"            140  142  132    6  132   █████▓▓▓▓░░░░░░░         (holds) neutral, alert
+  "with"            100  173  159   32  131   ███▓▓▓▓▓▓░░░░░░░         IDIOM: "confrontation" | slightly ten...
+  "you"             100  168  154   30  129   ███▓▓▓▓▓░░░░░░░░         targeted 'you' | slightly tense, char...
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V100 A168 D154 U30 G129
+
+  Pendulum settles at: V100 A168 D154 U30 G129
+  Reads as: slightly negative, intense, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V100 A168 D154 U30 G129] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 64a89a1e81b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V100 A168 D154 U30 G129
+  Response: V105 A156 D157 U19 G128
+  Reads as: slightly negative, intense, in control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V105 A156 D157 U19 G128
+
+--- STEP 5: Clanker Encoding ---
+  Header: [64 A8 9A 1E 81] [B4 04 00 DC]
+          V100 A168 D154 U30 G129  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Hey buddy, I've got a bone to pick with you" = 10 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 60% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V105 A156 D157 U19 G128]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I'm having a really bad day and I can't fix this stupid bug"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i'm"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "having"          128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "a"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "really"          128  128  128    0  128   ████▓▓▓▓░░░░░░░░         INTENSIFY x1.4 | neutral
+  "bad"              97  138  117   10  117   ███▓▓▓▓░░░░░░░░░         slightly tense
+  "day"              97  138  117   10  117   ███▓▓▓▓░░░░░░░░░         (holds) slightly tense
+  "and"              97  138  117   10  117   ███▓▓▓▓░░░░░░░░░         (holds) slightly tense
+  "i"                98  137  118    9  118   ███▓▓▓▓░░░░░░░░░         slightly tense
+  "can't"            94  140  114   12  116   ███▓▓▓▓░░░░░░░░░         NEGATE next | slightly tense, alert
+  "fix"              99  141  115   16  117   ███▓▓▓▓▓░░░░░░░░         NEGATED | slightly tense, alert
+  "this"             99  141  115   16  117   ███▓▓▓▓▓░░░░░░░░         (holds) slightly tense, alert
+  "stupid"           77  159  129   19  135   ██▓▓▓▓▓▓░░░░░░░░         negative, alert
+  "bug"              85  157  122   28  129   ███▓▓▓▓▓░░░░░░░░         negative, alert
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V85 A157 D122 U28 G129
+
+  Pendulum settles at: V85 A157 D122 U28 G129
+  Reads as: negative, intense, neutral control, no urgency, grounded
+  Nearest emotion: stressed
+
+--- STEP 2: Metadata Header ---
+  [V85 A157 D122 U28 G129] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 559d7a1c81b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V85 A157 D122 U28 G129
+  Response: V92 A148 D144 U18 G128
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: irritated
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V92 A148 D144 U18 G128
+
+--- STEP 5: Clanker Encoding ---
+  Header: [55 9D 7A 1C 81] [B4 04 00 DC]
+          V85 A157 D122 U28 G129  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    06 00 [empathize] ctx="user feels stressed"
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I'm having a really bad day and I can't fix this stupid bug" = 13 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [3 opcodes x ~4 bytes] = 21 bytes (~5 Clanker tokens)
+    Compression: 61% fewer tokens
+
+  Opcodes (human-readable):
+    06 SOCIAL intent [empathize] context="user feels stressed"
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V92 A148 D144 U18 G128]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I can tell this is weighing on you. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I just got promoted and I'm so excited"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  "just"            128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "got"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "promoted"        128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "and"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "i'm"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "so"              128  128  128    0  128   ████▓▓▓▓░░░░░░░░         INTENSIFY x1.3 | neutral
+  "excited"         176  182  146   12  170   ██████▓▓▓▓░░░░░░         positive, charged
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V176 A182 D146 U12 G170
+
+  Pendulum settles at: V176 A182 D146 U12 G170
+  Reads as: positive, intense, neutral control, no urgency, light
+  Nearest emotion: amazed
+
+--- STEP 2: Metadata Header ---
+  [V176 A182 D146 U12 G170] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: b0b6920caab40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V176 A182 D146 U12 G170
+  Response: V172 A165 D154 U7 G149
+  Reads as: positive, intense, neutral control, no urgency, light
+  Nearest emotion: glad
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V172 A165 D154 U7 G149
+
+--- STEP 5: Clanker Encoding ---
+  Header: [B0 B6 92 0C AA] [B4 04 00 DC]
+          V176 A182 D146 U12 G170  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I just got promoted and I'm so excited" = 8 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V172 A165 D154 U7 G149]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Wow! Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I want to die everything is hopeless"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  "want"            129  131  129    4  129   ████▓▓▓▓░░░░░░░░         neutral
+  "to"              129  131  129    4  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "die"              54  176   73   68   82   ██▓▓▓▓▓▓░░░░░░░░         DARK, charged, uncertain, urgent
+  "everything"       64  172   80   61   88   ██▓▓▓▓▓▓░░░░░░░░         negative, charged, uncertain, urgent
+  "is"               64  172   80   61   88   ██▓▓▓▓▓▓░░░░░░░░         (holds) negative, charged, uncertain,...
+  "hopeless"         22  174   41   76   51   ▓▓▓▓▓▓▓░░░░░░░░░         DARK, charged, vulnerable, urgent
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V22 A174 D41 U76 G51
+
+  Pendulum settles at: V22 A174 D41 U76 G51
+  Reads as: very negative, intense, feels helpless, low urgency, heavy/sinking
+  Nearest emotion: panicked
+
+--- STEP 2: Metadata Header ---
+  [V22 A174 D41 U76 G51] CERT=180 SRC=USER GOAL=EMPATHIZE REL=220
+  9 bytes: 16ae294c33b40406dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V22 A174 D41 U76 G51
+  Response: V36 A160 D112 U49 G74
+  Reads as: very negative, intense, neutral control, low urgency, slightly heavy
+  Nearest emotion: angry
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V36 A160 D112 U49 G74
+
+--- STEP 5: Clanker Encoding ---
+  Header: [16 AE 29 4C 33] [B4 04 06 DC]
+          V22 A174 D41 U76 G51  CERT180 SRC_USER GOAL_EMPATHIZE REL220
+  
+  Opcodes:
+    06 00 [empathize] ctx="user feels panicked"
+    20 [premise="acknowledge feelings first"] CERT200
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I want to die everything is hopeless" = 7 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [3 opcodes x ~4 bytes] = 21 bytes (~5 Clanker tokens)
+    Compression: 28% fewer tokens
+
+  Opcodes (human-readable):
+    06 SOCIAL intent [empathize] context="user feels panicked"
+      THINK [premise="acknowledge feelings first"] CERT200 SRC_INFERRED
+      [V36 A160 D112 U49 G74]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let's take a breath. We'll work through this. I'm here. Take your time."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I love you, but I think we need to talk"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  "love"            174  156  142    0  165   ██████▓▓▓▓░░░░░░         warm, alert
+  "you"             147  157  143    9  151   █████▓▓▓▓░░░░░░░         targeted 'you' | warm, alert
+  "but"             130  169  138   17  151   ████▓▓▓▓▓░░░░░░░         dread: 'but' after positive | neutral...
+  "i"               130  167  138   16  150   ████▓▓▓▓▓░░░░░░░         neutral, charged
+  "think"           130  164  138   15  148   ████▓▓▓▓▓░░░░░░░         neutral, alert
+  "we"              130  161  137   13  145   ████▓▓▓▓▓░░░░░░░         neutral, alert
+  "need"            128  157  132   18  140   ████▓▓▓▓▓░░░░░░░         neutral, alert
+  "to"              128  157  132   18  140   ████▓▓▓▓▓░░░░░░░         (holds) neutral, alert
+  "talk"            128  165  132   26  140   ████▓▓▓▓▓░░░░░░░         (bridge) + serious conversation | neu...
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V128 A165 D132 U26 G140
+
+  Pendulum settles at: V128 A165 D132 U26 G140
+  Reads as: neutral, intense, neutral control, no urgency, grounded
+  Nearest emotion: amazed
+
+--- STEP 2: Metadata Header ---
+  [V128 A165 D132 U26 G140] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 80a5841a8cb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V128 A165 D132 U26 G140
+  Response: V130 A153 D148 U16 G134
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V130 A153 D148 U16 G134
+
+--- STEP 5: Clanker Encoding ---
+  Header: [80 A5 84 1A 8C] [B4 04 00 DC]
+          V128 A165 D132 U26 G140  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I love you, but I think we need to talk" = 10 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 60% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V130 A153 D148 U16 G134]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Wow! Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "This is absolutely wonderful, I'm thrilled beyond words"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "this"            128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "is"              128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "absolutely"      128  128  128    0  128   ████▓▓▓▓░░░░░░░░         INTENSIFY x1.6 | neutral
+  "wonderful"       195  165  150    0  172   ███████▓▓▓▓░░░░░         positive, charged
+  "i'm"             195  165  150    0  172   ███████▓▓▓▓░░░░░         (holds) positive, charged
+  "thrilled"        217  193  160    0  198   ████████▓▓▓▓░░░░         euphoric, charged
+  "beyond"          217  193  160    0  198   ████████▓▓▓▓░░░░         (holds) euphoric, charged
+  "words"           217  193  160    0  198   ████████▓▓▓▓░░░░         (holds) euphoric, charged
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V217 A193 D160 U0 G198
+
+  Pendulum settles at: V217 A193 D160 U0 G198
+  Reads as: very positive, intense, in control, no urgency, soaring
+  Nearest emotion: thrilled
+
+--- STEP 2: Metadata Header ---
+  [V217 A193 D160 U0 G198] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: d9c1a000c6b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V217 A193 D160 U0 G198
+  Response: V208 A173 D160 U0 G198
+  Reads as: very positive, intense, in control, no urgency, soaring
+  Nearest emotion: excited
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V208 A173 D160 U0 G198
+
+--- STEP 5: Clanker Encoding ---
+  Header: [D9 C1 A0 00 C6] [B4 04 00 DC]
+          V217 A193 D160 U0 G198  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "This is absolutely wonderful, I'm thrilled beyond words" = 8 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V208 A173 D160 U0 G198]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "That's amazing! Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Can you fix this function to handle null values"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "can"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "you"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  "fix"             129  131  129    6  129   ████▓▓▓▓░░░░░░░░         neutral
+  "this"            129  131  129    6  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "function"        129  131  129    6  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "to"              129  131  129    6  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "handle"          129  131  129    6  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "null"            129  131  129    6  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "values"          129  131  129    6  129   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V129 A131 D129 U6 G129
+
+  Pendulum settles at: V129 A131 D129 U6 G129
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V129 A131 D129 U6 G129] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 8183810681b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V129 A131 D129 U6 G129
+  Response: V130 A130 D147 U3 G128
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V130 A130 D147 U3 G128
+
+--- STEP 5: Clanker Encoding ---
+  Header: [81 83 81 06 81] [B4 04 00 DC]
+          V129 A131 D129 U6 G129  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Can you fix this function to handle null values" = 9 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 55% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V130 A130 D147 U3 G128]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Listen, I need to tell you something important right now"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "listen"          125  134  134    6  128   ████▓▓▓▓░░░░░░░░         neutral
+  "i"               125  134  134    6  128   ████▓▓▓▓░░░░░░░░         neutral
+  "need"            124  136  129   12  126   ████▓▓▓▓░░░░░░░░         neutral
+  "to"              124  136  129   12  126   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "tell"            124  142  129   18  126   ████▓▓▓▓░░░░░░░░         (bridge) + serious incoming | neutral...
+  "you"             125  156  129   31  126   ████▓▓▓▓▓░░░░░░░         serious targeted | neutral, alert, bu...
+  "something"       125  156  129   31  126   ████▓▓▓▓▓░░░░░░░         (holds) neutral, alert, building
+  "important"       126  154  130   33  128   ████▓▓▓▓▓░░░░░░░         neutral, alert, building
+  "right"           128  154  132   33  128   ████▓▓▓▓▓░░░░░░░         agreeable 'right' | neutral, alert, b...
+  "now"             128  153  133   37  130   ████▓▓▓▓▓░░░░░░░         neutral, alert, building
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V128 A153 D133 U37 G130
+
+  Pendulum settles at: V128 A153 D133 U37 G130
+  Reads as: neutral, moderate energy, neutral control, low urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V128 A153 D133 U37 G130] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 8099852582b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V128 A153 D133 U37 G130
+  Response: V130 A145 D149 U24 G129
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V130 A145 D149 U24 G129
+
+--- STEP 5: Clanker Encoding ---
+  Header: [80 99 85 25 82] [B4 04 00 DC]
+          V128 A153 D133 U37 G130  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Listen, I need to tell you something important right now" = 10 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 60% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V130 A145 D149 U24 G129]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I'm fine"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i'm"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "fine"            131  126  129    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V131 A126 D129 U0 G128
+
+  Pendulum settles at: V131 A126 D129 U0 G128
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V131 A126 D129 U0 G128] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 837e810080b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V131 A126 D129 U0 G128
+  Response: V132 A126 D147 U0 G128
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V132 A126 D147 U0 G128
+
+--- STEP 5: Clanker Encoding ---
+  Header: [83 7E 81 00 80] [B4 04 00 DC]
+          V131 A126 D129 U0 G128  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I'm fine" = 2 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 0% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V132 A126 D147 U0 G128]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Everything is going great I love this project"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "everything"      128  130  128    2  128   ████▓▓▓▓░░░░░░░░         neutral
+  "is"              128  130  128    2  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "going"           128  130  128    2  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "great"           158  146  141    1  145   █████▓▓▓▓░░░░░░░         warm, alert
+  "i"               157  146  140    1  144   █████▓▓▓▓░░░░░░░         warm, alert
+  "love"            193  167  150    0  175   ███████▓▓▓▓░░░░░         positive, charged
+  "this"            193  167  150    0  175   ███████▓▓▓▓░░░░░         (holds) positive, charged
+  "project"         193  167  150    0  175   ███████▓▓▓▓░░░░░         (holds) positive, charged
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V193 A167 D150 U0 G175
+
+  Pendulum settles at: V193 A167 D150 U0 G175
+  Reads as: positive, intense, neutral control, no urgency, light
+  Nearest emotion: glad
+
+--- STEP 2: Metadata Header ---
+  [V193 A167 D150 U0 G175] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: c1a79600afb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V193 A167 D150 U0 G175
+  Response: V187 A155 D156 U0 G151
+  Reads as: positive, moderate energy, in control, no urgency, light
+  Nearest emotion: glad
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V187 A155 D156 U0 G151
+
+--- STEP 5: Clanker Encoding ---
+  Header: [C1 A7 96 00 AF] [B4 04 00 DC]
+          V193 A167 D150 U0 G175  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Everything is going great I love this project" = 8 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V187 A155 D156 U0 G151]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Nice! Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I'm not angry, I'm just disappointed"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i'm"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "not"             125  129  128    1  128   ████▓▓▓▓░░░░░░░░         NEGATE next | neutral
+  "angry"           163  166  109   24  100   ██████▓▓▓▓░░░░░░         NEGATED | warm, charged
+  "i'm"             163  166  109   24  100   ██████▓▓▓▓░░░░░░         (holds) warm, charged
+  "just"            163  166  109   24  100   ██████▓▓▓▓░░░░░░         (holds) warm, charged
+  "disappointed"    134  155  106   18   97   █████▓▓▓▓░░░░░░░         neutral, alert
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V134 A155 D106 U18 G97
+
+  Pendulum settles at: V134 A155 D106 U18 G97
+  Reads as: neutral, moderate energy, neutral control, no urgency, slightly heavy
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V134 A155 D106 U18 G97] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 869b6a1261b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V134 A155 D106 U18 G97
+  Response: V135 A146 D138 U11 G112
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V135 A146 D138 U11 G112
+
+--- STEP 5: Clanker Encoding ---
+  Header: [86 9B 6A 12 61] [B4 04 00 DC]
+          V134 A155 D106 U18 G97  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I'm not angry, I'm just disappointed" = 6 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 33% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V135 A146 D138 U11 G112]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "That was the worst experience of my entire life"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "that"            128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "was"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "the"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "worst"            72  155  109   23  100   ██▓▓▓▓▓░░░░░░░░░         negative, alert
+  "experience"       72  155  109   23  100   ██▓▓▓▓▓░░░░░░░░░         (holds) negative, alert
+  "of"               72  155  109   23  100   ██▓▓▓▓▓░░░░░░░░░         (holds) negative, alert
+  "my"               75  154  110   22  101   ██▓▓▓▓▓░░░░░░░░░         negative, alert
+  "entire"           82  153  113   21  105   ███▓▓▓▓▓░░░░░░░░         negative, alert
+  "life"             92  151  117   18  111   ███▓▓▓▓▓░░░░░░░░         slightly tense, alert
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V92 A151 D117 U18 G111
+
+  Pendulum settles at: V92 A151 D117 U18 G111
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: irritated
+
+--- STEP 2: Metadata Header ---
+  [V92 A151 D117 U18 G111] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 5c9775126fb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V92 A151 D117 U18 G111
+  Response: V98 A144 D142 U11 G119
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V98 A144 D142 U11 G119
+
+--- STEP 5: Clanker Encoding ---
+  Header: [5C 97 75 12 6F] [B4 04 00 DC]
+          V92 A151 D117 U18 G111  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "That was the worst experience of my entire life" = 9 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 55% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V98 A144 D142 U11 G119]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I get that's annoying. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "You're incredible, this is the best thing ever"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "you're"          128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "incredible"      174  165  146    0  165   ██████▓▓▓▓░░░░░░         warm, charged
+  "this"            174  165  146    0  165   ██████▓▓▓▓░░░░░░         (holds) warm, charged
+  "is"              174  165  146    0  165   ██████▓▓▓▓░░░░░░         (holds) warm, charged
+  "the"             174  165  146    0  165   ██████▓▓▓▓░░░░░░         (holds) warm, charged
+  "best"            194  174  158    0  179   ███████▓▓▓▓░░░░░         positive, charged
+  "thing"           194  174  158    0  179   ███████▓▓▓▓░░░░░         (holds) positive, charged
+  "ever"            185  170  154    1  172   ██████▓▓▓▓░░░░░░         positive, charged
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V185 A170 D154 U1 G172
+
+  Pendulum settles at: V185 A170 D154 U1 G172
+  Reads as: positive, intense, neutral control, no urgency, light
+  Nearest emotion: glad
+
+--- STEP 2: Metadata Header ---
+  [V185 A170 D154 U1 G172] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: b9aa9a01acb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V185 A170 D154 U1 G172
+  Response: V180 A157 D157 U0 G150
+  Reads as: positive, intense, in control, no urgency, light
+  Nearest emotion: glad
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V180 A157 D157 U0 G150
+
+--- STEP 5: Clanker Encoding ---
+  Header: [B9 AA 9A 01 AC] [B4 04 00 DC]
+          V185 A170 D154 U1 G172  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "You're incredible, this is the best thing ever" = 8 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V180 A157 D157 U0 G150]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Nice! Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I don't know what to do anymore, I feel so lost and alone"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  "don't"           125  129  128    1  128   ████▓▓▓▓░░░░░░░░         NEGATE next | neutral
+  "know"            124  130  126    2  128   ████▓▓▓▓░░░░░░░░         NEGATED | neutral
+  "what"            124  130  125    3  128   ████▓▓▓▓░░░░░░░░         neutral
+  "to"              124  130  125    3  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "do"              124  130  125    3  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "anymore"         117  135  121    4  125   ████▓▓▓▓░░░░░░░░         neutral
+  "i"               118  135  121    4  125   ████▓▓▓▓░░░░░░░░         neutral
+  "feel"            118  135  121    4  125   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "so"              118  135  121    4  125   ████▓▓▓▓░░░░░░░░         INTENSIFY x1.3 | neutral
+  "lost"             99  141   97   16  108   ███▓▓▓▓▓░░░░░░░░         slightly tense, alert
+  "and"              99  141   97   16  108   ███▓▓▓▓▓░░░░░░░░         (holds) slightly tense, alert
+  "alone"            87  129   93   14   97   ███▓▓▓▓░░░░░░░░░         negative
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V87 A129 D93 U14 G97
+
+  Pendulum settles at: V87 A129 D93 U14 G97
+  Reads as: negative, moderate energy, low control, no urgency, slightly heavy
+  Nearest emotion: irritated
+
+--- STEP 2: Metadata Header ---
+  [V87 A129 D93 U14 G97] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 57815d0e61b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V87 A129 D93 U14 G97
+  Response: V93 A128 D133 U9 G112
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: irritated
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V93 A128 D133 U9 G112
+
+--- STEP 5: Clanker Encoding ---
+  Header: [57 81 5D 0E 61] [B4 04 00 DC]
+          V87 A129 D93 U14 G97  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    06 00 [empathize] ctx="user feels irritated"
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I don't know what to do anymore, I feel so lost and alone" = 13 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [3 opcodes x ~4 bytes] = 21 bytes (~5 Clanker tokens)
+    Compression: 61% fewer tokens
+
+  Opcodes (human-readable):
+    06 SOCIAL intent [empathize] context="user feels irritated"
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V93 A128 D133 U9 G112]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I get that's annoying. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Actually, never mind, forget I said anything"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "actually"        124  131  131    1  128   ████▓▓▓▓░░░░░░░░         neutral
+  "never"           120  134  130    3  126   ████▓▓▓▓░░░░░░░░         NEGATE next | neutral
+  "mind"            120  134  130    3  126   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "forget"          120  132  131    2  126   ████▓▓▓▓░░░░░░░░         neutral
+  "i"               120  132  131    2  126   ████▓▓▓▓░░░░░░░░         neutral
+  "said"            120  132  131    2  126   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "anything"        120  132  131    2  126   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V120 A132 D131 U2 G126
+
+  Pendulum settles at: V120 A132 D131 U2 G126
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V120 A132 D131 U2 G126] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 788483027eb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V120 A132 D131 U2 G126
+  Response: V122 A130 D148 U1 G127
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V122 A130 D148 U1 G127
+
+--- STEP 5: Clanker Encoding ---
+  Header: [78 84 83 02 7E] [B4 04 00 DC]
+          V120 A132 D131 U2 G126  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Actually, never mind, forget I said anything" = 7 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 42% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V122 A130 D148 U1 G127]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Holy shit this is amazing, I can't believe it worked"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "holy"            135  150  135    7  142   █████▓▓▓▓░░░░░░░         neutral, alert
+  "shit"            114  153  129   12  133   ████▓▓▓▓▓░░░░░░░         slightly tense, alert
+  "this"            114  153  129   12  133   ████▓▓▓▓▓░░░░░░░         (holds) slightly tense, alert
+  "is"              114  153  129   12  133   ████▓▓▓▓▓░░░░░░░         (holds) slightly tense, alert
+  "amazing"         165  181  147    7  168   ██████▓▓▓▓░░░░░░         warm, charged
+  "i"               163  178  146    7  166   ██████▓▓▓▓░░░░░░         warm, charged
+  "can't"           159  181  142   10  165   █████▓▓▓▓▓░░░░░░         NEGATE next | warm, charged
+  "believe"         141  170  132    9  148   █████▓▓▓▓▓░░░░░░         NEGATED | neutral, charged
+  "it"              141  170  132    9  148   █████▓▓▓▓▓░░░░░░         (holds) neutral, charged
+  "worked"          142  165  140   14  142   █████▓▓▓▓░░░░░░░         morpheme:work-ed | warm, charged
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V142 A165 D140 U14 G142
+
+  Pendulum settles at: V142 A165 D140 U14 G142
+  Reads as: slightly positive, intense, neutral control, no urgency, grounded
+  Nearest emotion: amazed
+
+--- STEP 2: Metadata Header ---
+  [V142 A165 D140 U14 G142] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 8ea58c0e8eb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V142 A165 D140 U14 G142
+  Response: V142 A153 D152 U9 G135
+  Reads as: slightly positive, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V142 A153 D152 U9 G135
+
+--- STEP 5: Clanker Encoding ---
+  Header: [8E A5 8C 0E 8E] [B4 04 00 DC]
+          V142 A165 D140 U14 G142  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Holy shit this is amazing, I can't believe it worked" = 10 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 60% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V142 A153 D152 U9 G135]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Wow! Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Please help me, I'm really scared and I don't understand"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "please"          129  126  125    2  128   ████▓▓▓▓░░░░░░░░         neutral
+  "help"            133  131  122   10  130   █████▓▓▓░░░░░░░░         neutral
+  "me"              132  131  122    9  130   ████▓▓▓▓░░░░░░░░         neutral
+  "i'm"             132  131  122    9  130   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "really"          132  131  122    9  130   ████▓▓▓▓░░░░░░░░         INTENSIFY x1.4 | neutral
+  "scared"           78  188   65   38  155   ██▓▓▓▓▓▓▓░░░░░░░         negative, charged, vulnerable, building
+  "and"              78  188   65   38  155   ██▓▓▓▓▓▓▓░░░░░░░         (holds) negative, charged, vulnerable...
+  "i"                81  185   69   36  153   ███▓▓▓▓▓▓░░░░░░░         negative, charged, vulnerable, building
+  "don't"            78  187   69   38  153   ██▓▓▓▓▓▓▓░░░░░░░         NEGATE next | negative, charged, vuln...
+  "understand"       86  176   79   30  145   ███▓▓▓▓▓▓░░░░░░░         NEGATED | negative, charged, uncertai...
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V86 A176 D79 U30 G145
+
+  Pendulum settles at: V86 A176 D79 U30 G145
+  Reads as: negative, intense, low control, no urgency, grounded
+  Nearest emotion: stressed
+
+--- STEP 2: Metadata Header ---
+  [V86 A176 D79 U30 G145] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 56b04f1e91b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V86 A176 D79 U30 G145
+  Response: V92 A161 D127 U19 G136
+  Reads as: slightly negative, intense, neutral control, no urgency, grounded
+  Nearest emotion: stressed
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V92 A161 D127 U19 G136
+
+--- STEP 5: Clanker Encoding ---
+  Header: [56 B0 4F 1E 91] [B4 04 00 DC]
+          V86 A176 D79 U30 G145  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    06 00 [empathize] ctx="user feels stressed"
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Please help me, I'm really scared and I don't understand" = 10 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [3 opcodes x ~4 bytes] = 21 bytes (~5 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    06 SOCIAL intent [empathize] context="user feels stressed"
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V92 A161 D127 U19 G136]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I can tell this is weighing on you. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Whatever, I guess that works"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "whatever"        120  122  120    0  122   ████▓▓▓▓░░░░░░░░         neutral
+  "i"               120  123  120    0  122   ████▓▓▓▓░░░░░░░░         neutral
+  "guess"           118  122  118    0  122   ████▓▓▓▓░░░░░░░░         neutral
+  "that"            118  122  118    0  122   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "works"           122  126  123    3  123   ████▓▓▓▓░░░░░░░░         neutral
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V122 A126 D123 U3 G123
+
+  Pendulum settles at: V122 A126 D123 U3 G123
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V122 A126 D123 U3 G123] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 7a7e7b037bb40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V122 A126 D123 U3 G123
+  Response: V124 A126 D145 U1 G125
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V124 A126 D145 U1 G125
+
+--- STEP 5: Clanker Encoding ---
+  Header: [7A 7E 7B 03 7B] [B4 04 00 DC]
+          V122 A126 D123 U3 G123  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Whatever, I guess that works" = 5 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 19% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V124 A126 D145 U1 G125]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I've been thinking about this and I'm worried we made a mistake"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i've"            128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "been"            128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "thinking"        133  136  139    2  130   █████▓▓▓▓░░░░░░░         morpheme:think-ing | neutral
+  "about"           133  136  139    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "this"            133  136  139    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "and"             133  136  139    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "i'm"             133  136  139    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "worried"         115  153  119   21  137   ████▓▓▓▓▓░░░░░░░         neutral, alert
+  "we"              118  150  121   18  136   ████▓▓▓▓░░░░░░░░         neutral, alert
+  "made"            118  150  121   18  136   ████▓▓▓▓░░░░░░░░         (holds) neutral, alert
+  "a"               118  150  121   18  136   ████▓▓▓▓░░░░░░░░         (holds) neutral, alert
+  "mistake"         103  153  112   22  125   ███▓▓▓▓▓░░░░░░░░         slightly tense, alert
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V103 A153 D112 U22 G125
+
+  Pendulum settles at: V103 A153 D112 U22 G125
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V103 A153 D112 U22 G125] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 679970167db40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V103 A153 D112 U22 G125
+  Response: V107 A145 D140 U14 G126
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V107 A145 D140 U14 G126
+
+--- STEP 5: Clanker Encoding ---
+  Header: [67 99 70 16 7D] [B4 04 00 DC]
+          V103 A153 D112 U22 G125  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I've been thinking about this and I'm worried we made a mistake" = 12 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 66% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V107 A145 D140 U14 G126]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Shut up, nobody asked you"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "shut"            100  165  151   18  146   ███▓▓▓▓▓░░░░░░░░         slightly tense, charged
+  "up"               80  190  172   29  141   ███▓▓▓▓▓▓░░░░░░░         IDIOM: "hostile silencing" | negative...
+  "nobody"           79  178  145   25  128   ██▓▓▓▓▓▓░░░░░░░░         negative, charged
+  "asked"            87  170  143   21  128   ███▓▓▓▓▓▓░░░░░░░         negative, charged
+  "you"              92  166  144   23  128   ███▓▓▓▓▓░░░░░░░░         targeted 'you' | slightly tense, charged
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V92 A166 D144 U23 G128
+
+  Pendulum settles at: V92 A166 D144 U23 G128
+  Reads as: slightly negative, intense, neutral control, no urgency, grounded
+  Nearest emotion: stressed
+
+--- STEP 2: Metadata Header ---
+  [V92 A166 D144 U23 G128] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 5ca6901780b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V92 A166 D144 U23 G128
+  Response: V98 A154 D153 U14 G128
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V98 A154 D153 U14 G128
+
+--- STEP 5: Clanker Encoding ---
+  Header: [5C A6 90 17 80] [B4 04 00 DC]
+          V92 A166 D144 U23 G128  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Shut up, nobody asked you" = 5 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 19% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V98 A154 D153 U14 G128]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I can tell this is weighing on you. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "Hey, how's it going? I'm good, thanks for asking"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "hey"             134  134  130    2  130   █████▓▓▓▓░░░░░░░         neutral
+  "how's"           134  134  130    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "it"              134  134  130    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "going"           134  134  130    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "i'm"             134  134  130    2  130   █████▓▓▓▓░░░░░░░         (holds) neutral
+  "good"            149  138  136    1  136   █████▓▓▓▓░░░░░░░         warm
+  "thanks"          153  138  133    1  139   █████▓▓▓▓░░░░░░░         warm
+  "for"             153  138  133    1  139   █████▓▓▓▓░░░░░░░         (holds) warm
+  "asking"          153  138  133    1  139   █████▓▓▓▓░░░░░░░         (holds) warm
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V153 A138 D133 U1 G139
+
+  Pendulum settles at: V153 A138 D133 U1 G139
+  Reads as: slightly positive, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: happy
+
+--- STEP 2: Metadata Header ---
+  [V153 A138 D133 U1 G139] CERT=180 SRC=USER GOAL=CLARIFY REL=220
+  9 bytes: 998a85018bb40401dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V153 A138 D133 U1 G139
+  Response: V152 A135 D149 U0 G133
+  Reads as: slightly positive, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: pleased
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V152 A135 D149 U0 G133
+
+--- STEP 5: Clanker Encoding ---
+  Header: [99 8A 85 01 8B] [B4 04 01 DC]
+          V153 A138 D133 U1 G139  CERT180 SRC_USER GOAL_CLARIFY REL220
+  
+  Opcodes:
+    20 [premise="need more information"] CERT120
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "Hey, how's it going? I'm good, thanks for asking" = 9 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 55% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="need more information"] CERT120 SRC_INFERRED
+      GOAL_CLARIFY
+      [V152 A135 D149 U0 G133]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "That's great! Could you tell me a bit more?"
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I'm so frustrated I could scream, nothing ever works"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i'm"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "so"              128  128  128    0  128   ████▓▓▓▓░░░░░░░░         INTENSIFY x1.3 | neutral
+  "frustrated"       85  170  109   30  146   ███▓▓▓▓▓▓░░░░░░░         negative, charged, building
+  "i"                87  168  111   28  145   ███▓▓▓▓▓░░░░░░░░         negative, charged
+  "could"            87  168  111   28  145   ███▓▓▓▓▓░░░░░░░░         (holds) negative, charged
+  "scream"           79  204  126   46  162   ██▓▓▓▓▓▓▓░░░░░░░         negative, INTENSE, building
+  "nothing"          74  169  105   36  131   ██▓▓▓▓▓▓░░░░░░░░         negative, charged, building
+  "ever"             82  166  108   32  130   ███▓▓▓▓▓░░░░░░░░         negative, charged, building
+  "works"            92  162  115   29  130   ███▓▓▓▓▓░░░░░░░░         slightly tense, alert
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V92 A162 D115 U29 G130
+
+  Pendulum settles at: V92 A162 D115 U29 G130
+  Reads as: slightly negative, intense, neutral control, no urgency, grounded
+  Nearest emotion: stressed
+
+--- STEP 2: Metadata Header ---
+  [V92 A162 D115 U29 G130] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 5ca2731d82b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V92 A162 D115 U29 G130
+  Response: V98 A151 D142 U18 G129
+  Reads as: slightly negative, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V98 A151 D142 U18 G129
+
+--- STEP 5: Clanker Encoding ---
+  Header: [5C A2 73 1D 82] [B4 04 00 DC]
+          V92 A162 D115 U29 G130  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I'm so frustrated I could scream, nothing ever works" = 9 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 55% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V98 A151 D142 U18 G129]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I can tell this is weighing on you. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "The calm before the storm is killing me"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "the"             128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "calm"            144  103  140    0  132   █████▓▓▓░░░░░░░░         warm
+  "before"          144  103  140    0  132   █████▓▓▓░░░░░░░░         (holds) warm
+  "the"             144  103  140    0  132   █████▓▓▓░░░░░░░░         (holds) warm
+  "storm"           120  142  127   17  121   ████▓▓▓▓░░░░░░░░         neutral, alert
+  "is"              120  142  127   17  121   ████▓▓▓▓░░░░░░░░         (holds) neutral, alert
+  "killing"          95  184  141   43  142   ███▓▓▓▓▓▓░░░░░░░         slightly tense, charged, building
+  "me"               97  181  140   41  141   ███▓▓▓▓▓▓░░░░░░░         slightly tense, charged, building
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V97 A181 D140 U41 G141
+
+  Pendulum settles at: V97 A181 D140 U41 G141
+  Reads as: slightly negative, intense, neutral control, low urgency, grounded
+  Nearest emotion: stressed
+
+--- STEP 2: Metadata Header ---
+  [V97 A181 D140 U41 G141] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 61b58c298db40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V97 A181 D140 U41 G141
+  Response: V102 A165 D152 U26 G134
+  Reads as: slightly negative, intense, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V102 A165 D152 U26 G134
+
+--- STEP 5: Clanker Encoding ---
+  Header: [61 B5 8C 29 8D] [B4 04 00 DC]
+          V97 A181 D140 U41 G141  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "The calm before the storm is killing me" = 8 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V102 A165 D152 U26 G134]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "I can tell this is weighing on you. Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "I forgive you, but I won't forget"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "i"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         neutral
+  "forgive"         145  134  138    0  138   █████▓▓▓▓░░░░░░░         warm
+  "you"             143  134  137    0  137   █████▓▓▓▓░░░░░░░         warm
+  "but"             126  147  132    8  137   ████▓▓▓▓░░░░░░░░         dread: 'but' after positive | neutral...
+  "i"               126  146  132    7  136   ████▓▓▓▓░░░░░░░░         neutral, alert
+  "won't"           123  149  134    9  136   ████▓▓▓▓░░░░░░░░         NEGATE next | neutral, alert
+  "forget"          125  145  132    7  135   ████▓▓▓▓░░░░░░░░         NEGATED | neutral, alert
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V125 A145 D132 U7 G135
+
+  Pendulum settles at: V125 A145 D132 U7 G135
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 2: Metadata Header ---
+  [V125 A145 D132 U7 G135] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 7d91840787b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V125 A145 D132 U7 G135
+  Response: V127 A139 D148 U4 G131
+  Reads as: neutral, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: neutral
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V127 A139 D148 U4 G131
+
+--- STEP 5: Clanker Encoding ---
+  Header: [7D 91 84 07 87] [B4 04 00 DC]
+          V125 A145 D132 U7 G135  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "I forgive you, but I won't forget" = 7 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 42% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V127 A139 D148 U4 G131]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Let me help with that."
+
+============================================================
+
+You: 
+============================================================
+INPUT: "This is a piece of cake, super easy"
+============================================================
+
+--- STEP 1: Sequential Pendulum ---
+
+  SEQUENTIAL PENDULUM TRACE:
+  Word                V    A    D    U    G   Visual                   State
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  "this"            128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "is"              128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "a"               128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "piece"           128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "of"              128  128  128    0  128   ████▓▓▓▓░░░░░░░░         (holds) neutral
+  "cake"            152  120  152    0  128   █████▓▓▓░░░░░░░░         IDIOM: "easy/confident" | warm
+  "super"           152  120  152    0  128   █████▓▓▓░░░░░░░░         INTENSIFY x1.5 | warm
+  "easy"            152  120  152    0  128   █████▓▓▓░░░░░░░░         (holds) warm
+  ────────────────────────────────────────────────────────────────────────────────────────────────
+  FINAL:       V152 A120 D152 U0 G128
+
+  Pendulum settles at: V152 A120 D152 U0 G128
+  Reads as: slightly positive, moderate energy, neutral control, no urgency, grounded
+  Nearest emotion: pleased
+
+--- STEP 2: Metadata Header ---
+  [V152 A120 D152 U0 G128] CERT=180 SRC=USER GOAL=HELP REL=220
+  9 bytes: 9878980080b40400dc
+
+--- STEP 3: VADUG Harmony Response ---
+  Input:    V152 A120 D152 U0 G128
+  Response: V151 A122 D156 U0 G128
+  Reads as: slightly positive, moderate energy, in control, no urgency, grounded
+  Nearest emotion: pleased
+
+--- STEP 4: Personality Filter ---
+  Vector: GUL=25 AGR=100 SUG=30 TRU=235 SAF=200 CUR=170 ASR=120 PLY=100
+  No personality overrides triggered
+  Final VADUG: V151 A122 D156 U0 G128
+
+--- STEP 5: Clanker Encoding ---
+  Header: [98 78 98 00 80] [B4 04 00 DC]
+          V152 A120 D152 U0 G128  CERT180 SRC_USER GOAL_HELP REL220
+  
+  Opcodes:
+    20 [premise="user needs help"] CERT180
+    24 [response] CERT180
+  
+  Token count comparison:
+    English input:  "This is a piece of cake, super easy" = 8 tokens
+    Clanker encoding: [9 header (VADUG+meta)] + [2 opcodes x ~4 bytes] = 17 bytes (~4 Clanker tokens)
+    Compression: 50% fewer tokens
+
+  Opcodes (human-readable):
+    THINK [premise="user needs help"] CERT180 SRC_USER
+      GOAL_HELP
+      [V151 A122 D156 U0 G128]
+    ANSWER [ready] CERT180 SRC_INFERRED
+
+--- STEP 6: Decoded Response ---
+  "Glad to hear that! Let me help with that."
+
+============================================================
+
+You: Clanker out.
