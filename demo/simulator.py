@@ -441,8 +441,8 @@ class SequentialPendulum:
         self.a = 128.0
         self.d = 128.0
         self.u = 0.0
-        self.momentum = 0.90  # how much previous state carries forward
-        self.drift_rate = 0.10  # how fast pendulum drifts toward center per tick
+        self.momentum = 0.70  # how much previous state carries forward (lower = more responsive)
+        self.drift_rate = 0.05  # how fast pendulum drifts toward center per emotional word
         self.history = []  # (word, v, a, d, u, state_label) per step
         self.previous_words = []  # for idiom/context detection
         self.negate_next = False
@@ -642,8 +642,9 @@ class SequentialPendulum:
         applied_force = False
         idiom_hit = False
 
-        # 1. Drift toward center (momentum decay)
-        self._drift_toward_center()
+        # 1. Drift toward center ONLY happens AFTER emotional words (see below)
+        # Bridge/filler words are "zero mass" — they don't pull the pendulum
+        # This prevents "the", "is", "a" from diluting emotional payload
 
         # 2. Check for idiom completion at this word
         idiom = self.check_idiom(words, current_idx)
@@ -768,8 +769,8 @@ class SequentialPendulum:
 
                 # Momentum blending: new state = momentum * old + (1-momentum) * target + direct push
                 # The "direct push" is what makes strong words override momentum
-                push_strength = min(1.0, (abs(vf) + abs(af)) / 80.0)  # stronger words push harder
-                direct_push = push_strength * 0.4  # up to 40% direct force
+                push_strength = min(1.0, (abs(vf) + abs(af)) / 60.0)  # stronger words push harder
+                direct_push = push_strength * 0.6  # up to 60% direct force — emotional words DOMINATE
 
                 target_v = 128.0 + vf * force_scale
                 target_a = 128.0 + af * force_scale
@@ -782,6 +783,9 @@ class SequentialPendulum:
                 self.d = self.d * self.momentum + target_d * blend + df * direct_push * force_scale
                 self.u = self.u * self.momentum + target_u * blend + uf * direct_push * force_scale
 
+                # Drift toward center ONLY after emotional words apply force
+                # This is the "zero-mass neutrality" fix — filler words don't dilute
+                self._drift_toward_center()
                 self.intensity = 1.0
                 applied_force = True
 
