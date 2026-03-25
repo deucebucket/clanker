@@ -9430,12 +9430,11 @@ def main():
   |   G=Gravity (sinking/heavy <-> floating/soaring)   |
   |   256^5 = 1.1 trillion unique emotional states     |
   +---------------------------------------------------+
-  |   NEW: Sarcasm Detection (v0.5.2)                  |
-  |   Three signals from pendulum trajectory:          |
-  |   1. Trajectory Reversal (spike -> drop)           |
-  |   2. Intensity Mismatch (too positive for context) |
-  |   3. Context Contradiction (positive after neg)    |
-  |   Pure math. No sentiment classifier needed.       |
+  |   NEW: Math-Based Response Builder (v0.9)           |
+  |   Words selected by VADUG coordinate distance.     |
+  |   5,884 words available for response construction. |
+  |   Every word chosen because its coordinates match  |
+  |   the target response VADUG. No canned phrases.    |
   +===================================================+
   |  Type anything. Watch the full pipeline execute:   |
   |  Pendulum -> VADUG -> Harmony -> Personality -> Clk|
