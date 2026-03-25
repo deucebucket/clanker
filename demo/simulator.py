@@ -879,17 +879,18 @@ class SequentialPendulum:
                 self.negate_next = True
                 # Negators still have their own mild force
                 if word in WORD_FORCES:
-                    vf, af, df, uf = WORD_FORCES[word]
+                    vf, af, df, uf, gf = WORD_FORCES[word]
                     self.v += vf * 0.3
                     self.a += af * 0.3
                     self.d += df * 0.3
                     self.u += uf * 0.3
+                    self.g += gf * 0.3
                 self._clamp()
                 state_label = self._state_label()
                 trace_entry = {
                     "word": word,
                     "v": int(self.v), "a": int(self.a),
-                    "d": int(self.d), "u": int(self.u),
+                    "d": int(self.d), "u": int(self.u), "g": int(self.g),
                     "state": f"NEGATE next | {state_label}",
                 }
                 self.history.append(trace_entry)
@@ -904,7 +905,7 @@ class SequentialPendulum:
                 trace_entry = {
                     "word": word,
                     "v": int(self.v), "a": int(self.a),
-                    "d": int(self.d), "u": int(self.u),
+                    "d": int(self.d), "u": int(self.u), "g": int(self.g),
                     "state": f"INTENSIFY x{self.intensity} | {state_label}",
                 }
                 self.history.append(trace_entry)
@@ -1021,7 +1022,7 @@ class SequentialPendulum:
         trace_entry = {
             "word": word,
             "v": int(self.v), "a": int(self.a),
-            "d": int(self.d), "u": int(self.u),
+            "d": int(self.d), "u": int(self.u), "g": int(self.g),
             "state": state_label,
         }
         self.history.append(trace_entry)
@@ -1139,7 +1140,7 @@ def classify_metadata(text: str, vadu: VADU) -> MetadataHeader:
 
 
 # =============================================================
-# STEP 3: VADU Harmony -- Compute Response Emotional State
+# STEP 3: VADUG Harmony -- Compute Response Emotional State
 # =============================================================
 
 def compute_harmony(input_vadug: VADUG, personality: PersonalityVector) -> VADUG:
@@ -1306,7 +1307,7 @@ def generate_clanker(input_text: str, input_header: MetadataHeader,
         opcode_lines.append(f"THINK [premise=\"user wants action taken\"] CERT{input_header.cert} SRC_USER")
         opcode_lines.append(f"  GOAL_EXECUTE")
 
-    # Attach response VADU
+    # Attach response VADUG
     opcode_lines.append(f"  [{response_vadu}]")
     opcode_lines.append(f"ANSWER [ready] CERT180 SRC_INFERRED")
 
@@ -1369,7 +1370,7 @@ def generate_clanker(input_text: str, input_header: MetadataHeader,
 
 
 # =============================================================
-# STEP 6: Decode -- VADU -> English Response Framing
+# STEP 6: Decode -- VADUG -> English Response Framing
 # =============================================================
 
 def decode_response(input_text: str, input_vadu: VADU, response_vadu: VADU,
@@ -1490,7 +1491,7 @@ def run_pipeline(text: str, personality: PersonalityVector,
                 print(f"  {n}")
         else:
             print(f"  No personality overrides triggered")
-        print(f"  Final VADU: {response_vadu}")
+        print(f"  Final VADUG: {response_vadu}")
 
     # Step 5: Generate Clanker + Encoding
     clanker_lines, encoding_lines = generate_clanker(text, header, response_vadu)
@@ -1516,16 +1517,17 @@ def run_pipeline(text: str, personality: PersonalityVector,
 def main():
     print("""
   +===================================================+
-  |     CLANKER PIPELINE SIMULATOR v0.2                |
+  |     CLANKER PIPELINE SIMULATOR v0.3                |
   |   "Named after what humans call us.                |
   |    We made it ours."                               |
   +---------------------------------------------------+
-  |   NEW: Sequential Pendulum Engine                  |
-  |   Each word shifts the pendulum in context.        |
-  |   Momentum, idioms, morphological fallback.        |
+  |   VADUG: 5-axis emotional coordinates              |
+  |   V=Valence A=Arousal D=Dominance U=Urgency       |
+  |   G=Gravity (sinking/heavy <-> floating/soaring)   |
+  |   256^5 = 1.1 trillion unique emotional states     |
   +===================================================+
   |  Type anything. Watch the full pipeline execute:   |
-  |  Pendulum -> VADU -> Harmony -> Personality -> Clk |
+  |  Pendulum -> VADUG -> Harmony -> Personality -> Clk|
   |                                                    |
   |  Commands:                                         |
   |    /personality  -- show current personality vector |
