@@ -259,6 +259,73 @@ ROOTS = {
     "hurry":    (-5, +35, +5, +40),
     "quick":    (+5, +25, +15, +30),
     "slow":     (-5, -15, -5, -10),
+
+    # ── Strong positive (expanded) ──
+    "incred":   (+60, +45, +20, 0),     # incredible
+    "magnif":   (+55, +35, +20, 0),     # magnificent (alt stem)
+    "magnific": (+55, +35, +25, 0),     # magnificent
+    "spectac":  (+55, +45, +20, 0),     # spectacular
+    "phenomen": (+50, +40, +15, 0),     # phenomenal
+    "brillian": (+50, +35, +25, 0),     # brilliant
+    "gorge":    (+45, +25, +15, 0),     # gorgeous
+    "triumph":  (+50, +45, +50, +5),    # triumphant
+    "radic":    (+10, +40, +20, +15),   # radical
+
+    # ── Strong negative (expanded) ──
+    "pathet":   (-45, +15, -35, +10),   # pathetic
+    "nightmar": (-60, +50, -40, +30),   # nightmare
+    "catastroph": (-65, +55, -35, +40), # catastrophe
+    "overwhelm": (-30, +50, -30, +25),  # overwhelm
+    "exhaust":  (-25, -20, -30, +10),   # exhausted, exhausting
+    "embarrass": (-35, +30, -30, +10),  # embarrassed
+    "awkward":  (-20, +20, -25, +5),    # awkward
+    "guilt":    (-40, +25, -25, +10),   # guilty
+    "shame":    (-45, +30, -35, +10),   # ashamed, shame
+    "betray":   (-60, +45, -35, +25),   # betrayal
+    "abandon":  (-55, +35, -45, +20),   # abandoned
+    "toxic":    (-50, +30, +10, +15),   # toxic
+    "manipul":  (-45, +25, +15, +15),   # manipulate
+    "hypocrit": (-40, +30, +10, +10),   # hypocrite
+    "frustrat": (-35, +40, -15, +20),   # frustrated, frustration
+    "devastat": (-60, +40, -40, +25),   # devastated, devastating
+    "wretch":   (-60, +20, -40, +15),   # wretched
+    "abysm":    (-55, +15, -40, +10),   # abysmal
+
+    # ── Resilience / strength (expanded) ──
+    "resili":   (+30, +25, +40, +5),    # resilient
+    "persever": (+25, +30, +40, +10),   # persevere
+    "endur":    (+15, +20, +35, +10),   # endure
+    "surviv":   (+15, +25, +30, +10),   # survive
+
+    # ── Confrontational ──
+    "arrog":    (-30, +20, +30, +5),    # arrogant
+    "ignor":    (-25, +15, -10, +5),    # ignorant, ignore
+    "contempt": (-45, +35, +30, +10),   # contempt
+    "disgrac":  (-50, +30, -20, +10),   # disgrace
+    "ridic":    (-25, +30, +10, +10),   # ridiculous
+    "absurd":   (-25, +30, +10, +10),   # absurd
+
+    # ── Physical intensity ──
+    "drown":    (-40, +45, -35, +25),   # drowning
+    "suffoc":   (-40, +50, -35, +30),   # suffocate
+    "crush":    (-35, +40, -20, +20),   # crushing
+    "shatter":  (-40, +45, -25, +25),   # shattering
+    "explod":   (-20, +60, +10, +35),   # exploding
+    "burn":     (-20, +45, +10, +25),   # burning
+
+    # ── Relational (expanded) ──
+    "forgiv":   (+30, +10, +20, 0),     # forgive, forgiveness
+    "devot":    (+40, +20, +25, 0),     # devoted, devotion
+    "loyal":    (+35, +10, +25, 0),     # loyal, loyalty
+    "treasur":  (+40, +15, +20, 0),     # treasure
+    "appreci":  (+35, +15, +20, 0),     # appreciate
+    "admir":    (+35, +20, +20, 0),     # admire
+    "motiv":    (+30, +30, +25, +5),    # motivate
+    "encourag": (+30, +20, +20, 0),     # encourage
+    "comfor":   (+40, -15, +25, 0),     # comfort (alt stem)
+    "heal":     (+30, +10, +20, 0),     # heal, healing
+    "recov":    (+25, +15, +20, +5),    # recover
+    "overcom":  (+30, +30, +35, +5),    # overcome
 }
 
 

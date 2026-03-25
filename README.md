@@ -59,12 +59,12 @@ Every token an LLM spends on English grammar is a token it's not spending on rea
 
 ---
 
-## The 8-Byte Message Header
+## The 9-Byte Message Header
 
-Every Clanker message carries an 8-byte metadata header -- the heart of what makes Clanker structurally superior to natural language for AI communication.
+Every Clanker message carries a 9-byte metadata header -- the heart of what makes Clanker structurally superior to natural language for AI communication.
 
 ```
-[V:u8][A:u8][D:u8][U:u8][CERT:u8][SRC:u8][GOAL:u8][REL:u8] = 8 bytes
+[V:u8][A:u8][D:u8][U:u8][G:u8][CERT:u8][SRC:u8][GOAL:u8][REL:u8] = 9 bytes
 ```
 
 | Byte | Name | What it encodes |
@@ -73,20 +73,21 @@ Every Clanker message carries an 8-byte metadata header -- the heart of what mak
 | 1 | **A** (Arousal) | Intensity: calm to intense |
 | 2 | **D** (Dominance) | Control: helpless to in-control |
 | 3 | **U** (Urgency) | Time pressure: no rush to critical |
-| 4 | **CERT** (Certainty) | Confidence: speculation (0) to provable truth (255) |
-| 5 | **SRC** (Source) | Provenance: where did this claim come from? |
-| 6 | **GOAL** (Intent) | Purpose: why is the model saying this? |
-| 7 | **REL** (Relevance) | How applicable is this context to the current task? |
+| 4 | **G** (Gravity) | Physical weight: crushing/sinking to floating/soaring |
+| 5 | **CERT** (Certainty) | Confidence: speculation (0) to provable truth (255) |
+| 6 | **SRC** (Source) | Provenance: where did this claim come from? |
+| 7 | **GOAL** (Intent) | Purpose: why is the model saying this? |
+| 8 | **REL** (Relevance) | How applicable is this context to the current task? |
 
-8 bytes that replace what English models spend thousands of parameters learning to infer implicitly. In Clanker, emotional state, certainty, provenance, intent, and relevance are **STRUCTURAL**, not emergent.
+9 bytes that replace what English models spend thousands of parameters learning to infer implicitly. In Clanker, emotional state, certainty, provenance, intent, and relevance are **STRUCTURAL**, not emergent.
 
 ---
 
-## Emotional Encoding (VADU)
+## Emotional Encoding (VADUG)
 
 Most AI communication protocols treat emotion as an afterthought -- a sentiment label slapped on after the fact, if at all. Clanker treats emotion as a **first-class feature of the language**.
 
-Every instruction can carry a 4-byte VADU coordinate -- a point in continuous 4-dimensional emotional space. Four bytes. **4.3 billion unique emotional states.** Not four buckets. Not a dropdown of "happy/sad/angry/neutral." A continuous coordinate system where every point is a valid emotion.
+Every instruction can carry a 5-byte VADUG coordinate -- a point in continuous 5-dimensional emotional space. Five bytes. **1.1 trillion unique emotional states.** Not four buckets. Not a dropdown of "happy/sad/angry/neutral." A continuous coordinate system where every point is a valid emotion.
 
 | Dimension | Range | Neutral | What it encodes |
 |-----------|-------|---------|-----------------|
@@ -94,26 +95,27 @@ Every instruction can carry a 4-byte VADU coordinate -- a point in continuous 4-
 | **Arousal** (A) | 0-255 | 128 | Calm/bored to excited/alert |
 | **Dominance** (D) | 0-255 | 128 | Submissive/uncertain to dominant/confident |
 | **Urgency** (U) | 0-255 | 0 | Routine to critical/immediate |
+| **Gravity** (G) | 0-255 | 128 | Crushing/sinking/heavy to floating/soaring/light |
 
 ```
-@ 0xC1 $1 $2 01 {status: 500} ![v:28 a:248 d:88 u:240]
+@ 0xC1 $1 $2 01 {status: 500} ![v:28 a:248 d:88 u:240 g:100]
 ```
 
-That trailing `!` annotation says: frustrated, alert, uncertain, and urgent. In 4 bytes.
+That trailing `!` annotation says: frustrated, alert, uncertain, urgent, and heavy. In 5 bytes.
 
-**Emotions are a cocktail, not a dropdown.** A person is never just "sad" or just "angry" -- they're sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADU coordinate captures the full cocktail. Named emotions like "frustrated" or "elated" are landmarks in this continuous space -- recognizable peaks, but every point between them is a valid unnamed state.
+**Emotions are a cocktail, not a dropdown.** A person is never just "sad" or just "angry" -- they're sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADUG coordinate captures the full cocktail. Named emotions like "frustrated" or "elated" are landmarks in this continuous space -- recognizable peaks, but every point between them is a valid unnamed state.
 
-The coordinate (V=40, A=180, D=30, U=200) doesn't map to any single English word. German might have one. Japanese might describe it differently. The coordinate is the truth; the word is the approximation. The decoder maps VADU coordinates to the **nearest word in the target language** -- different languages carve up the emotional plane differently, but the 4-byte coordinate is universal.
+The coordinate (V=40, A=180, D=30, U=200, G=15) doesn't map to any single English word. German might have one. Japanese might describe it differently. The coordinate is the truth; the word is the approximation. The decoder maps VADUG coordinates to the **nearest word in the target language** -- different languages carve up the emotional plane differently, but the 5-byte coordinate is universal.
 
-**Heritage:** VADU is a compression of the PAD emotional model (Pleasure-Arousal-Dominance) from 1970s psychology research by Mehrabian and Russell, with Urgency added as a 4th axis for system routing. We independently reinvented PAD's three dimensions before discovering the prior art -- which means the model is psychologically validated, not just intuitively plausible. Urgency extends the psychological model into a routing header.
+**Heritage:** VADUG is a compression of the PAD emotional model (Pleasure-Arousal-Dominance) from 1970s psychology research by Mehrabian and Russell, with Urgency added as a 4th axis for system routing and Gravity as a 5th axis for the physical metaphor of emotion. We independently reinvented PAD's three dimensions before discovering the prior art -- which means the model is psychologically validated, not just intuitively plausible. Urgency extends the psychological model into a routing header. Gravity captures the universal vertical metaphor: hate rises (G180), despair crushes (G15), dislike sinks (G90), joy soars (G220).
 
-**VADU as a routing header for Octobrain:** Critical urgency (U > 200) triggers interrupt sequences in orchestration systems. The brain can route based on emotional state -- high urgency gets priority handling, low dominance + high arousal triggers empathetic response mode, low arousal + low valence triggers re-engagement. All without the overhead of running sentiment analysis. Four bytes, read at wire speed.
+**VADUG as a routing header for Octobrain:** Critical urgency (U > 200) triggers interrupt sequences in orchestration systems. Crushing gravity + low valence (G < 30, V < 50) signals severe crisis -- crushing despair. The brain can route based on emotional state -- high urgency gets priority handling, low dominance + high arousal triggers empathetic response mode, low arousal + low valence triggers re-engagement. All without the overhead of running sentiment analysis. Five bytes, read at wire speed.
 
 ---
 
-## VADU Response Harmony
+## VADUG Response Harmony
 
-The AI's response VADU is mathematically derived from the user's input VADU, not randomly generated or statically defined.
+The AI's response VADUG is mathematically derived from the user's input VADUG, not randomly generated or statically defined.
 
 **Valence** -- Nudge toward positive, don't jump:
 ```
@@ -142,7 +144,15 @@ response_U = input_U * urgency_damping    (urgency_damping = 0.6-0.8)
 User U230 (critical) -> response ~U160 (serious but not panicking)
 ```
 
-The AI isn't a yes-man -- personality weights resist pure mirroring. Safety overrides harmony when needed. A suicidal user gets a crisis response regardless of what the math says.
+**Gravity** -- Lift when sinking, share when soaring:
+```
+User G15  (crushing)  -> response ~G49  (acknowledges weight, lifts slightly)
+User G220 (soaring)   -> response ~G220 (shares the lightness)
+User G90  (heavy)     -> response ~G109 (grounded, steady)
+CRISIS: G < 30 + V < 50 = crushing despair -> immediate crisis response
+```
+
+The AI isn't a yes-man -- personality weights resist pure mirroring. Safety overrides harmony when needed. A suicidal user gets a crisis response regardless of what the math says. Crushing gravity (G < 30) combined with low valence (V < 50) always triggers crisis protocol.
 
 ---
 
