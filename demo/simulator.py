@@ -1912,7 +1912,7 @@ WORD_FORCES = {
     "girl": (45, 45, -10, 15, -30),
     "soul": (75, 15, 50, 5, -50),
     "spirit": (60, 45, 35, 10, -50),
-    # ── Gemini batch 2: medical specialists, gen-z, finance, relationships, body, profanity expanded ──
+    # ── Gemini batch 2: expanded medical, slang, finance, body, profanity ──
     "insulin": (20, -10, 20, 45, 0), "chemotherapy": (-75, 45, -50, 50, 40),
     "ventilator": (-50, 50, -50, 60, 30), "biopsy": (-30, 40, -20, 50, 20),
     "autopsy": (-70, 10, 10, 10, 40), "migraine": (-60, 30, -45, 45, 20),
