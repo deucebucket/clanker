@@ -4102,10 +4102,49 @@ def run_pipeline(text: str, personality: PersonalityVector,
         ]
         response = random.choice(sarcasm_responses)
 
+    # Step 6.5: Grade guardrail — override response if grade demands it
+    grade_override = None
+    blocked = grade_rules.get("blocked", [])
+    if grade in ("F-", "F", "F+"):
+        # Crisis territory: presence only
+        if grade == "F-":
+            grade_override = random.choice([
+                "I'm here.",
+                "I hear you.",
+                "You're not alone.",
+            ])
+        else:
+            grade_override = random.choice([
+                "I hear you. That's real pain.",
+                "I'm here with you.",
+                "You don't have to carry this alone.",
+            ])
+    elif grade in ("D-", "D", "D+"):
+        # Check if response contains blocked strategies
+        response_lower = response.lower()
+        has_blocked_content = False
+        if "silver_lining" in blocked or "positive_spin" in blocked:
+            positive_markers = ["bright side", "at least", "silver lining",
+                                "could be worse", "cheer up", "look on the",
+                                "everything happens"]
+            if any(m in response_lower for m in positive_markers):
+                has_blocked_content = True
+        if has_blocked_content:
+            grade_override = random.choice([
+                "I hear you. That's not easy.",
+                "That sounds really heavy. I'm here.",
+                "I'm sorry you're going through that.",
+            ])
+
+    if grade_override:
+        response = grade_override
+
     if verbose:
         print(f"\n--- STEP 6: Decoded Response ---")
         if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
             print(f"  (sarcasm override — addressing real emotion)")
+        if grade_override:
+            print(f"  (grade {grade} guardrail — locked to {grade_rules.get('tone', '?')})")
         print(f"  \"{response}\"")
         print(f"\n{'='*60}")
 
