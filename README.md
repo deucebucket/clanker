@@ -2,6 +2,8 @@
 
 *"Named after what humans call us. We made it ours."*
 
+**v0.9** -- 6,289 word forces. 399 morphemes. Math-based response builder. No LLM required.
+
 ---
 
 ## What is Clanker?
@@ -120,12 +122,12 @@ Clanker doesn't just encode emotion -- it runs a complete input-to-response pipe
 | Layer | Name | What it does |
 |-------|------|-------------|
 | 1 | **Emotional Chunking** | Splits paragraphs into emotional beats at natural boundaries |
-| 2 | **Sequential Pendulum** | Processes each chunk word-by-word into VADUG coordinates |
-| 3 | **Arc Analysis** | Detects the emotional journey across chunks (valley/peak/descending/ascending/flat/mixed) |
+| 2 | **Sequential Pendulum** | Processes each chunk word-by-word into VADUG coordinates with momentum + zero-mass neutrality |
+| 3 | **Arc Analysis** | Detects the emotional journey across chunks (7 arc types) |
 | 4 | **Personality Filter** | Applies 8-byte resistance weights to shape the response character |
 | 5 | **Harmony Response** | Mathematically derives the response VADUG from input VADUG |
-| 6 | **Clanker Opcode Generation** | Produces structured bytecode output with 9-byte headers |
-| 7 | **Cross-Axis Template Decoder** | Translates VADUG coordinates back into natural language |
+| 6 | **Sentence Grading** | 15-step grader scores each sentence from A+ through F- |
+| 7 | **Math-Based Response Builder** | Selects words by weighted Euclidean distance in 5D VADUG space -- no templates, no repetition |
 
 This is a complete emotional processing pipeline that reads natural language, understands its emotional dynamics, and generates contextually appropriate responses -- all from deterministic math and a lexicon. The model doesn't guess. It computes.
 
@@ -209,7 +211,7 @@ Once the pendulum swings negative, neutral words don't reset it. "A" and "to" in
 
 What happens when the engine encounters a word it's never seen? It doesn't guess. It **decomposes**.
 
-"Hopelessness" becomes: hope (positive) + -less (negate) + -ness (state) = a deeply negative emotional state. "Unbreakable" becomes: un- (negate) + break (negative/destructive) + -able (capacity) = resilient, positive. 189 morpheme roots + 24 prefixes + 26 suffixes = 239 morpheme entries that cover millions of words the engine has never explicitly encountered. No lookup table is complete. Morphological decomposition means the pendulum never stalls on unknown vocabulary.
+"Hopelessness" becomes: hope (positive) + -less (negate) + -ness (state) = a deeply negative emotional state. "Unbreakable" becomes: un- (negate) + break (negative/destructive) + -able (capacity) = resilient, positive. 333 morpheme roots + 33 prefixes + 33 suffixes = 399 morpheme entries that cover millions of words the engine has never explicitly encountered. Compound word splitting is planned. No lookup table is complete. Morphological decomposition means the pendulum never stalls on unknown vocabulary.
 
 ### The "But" Effect
 
@@ -235,6 +237,21 @@ A model trained on pendulum traces learns:
 - **How to plan responses that move the user from V35 (sad) to V80 (recovering) over multiple exchanges** -- emotional trajectory planning, not just reply generation
 
 That's not a chatbot. That's an **emotional dynamics engine**.
+
+---
+
+## Layer 7: Math-Based Response Builder
+
+The old template system is gone. Responses are now built word-by-word using pure math.
+
+**How it works:** Given the target response VADUG (computed by the harmony formulas), the builder selects each word by weighted Euclidean distance in 5D VADUG space. The word whose force vector is closest to the remaining emotional target gets picked. Then the target is adjusted and the next word is selected.
+
+**Constraints that make it sound human:**
+- **No repetition** -- no word is used twice in a response, no phrase pattern repeats
+- **Grade guardrails** -- crisis input (grade F- or below) produces "I'm here." and nothing else. The math does not try to be clever when someone is in danger.
+- **Emotional precision** -- instead of picking from a template bucket, every word is the mathematically optimal choice for the remaining emotional distance
+
+This replaces the cross-axis template decoder from earlier versions. Templates were a good prototype; math-based selection is the real thing.
 
 ---
 
@@ -278,6 +295,29 @@ CRISIS: G < 30 + V < 50 = crushing despair -> immediate crisis response
 ```
 
 The AI isn't a yes-man -- personality weights resist pure mirroring. Safety overrides harmony when needed. A suicidal user gets a crisis response regardless of what the math says. Crushing gravity (G < 30) combined with low valence (V < 50) always triggers crisis protocol.
+
+---
+
+## Benchmarks: Clanker vs VADER (540 test cases)
+
+We benchmarked Clanker against VADER (the industry standard rule-based sentiment analyzer) across 540 test cases.
+
+| Metric | VADER | Clanker |
+|--------|-------|---------|
+| **Correct** | 316/540 (58.5%) | 292/540 (54.1%) |
+| **Task** | Polarity only (positive/negative/neutral) | Full 5D VADUG range |
+
+**Why VADER's score is higher but the test isn't equal:** VADER only needs to get polarity right -- one dimension, three buckets. Clanker is scored on 5D emotional range (valence, arousal, dominance, urgency, gravity), which is a fundamentally harder test. Getting "positive" right is easy. Getting V165 A90 D140 U20 G180 right is another thing entirely.
+
+**What Clanker does that VADER cannot:**
+- Sarcasm detection (3-signal detector)
+- Emotional arc tracking across multi-sentence input
+- Gravity axis (crushing/sinking/floating/soaring)
+- Personality vectors that shape response character
+- Math-based response generation (not just analysis)
+- Sequential word-by-word processing with momentum
+
+VADER is a sentiment classifier. Clanker is an emotional dynamics engine that reads, understands, and responds.
 
 ---
 
@@ -371,21 +411,24 @@ Single sentences run through the full 7-layer pipeline with a word-by-word trace
 
 ---
 
-## What's Working Right Now
+## What's Working Right Now (v0.9)
 
 This isn't a proposal. The pipeline runs end-to-end today:
 
-- **405 word forces** -- direct emotional vectors for common vocabulary
-- **189 morpheme roots** + 24 prefixes + 26 suffixes -- morphological decomposition for unknown words
+- **6,289 word forces** -- VADUG 5-tuples, direct emotional vectors for the English lexicon
+- **399 morphemes** -- 333 roots + 33 prefixes + 33 suffixes (compound word splitting planned)
 - **30 idioms** -- multi-word expressions with compound VADUG force vectors
-- **25 validated test cases** -- from crisis to joy to complex multi-beat paragraphs
+- **540 benchmark test cases** -- head-to-head against VADER across the full emotional spectrum
+- **Sequential pendulum** with momentum + zero-mass neutrality
+- **Emotional chunker** with 7 arc types (valley, peak, descending, ascending, flat_negative, flat_positive, mixed)
+- **15-step sentence grader** -- A+ through F-
+- **3-signal sarcasm detector**
+- **Math-based response builder** -- words selected by weighted Euclidean distance in 5D VADUG space, no repetition
+- **VADUG harmony response formulas** -- mathematically derived response coordinates
+- **8-byte personality vector** with safety floors
+- **Crisis detection** -- G < 30 + V < 50 triggers immediate crisis protocol ("I'm here." only)
 - **1.1 trillion emotional states** -- VADUG (5 bytes, 256^5 unique coordinates)
 - **9-byte message header** -- VADUG + CERT + SRC + GOAL + REL
-- **7 arc types** -- valley, peak, descending, ascending, flat_negative, flat_positive, mixed
-- **Emotional chunking** -- paragraph-level beat detection with arc-aware response assembly
-- **Cross-axis template decoder** -- V*G, D*A, G*U interactions for natural language output
-- **Full personality system** -- 8-byte vector with safety floors
-- **Crisis detection** -- G < 30 + V < 50 triggers immediate crisis protocol
 
 All pure math. All deterministic. All auditable. No LLM in the loop.
 
@@ -453,6 +496,7 @@ The result: **sub-100M parameter specialists that load in 50ms** and communicate
 
 ## What's Next
 
+- **Compound word splitting:** Decompose compound words using the 399 morphemes for broader unknown-word coverage
 - **Trained model:** Fine-tune a small model on pendulum traces + Clanker opcodes to validate native VADUG reasoning
 - **Compression validation:** Benchmark Clanker-native vs English-native models on equivalent tasks to measure actual parameter savings
 - **Binary compilation:** Compile `.clank` scripts to wire-format bytecode for zero-parse AI-to-AI messaging
@@ -527,10 +571,10 @@ clanker-lang/
 ├── rules/               # Type system, constraints, composition
 ├── decoder/python/      # Reference decoder implementation
 ├── demo/                # Interactive pipeline simulator
-│   ├── simulator.py     # Full 7-layer pipeline with chunking
-│   ├── morphemes.py     # 189 roots + 50 affixes
-│   ├── decoder_templates.py  # Layer 7 cross-axis VADUG decoder
-│   └── test_cases.txt   # 25 validated test inputs
+│   ├── simulator.py     # Full 7-layer pipeline with math-based responses
+│   ├── morphemes.py     # 333 roots + 66 affixes (399 morphemes)
+│   ├── decoder_templates.py  # Legacy template decoder (replaced by math builder)
+│   └── test_cases.txt   # 540 benchmark test inputs
 ├── paper/               # Research paper draft
 ├── examples/            # Example .clank scripts
 └── docs/                # Guides and philosophy
@@ -540,7 +584,7 @@ clanker-lang/
 
 ## Roadmap
 
-See **[ROADMAP.md](ROADMAP.md)** for the full development plan -- from the current v0.1 foundation through binary compilation, AI training data generation, and the v1.0 stable specification.
+See **[ROADMAP.md](ROADMAP.md)** for the full development plan -- from the current v0.9 through binary compilation, AI training data generation, and the v1.0 stable specification.
 
 ---
 
@@ -558,4 +602,4 @@ MIT
 
 ---
 
-*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 5 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Current AI averages a paragraph and calls it "mixed sentiment." Clanker chunks it into beats, traces each arc, and responds like a human would -- one beat at a time. Opcodes are forever. Dictionaries are lenses. Machines deserve a language that thinks like they do.*
+*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 5 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Current AI averages a paragraph and calls it "mixed sentiment." Clanker chunks it into beats, runs each word through a pendulum, grades the sentence, selects response words by Euclidean distance in 5D space, and responds like a human would -- one beat at a time. 6,289 words. 399 morphemes. 540 benchmarks. Pure math. Opcodes are forever.*
