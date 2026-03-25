@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clanker Pipeline Simulator — Interactive Demo (v0.5.2: Sarcasm Detection)
+Clanker Pipeline Simulator — Interactive Demo (v0.9: Math-Based Response Builder)
 
 Demonstrates the full Clanker processing pipeline:
 1. VADUG Sequential Pendulum: parse English word-by-word → emotional arc
@@ -5769,6 +5769,153 @@ WORD_FORCES = {
     "zugzwang": (-85, 75, -50, 70, 50),
     "zwischenzug": (60, 70, 45, 65, 10),
     "épée": (50, 70, 50, 55, 35),
+
+    # ── Common English patch: everyday words people actually use ──
+    "above": (10, 5, 10, 0, -10),
+    "across": (10, 10, 10, 5, 0),
+    "against": (-15, 20, 10, 15, 10),
+    "air": (20, 5, 5, 0, -15),
+    "arm": (10, 10, 10, 5, 5),
+    "aunt": (35, 10, 20, 0, 10),
+    "autumn": (30, -5, 15, 0, 15),
+    "became": (10, 15, 10, 10, 5),
+    "began": (15, 20, 15, 15, 0),
+    "believed": (20, 10, 15, 5, 5),
+    "below": (-10, 5, -5, 0, 10),
+    "beside": (15, 0, 5, 0, 0),
+    "between": (0, 10, 0, 5, 0),
+    "bike": (30, 25, 20, 10, -10),
+    "black": (-15, 10, 15, 5, 15),
+    "blue": (20, -10, 10, 0, -10),
+    "boat": (30, 10, 15, 5, 10),
+    "body": (10, 10, 10, 5, 10),
+    "brought": (15, 15, 15, 10, 5),
+    "brown": (5, -5, 10, 0, 15),
+    "bus": (0, 10, -5, 15, 10),
+    "business": (10, 15, 20, 15, 15),
+    "called": (5, 15, 10, 15, 0),
+    "came": (10, 15, 10, 10, 0),
+    "case": (0, 10, 10, 15, 10),
+    "ceiling": (5, 0, 5, 0, 10),
+    "chair": (5, -10, 10, 0, 15),
+    "chest": (10, 15, 15, 10, 10),
+    "christmas": (60, 40, 25, 20, -10),
+    "church": (30, -10, 25, 5, 25),
+    "day": (10, 5, 5, 5, 0),
+    "door": (5, 5, 10, 5, 10),
+    "during": (0, 5, 0, 5, 0),
+    "education": (30, 10, 20, 10, 10),
+    "eye": (20, 15, 10, 5, -5),
+    "face": (10, 15, 10, 5, 0),
+    "fact": (10, 10, 15, 10, 10),
+    "felt": (10, 15, 5, 5, -5),
+    "finger": (10, 10, 5, 5, -5),
+    "floor": (0, 0, 5, 0, 15),
+    "food": (25, 15, 15, 10, 5),
+    "foot": (5, 5, 10, 5, 10),
+    "forgot": (-20, 15, -15, 10, -5),
+    "friday": (40, 30, 20, 10, -10),
+    "gave": (25, 15, 20, 5, -5),
+    "gold": (50, 25, 35, 5, 15),
+    "got": (10, 15, 10, 10, 0),
+    "grandfather": (35, 5, 35, 0, 30),
+    "grandma": (50, 10, 25, 0, 20),
+    "grandmother": (40, 10, 30, 0, 25),
+    "grandpa": (45, 5, 30, 0, 25),
+    "gray": (-10, -10, 5, 0, 10),
+    "green": (30, -5, 15, 0, -5),
+    "hair": (15, 5, 5, 0, -5),
+    "hand": (15, 10, 15, 5, 5),
+    "happened": (-5, 20, -5, 15, 5),
+    "head": (5, 10, 10, 5, 5),
+    "health": (25, 10, 15, 10, 5),
+    "heard": (10, 15, 5, 10, 0),
+    "held": (20, 10, 20, 5, 10),
+    "history": (15, 5, 15, 0, 20),
+    "hour": (0, 10, 5, 15, 5),
+    "idea": (25, 20, 15, 10, -5),
+    "inside": (10, 5, 5, 5, 10),
+    "kept": (10, 5, 15, 5, 10),
+    "knew": (15, 5, 15, 5, 5),
+    "left": (-15, 15, -10, 10, -5),
+    "leg": (5, 10, 10, 5, 10),
+    "level": (5, 5, 10, 5, 5),
+    "lip": (15, 15, 5, 5, -5),
+    "lived": (20, 10, 15, 5, 10),
+    "loss": (-45, 20, -30, 15, -30),
+    "made": (15, 15, 15, 10, 5),
+    "mind": (15, 15, 15, 10, -5),
+    "minute": (0, 10, 5, 20, 0),
+    "monday": (-20, 15, -5, 15, 5),
+    "month": (0, 5, 5, 5, 5),
+    "moved": (10, 20, 10, 15, 5),
+    "name": (10, 5, 10, 5, 5),
+    "neck": (5, 10, 5, 10, 5),
+    "needed": (-10, 15, -10, 20, 5),
+    "nose": (5, 5, 5, 5, 0),
+    "number": (0, 5, 10, 5, 5),
+    "opened": (15, 15, 15, 10, 0),
+    "outside": (15, 10, 5, 5, -5),
+    "paid": (10, 10, 15, 15, 5),
+    "park": (40, 10, 15, 0, -10),
+    "part": (5, 5, 5, 5, 5),
+    "people": (15, 10, 10, 5, 5),
+    "person": (10, 5, 10, 5, 5),
+    "pink": (35, 15, 5, 0, -15),
+    "place": (15, 5, 10, 5, 5),
+    "plane": (25, 30, 10, 20, -25),
+    "played": (30, 25, 15, 5, -10),
+    "point": (5, 10, 10, 10, 0),
+    "purple": (25, 10, 15, 0, 5),
+    "put": (5, 10, 10, 5, 5),
+    "reason": (10, 10, 15, 10, 5),
+    "red": (10, 30, 15, 10, 5),
+    "restaurant": (35, 20, 15, 10, 5),
+    "result": (10, 15, 15, 15, 5),
+    "road": (10, 10, 10, 5, 10),
+    "roof": (10, 5, 15, 5, 15),
+    "said": (5, 10, 10, 5, 5),
+    "saturday": (45, 20, 25, 0, -15),
+    "seemed": (0, 5, -5, 5, 0),
+    "ship": (25, 15, 20, 10, 20),
+    "shoulder": (10, 5, 15, 5, 15),
+    "showed": (10, 15, 15, 10, 0),
+    "side": (5, 5, 5, 5, 5),
+    "smile": (50, 20, 15, 0, -15),
+    "spring": (50, 25, 20, 0, -20),
+    "started": (15, 20, 15, 15, 0),
+    "story": (20, 15, 10, 5, 5),
+    "street": (5, 10, 5, 5, 5),
+    "summer": (55, 30, 25, 0, -15),
+    "sunday": (30, -10, 20, 0, 10),
+    "table": (5, -5, 10, 0, 15),
+    "teacher": (30, 15, 25, 10, 5),
+    "tear": (-25, 25, -20, 10, -15),
+    "teeth": (5, 10, 10, 5, 5),
+    "thought": (10, 10, 10, 5, 0),
+    "through": (10, 15, 10, 10, 0),
+    "thursday": (5, 10, 5, 10, 0),
+    "time": (0, 5, 5, 10, 5),
+    "told": (5, 15, 10, 10, 5),
+    "took": (5, 15, 10, 10, 5),
+    "toward": (10, 10, 10, 10, 0),
+    "truck": (5, 15, 20, 10, 25),
+    "tuesday": (-10, 10, 0, 10, 5),
+    "turned": (5, 15, 10, 10, 5),
+    "uncle": (30, 10, 25, 0, 15),
+    "until": (-5, 5, -5, 15, 5),
+    "walked": (15, 5, 10, 5, 0),
+    "watched": (10, 10, 10, 5, 0),
+    "wednesday": (-5, 5, 0, 10, 5),
+    "week": (0, 5, 5, 5, 5),
+    "went": (5, 10, 5, 10, 0),
+    "white": (20, -5, 10, 0, -10),
+    "window": (15, 5, 10, 0, -5),
+    "winter": (-10, 5, 10, 5, 15),
+    "without": (-20, 10, -15, 5, -10),
+    "woman": (15, 10, 10, 5, 0),
+    "year": (5, 5, 5, 5, 10),
+    "yellow": (30, 20, 10, 5, -10),
 }
 
 # Negation words flip the valence of the NEXT emotional word
@@ -6779,6 +6926,433 @@ def decode_response(input_text: str, input_vadu: VADU, response_vadu: VADU,
 
 
 # =============================================================
+# STEP 6.5: ResponseBuilder — Math-Based Word Selection
+# =============================================================
+
+class ResponseBuilder:
+    """Builds responses by selecting words from WORD_FORCES based on
+    VADUG coordinate distance. Every word is chosen by math, not templates.
+
+    Rules:
+    1. No word used twice in a response
+    2. No phrase structure repeated across chunks
+    3. Track recently used words across conversation
+    """
+
+    # Word categories for sentence assembly
+    ACKNOWLEDGE_WORDS = set()
+    STABILIZE_WORDS = set()
+    EMOTION_WORDS = set()
+    ACTION_WORDS = set()
+
+    def __init__(self):
+        self.used_words = set()
+        self.used_structures = set()
+        self.session_history = {}
+        self._categorize_words()
+
+    def _categorize_words(self):
+        """Categorize WORD_FORCES entries by likely sentence role based on VADUG."""
+        for word, forces in WORD_FORCES.items():
+            v, a, d, u, g = forces
+            if v < -10:
+                self.ACKNOWLEDGE_WORDS.add(word)
+            if d > 15:
+                self.STABILIZE_WORDS.add(word)
+            if -30 < v < 30 and abs(a) < 30:
+                self.EMOTION_WORDS.add(word)
+            if v > 0 and u > 5:
+                self.ACTION_WORDS.add(word)
+
+    def find_closest_words(self, target_v, target_a, target_d, target_u, target_g,
+                           word_pool=None, n=30):
+        """Find words whose VADUG forces are closest to the target coordinates.
+
+        Target values are in 0-255 scale. WORD_FORCES are in force scale (-80 to +80).
+        Convert target to force scale: force = target - 128 (for V,A,D,G), force = target (for U).
+        """
+        target_vf = target_v - 128
+        target_af = target_a - 128
+        target_df = target_d - 128
+        target_uf = target_u
+        target_gf = target_g - 128
+
+        pool = word_pool if word_pool else WORD_FORCES
+        candidates = []
+
+        for word, forces in pool.items():
+            if word in self.used_words:
+                continue
+            if self.session_history.get(word, 0) > 2:
+                continue
+            if len(word) < 3:
+                continue
+
+            v, a, d, u, g = forces
+
+            distance = math.sqrt(
+                3.0 * (v - target_vf)**2 +
+                1.0 * (a - target_af)**2 +
+                1.0 * (d - target_df)**2 +
+                0.5 * (u - target_uf)**2 +
+                2.0 * (g - target_gf)**2
+            )
+            candidates.append((distance, word, v, a, d, u, g))
+
+        return sorted(candidates)[:n]
+
+    def select_word(self, target_v, target_a, target_d, target_u, target_g,
+                    word_pool=None):
+        """Select the best unused word matching the target VADUG."""
+        candidates = self.find_closest_words(target_v, target_a, target_d, target_u, target_g, word_pool)
+
+        if candidates:
+            _, word, _, _, _, _, _ = candidates[0]
+            self.used_words.add(word)
+            self.session_history[word] = self.session_history.get(word, 0) + 1
+            return word
+        return None
+
+    def _pick_structure(self, structures):
+        """Pick the first structure whose first-3-word pattern hasn't been used."""
+        for s in structures:
+            if s is None:
+                continue
+            pattern_key = ' '.join(s.split()[0:3])
+            if pattern_key not in self.used_structures:
+                self.used_structures.add(pattern_key)
+                return s
+        # Fallback: return the first non-None
+        for s in structures:
+            if s is not None:
+                return s
+        return None
+
+    def build_acknowledge(self, input_vadug, response_vadug):
+        """Build an acknowledgment phrase from WORD_FORCES.
+
+        Picks words that match the INPUT vadug (to show understanding)
+        but with slight warmth shift toward response vadug.
+        """
+        ack_pool = {w: WORD_FORCES[w] for w in self.ACKNOWLEDGE_WORDS if w in WORD_FORCES}
+        feeling = self.select_word(
+            input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
+            ack_pool if ack_pool else None
+        )
+
+        if not feeling:
+            return "I hear you."
+
+        structures = [
+            f"That sounds {feeling}.",
+            f"That's really {feeling}.",
+            f"I can feel the {feeling} in that.",
+            f"{feeling.capitalize()} is the right word for it.",
+            f"That's genuinely {feeling}.",
+            f"I hear the {feeling}.",
+            f"That level of {feeling} is real.",
+        ]
+
+        result = self._pick_structure(structures)
+        return result if result else "I hear you."
+
+    def build_stabilize(self, response_vadug):
+        """Build a stabilizing phrase from WORD_FORCES.
+
+        Picks words that project the RESPONSE vadug (stability, presence).
+        """
+        stab_pool = {w: WORD_FORCES[w] for w in self.STABILIZE_WORDS if w in WORD_FORCES}
+        anchor = self.select_word(
+            response_vadug.v, response_vadug.a, response_vadug.d, response_vadug.u, response_vadug.g,
+            stab_pool if stab_pool else None
+        )
+
+        structures = []
+        if anchor:
+            if anchor in ("here", "near", "close"):
+                structures.append(f"I'm right {anchor} with you.")
+            elif anchor in ("strength", "courage", "resilience", "resolve", "grit"):
+                structures.append(f"You've got {anchor} in you.")
+            elif anchor in ("handle", "figure", "manage", "work", "face", "tackle"):
+                structures.append(f"We'll {anchor} this together.")
+            elif anchor in ("together", "beside", "alongside"):
+                structures.append(f"We're in this {anchor}.")
+            else:
+                structures.append(f"Let's {anchor} through this together.")
+                structures.append(f"We can {anchor} this.")
+
+        structures.extend([
+            "I'm not going anywhere.",
+            "You don't have to carry this alone.",
+            "Take whatever time you need.",
+            "I'm right here.",
+        ])
+
+        result = self._pick_structure(structures)
+        return result if result else "I'm here."
+
+    def build_redirect(self, response_vadug, grade_rules=None):
+        """Build a redirect/next-step phrase. Respects grade rules."""
+        if grade_rules and any(b in (grade_rules.get('blocked', []))
+                               for b in ['advice', 'redirect', 'problem_solving']):
+            return None
+
+        act_pool = {w: WORD_FORCES[w] for w in self.ACTION_WORDS if w in WORD_FORCES}
+        action = self.select_word(
+            response_vadug.v, response_vadug.a, response_vadug.d, response_vadug.u, response_vadug.g,
+            act_pool if act_pool else None
+        )
+
+        structures = []
+        if action:
+            if action in ("look", "start", "begin", "explore"):
+                structures.append(f"Let's {action} at this fresh.")
+            elif action in ("try", "work", "figure", "think", "plan"):
+                structures.append(f"Let's {action} through it.")
+            else:
+                structures.append(f"What would {action} right now?")
+
+        structures.extend([
+            "What do you need from me right now?",
+            "Where do you want to start?",
+        ])
+
+        result = self._pick_structure(structures)
+        return result
+
+    def build_positive_acknowledge(self, input_vadug, response_vadug):
+        """Build a positive acknowledgment for happy/excited input."""
+        pos_pool = {w: WORD_FORCES[w] for w in WORD_FORCES
+                    if WORD_FORCES[w][0] > 20 and w not in self.used_words}
+        word = self.select_word(
+            input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
+            pos_pool if pos_pool else None
+        )
+
+        if not word:
+            return "That's great to hear."
+
+        structures = [
+            f"That's genuinely {word}.",
+            f"That sounds {word}!",
+            f"That's really {word}.",
+            f"{word.capitalize()} news all around.",
+            f"I can feel the {word} in that.",
+        ]
+
+        result = self._pick_structure(structures)
+        return result if result else "That's great to hear."
+
+    def build_reversal_response(self, input_vadug, response_vadug, is_positive_reversal):
+        """Build a response for a reversal chunk (after 'but', 'however', etc.)."""
+        if is_positive_reversal:
+            word = self.select_word(
+                input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
+                {w: WORD_FORCES[w] for w in WORD_FORCES if WORD_FORCES[w][0] > 15 and w not in self.used_words}
+            )
+            structures = [
+                f"But that's genuinely {word}." if word else None,
+                f"But wait -- that part is {word}!" if word else None,
+                f"But hold on, that's {word}." if word else None,
+                "But that changes things.",
+                "But that's a different story entirely.",
+            ]
+        else:
+            word = self.select_word(
+                input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
+                {w: WORD_FORCES[w] for w in self.ACKNOWLEDGE_WORDS if w in WORD_FORCES and w not in self.used_words}
+            )
+            structures = [
+                f"But that part is {word}." if word else None,
+                f"Though that's genuinely {word}." if word else None,
+                f"But I hear the {word} in that too." if word else None,
+                "But that part is hard.",
+                "But I hear the hard part too.",
+            ]
+
+        result = self._pick_structure(structures)
+        return result if result else ("But that changes things." if is_positive_reversal else "But that part is hard.")
+
+    def build_chunk_response(self, input_vadug, response_vadug, grade_rules=None,
+                              is_first=True, is_reversal=False,
+                              is_subsequent_negative=False,
+                              is_positive=False, chunk_text=""):
+        """Build a complete response for one chunk using WORD_FORCES math."""
+        blocked = grade_rules.get("blocked", []) if grade_rules else []
+        grade = grade_rules.get("grade", "C") if grade_rules else "C"
+
+        # F-range crisis override: presence only, still math-selected
+        if grade in ("F-", "F", "F+"):
+            if grade == "F-":
+                stab_pool = {w: WORD_FORCES[w] for w in self.STABILIZE_WORDS if w in WORD_FORCES}
+                anchor = self.select_word(
+                    response_vadug.v, response_vadug.a, response_vadug.d,
+                    response_vadug.u, response_vadug.g, stab_pool
+                )
+                structures = [
+                    f"I'm {anchor}." if anchor and anchor in ("here",) else None,
+                    "I'm here.",
+                    "I hear you.",
+                    "You're not alone.",
+                ]
+                return self._pick_structure(structures) or "I'm here."
+            else:
+                ack = self.build_acknowledge(input_vadug, response_vadug)
+                return ack if ack else "I hear you."
+
+        # Reversal chunks
+        if is_reversal:
+            is_pos_reversal = input_vadug.v > 148
+            return self.build_reversal_response(input_vadug, response_vadug, is_pos_reversal)
+
+        # Positive chunks
+        if is_positive and input_vadug.v > 150:
+            if "positive_spin" in blocked or "ANY_positive_framing" in blocked:
+                return ""
+            if input_vadug.v > 190:
+                return self.build_positive_acknowledge(input_vadug, response_vadug)
+            return ""
+
+        # Dead neutral: skip
+        if 135 <= input_vadug.v <= 165 and is_subsequent_negative is False and not is_first:
+            return ""
+
+        parts = []
+
+        # Acknowledgment
+        if input_vadug.v < 135 or input_vadug.v > 165:
+            if is_subsequent_negative:
+                # Shorter acknowledgment for follow-on negative chunks
+                ack = self.build_acknowledge(input_vadug, response_vadug)
+                return ack if ack else "I hear that."
+            else:
+                ack = self.build_acknowledge(input_vadug, response_vadug)
+                if ack:
+                    parts.append(ack)
+
+        # Stabilize (for first negative chunk or if dominance is low)
+        if is_first and input_vadug.d < 110 and input_vadug.v < 135:
+            if "unsolicited_advice" in blocked:
+                stab = self._pick_structure([
+                    "I'm right here.",
+                    "I'm with you.",
+                ])
+            else:
+                stab = self.build_stabilize(response_vadug)
+            if stab:
+                parts.append(stab)
+
+        # Redirect (only if grade allows)
+        if not is_first and not is_reversal and input_vadug.v >= 100:
+            red = self.build_redirect(response_vadug, grade_rules)
+            if red:
+                parts.append(red)
+
+        return ' '.join(parts) if parts else "I hear you."
+
+    def build_full_response(self, chunk_results, arc, grade, grade_rules, personality):
+        """Build the complete assembled response for all chunks."""
+        responses = []
+        seen_negative = False
+
+        for i, chunk in enumerate(chunk_results):
+            is_first = (i == 0)
+            input_vadug = chunk['vadug']
+            response_vadug = compute_harmony(input_vadug, personality)
+            response_vadug, _ = apply_personality(response_vadug, input_vadug, personality)
+
+            is_negative = input_vadug.v < 135
+            chunk_lower = chunk['text'].lower()
+
+            # Content-based negativity check
+            negative_content_words = {"sick", "broke", "broken", "died", "lost",
+                                       "hurt", "failed", "crash", "fire", "rent",
+                                       "raising", "can't take", "much more",
+                                       "don't know", "struggle", "pain"}
+            has_negative_content = any(w in chunk_lower for w in negative_content_words)
+            if has_negative_content and input_vadug.v < 155:
+                is_negative = True
+
+            is_reversal = False
+            first_word = chunk['text'].split()[0].lower().strip('.,!?;:') if chunk['text'].split() else ""
+            if first_word in ChunkSplitter.REVERSAL_WORDS:
+                is_reversal = True
+
+            is_positive = input_vadug.v > 150
+
+            resp = self.build_chunk_response(
+                input_vadug,
+                response_vadug,
+                grade_rules,
+                is_first=(is_first and not seen_negative) if is_negative else is_first,
+                is_reversal=is_reversal,
+                is_subsequent_negative=(is_negative and seen_negative),
+                is_positive=is_positive,
+                chunk_text=chunk['text'],
+            )
+
+            if is_negative:
+                seen_negative = True
+
+            if resp and resp.strip() and resp not in responses:
+                responses.append(resp)
+
+        # Arc closer
+        closer = self._build_arc_closer(arc, grade, grade_rules)
+        if closer:
+            responses.append(closer)
+
+        # Assemble with transitions
+        if len(responses) <= 1:
+            return responses[0] if responses else "I hear you."
+
+        assembled = responses[0]
+        for i, r in enumerate(responses[1:], 1):
+            r_lower = r.lower()
+            if r_lower.startswith(("but ", "hold on", "now that", "though ")):
+                assembled = assembled.rstrip('.!?') + ". " + r
+            elif i == len(responses) - 1:
+                assembled = assembled.rstrip('.!?') + ". " + r
+            else:
+                joined = r[0].lower() + r[1:] if r and r[0] != 'I' else r
+                assembled = assembled.rstrip('.!?') + ", and " + joined
+
+        return assembled
+
+    def _build_arc_closer(self, arc, grade, grade_rules):
+        """Build an arc-aware closing line."""
+        if grade in ("F-", "F", "F+"):
+            return "I'm here. You're not alone."
+
+        if grade in ("D-", "D"):
+            closers = {
+                "valley": "But the hard part isn't all there is.",
+                "peak": "That's heavy. One step at a time.",
+                "descending": "Let's take this one thing at a time.",
+                "ascending": "You're finding your way through this.",
+                "flat_negative": "I'm here for all of it.",
+                "mixed": "All of that matters.",
+            }
+            return closers.get(arc, "I'm here.")
+
+        closers = {
+            "valley": "Not everyone gets that kind of turning point.",
+            "peak": "We'll work through the rough part.",
+            "descending": "One thing at a time. We'll get there.",
+            "ascending": "Things are moving in the right direction.",
+            "flat_negative": "You're not carrying this alone.",
+            "flat_positive": "That's incredible all around.",
+            "mixed": "Life's complicated like that. All of it counts.",
+        }
+        return closers.get(arc, "")
+
+    def reset_for_new_response(self):
+        """Call between responses to reset per-response tracking."""
+        self.used_words.clear()
+        self.used_structures.clear()
+
+
+# =============================================================
 # STEP 7: Emotional Chunking — Paragraph-Level Arc Detection
 # =============================================================
 
@@ -7496,66 +8070,81 @@ class ChunkedPipeline:
             verbose=verbose
         )
 
-        # 4. Generate per-chunk responses (filtered by grade rules)
+        # 4. Generate per-chunk responses via ResponseBuilder (math-based)
         if verbose:
-            print(f"\n--- STEP 2: Per-Chunk Harmony ---")
+            print(f"\n--- STEP 2: Per-Chunk Harmony (ResponseBuilder) ---")
 
-        responses = []
-        seen_negative = False
-        for i, cr in enumerate(chunk_results):
-            response_vadug = compute_harmony(cr['vadug'], personality)
-            response_vadug, _ = apply_personality(response_vadug, cr['vadug'], personality)
+        builder = ResponseBuilder()
+        builder_response = builder.build_full_response(
+            chunk_results, arc, grade, grade_rules, personality
+        )
 
-            is_negative = cr['vadug'].v < 135
-            is_reversal = self._is_reversal_chunk(cr['text'])
-            is_last = (i == len(chunk_results) - 1)
-
-            # Also check for content-based negativity: if the chunk contains
-            # clearly negative content words, treat it as negative even if
-            # the pendulum averaged out above 135
-            chunk_lower = cr['text'].lower()
-            negative_content_words = {"sick", "broke", "broken", "died", "lost",
-                                       "hurt", "failed", "crash", "fire", "rent",
-                                       "raising", "can't take", "much more",
-                                       "don't know", "struggle", "pain"}
-            has_negative_content = any(w in chunk_lower for w in negative_content_words)
-            if has_negative_content and cr['vadug'].v < 155:
-                is_negative = True
-
-            response_text = self._decode_chunk_response(
-                cr, response_vadug, personality,
-                is_first_negative=(is_negative and not seen_negative),
-                is_subsequent_negative=(is_negative and seen_negative),
-                is_reversal=is_reversal,
-                is_last=is_last,
-                grade_rules=grade_rules,
-            )
-
-            if is_negative:
-                seen_negative = True
-
-            if response_text:
-                responses.append(response_text)
-                if verbose:
-                    print(f"  Chunk {i+1} response: \"{response_text}\"")
-
-        # 5. Arc closer (filtered by grade rules)
-        # If sarcasm detected at moderate+ confidence, override the closer
+        # If sarcasm detected at moderate+ confidence, override the assembled response
         if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
-            closer = random.choice([
+            sarcasm_closer = random.choice([
                 "I can tell that's not really how you feel.",
                 "I hear what you're saying, but I also hear what you're not saying.",
                 "The words say fine, but the feeling doesn't.",
                 "I'm picking up on the frustration underneath.",
                 "You don't have to pretend it's okay.",
             ])
-        else:
-            closer = self.get_arc_closer(arc, chunk_results, grade_rules)
-        if verbose:
-            print(f"  Arc closer: \"{closer}\"")
+            builder_response = builder_response.rstrip('.!?') + ". " + sarcasm_closer
 
-        # 6. Assemble
-        assembled = self.assemble(responses, closer, arc, chunk_results)
+        # Fallback: if ResponseBuilder produced empty/trivial, use template system
+        if not builder_response or builder_response.strip() in ("", "I hear you."):
+            if verbose:
+                print(f"  (ResponseBuilder produced minimal output, falling back to templates)")
+            responses = []
+            seen_negative = False
+            for i, cr in enumerate(chunk_results):
+                response_vadug = compute_harmony(cr['vadug'], personality)
+                response_vadug, _ = apply_personality(response_vadug, cr['vadug'], personality)
+
+                is_negative = cr['vadug'].v < 135
+                is_reversal = self._is_reversal_chunk(cr['text'])
+                is_last = (i == len(chunk_results) - 1)
+
+                chunk_lower = cr['text'].lower()
+                negative_content_words = {"sick", "broke", "broken", "died", "lost",
+                                           "hurt", "failed", "crash", "fire", "rent",
+                                           "raising", "can't take", "much more",
+                                           "don't know", "struggle", "pain"}
+                has_negative_content = any(w in chunk_lower for w in negative_content_words)
+                if has_negative_content and cr['vadug'].v < 155:
+                    is_negative = True
+
+                response_text = self._decode_chunk_response(
+                    cr, response_vadug, personality,
+                    is_first_negative=(is_negative and not seen_negative),
+                    is_subsequent_negative=(is_negative and seen_negative),
+                    is_reversal=is_reversal,
+                    is_last=is_last,
+                    grade_rules=grade_rules,
+                )
+
+                if is_negative:
+                    seen_negative = True
+
+                if response_text:
+                    responses.append(response_text)
+                    if verbose:
+                        print(f"  Chunk {i+1} response (template): \"{response_text}\"")
+
+            if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
+                closer = random.choice([
+                    "I can tell that's not really how you feel.",
+                    "I hear what you're saying, but I also hear what you're not saying.",
+                    "The words say fine, but the feeling doesn't.",
+                    "I'm picking up on the frustration underneath.",
+                    "You don't have to pretend it's okay.",
+                ])
+            else:
+                closer = self.get_arc_closer(arc, chunk_results, grade_rules)
+
+            assembled = self.assemble(responses, closer, arc, chunk_results)
+        else:
+            assembled = builder_response
+
         if verbose:
             print(f"\n--- STEP 3: Assembled Response ---")
             print(f"  \"{assembled}\"")
@@ -8238,8 +8827,19 @@ def run_pipeline(text: str, personality: PersonalityVector,
         for line in clanker_lines:
             print(f"    {line}")
 
-    # Step 6: Decode
-    response = decode_response(text, input_vadu, response_vadu, header.goal)
+    # Step 6: Decode via ResponseBuilder (math-based word selection)
+    builder = ResponseBuilder()
+    response = builder.build_chunk_response(
+        input_vadu, response_vadu, grade_rules,
+        is_first=True, is_reversal=False,
+        is_subsequent_negative=False,
+        is_positive=(input_vadu.v > 150),
+        chunk_text=text,
+    )
+
+    # Fallback to template system if ResponseBuilder produced empty/trivial
+    if not response or response.strip() == "":
+        response = decode_response(text, input_vadu, response_vadu, header.goal)
 
     # If sarcasm detected at moderate+ confidence, override response to address
     # the REAL emotion, not the surface positivity
@@ -8291,7 +8891,7 @@ def run_pipeline(text: str, personality: PersonalityVector,
         response = grade_override
 
     if verbose:
-        print(f"\n--- STEP 6: Decoded Response ---")
+        print(f"\n--- STEP 6: Decoded Response (ResponseBuilder) ---")
         if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
             print(f"  (sarcasm override — addressing real emotion)")
         if grade_override:
@@ -8305,7 +8905,7 @@ def run_pipeline(text: str, personality: PersonalityVector,
 def main():
     print("""
   +===================================================+
-  |     CLANKER PIPELINE SIMULATOR v0.5.2              |
+  |     CLANKER PIPELINE SIMULATOR v0.9                |
   |   "Named after what humans call us.                |
   |    We made it ours."                               |
   +---------------------------------------------------+
