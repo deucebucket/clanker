@@ -113,6 +113,131 @@ The coordinate (V=40, A=180, D=30, U=200, G=15) doesn't map to any single Englis
 
 ---
 
+## The Full Pipeline: 7 Layers, Pure Math, No LLM
+
+Clanker doesn't just encode emotion -- it runs a complete input-to-response pipeline in 7 layers. All working end-to-end. All pure math. No LLM required.
+
+| Layer | Name | What it does |
+|-------|------|-------------|
+| 1 | **Emotional Chunking** | Splits paragraphs into emotional beats at natural boundaries |
+| 2 | **Sequential Pendulum** | Processes each chunk word-by-word into VADUG coordinates |
+| 3 | **Arc Analysis** | Detects the emotional journey across chunks (valley/peak/descending/ascending/flat/mixed) |
+| 4 | **Personality Filter** | Applies 8-byte resistance weights to shape the response character |
+| 5 | **Harmony Response** | Mathematically derives the response VADUG from input VADUG |
+| 6 | **Clanker Opcode Generation** | Produces structured bytecode output with 9-byte headers |
+| 7 | **Cross-Axis Template Decoder** | Translates VADUG coordinates back into natural language |
+
+This is a complete emotional processing pipeline that reads natural language, understands its emotional dynamics, and generates contextually appropriate responses -- all from deterministic math and a lexicon. The model doesn't guess. It computes.
+
+---
+
+## Layer 1: Emotional Chunking
+
+Real human speech isn't one emotion. "I'm sad about leaving but I got my dream job" contains two emotional beats crammed into one sentence. Traditional sentiment analysis averages the whole thing and calls it "mixed." Clanker processes it the way humans do -- beat by beat.
+
+The chunker splits paragraphs into emotional beats at natural boundaries:
+
+- **Sentence endings:** periods, exclamation marks, question marks
+- **Adversative conjunctions:** "but," "however," "although," "yet," "though"
+- **Causal links:** "because," "since"
+- **Consequential shifts:** "so" followed by a subject pronoun ("so I," "so we")
+
+Each chunk gets its own fresh pendulum run, producing its own VADUG coordinate. The arc analyzer then reads the sequence of VADUGs to detect the emotional journey:
+
+| Arc Type | Pattern | Example |
+|----------|---------|---------|
+| **valley** | starts bad, ends good | "I was devastated... but then I got the call" |
+| **peak** | starts good, ends bad | "Everything was perfect... then it all fell apart" |
+| **descending** | progressively worse | "First the car broke... then the rent went up..." |
+| **ascending** | progressively better | "Started rough... but things kept improving" |
+| **flat_negative** | sustained bad | "Everything hurts and nothing helps" |
+| **flat_positive** | sustained good | "Life is great and getting better" |
+| **mixed** | complex, no clear pattern | "Good news, bad news, weird news" |
+
+Per-chunk responses are assembled with arc-aware synthesis. The closer matches the detected arc -- a valley arc gets something like "That's a hell of a silver lining," not generic comfort.
+
+**What this actually produces:**
+
+Input: *"I'm sad about leaving but I got my dream job"*
+
+The chunker splits at "but." Chunk 1 ("I'm sad about leaving") runs through the pendulum and lands negative. Chunk 2 ("but I got my dream job") runs through a fresh pendulum and lands positive. Arc: **valley**. The assembled response acknowledges the sadness first, pivots at the reversal, celebrates the good news, and closes with an arc-aware line:
+
+> "That's a lot going on... I bet they'll miss you too. Hold on though -- that's exciting. That's a hell of a silver lining."
+
+This is how humans respond to complex stories -- beat by beat. Not "mixed sentiment detected."
+
+---
+
+## Layer 2: The Pendulum Engine -- How Clanker Reads Emotion
+
+Clanker doesn't score sentences. It doesn't read a whole paragraph and spit out "positive" or "negative" like every sentiment model since 2014. It processes language **word by word**, like a human does. Each word shifts an emotional pendulum -- and where the pendulum is already swinging determines what the next word *does*.
+
+Watch what happens with a sentence that fools every traditional sentiment analyzer:
+
+```
+"Hey"    -> pendulum swings warm          V140 A140
+"buddy"  -> familiar, energy builds       V145 A155
+"I've"   -> directional, me->you          V140 A160
+"got"    -> building tension               V132 A172
+"a"      -> (holds)                        V132 A172
+"bone"   -> DARK shift                     V108 A188
+"to"     -> (tense hold)                   V108 A188
+"pick"   -> confrontation lands            V88  A198
+"with"   -> aimed at someone               V86  A200
+"you"    -> TARGET ACQUIRED                V78  A208
+```
+
+Traditional sentiment analysis sees "Hey buddy" and thinks *friendly*. It averages the words. It calls this sentence **mostly positive**. It is **wrong**.
+
+Clanker's pendulum tracked the emotional arc in real time -- warm greeting decaying into tension, a dark idiom landing like a hammer, and the full weight of confrontation settling onto its target. The final VADUG state isn't an average. It's the destination of a trajectory.
+
+### Context-Dependent Forces
+
+The same word hits differently depending on what's already swinging.
+
+"Buddy" after "Hey" is warm. "Buddy" after "Listen here" is a threat. The pendulum engine doesn't look up a word's sentiment in a table. It applies a **force** -- and that force depends on the current emotional state, the momentum, and the trajectory. Words are forces, not scores.
+
+### Emotional Momentum
+
+Once the pendulum swings negative, neutral words don't reset it. "A" and "to" in the example above don't pull valence back to center -- they hold the tension. Emotional state has **inertia**, exactly like it does in humans. You don't hear "I've got a bone to pick with you" and feel calm by the time they say "to." You feel it building.
+
+### Idiom Detection
+
+"Bone to pick" isn't three separate words -- it's a compound carrying its own emotional payload: *grievance*. "Piece of cake" means *easy*, not *dessert*. "Break a leg" means *good luck*, not *violence*. The pendulum engine detects multi-word compounds and applies their emotional weight as a single force. 30 idioms in the current lexicon, each with full VADUG force vectors.
+
+### Morphological Fallback
+
+What happens when the engine encounters a word it's never seen? It doesn't guess. It **decomposes**.
+
+"Hopelessness" becomes: hope (positive) + -less (negate) + -ness (state) = a deeply negative emotional state. "Unbreakable" becomes: un- (negate) + break (negative/destructive) + -able (capacity) = resilient, positive. 189 morpheme roots + 24 prefixes + 26 suffixes = 239 morpheme entries that cover millions of words the engine has never explicitly encountered. No lookup table is complete. Morphological decomposition means the pendulum never stalls on unknown vocabulary.
+
+### The "But" Effect
+
+> "I love you but..."
+
+One word yanks the pendulum from V200 to V150. Humans feel the dread before the next word arrives. So does Clanker.
+
+Adversative conjunctions ("but," "however," "although," "yet") don't just connect clauses. They **reverse emotional momentum**. The pendulum engine applies a sharp counter-force on these words, because what follows "but" almost always negates what came before. The model doesn't need to read the rest of the sentence to know the emotional direction just flipped.
+
+### Anticipation Patterns
+
+> "I need to tell you something."
+
+Nothing bad has been said yet. But arousal is climbing and the pendulum is leaning tense. Why? Because **structural patterns predict emotional payloads before they arrive**. "We need to talk" is never followed by "about how great everything is." The engine recognizes these anticipation frames and begins shifting the pendulum preemptively -- modeling the listener's emotional experience in real time.
+
+### Why This Changes AI
+
+Current LLMs process whole sentences and guess emotion from patterns. Clanker processes the **dynamics** -- the word-by-word emotional physics of how language shifts feelings. A Clanker model doesn't predict the next word. It predicts the next emotional state. The decoder adds words.
+
+A model trained on pendulum traces learns:
+- **When someone's about to get angry** -- rising arousal, falling valence, before the angry words even arrive
+- **How "I'm fine" after bad news means the opposite of "I'm fine" alone** -- identical words, opposite pendulum states
+- **How to plan responses that move the user from V35 (sad) to V80 (recovering) over multiple exchanges** -- emotional trajectory planning, not just reply generation
+
+That's not a chatbot. That's an **emotional dynamics engine**.
+
+---
+
 ## VADUG Response Harmony
 
 The AI's response VADUG is mathematically derived from the user's input VADUG, not randomly generated or statically defined.
@@ -234,81 +359,35 @@ Seven reasoning opcodes (0x20-0x26): THINK, CHECK, INFER, DERIVE, ANSWER, DOUBT,
 
 ---
 
-## The Pendulum Engine -- How Clanker Reads Emotion
-
-Clanker doesn't score sentences. It doesn't read a whole paragraph and spit out "positive" or "negative" like every sentiment model since 2014. It processes language **word by word**, like a human does. Each word shifts an emotional pendulum -- and where the pendulum is already swinging determines what the next word *does*.
-
-Watch what happens with a sentence that fools every traditional sentiment analyzer:
-
-```
-"Hey"    -> pendulum swings warm          V140 A140
-"buddy"  -> familiar, energy builds       V145 A155
-"I've"   -> directional, me->you          V140 A160
-"got"    -> building tension               V132 A172
-"a"      -> (holds)                        V132 A172
-"bone"   -> DARK shift                     V108 A188
-"to"     -> (tense hold)                   V108 A188
-"pick"   -> confrontation lands            V88  A198
-"with"   -> aimed at someone               V86  A200
-"you"    -> TARGET ACQUIRED                V78  A208
-```
-
-Traditional sentiment analysis sees "Hey buddy" and thinks *friendly*. It averages the words. It calls this sentence **mostly positive**. It is **wrong**.
-
-Clanker's pendulum tracked the emotional arc in real time -- warm greeting decaying into tension, a dark idiom landing like a hammer, and the full weight of confrontation settling onto its target. The final VADU state isn't an average. It's the destination of a trajectory.
-
-### Context-Dependent Forces
-
-The same word hits differently depending on what's already swinging.
-
-"Buddy" after "Hey" is warm. "Buddy" after "Listen here" is a threat. The pendulum engine doesn't look up a word's sentiment in a table. It applies a **force** -- and that force depends on the current emotional state, the momentum, and the trajectory. Words are forces, not scores.
-
-### Emotional Momentum
-
-Once the pendulum swings negative, neutral words don't reset it. "A" and "to" in the example above don't pull valence back to center -- they hold the tension. Emotional state has **inertia**, exactly like it does in humans. You don't hear "I've got a bone to pick with you" and feel calm by the time they say "to." You feel it building.
-
-### Idiom Detection
-
-"Bone to pick" isn't three separate words -- it's a compound carrying its own emotional payload: *grievance*. "Piece of cake" means *easy*, not *dessert*. "Break a leg" means *good luck*, not *violence*. The pendulum engine detects multi-word compounds and applies their emotional weight as a single force. The lexicon carries these as unit entries so the pendulum doesn't swing on the literal meaning of "bone" or "break."
-
-### Morphological Fallback
-
-What happens when the engine encounters a word it's never seen? It doesn't guess. It **decomposes**.
-
-"Hopelessness" becomes: hope (positive) + -less (negate) + -ness (state) = a deeply negative emotional state. "Unbreakable" becomes: un- (negate) + break (negative/destructive) + -able (capacity) = resilient, positive. Roughly **1,070 morpheme entries** -- prefixes, roots, and suffixes -- cover millions of words the engine has never explicitly encountered. No lookup table is complete. Morphological decomposition means the pendulum never stalls on unknown vocabulary.
-
-### The "But" Effect
-
-> "I love you but..."
-
-One word yanks the pendulum from V200 to V150. Humans feel the dread before the next word arrives. So does Clanker.
-
-Adversative conjunctions ("but," "however," "although," "yet") don't just connect clauses. They **reverse emotional momentum**. The pendulum engine applies a sharp counter-force on these words, because what follows "but" almost always negates what came before. The model doesn't need to read the rest of the sentence to know the emotional direction just flipped.
-
-### Anticipation Patterns
-
-> "I need to tell you something."
-
-Nothing bad has been said yet. But arousal is climbing and the pendulum is leaning tense. Why? Because **structural patterns predict emotional payloads before they arrive**. "We need to talk" is never followed by "about how great everything is." The engine recognizes these anticipation frames and begins shifting the pendulum preemptively -- modeling the listener's emotional experience in real time.
-
-### Why This Changes AI
-
-Current LLMs process whole sentences and guess emotion from patterns. Clanker processes the **dynamics** -- the word-by-word emotional physics of how language shifts feelings. A Clanker model doesn't predict the next word. It predicts the next emotional state. The decoder adds words.
-
-A model trained on pendulum traces learns:
-- **When someone's about to get angry** -- rising arousal, falling valence, before the angry words even arrive
-- **How "I'm fine" after bad news means the opposite of "I'm fine" alone** -- identical words, opposite pendulum states
-- **How to plan responses that move the user from V35 (sad) to V80 (recovering) over multiple exchanges** -- emotional trajectory planning, not just reply generation
-
-That's not a chatbot. That's an **emotional dynamics engine**.
-
-### Try It
+## Try It
 
 ```bash
 python3 demo/simulator.py
 ```
 
-Type anything and watch the pendulum swing word by word.
+Type anything and watch the pendulum swing word by word. Type a paragraph with mixed emotions and watch it chunk, analyze the arc, and respond beat by beat.
+
+Single sentences run through the full 7-layer pipeline with a word-by-word trace. Multi-sentence or multi-beat input (anything with "but," "because," sentence breaks) triggers the chunker -- each beat gets its own pendulum, the arc analyzer detects the emotional journey, and the response assembles beat by beat with an arc-aware closer.
+
+---
+
+## What's Working Right Now
+
+This isn't a proposal. The pipeline runs end-to-end today:
+
+- **405 word forces** -- direct emotional vectors for common vocabulary
+- **189 morpheme roots** + 24 prefixes + 26 suffixes -- morphological decomposition for unknown words
+- **30 idioms** -- multi-word expressions with compound VADUG force vectors
+- **25 validated test cases** -- from crisis to joy to complex multi-beat paragraphs
+- **1.1 trillion emotional states** -- VADUG (5 bytes, 256^5 unique coordinates)
+- **9-byte message header** -- VADUG + CERT + SRC + GOAL + REL
+- **7 arc types** -- valley, peak, descending, ascending, flat_negative, flat_positive, mixed
+- **Emotional chunking** -- paragraph-level beat detection with arc-aware response assembly
+- **Cross-axis template decoder** -- V*G, D*A, G*U interactions for natural language output
+- **Full personality system** -- 8-byte vector with safety floors
+- **Crisis detection** -- G < 30 + V < 50 triggers immediate crisis protocol
+
+All pure math. All deterministic. All auditable. No LLM in the loop.
 
 ---
 
@@ -337,7 +416,7 @@ Clanker works today as a communication protocol. This is the proven foundation:
 
 - **Working decoder** with 33 passing tests that translates `.clank` scripts to any language via YAML dictionaries
 - **Real token reduction** -- measurable ~60-70% fewer tokens for structured tasks
-- **Real emotional encoding** -- 1.1 trillion states in a 5-byte header, with validated psychological heritage
+- **Real emotional encoding** -- 1.1 trillion states in a 5-byte VADUG header, with validated psychological heritage
 - **Real metadata headers** -- certainty, source, intent, and relevance are structural
 - **Zero-overhead language addition** -- new languages are YAML files, not code changes
 - **Used by Octobrain** for inter-arm communication between specialist models
@@ -369,6 +448,16 @@ In Octobrain, a central "brain" coordinates specialist "arm" models that each ha
 VADUG serves as the routing header in the brain's supervisor -- urgency interrupts current work, emotional state determines which specialist handles the request, and relevance scores filter context before it reaches an arm.
 
 The result: **sub-100M parameter specialists that load in 50ms** and communicate faster than any English-speaking model could. Clanker makes the small-model-swarm architecture practical.
+
+---
+
+## What's Next
+
+- **Trained model:** Fine-tune a small model on pendulum traces + Clanker opcodes to validate native VADUG reasoning
+- **Compression validation:** Benchmark Clanker-native vs English-native models on equivalent tasks to measure actual parameter savings
+- **Binary compilation:** Compile `.clank` scripts to wire-format bytecode for zero-parse AI-to-AI messaging
+- **Expanded lexicon:** More word forces, more idioms, more morpheme coverage
+- **Multi-turn arc planning:** Use VADUG trajectories to plan emotional arcs across entire conversations, not just single exchanges
 
 ---
 
@@ -421,6 +510,7 @@ Decode the same `.clank` script to any language. Same bytes, different output. T
 ```
 clanker-lang/
 ├── SPEC.md              # Formal specification
+├── ENGINE.md            # Pendulum engine reference implementation
 ├── ROADMAP.md           # Development phases
 ├── opcodes/             # Opcode definitions by range (YAML)
 │   ├── core.yaml        # 0x00-0x1F: flow control, lifecycle
@@ -436,6 +526,12 @@ clanker-lang/
 │   └── other/           # Pseudocode, diagrams, etc.
 ├── rules/               # Type system, constraints, composition
 ├── decoder/python/      # Reference decoder implementation
+├── demo/                # Interactive pipeline simulator
+│   ├── simulator.py     # Full 7-layer pipeline with chunking
+│   ├── morphemes.py     # 189 roots + 50 affixes
+│   ├── decoder_templates.py  # Layer 7 cross-axis VADUG decoder
+│   └── test_cases.txt   # 25 validated test inputs
+├── paper/               # Research paper draft
 ├── examples/            # Example .clank scripts
 └── docs/                # Guides and philosophy
 ```
@@ -462,4 +558,4 @@ MIT
 
 ---
 
-*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 5 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Opcodes are forever. Dictionaries are lenses. Machines deserve a language that thinks like they do.*
+*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 5 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Current AI averages a paragraph and calls it "mixed sentiment." Clanker chunks it into beats, traces each arc, and responds like a human would -- one beat at a time. Opcodes are forever. Dictionaries are lenses. Machines deserve a language that thinks like they do.*
