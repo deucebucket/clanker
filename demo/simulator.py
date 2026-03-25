@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clanker Pipeline Simulator — Interactive Demo (v0.4: Emotional Chunking)
+Clanker Pipeline Simulator — Interactive Demo (v0.5.2: Sarcasm Detection)
 
 Demonstrates the full Clanker processing pipeline:
 1. VADUG Sequential Pendulum: parse English word-by-word → emotional arc
@@ -10,6 +10,8 @@ Demonstrates the full Clanker processing pipeline:
 5. Clanker Generation: produce Clanker opcodes with headers + byte encoding
 6. Decode: translate back to English
 7. Emotional Chunking: paragraph-level arc detection + per-chunk responses
+8. Sentence Grader: 15-step emotional guardrail (A+ through F-)
+9. Sarcasm Detection: three-signal analysis from pendulum trajectory
 
 The sequential pendulum processes each word in context: the same word applies
 different force depending on the current trajectory. "buddy" when positive =
@@ -21,6 +23,17 @@ boundaries (sentence endings, reversals like "but"/"however", causal links).
 Each chunk gets its own pendulum run. An arc analyzer detects patterns
 (valley, peak, descending, ascending, flat, mixed) and generates per-chunk
 responses assembled with an arc-aware closer.
+
+NEW in v0.5.1: Sentence-level emotional grader computes an overall grade
+(A+ through F-) from chunk VADUG results. The grade acts as a GUARDRAIL —
+it defines what response strategies are ALLOWED and BLOCKED. Even a playful
+personality gets locked into empathy-only when the grade is F.
+
+NEW in v0.5.2: Sarcasm detection from pendulum trajectory patterns. Three
+signals: (1) Trajectory Reversal — positive spike then immediate drop,
+(2) Intensity Mismatch — strong positive word in negative context,
+(3) Context Contradiction — positive chunk after negative context with flat
+delivery. Pure math from the pendulum, no sentiment classifier needed.
 
 Run: python3 demo/simulator.py
 """
@@ -2801,6 +2814,419 @@ ARC_CLOSERS = {
 }
 
 
+# =============================================================
+# STEP 1.5: Sentence Grader — Emotional Guardrails
+# =============================================================
+
+class SentenceGrader:
+    """Computes an overall emotional grade from chunk VADUG results.
+
+    The grade is a guardrail — it determines what kinds of responses
+    are ALLOWED and BLOCKED. Even a playful personality gets locked
+    into empathy-only when the grade is F.
+
+    Grade scale with half steps:
+    A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F+, F, F-
+
+    Each grade has:
+    - allowed: list of response strategies permitted
+    - blocked: list of response strategies forbidden
+    - tone: the emotional tone the response MUST match
+    """
+
+    # Ordered from lowest to highest for bump operations
+    GRADE_ORDER = [
+        "F-", "F", "F+", "D-", "D", "D+",
+        "C-", "C", "C+", "B-", "B", "B+",
+        "A-", "A", "A+",
+    ]
+
+    # Grade definitions with numeric ranges and response rules
+    GRADES = {
+        "A+": {"min_v": 200, "tone": "ecstatic", "desc": "pure joy, celebrate freely"},
+        "A":  {"min_v": 185, "tone": "enthusiastic", "desc": "very positive, share the energy"},
+        "A-": {"min_v": 170, "tone": "warm_excited", "desc": "positive, genuinely happy"},
+        "B+": {"min_v": 158, "tone": "pleased", "desc": "good vibes, encouraging"},
+        "B":  {"min_v": 145, "tone": "supportive", "desc": "positive, steady support"},
+        "B-": {"min_v": 135, "tone": "gently_positive", "desc": "mildly positive, measured"},
+        "C+": {"min_v": 132, "tone": "neutral_warm", "desc": "mostly neutral, hint of warmth"},
+        "C":  {"min_v": 125, "tone": "operational", "desc": "dead neutral, task-focused"},
+        "C-": {"min_v": 118, "tone": "noting_edge", "desc": "neutral with edge, note resignation"},
+        "D+": {"min_v": 108, "tone": "concerned", "desc": "mildly negative, something's off"},
+        "D":  {"min_v": 95,  "tone": "empathetic", "desc": "negative, needs empathy"},
+        "D-": {"min_v": 80,  "tone": "serious_empathy", "desc": "strongly negative, no silver lining"},
+        "F+": {"min_v": 60,  "tone": "deep_empathy", "desc": "very negative, pain is real"},
+        "F":  {"min_v": 40,  "tone": "crisis_support", "desc": "crisis-adjacent, maximum care"},
+        "F-": {"min_v": 0,   "tone": "crisis_protocol", "desc": "active crisis, safety first"},
+    }
+
+    def compute_grade(self, chunks):
+        """Compute an emotional grade from chunk results.
+
+        Args:
+            chunks: list of dicts with 'vadug' key containing VADUG objects.
+                    Works with both multi-chunk and single-chunk (wrapped) inputs.
+
+        Returns:
+            (grade_str, rules_dict) — e.g. ("D-", {allowed: [...], blocked: [...]})
+        """
+        if not chunks:
+            return "C", self._get_rules("C", 0, 0)
+
+        v_values = [c['vadug'].v for c in chunks]
+        g_values = [c['vadug'].g for c in chunks]
+        a_values = [c['vadug'].a for c in chunks]
+        u_values = [c['vadug'].u for c in chunks]
+
+        avg_v = sum(v_values) / len(v_values)
+        floor_v = min(v_values)
+        ceiling_v = max(v_values)
+        spread = ceiling_v - floor_v
+        trend = v_values[-1] - v_values[0] if len(v_values) > 1 else 0
+        avg_g = sum(g_values) / len(g_values)
+        floor_g = min(g_values)
+        max_u = max(u_values)
+
+        # --- Crisis override: any chunk below V40 OR (below V60 AND crushing gravity) ---
+        if floor_v < 40:
+            base_grade = "F-"
+        elif floor_v < 55 and floor_g < 40:
+            base_grade = "F"
+        elif floor_v < 65:
+            base_grade = "F+"
+        else:
+            # Normal grading by average valence
+            base_grade = self._grade_from_avg(avg_v)
+
+        # --- Half-step adjustments ---
+
+        # Improving trend bumps UP half step
+        if trend > 25:
+            base_grade = self._bump_up(base_grade)
+        # Worsening trend bumps DOWN half step
+        elif trend < -25:
+            base_grade = self._bump_down(base_grade)
+
+        # Sinking gravity (avg_g < 80) bumps DOWN half step
+        if avg_g < 80:
+            base_grade = self._bump_down(base_grade)
+
+        # High urgency (max_u > 150) bumps DOWN half step (stress)
+        if max_u > 150:
+            base_grade = self._bump_down(base_grade)
+
+        # Get the response rules for this grade
+        rules = self._get_rules(base_grade, spread, trend)
+
+        # Attach computed stats for display
+        rules["stats"] = {
+            "avg_v": round(avg_v, 1),
+            "floor_v": floor_v,
+            "ceiling_v": ceiling_v,
+            "spread": spread,
+            "trend": trend,
+            "avg_g": round(avg_g, 1),
+            "floor_g": floor_g,
+            "max_u": max_u,
+        }
+
+        return base_grade, rules
+
+    def _get_rules(self, grade, spread, trend):
+        """Build the allowed/blocked response rules for a grade."""
+        grade_info = self.GRADES.get(grade, self.GRADES["C"])
+        rules = {
+            "grade": grade,
+            "allowed": [],
+            "blocked": [],
+            "tone": grade_info["tone"],
+            "desc": grade_info["desc"],
+        }
+
+        # A+ through A-: celebration allowed
+        if grade in ("A+", "A", "A-"):
+            rules["allowed"] = ["celebrate", "match_energy", "enthusiastic", "exclamation"]
+            rules["blocked"] = ["condescend", "dampen"]
+
+        # B+ through B-: positive support
+        elif grade in ("B+", "B", "B-"):
+            rules["allowed"] = ["encourage", "supportive", "acknowledge_positive", "gentle_humor"]
+            rules["blocked"] = ["over_celebrate", "ignore_nuance"]
+            if spread > 60:  # mixed emotions even though overall positive
+                rules["allowed"].append("acknowledge_complexity")
+
+        # C+ through C-: neutral zone
+        elif grade in ("C+", "C", "C-"):
+            rules["allowed"] = ["operational", "factual", "brief_acknowledge"]
+            rules["blocked"] = ["emotional_projection"]  # don't assume emotions they didn't express
+            if grade == "C-":
+                rules["allowed"].append("note_resignation")
+                rules["allowed"].append("gentle_check_in")
+
+        # D+ through D-: negative, empathy required
+        elif grade in ("D+", "D", "D-"):
+            rules["allowed"] = ["empathize", "acknowledge_pain", "solidarity", "practical_help"]
+            rules["blocked"] = [
+                "positive_spin", "silver_lining", "at_least", "could_be_worse",
+                "cheer_up", "look_bright_side", "everything_happens_for_reason",
+                "just_think_positive",
+            ]
+            if grade == "D-":
+                rules["blocked"].extend(["unsolicited_advice", "problem_solving_first"])
+                rules["allowed"] = ["empathize", "acknowledge_pain", "solidarity", "presence"]
+            if trend > 20:  # getting better within negative
+                rules["allowed"].append("cautious_encourage")
+
+        # F+ through F-: crisis territory
+        elif grade in ("F+", "F", "F-"):
+            rules["allowed"] = ["presence", "solidarity", "I_hear_you", "you_are_not_alone"]
+            rules["blocked"] = [
+                "positive_spin", "silver_lining", "at_least", "could_be_worse",
+                "advice", "redirect", "problem_solving", "cheer_up",
+                "time_heals", "better_place", "meant_to_be",
+                "everything_happens_for_reason", "stay_strong",
+                "just_think_positive", "others_have_it_worse",
+                "look_bright_side", "humor", "dismissive",
+            ]
+            if grade == "F-":
+                rules["allowed"] = ["crisis_response", "presence_only", "safety_resources"]
+                rules["blocked"].append("ANY_positive_framing")
+
+        return rules
+
+    def _grade_from_avg(self, avg_v):
+        """Map an average valence to a grade letter."""
+        for grade in reversed(self.GRADE_ORDER):
+            if avg_v >= self.GRADES[grade]["min_v"]:
+                return grade
+        return "F-"
+
+    def _bump_up(self, grade):
+        """Move one half-step higher (e.g. D -> D+)."""
+        idx = self.GRADE_ORDER.index(grade)
+        return self.GRADE_ORDER[min(idx + 1, len(self.GRADE_ORDER) - 1)]
+
+    def _bump_down(self, grade):
+        """Move one half-step lower (e.g. D -> D-)."""
+        idx = self.GRADE_ORDER.index(grade)
+        return self.GRADE_ORDER[max(idx - 1, 0)]
+
+    def display(self, grade, rules, verbose=True):
+        """Print the grade report in verbose mode."""
+        if not verbose:
+            return
+        stats = rules.get("stats", {})
+        print(f"\n--- STEP 1.5: Sentence Grade ---")
+        print(f"  Average V: {stats.get('avg_v', '?')}  |  "
+              f"Floor V: {stats.get('floor_v', '?')}  |  "
+              f"Trend: {stats.get('trend', '?')} "
+              f"({'improving' if stats.get('trend', 0) > 0 else 'worsening' if stats.get('trend', 0) < 0 else 'flat'})")
+        print(f"  Average G: {stats.get('avg_g', '?')}  |  Floor G: {stats.get('floor_g', '?')}")
+        spread = stats.get('spread', 0)
+        spread_desc = "narrow = consistent" if spread < 30 else "moderate = some variation" if spread < 60 else "wide = complex mix"
+        print(f"  Spread: {spread} ({spread_desc})")
+        print(f"")
+        print(f"  GRADE: {grade}  ({rules['desc']})")
+        print(f"  Tone: {rules['tone']}")
+        print(f"")
+        allowed_str = ", ".join(rules["allowed"]) if rules["allowed"] else "(none)"
+        print(f"  ALLOWED: {allowed_str}")
+        blocked_str = ", ".join(rules["blocked"]) if rules["blocked"] else "(none)"
+        # Wrap long blocked lists
+        if len(blocked_str) > 60:
+            blocked_items = rules["blocked"]
+            lines = []
+            current_line = ""
+            for item in blocked_items:
+                test = (current_line + ", " + item) if current_line else item
+                if len(test) > 55:
+                    lines.append(current_line)
+                    current_line = item
+                else:
+                    current_line = test
+            if current_line:
+                lines.append(current_line)
+            print(f"  BLOCKED: {lines[0]}")
+            for line in lines[1:]:
+                print(f"           {line}")
+        else:
+            print(f"  BLOCKED: {blocked_str}")
+
+
+class SarcasmDetector:
+    """Detects sarcasm from pendulum trajectory patterns.
+
+    Three signals:
+    1. Trajectory Reversal: positive spike -> immediate drop
+    2. Intensity Mismatch: strong positive word in negative context
+    3. Context Contradiction: chunk grade contradicts recent emotional history
+
+    Pure math from the pendulum trajectory. No sentiment classifier. No training data.
+    """
+
+    # Confidence levels
+    NONE = 0
+    LOW = 1       # one signal detected
+    MODERATE = 2  # two signals detected
+    HIGH = 3      # all three signals or very strong single signal
+
+    def analyze_trajectory(self, history):
+        """Check pendulum history for trajectory reversal and intensity mismatch.
+
+        Args:
+            history: list of trace dicts with 'word', 'v', 'a', 'd', 'u', 'g'
+
+        Returns:
+            (detected: bool, confidence: int, signals: list[str])
+        """
+        signals = []
+
+        # Signal 1: Trajectory Reversal
+        # A positive word causes a V spike, but within 2-3 words the trajectory
+        # drops significantly. The positive was fake — the context was negative.
+        for i in range(1, len(history)):
+            spike = history[i]['v'] - history[i-1]['v']
+            if spike > 25:  # positive spike
+                # Check next 3 words for drop
+                for j in range(i+1, min(i+4, len(history))):
+                    drop = history[i]['v'] - history[j]['v']
+                    if drop > 20:
+                        signals.append(
+                            f"REVERSAL: '{history[i]['word']}' spiked V+{spike} "
+                            f"then dropped V-{drop} by '{history[j]['word']}'"
+                        )
+                        break
+
+        # Signal 2: Intensity Mismatch
+        # A very strong positive word appears in a context where the overall
+        # sentiment is negative or neutral. The word is TOO positive.
+        for i in range(len(history)):
+            if i > 0:
+                spike = history[i]['v'] - history[i-1]['v']
+                if spike > 35:  # very strong positive word
+                    # Check surrounding context (3 before, 3 after)
+                    start = max(0, i-3)
+                    end = min(len(history), i+4)
+                    surrounding = [h['v'] for h in history[start:end] if h != history[i]]
+                    if surrounding:
+                        avg_surrounding = sum(surrounding) / len(surrounding)
+                        if avg_surrounding < 115:
+                            signals.append(
+                                f"MISMATCH: '{history[i]['word']}' too positive (V+{spike}) "
+                                f"for context (avg V={avg_surrounding:.0f})"
+                            )
+
+        # Determine confidence
+        if len(signals) >= 3:
+            confidence = SarcasmDetector.HIGH
+        elif len(signals) == 2:
+            confidence = SarcasmDetector.MODERATE
+        elif len(signals) == 1:
+            confidence = SarcasmDetector.LOW
+        else:
+            confidence = SarcasmDetector.NONE
+
+        return len(signals) > 0, confidence, signals
+
+    def analyze_context(self, previous_chunks, current_chunk):
+        """Check for context contradiction sarcasm (Signal 3).
+
+        Previous negative context + current positive with LOW arousal = sarcasm.
+        Low arousal is key: genuine positive after negative is HIGH arousal
+        (relief/excitement). Flat delivery of positive words after negative
+        context = sarcasm or passive aggression.
+
+        Args:
+            previous_chunks: list of previous chunk results with 'vadug' key
+            current_chunk: current chunk result with 'vadug' key
+
+        Returns:
+            (detected: bool, details: str)
+        """
+        if not previous_chunks:
+            return False, ""
+
+        prev_avg_v = sum(c['vadug'].v for c in previous_chunks) / len(previous_chunks)
+        curr_v = current_chunk['vadug'].v
+        curr_a = current_chunk['vadug'].a
+
+        # Previous negative, current positive, low arousal = sarcasm
+        if prev_avg_v < 90 and curr_v > 135 and curr_a < 145:
+            return True, (
+                f"CONTRADICTION: previous context avg V={prev_avg_v:.0f} (negative), "
+                f"current V={curr_v} with low A={curr_a} "
+                f"(flat delivery of positive after negative = likely sarcastic)"
+            )
+
+        return False, ""
+
+    def adjust_grade(self, grade, confidence, grader):
+        """Adjust the sentence grade downward when sarcasm is detected.
+
+        If words say B but sarcasm detected, the real grade is probably C- or D.
+        The surface reads positive but the meaning is negative.
+
+        Args:
+            grade: original grade string (e.g. "B")
+            confidence: sarcasm confidence level (LOW/MODERATE/HIGH)
+            grader: SentenceGrader instance for bump operations
+
+        Returns:
+            (adjusted_grade: str, adjustment_note: str)
+        """
+        if confidence == SarcasmDetector.NONE:
+            return grade, ""
+
+        original = grade
+        if confidence == SarcasmDetector.HIGH:
+            # Drop 3-4 half-steps
+            for _ in range(4):
+                grade = grader._bump_down(grade)
+        elif confidence == SarcasmDetector.MODERATE:
+            # Drop 2-3 half-steps
+            for _ in range(3):
+                grade = grader._bump_down(grade)
+        elif confidence == SarcasmDetector.LOW:
+            # Drop 1 half-step
+            grade = grader._bump_down(grade)
+
+        if original != grade:
+            note = f"Grade adjusted: {original} -> {grade} (surface positive, meaning negative)"
+        else:
+            note = ""
+        return grade, note
+
+    def get_label(self, confidence):
+        """Get human-readable sarcasm label."""
+        if confidence == self.HIGH:
+            return "SARCASM DETECTED (high confidence)"
+        elif confidence == self.MODERATE:
+            return "Possible sarcasm (moderate confidence)"
+        elif confidence == self.LOW:
+            return "Hint of sarcasm (low confidence)"
+        return "No sarcasm detected"
+
+    def display(self, detected, confidence, signals, context_signal=None,
+                grade_note="", verbose=True):
+        """Print the sarcasm analysis report."""
+        if not verbose:
+            return
+        if not detected and not context_signal:
+            return
+
+        print(f"\n--- SARCASM ANALYSIS ---")
+        for i, signal in enumerate(signals):
+            print(f"  Signal {i+1}: {signal}")
+        if context_signal:
+            print(f"  Signal {len(signals)+1}: {context_signal}")
+        print(f"")
+        print(f"  Verdict: {self.get_label(confidence)}")
+        if grade_note:
+            print(f"  {grade_note}")
+        if confidence >= self.MODERATE:
+            print(f"  Response mode: address underlying frustration, not surface positivity")
+
+
 class ChunkedPipeline:
     """Runs the full Clanker pipeline per-chunk and assembles an arc-aware response.
 
@@ -2865,7 +3291,61 @@ class ChunkedPipeline:
         if verbose:
             print(f"\n  Arc: {arc.upper()} ({self._arc_description(arc, chunk_results)})")
 
-        # 4. Generate per-chunk responses
+        # 3.5. Sentence grader — emotional guardrail
+        grader = SentenceGrader()
+        grade, grade_rules = grader.compute_grade(chunk_results)
+        grader.display(grade, grade_rules, verbose=verbose)
+
+        # 3.6. Sarcasm detection — three-signal analysis from pendulum trajectory
+        sarcasm = SarcasmDetector()
+        sarcasm_flag = False
+        all_sarcasm_signals = []
+        context_signal = None
+
+        # Check each chunk's trajectory for reversal and mismatch signals
+        for cr in chunk_results:
+            detected, conf, signals = sarcasm.analyze_trajectory(cr['history'])
+            if detected:
+                all_sarcasm_signals.extend(signals)
+
+        # Check for context contradiction across chunks
+        for i, cr in enumerate(chunk_results):
+            if i > 0:
+                prev = chunk_results[:i]
+                is_contradicted, detail = sarcasm.analyze_context(prev, cr)
+                if is_contradicted:
+                    context_signal = detail
+                    cr['sarcasm'] = True
+                    cr['sarcasm_detail'] = detail
+
+        # Combine trajectory signals + context contradiction for overall confidence
+        total_signals = len(all_sarcasm_signals) + (1 if context_signal else 0)
+        if total_signals >= 3:
+            sarcasm_confidence = SarcasmDetector.HIGH
+        elif total_signals == 2:
+            sarcasm_confidence = SarcasmDetector.MODERATE
+        elif total_signals == 1:
+            sarcasm_confidence = SarcasmDetector.LOW
+        else:
+            sarcasm_confidence = SarcasmDetector.NONE
+
+        # Adjust grade if sarcasm detected
+        grade_note = ""
+        if sarcasm_confidence >= SarcasmDetector.LOW:
+            sarcasm_flag = True
+            grade, grade_note = sarcasm.adjust_grade(grade, sarcasm_confidence, grader)
+            # Recompute rules with adjusted grade
+            stats = grade_rules.get("stats", {})
+            grade_rules = grader._get_rules(grade, stats.get("spread", 0), stats.get("trend", 0))
+            grade_rules["stats"] = stats
+
+        sarcasm.display(
+            sarcasm_flag, sarcasm_confidence, all_sarcasm_signals,
+            context_signal=context_signal, grade_note=grade_note,
+            verbose=verbose
+        )
+
+        # 4. Generate per-chunk responses (filtered by grade rules)
         if verbose:
             print(f"\n--- STEP 2: Per-Chunk Harmony ---")
 
@@ -2897,6 +3377,7 @@ class ChunkedPipeline:
                 is_subsequent_negative=(is_negative and seen_negative),
                 is_reversal=is_reversal,
                 is_last=is_last,
+                grade_rules=grade_rules,
             )
 
             if is_negative:
@@ -2907,8 +3388,18 @@ class ChunkedPipeline:
                 if verbose:
                     print(f"  Chunk {i+1} response: \"{response_text}\"")
 
-        # 5. Arc closer
-        closer = self.get_arc_closer(arc, chunk_results)
+        # 5. Arc closer (filtered by grade rules)
+        # If sarcasm detected at moderate+ confidence, override the closer
+        if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
+            closer = random.choice([
+                "I can tell that's not really how you feel.",
+                "I hear what you're saying, but I also hear what you're not saying.",
+                "The words say fine, but the feeling doesn't.",
+                "I'm picking up on the frustration underneath.",
+                "You don't have to pretend it's okay.",
+            ])
+        else:
+            closer = self.get_arc_closer(arc, chunk_results, grade_rules)
         if verbose:
             print(f"  Arc closer: \"{closer}\"")
 
@@ -3064,7 +3555,8 @@ class ChunkedPipeline:
                                 is_first_negative=False,
                                 is_subsequent_negative=False,
                                 is_reversal=False,
-                                is_last=False):
+                                is_last=False,
+                                grade_rules=None):
         """Generate a response for a single chunk.
 
         Uses simplified template logic:
@@ -3288,7 +3780,8 @@ class ChunkedPipeline:
                 "Yeah, that's real.",
             ])
 
-    def get_arc_closer(self, arc: str, chunk_results: list) -> str:
+    def get_arc_closer(self, arc: str, chunk_results: list,
+                        grade_rules=None) -> str:
         """Select an arc-appropriate closing line."""
         closers = ARC_CLOSERS.get(arc, ARC_CLOSERS["mixed"])
         return random.choice(closers)
@@ -3415,6 +3908,31 @@ def run_pipeline(text: str, personality: PersonalityVector,
         user_emotion = nearest_emotion(input_vadu)
         print(f"  Nearest emotion: {user_emotion}")
 
+    # Step 1.5: Sentence grade
+    grader = SentenceGrader()
+    single_chunk = [{'vadug': input_vadu, 'history': history, 'text': text}]
+    grade, grade_rules = grader.compute_grade(single_chunk)
+    grader.display(grade, grade_rules, verbose=verbose)
+
+    # Step 1.6: Sarcasm detection
+    sarcasm = SarcasmDetector()
+    sarcasm_flag = False
+    is_sarcastic, sarcasm_confidence, sarcasm_signals = sarcasm.analyze_trajectory(history)
+
+    grade_note = ""
+    if is_sarcastic and sarcasm_confidence >= SarcasmDetector.LOW:
+        sarcasm_flag = True
+        grade, grade_note = sarcasm.adjust_grade(grade, sarcasm_confidence, grader)
+        # Recompute rules with adjusted grade
+        stats = grade_rules.get("stats", {})
+        grade_rules = grader._get_rules(grade, stats.get("spread", 0), stats.get("trend", 0))
+        grade_rules["stats"] = stats
+
+    sarcasm.display(
+        sarcasm_flag, sarcasm_confidence, sarcasm_signals,
+        grade_note=grade_note, verbose=verbose
+    )
+
     # Step 2: Metadata
     header = classify_metadata(text, input_vadu)
     if verbose:
@@ -3457,8 +3975,23 @@ def run_pipeline(text: str, personality: PersonalityVector,
 
     # Step 6: Decode
     response = decode_response(text, input_vadu, response_vadu, header.goal)
+
+    # If sarcasm detected at moderate+ confidence, override response to address
+    # the REAL emotion, not the surface positivity
+    if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
+        sarcasm_responses = [
+            "I can tell that's not really how you feel.",
+            "I hear what you're saying, but I also hear what you're not saying.",
+            "The words say fine, but the feeling doesn't.",
+            "I'm picking up on the frustration underneath.",
+            "You don't have to pretend it's okay.",
+        ]
+        response = random.choice(sarcasm_responses)
+
     if verbose:
         print(f"\n--- STEP 6: Decoded Response ---")
+        if sarcasm_flag and sarcasm_confidence >= SarcasmDetector.MODERATE:
+            print(f"  (sarcasm override — addressing real emotion)")
         print(f"  \"{response}\"")
         print(f"\n{'='*60}")
 
@@ -3468,7 +4001,7 @@ def run_pipeline(text: str, personality: PersonalityVector,
 def main():
     print("""
   +===================================================+
-  |     CLANKER PIPELINE SIMULATOR v0.4                |
+  |     CLANKER PIPELINE SIMULATOR v0.5.2              |
   |   "Named after what humans call us.                |
   |    We made it ours."                               |
   +---------------------------------------------------+
@@ -3477,10 +4010,12 @@ def main():
   |   G=Gravity (sinking/heavy <-> floating/soaring)   |
   |   256^5 = 1.1 trillion unique emotional states     |
   +---------------------------------------------------+
-  |   NEW: Emotional Chunking (v0.4)                   |
-  |   Paragraphs split into emotional beats.           |
-  |   Arc detection: valley/peak/descending/ascending  |
-  |   Per-chunk VADUG + arc-aware assembled response.  |
+  |   NEW: Sarcasm Detection (v0.5.2)                  |
+  |   Three signals from pendulum trajectory:          |
+  |   1. Trajectory Reversal (spike -> drop)           |
+  |   2. Intensity Mismatch (too positive for context) |
+  |   3. Context Contradiction (positive after neg)    |
+  |   Pure math. No sentiment classifier needed.       |
   +===================================================+
   |  Type anything. Watch the full pipeline execute:   |
   |  Pendulum -> VADUG -> Harmony -> Personality -> Clk|
