@@ -5916,6 +5916,413 @@ WORD_FORCES = {
     "woman": (15, 10, 10, 5, 0),
     "year": (5, 5, 5, 5, 10),
     "yellow": (30, 20, 10, 5, -10),
+
+    # ── Gemini lexicon 15-17 ──
+    "after": (40, 25, 50, 45, 35),
+    "again": (25, 45, 30, 55, 10),
+    "airport": (35, 75, 45, 85, 45),
+    "all": (60, 35, 75, 15, 40),
+    "allow": (65, 15, 50, 20, -15),
+    "and": (10, 5, 20, 5, 0),
+    "ankle": (10, 15, 25, 10, 15),
+    "appear": (15, 25, 10, 25, 0),
+    "apron": (40, -10, 25, 5, 15),
+    "around": (20, 20, 15, 10, 0),
+    "back": (10, 10, 20, 15, 15),
+    "backpack": (60, 45, 40, 20, 30),
+    "bag": (25, 15, 25, 30, 15),
+    "bake-verb": (95, 45, 45, 40, 25),
+    "bank": (20, 20, 50, 30, 55),
+    "bath": (75, -35, 50, 15, 15),
+    "battery-common": (45, 25, 45, 70, 25),
+    "beach": (95, 45, 40, 15, -25),
+    "because": (45, 20, 55, 30, 20),
+    "bed": (85, -45, 50, 0, -50),
+    "beer-common": (50, 25, -15, 10, 15),
+    "before": (20, 35, 35, 60, 50),
+    "belt": (20, 10, 35, 5, 15),
+    "bench": (70, -35, 35, 0, 40),
+    "big": (35, 25, 55, 10, 70),
+    "bit": (15, 5, 5, 5, 0),
+    "blackboard": (15, 5, 25, 5, 50),
+    "bleach": (-30, 45, 35, 45, 10),
+    "blink": (15, 20, 15, 10, -10),
+    "blood": (-15, 80, 25, 90, 20),
+    "bolt": (10, 25, 35, 20, 50),
+    "bookcase": (50, -10, 40, 0, 55),
+    "bottle": (25, 10, 20, 25, 15),
+    "bottom": (-15, -10, 25, 5, 80),
+    "box": (15, 5, 20, 15, 35),
+    "box-shipping": (35, 45, 30, 55, 45),
+    "brake": (10, 65, 55, 95, 35),
+    "break-action": (-75, 75, 25, 60, 20),
+    "bring": (45, 35, 40, 55, 10),
+    "brush": (45, -5, 25, 15, -5),
+    "brush-paint": (65, 25, 40, 15, -5),
+    "build": (85, 55, 60, 30, 65),
+    "building": (15, 10, 45, 5, 75),
+    "bulb": (65, 25, 35, 35, -25),
+    "bunch": (50, 25, 25, 10, 15),
+    "bush": (40, 0, 20, 5, 30),
+    "button": (15, 15, 15, 10, 0),
+    "cabinet": (15, 0, 30, 10, 40),
+    "can": (10, 5, 15, 20, 20),
+    "car": (45, 45, 50, 40, 55),
+    "card-payment": (45, 35, 45, 40, 10),
+    "carry": (20, 45, 40, 40, 55),
+    "cash": (85, 65, 55, 50, 25),
+    "century": (65, 5, 85, 15, 100),
+    "chalk": (10, 15, 15, 10, 5),
+    "chapter": (45, 15, 30, 5, 20),
+    "check-payment": (20, 30, 35, 45, 15),
+    "chew": (35, 20, 30, 35, 15),
+    "child-human": (80, 75, -25, 35, -40),
+    "choice": (45, 45, 60, 55, 15),
+    "choose": (55, 35, 55, 45, 10),
+    "city": (45, 55, 35, 30, 45),
+    "classroom": (35, 15, 25, 15, 20),
+    "clean-verb": (95, 35, 55, 35, 20),
+    "clear-transparent": (85, -20, 50, 15, -55),
+    "climb": (70, 85, 55, 45, 75),
+    "clip": (15, 15, 20, 15, 5),
+    "clothes": (40, 10, 30, 15, 10),
+    "clothespin": (15, 15, 20, 15, 5),
+    "coffee-common": (70, 60, 35, 60, -15),
+    "collar": (15, 10, 25, 5, 10),
+    "comb": (40, -10, 25, 15, -10),
+    "come": (35, 30, 25, 40, 0),
+    "cook-verb": (85, 55, 50, 55, 35),
+    "cord": (10, 15, 25, 30, 15),
+    "corner": (-5, 15, -15, 10, 15),
+    "corner-street": (0, 15, 10, 20, 10),
+    "correct": (90, 20, 65, 30, -25),
+    "cost": (-15, 50, 30, 65, 30),
+    "cotton": (85, -35, 40, 0, -25),
+    "cough": (-45, 45, 15, 55, 15),
+    "count": (15, 20, 45, 45, 25),
+    "countertop": (20, -5, 40, 10, 50),
+    "cow": (55, -20, 45, 5, 75),
+    "cream": (90, -30, 40, 10, 5),
+    "cup": (35, 10, 25, 30, 5),
+    "curtain": (40, -15, 20, 5, -20),
+    "daily": (25, -15, 45, 30, 35),
+    "dark-concept": (-85, 35, -40, 25, 90),
+    "day-concept": (90, 45, 55, 15, -60),
+    "death-concept": (-100, -50, -100, 65, 100),
+    "decade": (45, 10, 75, 35, 100),
+    "desk": (25, -5, 40, 15, 65),
+    "detergent": (40, 10, 30, 25, 15),
+    "dictionary": (55, 0, 55, 10, 60),
+    "die-verb": (-100, 55, -100, 70, 95),
+    "dig": (30, 60, 45, 35, 65),
+    "dozen": (45, 25, 35, 15, 55),
+    "drawer": (10, 5, 25, 15, 25),
+    "drive-verb": (65, 55, 60, 45, 45),
+    "drop": (-30, 50, -40, 45, 60),
+    "dry": (15, -15, 25, 10, 5),
+    "duck": (60, 35, 15, 15, -10),
+    "dusty": (-45, -5, -20, 15, 15),
+    "early": (50, 45, 40, 85, -25),
+    "east": (45, 25, 25, 10, -10),
+    "eat": (85, 35, 45, 60, 15),
+    "egg": (65, 10, 35, 40, 15),
+    "elbow": (10, 10, 25, 5, 15),
+    "envelope": (45, 30, 25, 40, -5),
+    "eraser": (40, -15, 20, 15, -15),
+    "fabric": (55, -10, 30, 10, -10),
+    "fall-verb": (-95, 95, -100, 75, 100),
+    "fast": (65, 95, 55, 95, -70),
+    "fear-verb": (-85, 85, -55, 90, 30),
+    "fence": (15, 5, 45, 5, 45),
+    "few": (-15, 5, -20, 5, 10),
+    "field": (65, -15, 40, 5, 15),
+    "flour": (40, -25, 30, 15, 35),
+    "fly-verb": (100, 75, 55, 35, -95),
+    "fold": (65, -35, 45, 20, 25),
+    "forbid": (-85, 65, 60, 75, 50),
+    "form": (5, 20, 40, 55, 35),
+    "freezer": (20, -10, 40, 10, 45),
+    "fridge": (60, 5, 45, 25, 55),
+    "front": (35, 25, 30, 20, -10),
+    "fruit": (95, 20, 30, 20, -30),
+    "future-concept": (85, 65, 55, 50, -70),
+    "gate": (25, 15, 35, 30, 25),
+    "glass-cup": (30, 15, 20, 25, 10),
+    "glasses": (40, 5, 35, 15, 5),
+    "glue": (15, 10, 35, 25, 40),
+    "go": (20, 40, 35, 50, -10),
+    "grass": (75, -25, 30, 0, -15),
+    "grater": (10, 30, 20, 15, 10),
+    "ground": (45, -5, 75, 0, 100),
+    "group": (35, 30, 40, 15, 25),
+    "guilt": (-90, 65, -85, 40, 60),
+    "half": (5, -5, -10, 25, 15),
+    "hallway": (0, 10, -20, 25, 15),
+    "handful": (45, 15, 25, 10, 10),
+    "handle": (30, 15, 45, 30, 25),
+    "hanger": (20, 5, 25, 15, 5),
+    "happen": (10, 45, 5, 50, 0),
+    "hard-diff": (-65, 75, 45, 95, 75),
+    "hard-difficult": (-55, 65, 40, 85, 60),
+    "hat": (40, 5, 20, 5, -15),
+    "hate-verb": (-95, 75, 35, 55, 40),
+    "heap": (10, 15, 35, 15, 60),
+    "heart-organ": (60, 50, 65, 20, 25),
+    "help-verb": (95, 40, 50, 65, 10),
+    "here-adv": (55, 45, 60, 85, 30),
+    "high": (55, 45, 50, 20, -90),
+    "hill": (55, 15, 35, 10, 45),
+    "hinge": (25, 10, 35, 20, 35),
+    "hip": (20, 15, 30, 5, 25),
+    "hook": (10, 25, 25, 30, 10),
+    "hospital-general": (-15, 45, 35, 80, 50),
+    "hotel": (70, 15, 50, 20, 55),
+    "humid": (-45, 35, -20, 20, 30),
+    "if": (5, 45, 10, 50, -10),
+    "ink": (15, 15, 35, 25, 15),
+    "iron-metal": (15, 5, 45, 5, 65),
+    "ironing-board": (10, 10, 30, 30, 35),
+    "jacket": (50, 10, 35, 10, 25),
+    "jar": (25, 0, 25, 10, 30),
+    "job": (35, 40, 50, 55, 45),
+    "kettle": (40, 30, 30, 45, 25),
+    "key": (40, 20, 45, 60, 15),
+    "keypad": (15, 30, 35, 45, 10),
+    "kick": (-55, 85, 45, 75, 35),
+    "kill-verb": (-100, 95, 75, 90, 80),
+    "knee": (15, 15, 35, 10, 25),
+    "knit": (85, -45, 45, 10, 20),
+    "ladle": (25, 5, 25, 10, 15),
+    "laundry-basket": (10, 15, 25, 45, 40),
+    "lawn": (80, -20, 35, 0, 25),
+    "lay": (75, -45, 35, 5, -20),
+    "least": (-25, -10, -20, 10, 10),
+    "leave": (-35, 45, -20, 65, 15),
+    "less": (-30, 10, -15, 15, 15),
+    "lesson": (45, 15, 20, 25, 10),
+    "letter": (70, 35, 35, 45, 5),
+    "lid": (15, 10, 35, 20, 10),
+    "life-concept": (100, 85, 70, 25, -90),
+    "lift-action": (30, 60, 45, 50, 20),
+    "light-concept": (100, 55, 55, 15, -95),
+    "light-switch": (10, 10, 30, 40, 5),
+    "light-weight": (75, 15, 40, 5, -95),
+    "light-wt": (85, 25, 45, 10, -100),
+    "like-verb": (75, 25, 35, 10, -20),
+    "list": (40, 15, 55, 35, 30),
+    "living-room": (75, -20, 45, 10, 15),
+    "lock": (20, 15, 50, 40, 40),
+    "lock-verb": (55, 35, 60, 75, 50),
+    "loose": (25, -25, -15, 5, -30),
+    "lotion": (70, -25, 30, 10, -15),
+    "love-verb": (100, 70, 55, 40, -80),
+    "low": (-25, -20, -35, 15, 65),
+    "mail": (55, 40, 35, 60, 10),
+    "man-human": (25, 15, 40, 5, 35),
+    "many": (40, 30, 45, 10, 20),
+    "marker": (30, 20, 25, 25, 5),
+    "market": (60, 50, 35, 45, 30),
+    "math": (10, 50, 25, 45, 40),
+    "method": (45, 15, 55, 20, 40),
+    "middle": (10, 0, 20, 5, 10),
+    "million": (85, 75, 85, 25, 100),
+    "mix": (45, 45, 35, 35, 20),
+    "monthly": (15, -5, 35, 20, 55),
+    "mop-verb": (35, 35, 40, 35, 35),
+    "more": (50, 40, 40, 30, -10),
+    "most": (55, 35, 55, 20, 20),
+    "mouth": (30, 25, 25, 15, 0),
+    "move": (35, 55, 40, 45, -10),
+    "nail": (0, 30, 20, 25, 25),
+    "name-label": (25, 15, 35, 25, 10),
+    "napkin": (45, -20, 20, 10, -15),
+    "necklace": (75, 25, 30, 5, 10),
+    "needle": (-5, 65, 30, 55, 5),
+    "news": (10, 75, 30, 95, 20),
+    "next": (35, 45, 25, 75, -10),
+    "night-concept": (65, -35, 45, 15, 75),
+    "none": (-40, -25, -60, 5, 10),
+    "north": (10, 15, 25, 5, 10),
+    "notebook": (55, 10, 35, 15, 20),
+    "now-adv": (55, 75, 60, 100, -50),
+    "nut": (55, 15, 40, 15, 50),
+    "oil": (25, -5, 35, 15, 20),
+    "once": (35, 25, 30, 30, 45),
+    "one": (35, 15, 40, 10, 30),
+    "opaque": (-10, -10, 30, 5, 55),
+    "opener": (35, 15, 35, 30, 10),
+    "or": (0, 15, 15, 25, 0),
+    "outlet": (5, 25, 35, 45, 35),
+    "oven": (45, 65, 40, 55, 55),
+    "page": (30, -5, 20, 10, -5),
+    "pair": (60, 20, 35, 10, 20),
+    "pan": (35, 45, 35, 45, 45),
+    "pants": (30, 5, 25, 10, 20),
+    "paper": (25, -10, 20, 15, -15),
+    "pardon": (25, 5, -15, 35, 5),
+    "past-concept": (25, -10, 40, 0, 75),
+    "path": (55, 15, 30, 10, 15),
+    "peace-state": (100, -90, 70, 0, -80),
+    "peeler": (25, 20, 30, 15, 10),
+    "pen": (35, 10, 30, 25, 5),
+    "pencil": (30, 10, 25, 20, 0),
+    "perfume": (75, 30, 30, 10, -35),
+    "petal": (85, 15, 15, 0, -55),
+    "piece": (20, 10, 15, 10, 10),
+    "pig": (40, 10, 35, 5, 55),
+    "pile": (15, 10, 30, 15, 55),
+    "pinch": (-45, 65, 20, 60, 10),
+    "pipe": (10, 10, 40, 20, 55),
+    "plan": (55, 35, 55, 45, 35),
+    "play-action": (95, 75, 40, 15, -45),
+    "pocket": (30, 5, 20, 5, 5),
+    "pot": (30, 35, 35, 35, 60),
+    "present-concept": (75, 55, 55, 85, 10),
+    "previous": (15, 10, 35, 25, 20),
+    "puddle": (35, 15, -10, 10, 15),
+    "punch": (-85, 95, 55, 95, 45),
+    "purse": (30, 15, 30, 15, 10),
+    "quarter": (0, 0, -15, 30, 10),
+    "rainy": (-15, -5, -20, 35, 25),
+    "rat": (-60, 50, -35, 45, 10),
+    "razor": (-10, 45, 30, 40, 5),
+    "read": (75, -15, 45, 15, 25),
+    "reading": (65, -20, 40, 10, 10),
+    "ready": (85, 85, 70, 100, -45),
+    "report": (10, 35, 45, 65, 40),
+    "ride": (85, 65, 45, 25, 30),
+    "ring": (80, 40, 45, 10, 20),
+    "rock": (15, -5, 45, 0, 75),
+    "roller": (55, 35, 40, 30, 15),
+    "rope": (35, 30, 45, 35, 55),
+    "round": (65, -10, 30, 5, 25),
+    "rub": (65, -15, 30, 20, 10),
+    "ruler": (25, 5, 40, 15, 20),
+    "sand": (55, -10, 25, 5, 15),
+    "save-verb": (90, 75, 60, 95, 25),
+    "scanner": (20, 30, 35, 30, 35),
+    "scent": (85, 25, 35, 10, -25),
+    "science": (45, 30, 40, 15, 20),
+    "scissors": (5, 55, 35, 45, 15),
+    "screw": (5, 30, 25, 25, 20),
+    "second": (5, 45, 10, 95, -100),
+    "see": (40, 35, 40, 20, -5),
+    "seem": (0, 10, -10, 20, 5),
+    "set": (25, 10, 35, 15, 35),
+    "sew": (60, 20, 45, 25, 10),
+    "shade": (70, -35, 35, 10, 25),
+    "shampoo": (80, -20, 40, 25, -15),
+    "sheep": (65, -30, 30, 5, 40),
+    "shelf": (20, -5, 30, 0, 35),
+    "shiny": (95, 65, 40, 20, -60),
+    "shirt": (35, 5, 25, 10, 10),
+    "shoes": (30, 20, 25, 25, 15),
+    "show": (55, 40, 45, 35, -5),
+    "shower": (60, 30, 45, 40, -15),
+    "shrub": (45, -5, 25, 5, 25),
+    "sidewalk": (15, 20, 25, 15, 10),
+    "sign": (10, 15, 30, 35, 10),
+    "sink": (20, 5, 30, 45, 20),
+    "slap": (-75, 85, 35, 85, 15),
+    "sleepy": (25, -85, -35, 45, 25),
+    "sleeve": (20, 5, 20, 5, 5),
+    "slow": (-45, -65, 25, 30, 60),
+    "small": (45, 10, -45, 5, -35),
+    "smell": (55, 35, 30, 15, -15),
+    "sneeze": (-10, 55, 20, 65, -10),
+    "soap": (75, -25, 45, 35, -20),
+    "socket": (5, 25, 30, 45, 35),
+    "socks": (55, -20, 20, 5, 5),
+    "some": (10, 5, 10, 5, 5),
+    "south": (35, 20, 25, 5, 5),
+    "spice": (70, 75, 30, 25, -15),
+    "sponge": (30, -5, 20, 15, -10),
+    "square": (35, 5, 45, 10, 50),
+    "stack": (30, 15, 45, 20, 70),
+    "stain-wood": (20, 15, 30, 15, 10),
+    "stairs": (10, 30, 25, 35, 45),
+    "stamp": (45, 15, 35, 25, 10),
+    "stapler": (25, 40, 35, 35, 25),
+    "start-engine": (75, 85, 55, 75, 35),
+    "station": (25, 45, 35, 55, 50),
+    "stay": (60, -30, 50, 15, 35),
+    "stem": (25, 5, 25, 5, 15),
+    "stick": (10, 5, 15, 10, 15),
+    "sticky": (-55, 35, -15, 25, 15),
+    "still": (55, -45, 50, 15, 45),
+    "stir": (50, 25, 35, 30, 15),
+    "stone": (20, -5, 40, 0, 65),
+    "stop-engine": (45, -25, 60, 65, 55),
+    "stormy": (-75, 80, -35, 90, 35),
+    "stove": (30, 80, 45, 65, 50),
+    "string": (15, 5, 15, 15, -5),
+    "student": (55, 35, -15, 20, 5),
+    "surprised": (45, 100, 15, 75, -50),
+    "swallow": (25, 25, 35, 40, 15),
+    "sweat": (-25, 65, -10, 50, 15),
+    "sweep": (45, 25, 40, 30, 30),
+    "swim": (95, 60, 45, 20, -25),
+    "switch": (20, 35, 45, 55, 10),
+    "system-general": (25, 15, 50, 10, 65),
+    "tablecloth": (50, -15, 30, 5, 20),
+    "tape": (30, 10, 25, 25, 0),
+    "tape-measure": (35, 15, 35, 25, 15),
+    "task": (10, 45, 35, 75, 25),
+    "taste": (75, 55, 35, 20, -10),
+    "tent": (65, 35, 35, 15, 15),
+    "then-adv": (20, 25, 35, 55, 35),
+    "there-adv": (15, 15, 30, 55, 45),
+    "thick": (25, 15, 55, 10, 75),
+    "thousand": (55, 50, 65, 15, 85),
+    "thread": (25, 10, 20, 20, -15),
+    "throat": (-5, 35, 20, 60, 20),
+    "tide": (35, 15, 50, 10, 45),
+    "tight": (-25, 40, 30, 50, 30),
+    "tire": (15, 15, 35, 45, 50),
+    "toe": (10, 15, 15, 5, 5),
+    "toilet": (-10, 15, 20, 60, 25),
+    "tooth": (10, 15, 25, 10, 15),
+    "top": (55, 35, 50, 10, -70),
+    "total": (65, 25, 75, 50, 80),
+    "touch": (85, 45, 35, 25, -20),
+    "towel": (55, -25, 30, 10, -10),
+    "town": (55, 25, 30, 15, 25),
+    "trash-can": (-30, 15, 20, 50, 25),
+    "tray": (20, 5, 25, 15, 20),
+    "true": (90, 15, 65, 10, 25),
+    "twice": (45, 35, 35, 35, 35),
+    "two": (45, 25, 35, 15, 25),
+    "umbrella": (55, -5, 40, 50, 10),
+    "vent": (15, 25, 30, 30, 15),
+    "village": (60, 10, 25, 10, 15),
+    "vinegar": (-35, 55, 25, 20, 10),
+    "wake": (45, 65, 45, 70, -35),
+    "wallet": (35, 20, 45, 30, 15),
+    "wash": (85, 25, 50, 40, 15),
+    "washer": (15, 5, 20, 15, 10),
+    "watch": (25, 15, 40, 25, 10),
+    "wave": (65, 55, 40, 35, 20),
+    "way": (15, 15, 35, 20, 20),
+    "wear": (40, 10, 35, 15, 5),
+    "weekend": (100, 55, 50, 20, -50),
+    "weekly": (20, -10, 40, 25, 45),
+    "west": (25, 15, 25, 5, 10),
+    "wet": (10, 20, 10, 20, 10),
+    "wheel": (35, 25, 40, 15, 35),
+    "while": (35, -25, 40, 15, 10),
+    "whiteboard": (25, 10, 30, 10, 40),
+    "windy": (20, 65, 15, 45, -20),
+    "wine-common": (70, 15, 25, 5, 15),
+    "with": (60, 25, 40, 15, 0),
+    "woman-human": (30, 15, 40, 5, 20),
+    "work-action": (20, 50, 45, 65, 45),
+    "wrist": (15, 15, 20, 5, 5),
+    "write": (50, 20, 45, 30, 15),
+    "writing": (60, 20, 45, 25, 15),
+    "yearly": (35, 5, 45, 15, 65),
+    "yet": (-10, 40, 15, 65, 10),
+    "zero": (-15, -55, -45, 15, 50),
+    "zipper": (10, 20, 15, 15, 0),
 }
 
 # Negation words flip the valence of the NEXT emotional word
@@ -6939,11 +7346,42 @@ class ResponseBuilder:
     3. Track recently used words across conversation
     """
 
-    # Word categories for sentence assembly
-    ACKNOWLEDGE_WORDS = set()
-    STABILIZE_WORDS = set()
-    EMOTION_WORDS = set()
-    ACTION_WORDS = set()
+    # Curated adjective sets -- words that work in "That sounds X" / "That's really X"
+    # These are all present in WORD_FORCES and selected for natural sentence fit
+    NEGATIVE_ADJECTIVES = {
+        "tough", "hard", "heavy", "rough", "painful", "awful", "terrible", "horrible",
+        "devastating", "exhausting", "overwhelming", "difficult", "sad", "lonely",
+        "scary", "stressful", "heartbreaking", "harsh", "brutal", "draining",
+        "crushing", "intense", "deep", "frustrating", "agonizing", "dreadful",
+        "miserable", "wretched", "hopeless", "helpless", "exhausted", "broken",
+        "uncomfortable", "uneasy", "anxious", "frightened", "terrified",
+        "disappointed", "embarrassed", "ashamed", "guilty", "stuck", "lost",
+        "worried", "stressed", "tired", "sick", "numb", "unfair", "unbearable",
+        "meaningless", "pointless", "useless", "bleak", "grim", "somber",
+        "melancholy", "bittersweet", "isolating", "toxic", "chaotic",
+    }
+
+    POSITIVE_ADJECTIVES = {
+        "amazing", "incredible", "wonderful", "fantastic", "beautiful", "brilliant",
+        "excellent", "awesome", "magnificent", "spectacular", "phenomenal", "outstanding",
+        "remarkable", "extraordinary", "superb", "marvelous", "glorious", "blessed",
+        "grateful", "thankful", "proud", "accomplished", "triumphant", "victorious",
+        "successful", "thriving", "flourishing", "radiant", "gorgeous", "stunning",
+        "ecstatic", "thrilled", "excited", "joyful", "happy", "delicious",
+        "inspiring", "vibrant", "colorful", "bright", "warm", "gentle", "peaceful",
+        "hopeful", "powerful", "resilient", "strong", "creative", "bold", "brave",
+    }
+
+    NOUN_FEELINGS = {
+        "grief", "sorrow", "pain", "loss", "anguish", "despair", "heartbreak",
+        "struggle", "weight", "darkness", "sadness", "loneliness", "fear",
+        "frustration", "anger", "regret", "guilt", "shame", "exhaustion",
+        "confusion", "chaos", "stress", "worry", "doubt", "torment",
+        "suffering", "burden", "tragedy", "nightmare", "betrayal", "rejection",
+        "joy", "love", "pride", "hope", "strength", "courage", "resilience",
+        "warmth", "comfort", "peace", "harmony", "triumph", "victory",
+        "excitement", "wonder", "gratitude", "relief", "freedom", "growth",
+    }
 
     def __init__(self):
         self.used_words = set()
@@ -6953,6 +7391,14 @@ class ResponseBuilder:
 
     def _categorize_words(self):
         """Categorize WORD_FORCES entries by likely sentence role based on VADUG."""
+        self.ACKNOWLEDGE_WORDS = set()
+        self.STABILIZE_WORDS = set()
+        self.EMOTION_WORDS = set()
+        self.ACTION_WORDS = set()
+        self.neg_adj_pool = {}
+        self.pos_adj_pool = {}
+        self.noun_pool = {}
+
         for word, forces in WORD_FORCES.items():
             v, a, d, u, g = forces
             if v < -10:
@@ -6963,6 +7409,14 @@ class ResponseBuilder:
                 self.EMOTION_WORDS.add(word)
             if v > 0 and u > 5:
                 self.ACTION_WORDS.add(word)
+
+            # Build curated pools from WORD_FORCES intersection with our adjective sets
+            if word in self.NEGATIVE_ADJECTIVES:
+                self.neg_adj_pool[word] = forces
+            if word in self.POSITIVE_ADJECTIVES:
+                self.pos_adj_pool[word] = forces
+            if word in self.NOUN_FEELINGS:
+                self.noun_pool[word] = forces
 
     def find_closest_words(self, target_v, target_a, target_d, target_u, target_g,
                            word_pool=None, n=30):
@@ -7014,11 +7468,16 @@ class ResponseBuilder:
         return None
 
     def _pick_structure(self, structures):
-        """Pick the first structure whose first-3-word pattern hasn't been used."""
+        """Pick the first structure whose opening pattern hasn't been used.
+
+        Uses first 2 words as pattern key to prevent 'That sounds X' and
+        'That sounds Y' from both being selected across chunks.
+        """
         for s in structures:
             if s is None:
                 continue
-            pattern_key = ' '.join(s.split()[0:3])
+            words = s.split()
+            pattern_key = ' '.join(words[0:2]) if len(words) >= 2 else s
             if pattern_key not in self.used_structures:
                 self.used_structures.add(pattern_key)
                 return s
@@ -7031,27 +7490,40 @@ class ResponseBuilder:
     def build_acknowledge(self, input_vadug, response_vadug):
         """Build an acknowledgment phrase from WORD_FORCES.
 
-        Picks words that match the INPUT vadug (to show understanding)
-        but with slight warmth shift toward response vadug.
+        Selects both an adjective (for 'That sounds X') and a noun (for 'the X
+        in that') closest to the input VADUG, then uses the best fitting template.
         """
-        ack_pool = {w: WORD_FORCES[w] for w in self.ACKNOWLEDGE_WORDS if w in WORD_FORCES}
-        feeling = self.select_word(
+        # Select an adjective from curated negative adjective pool
+        adj_pool = {w: f for w, f in self.neg_adj_pool.items() if w not in self.used_words}
+        adj = self.select_word(
             input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
-            ack_pool if ack_pool else None
+            adj_pool if adj_pool else None
         )
 
-        if not feeling:
-            return "I hear you."
+        # Select a noun from curated feeling-noun pool
+        noun_pool = {w: f for w, f in self.noun_pool.items()
+                     if w not in self.used_words and WORD_FORCES.get(w, (0,))[0] < 0}
+        noun = self.select_word(
+            input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
+            noun_pool if noun_pool else None
+        )
 
-        structures = [
-            f"That sounds {feeling}.",
-            f"That's really {feeling}.",
-            f"I can feel the {feeling} in that.",
-            f"{feeling.capitalize()} is the right word for it.",
-            f"That's genuinely {feeling}.",
-            f"I hear the {feeling}.",
-            f"That level of {feeling} is real.",
-        ]
+        structures = []
+        if adj:
+            structures.extend([
+                f"That sounds {adj}.",
+                f"That's really {adj}.",
+                f"That's genuinely {adj}.",
+            ])
+        if noun:
+            structures.extend([
+                f"I can feel the {noun} in that.",
+                f"I hear the {noun}.",
+                f"That level of {noun} is real.",
+            ])
+        if adj:
+            structures.append(f"{adj.capitalize()} is the right word for it.")
+        structures.append("I hear you.")
 
         result = self._pick_structure(structures)
         return result if result else "I hear you."
@@ -7061,7 +7533,8 @@ class ResponseBuilder:
 
         Picks words that project the RESPONSE vadug (stability, presence).
         """
-        stab_pool = {w: WORD_FORCES[w] for w in self.STABILIZE_WORDS if w in WORD_FORCES}
+        stab_pool = {w: WORD_FORCES[w] for w in self.STABILIZE_WORDS
+                     if w in WORD_FORCES and w not in self.used_words}
         anchor = self.select_word(
             response_vadug.v, response_vadug.a, response_vadug.d, response_vadug.u, response_vadug.g,
             stab_pool if stab_pool else None
@@ -7071,15 +7544,18 @@ class ResponseBuilder:
         if anchor:
             if anchor in ("here", "near", "close"):
                 structures.append(f"I'm right {anchor} with you.")
-            elif anchor in ("strength", "courage", "resilience", "resolve", "grit"):
+            elif anchor in ("strength", "courage", "resilience", "resolve", "grit",
+                            "comfort", "warmth"):
                 structures.append(f"You've got {anchor} in you.")
-            elif anchor in ("handle", "figure", "manage", "work", "face", "tackle"):
+            elif anchor in ("handle", "figure", "manage", "work", "face", "tackle",
+                            "navigate", "endure"):
                 structures.append(f"We'll {anchor} this together.")
             elif anchor in ("together", "beside", "alongside"):
                 structures.append(f"We're in this {anchor}.")
+            elif anchor in ("strong", "powerful", "resilient", "brave", "capable"):
+                structures.append(f"You're stronger than this feels.")
             else:
-                structures.append(f"Let's {anchor} through this together.")
-                structures.append(f"We can {anchor} this.")
+                structures.append(f"We'll get through this {anchor}.")
 
         structures.extend([
             "I'm not going anywhere.",
@@ -7091,26 +7567,38 @@ class ResponseBuilder:
         result = self._pick_structure(structures)
         return result if result else "I'm here."
 
+    # Verbs that work in "Let's X" / "What would X" redirect templates
+    REDIRECT_VERBS = {
+        "look", "start", "begin", "explore", "try", "work", "figure", "think",
+        "plan", "talk", "focus", "tackle", "check", "sort", "help", "fix",
+        "learn", "study", "practice", "build", "create", "make", "find",
+    }
+
     def build_redirect(self, response_vadug, grade_rules=None):
         """Build a redirect/next-step phrase. Respects grade rules."""
         if grade_rules and any(b in (grade_rules.get('blocked', []))
                                for b in ['advice', 'redirect', 'problem_solving']):
             return None
 
-        act_pool = {w: WORD_FORCES[w] for w in self.ACTION_WORDS if w in WORD_FORCES}
+        # Only select from known verbs that work in redirect templates
+        verb_pool = {w: WORD_FORCES[w] for w in self.REDIRECT_VERBS
+                     if w in WORD_FORCES and w not in self.used_words}
         action = self.select_word(
             response_vadug.v, response_vadug.a, response_vadug.d, response_vadug.u, response_vadug.g,
-            act_pool if act_pool else None
+            verb_pool if verb_pool else None
         )
 
         structures = []
         if action:
-            if action in ("look", "start", "begin", "explore"):
+            if action in ("look", "start", "begin", "explore", "check"):
                 structures.append(f"Let's {action} at this fresh.")
-            elif action in ("try", "work", "figure", "think", "plan"):
+            elif action in ("try", "work", "figure", "think", "plan", "sort",
+                            "talk", "focus"):
                 structures.append(f"Let's {action} through it.")
+            elif action in ("help", "fix", "tackle", "find"):
+                structures.append(f"Let's {action} this.")
             else:
-                structures.append(f"What would {action} right now?")
+                structures.append(f"Let's {action} from here.")
 
         structures.extend([
             "What do you need from me right now?",
@@ -7122,11 +7610,10 @@ class ResponseBuilder:
 
     def build_positive_acknowledge(self, input_vadug, response_vadug):
         """Build a positive acknowledgment for happy/excited input."""
-        pos_pool = {w: WORD_FORCES[w] for w in WORD_FORCES
-                    if WORD_FORCES[w][0] > 20 and w not in self.used_words}
+        adj_pool = {w: f for w, f in self.pos_adj_pool.items() if w not in self.used_words}
         word = self.select_word(
             input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
-            pos_pool if pos_pool else None
+            adj_pool if adj_pool else None
         )
 
         if not word:
@@ -7136,36 +7623,53 @@ class ResponseBuilder:
             f"That's genuinely {word}.",
             f"That sounds {word}!",
             f"That's really {word}.",
-            f"{word.capitalize()} news all around.",
             f"I can feel the {word} in that.",
         ]
 
         result = self._pick_structure(structures)
         return result if result else "That's great to hear."
 
+    # Adjectives that work in "that's genuinely X" / "that part is X" (situation descriptors)
+    SITUATION_POS_ADJECTIVES = {
+        "amazing", "incredible", "wonderful", "fantastic", "beautiful", "brilliant",
+        "excellent", "awesome", "magnificent", "spectacular", "phenomenal", "outstanding",
+        "remarkable", "extraordinary", "superb", "marvelous", "glorious", "exciting",
+        "inspiring", "vibrant", "stunning", "thrilling", "special", "great",
+    }
+
     def build_reversal_response(self, input_vadug, response_vadug, is_positive_reversal):
         """Build a response for a reversal chunk (after 'but', 'however', etc.)."""
         if is_positive_reversal:
+            # Use situation-appropriate positive adjectives only
+            sit_pool = {w: WORD_FORCES[w] for w in self.SITUATION_POS_ADJECTIVES
+                        if w in WORD_FORCES and w not in self.used_words}
             word = self.select_word(
                 input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
-                {w: WORD_FORCES[w] for w in WORD_FORCES if WORD_FORCES[w][0] > 15 and w not in self.used_words}
+                sit_pool if sit_pool else None
             )
             structures = [
-                f"But that's genuinely {word}." if word else None,
-                f"But wait -- that part is {word}!" if word else None,
-                f"But hold on, that's {word}." if word else None,
+                f"But that part is {word}." if word else None,
+                f"But wait -- that's {word}!" if word else None,
+                f"But hold on, that's genuinely {word}." if word else None,
                 "But that changes things.",
                 "But that's a different story entirely.",
             ]
         else:
-            word = self.select_word(
+            adj_pool = {w: f for w, f in self.neg_adj_pool.items() if w not in self.used_words}
+            noun_pool = {w: f for w, f in self.noun_pool.items()
+                         if w not in self.used_words and WORD_FORCES.get(w, (0,))[0] < 0}
+            adj = self.select_word(
                 input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
-                {w: WORD_FORCES[w] for w in self.ACKNOWLEDGE_WORDS if w in WORD_FORCES and w not in self.used_words}
+                adj_pool if adj_pool else None
+            )
+            noun = self.select_word(
+                input_vadug.v, input_vadug.a, input_vadug.d, input_vadug.u, input_vadug.g,
+                noun_pool if noun_pool else None
             )
             structures = [
-                f"But that part is {word}." if word else None,
-                f"Though that's genuinely {word}." if word else None,
-                f"But I hear the {word} in that too." if word else None,
+                f"But that part is {adj}." if adj else None,
+                f"Though that's genuinely {adj}." if adj else None,
+                f"But I hear the {noun} in that too." if noun else None,
                 "But that part is hard.",
                 "But I hear the hard part too.",
             ]
@@ -7250,7 +7754,8 @@ class ResponseBuilder:
 
         return ' '.join(parts) if parts else "I hear you."
 
-    def build_full_response(self, chunk_results, arc, grade, grade_rules, personality):
+    def build_full_response(self, chunk_results, arc, grade, grade_rules, personality,
+                             verbose=False):
         """Build the complete assembled response for all chunks."""
         responses = []
         seen_negative = False
@@ -7296,11 +7801,19 @@ class ResponseBuilder:
 
             if resp and resp.strip() and resp not in responses:
                 responses.append(resp)
+                if verbose:
+                    words_used = sorted(self.used_words)
+                    print(f"  Chunk {i+1} -> \"{resp}\"")
+                    print(f"    Words selected: {', '.join(words_used[-4:])}")
+            elif verbose:
+                print(f"  Chunk {i+1} -> (skipped, neutral/duplicate)")
 
         # Arc closer
         closer = self._build_arc_closer(arc, grade, grade_rules)
         if closer:
             responses.append(closer)
+            if verbose:
+                print(f"  Arc closer ({arc}) -> \"{closer}\"")
 
         # Assemble with transitions
         if len(responses) <= 1:
@@ -8076,7 +8589,8 @@ class ChunkedPipeline:
 
         builder = ResponseBuilder()
         builder_response = builder.build_full_response(
-            chunk_results, arc, grade, grade_rules, personality
+            chunk_results, arc, grade, grade_rules, personality,
+            verbose=verbose
         )
 
         # If sarcasm detected at moderate+ confidence, override the assembled response
