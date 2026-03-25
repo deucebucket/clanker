@@ -3847,8 +3847,57 @@ class ChunkedPipeline:
 
     def get_arc_closer(self, arc: str, chunk_results: list,
                         grade_rules=None) -> str:
-        """Select an arc-appropriate closing line."""
-        closers = ARC_CLOSERS.get(arc, ARC_CLOSERS["mixed"])
+        """Select an arc-appropriate closing line, filtered by grade guardrails.
+
+        Grade rules override the arc closer when certain strategies are blocked:
+        - F-range: presence-only closers regardless of arc
+        - D-range: empathy closers, no silver-lining or positive framing
+        - "silver_lining" blocked: filter out optimistic closers
+        """
+        blocked = grade_rules.get("blocked", []) if grade_rules else []
+        grade = grade_rules.get("grade", "C") if grade_rules else "C"
+
+        # F-range: override to presence-only closers
+        if grade in ("F-", "F", "F+"):
+            if grade == "F-":
+                return random.choice([
+                    "I'm here.",
+                    "You're not alone right now.",
+                ])
+            return random.choice([
+                "You're not alone in this.",
+                "I'm here. Whatever you need.",
+                "I hear you.",
+            ])
+
+        # D-range: empathy closers, block any positive/silver-lining arc closers
+        if grade in ("D-", "D", "D+"):
+            return random.choice([
+                "You're not alone in this.",
+                "I'm here if you need to talk through it.",
+                "That's a lot. I hear you.",
+                "I'm here. What do you need right now?",
+            ])
+
+        # Normal arc-based closers with filtering
+        closers = list(ARC_CLOSERS.get(arc, ARC_CLOSERS["mixed"]))
+
+        # Filter out closers that violate blocked strategies
+        if "silver_lining" in blocked or "positive_spin" in blocked:
+            # Remove closers with positive/silver-lining language
+            positive_words = {"silver lining", "amazing", "clicking", "looking up",
+                              "congrats", "incredible", "momentum", "good stuff"}
+            closers = [c for c in closers
+                       if not any(pw in c.lower() for pw in positive_words)]
+
+        # If all closers got filtered, fall back to neutral
+        if not closers:
+            closers = [
+                "I hear you.",
+                "That's a lot to hold.",
+                "I'm here for all of it.",
+            ]
+
         return random.choice(closers)
 
     def assemble(self, responses: list, closer: str, arc: str,
