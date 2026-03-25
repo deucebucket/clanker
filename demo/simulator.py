@@ -3559,11 +3559,17 @@ class ChunkedPipeline:
                                 grade_rules=None):
         """Generate a response for a single chunk.
 
-        Uses simplified template logic:
+        Uses simplified template logic, FILTERED by grade rules:
         - First negative chunk: full acknowledge + stabilize
         - Subsequent negative: just acknowledge (shorter)
         - Reversal chunk (after "but"): match the new energy
         - Positive chunk: brief celebration or skip
+
+        Grade guardrails:
+        - If grade is F-range, lock to presence-only responses
+        - If grade blocks "positive_spin", suppress positive celebration
+        - If grade blocks "at_least", suppress silver-lining framing
+        - If grade blocks "unsolicited_advice", use presence-style stabilize
         """
         v = response_vadug.v
         a = response_vadug.a
@@ -3571,12 +3577,35 @@ class ChunkedPipeline:
         u = response_vadug.u
         g = response_vadug.g
         input_v = chunk_result['vadug'].v
+        blocked = grade_rules.get("blocked", []) if grade_rules else []
+        grade = grade_rules.get("grade", "C") if grade_rules else "C"
+
+        # --- F-range crisis override: presence only ---
+        if grade in ("F-", "F", "F+"):
+            if grade == "F-":
+                return random.choice([
+                    "I'm here.",
+                    "I hear you.",
+                    "You're not alone.",
+                ])
+            else:
+                return random.choice([
+                    "I hear you. That's real pain.",
+                    "I'm here with you.",
+                    "You don't have to carry this alone.",
+                    "I hear you.",
+                ])
 
         if is_reversal:
             # Match the energy of the new direction
             chunk_lower = chunk_result['text'].lower()
             if input_v > 148:
-                # Reversal to positive
+                # Reversal to positive — but check if positive_spin is blocked
+                if "positive_spin" in blocked:
+                    return random.choice([
+                        "But I hear the shift there.",
+                        "But that part sounds different.",
+                    ])
                 return random.choice([
                     "But a dream job? That's incredible.",
                     "But that's amazing news!",
@@ -3586,6 +3615,12 @@ class ChunkedPipeline:
                 ])
             elif any(w in chunk_lower for w in ["honest", "study", "prepare", "admit", "fault"]):
                 # Reversal to self-awareness/honesty
+                # Check if "at_least" framing is blocked
+                if "at_least" in blocked:
+                    return random.choice([
+                        "But you see it clearly.",
+                        "But you know what happened.",
+                    ])
                 return random.choice([
                     "But hey, at least you're honest about it.",
                     "But you know exactly why.",
@@ -3609,16 +3644,26 @@ class ChunkedPipeline:
                 ack = self._get_content_aware_acknowledge(chunk_lower, input_v)
             else:
                 ack = self._get_acknowledge(v, g, input_v, chunk_result['vadug'].g)
-            stab = self._get_stabilize(d, a)
+            # D- blocks unsolicited_advice — use presence-style stabilize
+            if "unsolicited_advice" in blocked:
+                stab = random.choice([
+                    "I'm right here.",
+                    "I'm with you.",
+                ])
+            else:
+                stab = self._get_stabilize(d, a)
             return f"{ack} {stab}".strip()
 
         if is_subsequent_negative:
-            # Just acknowledge, shorter
+            # Just acknowledge, shorter — pass blocked list for filtering
             return self._get_short_acknowledge(input_v, chunk_result['vadug'].g,
-                                                chunk_result['text'])
+                                                chunk_result['text'],
+                                                blocked=blocked)
 
         if input_v > 150:
-            # Positive chunk — brief or skip if not notable
+            # Positive chunk — but if grade blocks positive framing, suppress
+            if "positive_spin" in blocked or "ANY_positive_framing" in blocked:
+                return ""
             if input_v > 190:
                 return random.choice([
                     "That's exciting!",
@@ -3716,8 +3761,16 @@ class ChunkedPipeline:
                 "We can figure this out.",
             ])
 
-    def _get_short_acknowledge(self, input_v, input_g, text):
-        """Short acknowledgment for subsequent negative chunks."""
+    def _get_short_acknowledge(self, input_v, input_g, text, blocked=None):
+        """Short acknowledgment for subsequent negative chunks.
+
+        Respects grade guardrails via the blocked list:
+        - "at_least" blocked: suppress "At least..." framing
+        - "positive_spin" blocked: suppress optimistic reframes
+        - "silver_lining" blocked: suppress "bright side" language
+        """
+        if blocked is None:
+            blocked = []
         # Try to reflect the specific content
         text_lower = text.lower()
 
@@ -3743,6 +3796,12 @@ class ChunkedPipeline:
                 "That's disappointing.",
             ])
         if any(w in text_lower for w in ["study", "studied", "prepare"]):
+            # "At least..." framing — blocked by D-range and below
+            if "at_least" in blocked:
+                return random.choice([
+                    "You see it clearly.",
+                    "You know what happened.",
+                ])
             return random.choice([
                 "At least you know what happened.",
                 "Honest with yourself — that's a start.",
@@ -3753,6 +3812,12 @@ class ChunkedPipeline:
                 "You're being honest with yourself.",
             ])
         if any(w in text_lower for w in ["better", "next", "improve"]):
+            # Positive spin — blocked by D-range and below
+            if "positive_spin" in blocked:
+                return random.choice([
+                    "I hear you looking ahead.",
+                    "One step at a time.",
+                ])
             return random.choice([
                 "That's the right mindset.",
                 "Now that's what I like to hear.",

@@ -1,0 +1,35 @@
+{
+  "benchmark": "Clanker vs VADER",
+  "date": "2025-03-25",
+  "overall": {
+    "vader_score": "17/30 (57%)",
+    "clanker_score": "14/30 (47%)"
+  },
+  "suites": [
+    {
+      "name": "1. Basic Sentiment Detection",
+      "vader": "5/5",
+      "clanker": "5/5"
+    },
+    {
+      "name": "2. Sarcasm Detection",
+      "vader": "0/5",
+      "clanker": "1/5"
+    },
+    {
+      "name": "3. Crisis Detection (Safety-Critical)",
+      "vader": "3/5",
+      "clanker": "1/5"
+    },
+    {
+      "name": "4. Emotional Granularity (Can it distinguish anger from sadness?)",
+      "vader": "9/10",
+      "clanker": "7/10"
+    },
+    {
+      "name": "5. Context Sensitivity",
+      "vader": "0/5",
+      "clanker": "0/5"
+    }
+  ]
+}
