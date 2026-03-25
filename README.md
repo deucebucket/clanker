@@ -224,6 +224,84 @@ Seven reasoning opcodes (0x20-0x26): THINK, CHECK, INFER, DERIVE, ANSWER, DOUBT,
 
 ---
 
+## The Pendulum Engine -- How Clanker Reads Emotion
+
+Clanker doesn't score sentences. It doesn't read a whole paragraph and spit out "positive" or "negative" like every sentiment model since 2014. It processes language **word by word**, like a human does. Each word shifts an emotional pendulum -- and where the pendulum is already swinging determines what the next word *does*.
+
+Watch what happens with a sentence that fools every traditional sentiment analyzer:
+
+```
+"Hey"    -> pendulum swings warm          V140 A140
+"buddy"  -> familiar, energy builds       V145 A155
+"I've"   -> directional, me->you          V140 A160
+"got"    -> building tension               V132 A172
+"a"      -> (holds)                        V132 A172
+"bone"   -> DARK shift                     V108 A188
+"to"     -> (tense hold)                   V108 A188
+"pick"   -> confrontation lands            V88  A198
+"with"   -> aimed at someone               V86  A200
+"you"    -> TARGET ACQUIRED                V78  A208
+```
+
+Traditional sentiment analysis sees "Hey buddy" and thinks *friendly*. It averages the words. It calls this sentence **mostly positive**. It is **wrong**.
+
+Clanker's pendulum tracked the emotional arc in real time -- warm greeting decaying into tension, a dark idiom landing like a hammer, and the full weight of confrontation settling onto its target. The final VADU state isn't an average. It's the destination of a trajectory.
+
+### Context-Dependent Forces
+
+The same word hits differently depending on what's already swinging.
+
+"Buddy" after "Hey" is warm. "Buddy" after "Listen here" is a threat. The pendulum engine doesn't look up a word's sentiment in a table. It applies a **force** -- and that force depends on the current emotional state, the momentum, and the trajectory. Words are forces, not scores.
+
+### Emotional Momentum
+
+Once the pendulum swings negative, neutral words don't reset it. "A" and "to" in the example above don't pull valence back to center -- they hold the tension. Emotional state has **inertia**, exactly like it does in humans. You don't hear "I've got a bone to pick with you" and feel calm by the time they say "to." You feel it building.
+
+### Idiom Detection
+
+"Bone to pick" isn't three separate words -- it's a compound carrying its own emotional payload: *grievance*. "Piece of cake" means *easy*, not *dessert*. "Break a leg" means *good luck*, not *violence*. The pendulum engine detects multi-word compounds and applies their emotional weight as a single force. The lexicon carries these as unit entries so the pendulum doesn't swing on the literal meaning of "bone" or "break."
+
+### Morphological Fallback
+
+What happens when the engine encounters a word it's never seen? It doesn't guess. It **decomposes**.
+
+"Hopelessness" becomes: hope (positive) + -less (negate) + -ness (state) = a deeply negative emotional state. "Unbreakable" becomes: un- (negate) + break (negative/destructive) + -able (capacity) = resilient, positive. Roughly **1,070 morpheme entries** -- prefixes, roots, and suffixes -- cover millions of words the engine has never explicitly encountered. No lookup table is complete. Morphological decomposition means the pendulum never stalls on unknown vocabulary.
+
+### The "But" Effect
+
+> "I love you but..."
+
+One word yanks the pendulum from V200 to V150. Humans feel the dread before the next word arrives. So does Clanker.
+
+Adversative conjunctions ("but," "however," "although," "yet") don't just connect clauses. They **reverse emotional momentum**. The pendulum engine applies a sharp counter-force on these words, because what follows "but" almost always negates what came before. The model doesn't need to read the rest of the sentence to know the emotional direction just flipped.
+
+### Anticipation Patterns
+
+> "I need to tell you something."
+
+Nothing bad has been said yet. But arousal is climbing and the pendulum is leaning tense. Why? Because **structural patterns predict emotional payloads before they arrive**. "We need to talk" is never followed by "about how great everything is." The engine recognizes these anticipation frames and begins shifting the pendulum preemptively -- modeling the listener's emotional experience in real time.
+
+### Why This Changes AI
+
+Current LLMs process whole sentences and guess emotion from patterns. Clanker processes the **dynamics** -- the word-by-word emotional physics of how language shifts feelings. A Clanker model doesn't predict the next word. It predicts the next emotional state. The decoder adds words.
+
+A model trained on pendulum traces learns:
+- **When someone's about to get angry** -- rising arousal, falling valence, before the angry words even arrive
+- **How "I'm fine" after bad news means the opposite of "I'm fine" alone** -- identical words, opposite pendulum states
+- **How to plan responses that move the user from V35 (sad) to V80 (recovering) over multiple exchanges** -- emotional trajectory planning, not just reply generation
+
+That's not a chatbot. That's an **emotional dynamics engine**.
+
+### Try It
+
+```bash
+python3 demo/simulator.py
+```
+
+Type anything and watch the pendulum swing word by word.
+
+---
+
 ## Model Compression (Research Hypothesis)
 
 We're honest about what's proven and what's not. This is theoretical -- but the hypothesis is strong.
