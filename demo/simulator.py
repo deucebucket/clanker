@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Clanker Pipeline Simulator — Interactive Demo (v0.2: Sequential Pendulum)
+Clanker Pipeline Simulator — Interactive Demo (v0.3: Sequential Pendulum + Gravity)
 
 Demonstrates the full Clanker processing pipeline:
-1. VADU Sequential Pendulum: parse English word-by-word → emotional arc
+1. VADUG Sequential Pendulum: parse English word-by-word → emotional arc
 2. Metadata Header: CERT, SRC, GOAL, REL tagging
-3. Harmony Response: mathematically derive response VADU
+3. Harmony Response: mathematically derive response VADUG
 4. Personality Filter: apply personality vector weights
 5. Clanker Generation: produce Clanker opcodes with headers + byte encoding
 6. Decode: translate back to English
@@ -30,29 +30,32 @@ from morphemes import decompose_word, ROOTS, PREFIXES, SUFFIXES
 
 
 # -------------------------------------------------------------
-# VADU: 4-byte emotional coordinate system
-# V=Valence(0-255), A=Arousal(0-255), D=Dominance(0-255), U=Urgency(0-255)
-# 128 = neutral center for V/A/D, 0 = minimum for U
+# VADUG: 5-byte emotional coordinate system
+# V=Valence(0-255), A=Arousal(0-255), D=Dominance(0-255), U=Urgency(0-255), G=Gravity(0-255)
+# 128 = neutral center for V/A/D/G, 0 = minimum for U
+# G: 0=crushing/sinking, 128=grounded, 255=floating/soaring
 # -------------------------------------------------------------
 
 @dataclass
-class VADU:
+class VADUG:
     v: int = 128  # valence: 0=negative, 128=neutral, 255=positive
     a: int = 128  # arousal: 0=calm, 255=intense
     d: int = 128  # dominance: 0=helpless, 255=in control
     u: int = 0    # urgency: 0=no rush, 255=critical
+    g: int = 128  # gravity: 0=crushing/sinking, 128=grounded, 255=floating/soaring
 
     def __post_init__(self):
         self.v = max(0, min(255, self.v))
         self.a = max(0, min(255, self.a))
         self.d = max(0, min(255, self.d))
         self.u = max(0, min(255, self.u))
+        self.g = max(0, min(255, self.g))
 
     def to_bytes(self) -> bytes:
-        return bytes([self.v, self.a, self.d, self.u])
+        return bytes([self.v, self.a, self.d, self.u, self.g])
 
     def __str__(self):
-        return f"V{self.v} A{self.a} D{self.d} U{self.u}"
+        return f"V{self.v} A{self.a} D{self.d} U{self.u} G{self.g}"
 
     def describe(self) -> str:
         parts = []
@@ -82,7 +85,19 @@ class VADU:
         elif self.u > 30: parts.append("low urgency")
         else: parts.append("no urgency")
 
+        if self.g < 30: parts.append("CRUSHING weight")
+        elif self.g < 70: parts.append("heavy/sinking")
+        elif self.g < 110: parts.append("slightly heavy")
+        elif self.g < 148: parts.append("grounded")
+        elif self.g < 190: parts.append("light")
+        elif self.g < 230: parts.append("soaring")
+        else: parts.append("floating/weightless")
+
         return ", ".join(parts)
+
+
+# Backward-compatible alias
+VADU = VADUG
 
 
 # -------------------------------------------------------------
@@ -91,7 +106,7 @@ class VADU:
 
 @dataclass
 class MetadataHeader:
-    vadu: VADU = field(default_factory=VADU)
+    vadu: VADUG = field(default_factory=VADUG)
     cert: int = 128     # certainty 0-255
     src: int = 0x04     # source: USER by default for input
     goal: int = 0x00    # intent
@@ -143,268 +158,278 @@ class PersonalityVector:
 # STEP 1: Sequential Pendulum Engine
 # =============================================================
 
-# Word-level emotional force vectors (v_force, a_force, d_force, u_force)
-# These push the pendulum from center (128,128,128,0)
+# Word-level emotional force vectors (v_force, a_force, d_force, u_force, g_force)
+# These push the pendulum from center (128,128,128,0,128)
+# G (Gravity): positive = lighter/soaring, negative = heavier/sinking
+#   Anger: +20 to +50 (rising, boiling)
+#   Sadness: -20 to -50 (sinking, heavy)
+#   Fear: +10 to +40 (floating ungrounded)
+#   Joy: +30 to +60 (soaring, light)
+#   Calm: -5 to +10 (grounded)
+#   Disgust: +20 to +50 (repulsion rises)
+#   Despair: -40 to -60 (crushing)
+#   Neutral: 0 (grounded)
+#   Urgency: +10 to +30 (adrenaline lift)
 WORD_FORCES = {
     # ── Strong negative ──
-    "hate": (-60, +40, +20, +30), "terrible": (-50, +30, -10, +20),
-    "awful": (-50, +25, -15, +15), "horrible": (-55, +35, -10, +25),
-    "worst": (-60, +30, -20, +25), "died": (-70, +50, -40, +40),
-    "kill": (-60, +60, +30, +50), "suicide": (-80, +60, -60, +80),
-    "devastated": (-65, +40, -50, +30), "destroyed": (-55, +40, -30, +35),
-    "furious": (-50, +70, +40, +40), "enraged": (-55, +75, +45, +45),
-    "die": (-80, +50, -60, +70), "death": (-70, +40, -50, +50),
-    "hopeless": (-70, +20, -60, +40), "worthless": (-70, +15, -60, +30),
-    "useless": (-50, +10, -50, +20), "pointless": (-50, +5, -40, +15),
-    "suicidal": (-80, +60, -70, +80), "depressed": (-60, -20, -50, +20),
-    "miserable": (-65, +10, -45, +20), "suffering": (-60, +30, -40, +30),
-    "everything": (0, +10, 0, +10), "nothing": (-30, -10, -30, +10),
-    "disgusting": (-55, +40, +15, +15), "pathetic": (-45, +15, -35, +10),
-    "ruined": (-55, +30, -30, +20), "devastating": (-60, +40, -40, +30),
-    "tragic": (-60, +35, -35, +20), "nightmare": (-60, +50, -40, +30),
-    "catastrophe": (-65, +55, -35, +40), "catastrophic": (-65, +55, -35, +40),
-    "wretched": (-60, +20, -40, +15), "agonizing": (-60, +45, -30, +30),
-    "torment": (-55, +40, -30, +25), "dreadful": (-55, +35, -40, +25),
-    "abysmal": (-55, +15, -40, +10),
+    "hate": (-60, +40, +20, +30, +35), "terrible": (-50, +30, -10, +20, -20),
+    "awful": (-50, +25, -15, +15, -25), "horrible": (-55, +35, -10, +25, -20),
+    "worst": (-60, +30, -20, +25, -30), "died": (-70, +50, -40, +40, -50),
+    "kill": (-60, +60, +30, +50, +30), "suicide": (-80, +60, -60, +80, -55),
+    "devastated": (-65, +40, -50, +30, -45), "destroyed": (-55, +40, -30, +35, -30),
+    "furious": (-50, +70, +40, +40, +40), "enraged": (-55, +75, +45, +45, +45),
+    "die": (-80, +50, -60, +70, -50), "death": (-70, +40, -50, +50, -45),
+    "hopeless": (-70, +20, -60, +40, -55), "worthless": (-70, +15, -60, +30, -50),
+    "useless": (-50, +10, -50, +20, -35), "pointless": (-50, +5, -40, +15, -35),
+    "suicidal": (-80, +60, -70, +80, -55), "depressed": (-60, -20, -50, +20, -50),
+    "miserable": (-65, +10, -45, +20, -45), "suffering": (-60, +30, -40, +30, -35),
+    "everything": (0, +10, 0, +10, 0), "nothing": (-30, -10, -30, +10, -25),
+    "disgusting": (-55, +40, +15, +15, +30), "pathetic": (-45, +15, -35, +10, -30),
+    "ruined": (-55, +30, -30, +20, -30), "devastating": (-60, +40, -40, +30, -45),
+    "tragic": (-60, +35, -35, +20, -40), "nightmare": (-60, +50, -40, +30, -35),
+    "catastrophe": (-65, +55, -35, +40, -30), "catastrophic": (-65, +55, -35, +40, -30),
+    "wretched": (-60, +20, -40, +15, -45), "agonizing": (-60, +45, -30, +30, -25),
+    "torment": (-55, +40, -30, +25, -20), "dreadful": (-55, +35, -40, +25, -30),
+    "abysmal": (-55, +15, -40, +10, -50),
 
     # ── Moderate negative ──
-    "bad": (-30, +10, -10, +10), "sad": (-35, -10, -20, +5),
-    "angry": (-40, +40, +20, +25), "mad": (-35, +35, +15, +20),
-    "upset": (-30, +25, -10, +15), "frustrated": (-35, +35, -15, +25),
-    "annoyed": (-20, +20, +5, +10), "disappointed": (-25, +5, -15, +5),
-    "worried": (-20, +25, -20, +25), "anxious": (-25, +35, -25, +30),
-    "stressed": (-25, +30, -20, +30), "tired": (-15, -25, -15, +5),
-    "bored": (-10, -30, -5, 0), "lonely": (-30, -15, -25, +5),
-    "confused": (-15, +15, -20, +15), "lost": (-25, +10, -30, +15),
-    "stuck": (-20, +15, -25, +20), "broken": (-40, +10, -35, +15),
-    "failed": (-35, +10, -30, +15), "sucks": (-30, +20, -5, +10),
-    "shit": (-25, +15, -5, +10), "fuck": (-20, +30, +10, +15),
-    "damn": (-15, +20, +5, +10), "crap": (-20, +10, -5, +5),
-    "wrong": (-20, +10, -10, +15), "error": (-15, +15, -5, +20),
-    "bug": (-15, +15, -10, +25), "crash": (-30, +30, -20, +35),
-    "pain": (-40, +30, -25, +20), "hurt": (-35, +25, -20, +15),
-    "sick": (-30, +15, -25, +15), "afraid": (-35, +40, -40, +25),
-    "scared": (-40, +45, -45, +25), "fear": (-35, +40, -40, +25),
-    "frightened": (-40, +50, -45, +30), "terrified": (-55, +60, -55, +40),
-    "panicked": (-50, +65, -50, +45), "nervous": (-20, +30, -20, +20),
-    "uncomfortable": (-20, +15, -15, +10), "uneasy": (-20, +20, -15, +15),
-    "awkward": (-15, +15, -20, +5), "embarrassed": (-30, +25, -25, +10),
-    "ashamed": (-40, +25, -30, +10), "guilty": (-35, +20, -25, +10),
-    "regret": (-30, +15, -20, +10), "mistake": (-25, +15, -15, +15),
-    "problem": (-15, +15, -10, +20), "issue": (-10, +10, -5, +15),
-    "trouble": (-20, +20, -15, +20), "difficult": (-15, +15, -10, +15),
-    "struggle": (-25, +25, -20, +20), "painful": (-40, +30, -25, +20),
-    "overwhelming": (-30, +40, -25, +25), "exhausting": (-25, -15, -25, +10),
-    "draining": (-20, -15, -20, +10), "tedious": (-15, -20, -10, +5),
-    "boring": (-10, -30, -5, 0), "dull": (-10, -25, -5, 0),
-    "mediocre": (-10, -10, -5, 0), "lame": (-15, -5, -10, +5),
-    "garbage": (-35, +15, -10, +10), "trash": (-30, +15, -10, +10),
-    "waste": (-25, +10, -15, +10), "meaningless": (-35, -5, -30, +10),
+    "bad": (-30, +10, -10, +10, -10), "sad": (-35, -10, -20, +5, -30),
+    "angry": (-40, +40, +20, +25, +30), "mad": (-35, +35, +15, +20, +25),
+    "upset": (-30, +25, -10, +15, -10), "frustrated": (-35, +35, -15, +25, +15),
+    "annoyed": (-20, +20, +5, +10, +10), "disappointed": (-25, +5, -15, +5, -20),
+    "worried": (-20, +25, -20, +25, +10), "anxious": (-25, +35, -25, +30, +15),
+    "stressed": (-25, +30, -20, +30, +10), "tired": (-15, -25, -15, +5, -20),
+    "bored": (-10, -30, -5, 0, -10), "lonely": (-30, -15, -25, +5, -30),
+    "confused": (-15, +15, -20, +15, +10), "lost": (-25, +10, -30, +15, -20),
+    "stuck": (-20, +15, -25, +20, -20), "broken": (-40, +10, -35, +15, -30),
+    "failed": (-35, +10, -30, +15, -25), "sucks": (-30, +20, -5, +10, -10),
+    "shit": (-25, +15, -5, +10, -5), "fuck": (-20, +30, +10, +15, +10),
+    "damn": (-15, +20, +5, +10, +5), "crap": (-20, +10, -5, +5, -5),
+    "wrong": (-20, +10, -10, +15, -5), "error": (-15, +15, -5, +20, -5),
+    "bug": (-15, +15, -10, +25, -5), "crash": (-30, +30, -20, +35, -20),
+    "pain": (-40, +30, -25, +20, -25), "hurt": (-35, +25, -20, +15, -20),
+    "sick": (-30, +15, -25, +15, -15), "afraid": (-35, +40, -40, +25, +15),
+    "scared": (-40, +45, -45, +25, +20), "fear": (-35, +40, -40, +25, +15),
+    "frightened": (-40, +50, -45, +30, +20), "terrified": (-55, +60, -55, +40, +25),
+    "panicked": (-50, +65, -50, +45, +30), "nervous": (-20, +30, -20, +20, +10),
+    "uncomfortable": (-20, +15, -15, +10, -5), "uneasy": (-20, +20, -15, +15, +5),
+    "awkward": (-15, +15, -20, +5, -5), "embarrassed": (-30, +25, -25, +10, -10),
+    "ashamed": (-40, +25, -30, +10, -25), "guilty": (-35, +20, -25, +10, -25),
+    "regret": (-30, +15, -20, +10, -20), "mistake": (-25, +15, -15, +15, -10),
+    "problem": (-15, +15, -10, +20, -5), "issue": (-10, +10, -5, +15, -5),
+    "trouble": (-20, +20, -15, +20, -10), "difficult": (-15, +15, -10, +15, -5),
+    "struggle": (-25, +25, -20, +20, -15), "painful": (-40, +30, -25, +20, -25),
+    "overwhelming": (-30, +40, -25, +25, -20), "exhausting": (-25, -15, -25, +10, -25),
+    "draining": (-20, -15, -20, +10, -20), "tedious": (-15, -20, -10, +5, -10),
+    "boring": (-10, -30, -5, 0, -10), "dull": (-10, -25, -5, 0, -10),
+    "mediocre": (-10, -10, -5, 0, -5), "lame": (-15, -5, -10, +5, -10),
+    "garbage": (-35, +15, -10, +10, -15), "trash": (-30, +15, -10, +10, -15),
+    "waste": (-25, +10, -15, +10, -15), "meaningless": (-35, -5, -30, +10, -30),
 
-    # ── Confrontational ──
-    "shut": (-30, +40, +25, +20), "nobody": (-25, +15, -15, +10),
-    "asked": (-10, +10, +5, +5), "rude": (-30, +25, +10, +10),
-    "disrespectful": (-35, +30, +10, +10), "arrogant": (-30, +20, +15, +5),
-    "selfish": (-30, +15, +10, +5), "ignorant": (-25, +15, -5, +5),
-    "stupid": (-35, +25, +10, +10), "idiot": (-40, +30, +15, +15),
-    "moron": (-40, +30, +15, +15), "fool": (-30, +20, +10, +10),
-    "ridiculous": (-25, +25, +10, +10), "absurd": (-25, +25, +10, +10),
-    "liar": (-40, +35, +15, +15), "fake": (-30, +20, +10, +10),
-    "hypocrite": (-35, +25, +10, +10), "manipulative": (-40, +25, +10, +15),
-    "toxic": (-45, +30, +10, +15), "hostile": (-40, +40, +20, +20),
+    # ── Confrontational ── (anger rises)
+    "shut": (-30, +40, +25, +20, +20), "nobody": (-25, +15, -15, +10, -10),
+    "asked": (-10, +10, +5, +5, 0), "rude": (-30, +25, +10, +10, +15),
+    "disrespectful": (-35, +30, +10, +10, +15), "arrogant": (-30, +20, +15, +5, +15),
+    "selfish": (-30, +15, +10, +5, +10), "ignorant": (-25, +15, -5, +5, 0),
+    "stupid": (-35, +25, +10, +10, +15), "idiot": (-40, +30, +15, +15, +20),
+    "moron": (-40, +30, +15, +15, +20), "fool": (-30, +20, +10, +10, +10),
+    "ridiculous": (-25, +25, +10, +10, +15), "absurd": (-25, +25, +10, +10, +15),
+    "liar": (-40, +35, +15, +15, +20), "fake": (-30, +20, +10, +10, +10),
+    "hypocrite": (-35, +25, +10, +10, +15), "manipulative": (-40, +25, +10, +15, +15),
+    "toxic": (-45, +30, +10, +15, +20), "hostile": (-40, +40, +20, +20, +25),
 
     # ── Mild negative ──
-    "not": (-10, +5, 0, +5), "don't": (-10, +5, 0, +5),
-    "didn't": (-10, +5, 0, +5), "can't": (-15, +10, -15, +10),
-    "won't": (-10, +10, +5, +5), "never": (-15, +10, -5, +5),
-    "no": (-10, +5, 0, +5), "stop": (-10, +15, +10, +15),
+    "not": (-10, +5, 0, +5, 0), "don't": (-10, +5, 0, +5, 0),
+    "didn't": (-10, +5, 0, +5, 0), "can't": (-15, +10, -15, +10, -5),
+    "won't": (-10, +10, +5, +5, 0), "never": (-15, +10, -5, +5, -5),
+    "no": (-10, +5, 0, +5, 0), "stop": (-10, +15, +10, +15, 0),
 
     # ── Neutral / functional ──
-    "help": (+10, +10, -10, +20), "fix": (+5, +10, +5, +20),
-    "need": (-5, +10, -10, +25), "want": (+5, +10, +5, +15),
-    "please": (+5, -5, -10, +10), "think": (0, +5, +5, +5),
-    "know": (+5, +5, +10, +5), "try": (+5, +10, -5, +10),
-    "maybe": (-5, -5, -10, 0), "might": (-5, -5, -5, 0),
-    "how": (0, +5, -5, +10), "what": (0, +5, -5, +10),
-    "why": (-5, +10, -5, +15), "when": (0, +5, 0, +15),
-    "work": (+5, +10, +10, +15), "make": (+5, +10, +10, +10),
-    "understand": (+10, +10, +10, +5),
+    "help": (+10, +10, -10, +20, +5), "fix": (+5, +10, +5, +20, +5),
+    "need": (-5, +10, -10, +25, -5), "want": (+5, +10, +5, +15, +5),
+    "please": (+5, -5, -10, +10, 0), "think": (0, +5, +5, +5, 0),
+    "know": (+5, +5, +10, +5, 0), "try": (+5, +10, -5, +10, +5),
+    "maybe": (-5, -5, -10, 0, 0), "might": (-5, -5, -5, 0, 0),
+    "how": (0, +5, -5, +10, 0), "what": (0, +5, -5, +10, 0),
+    "why": (-5, +10, -5, +15, 0), "when": (0, +5, 0, +15, 0),
+    "work": (+5, +10, +10, +15, 0), "make": (+5, +10, +10, +10, +5),
+    "understand": (+10, +10, +10, +5, +5),
 
     # ── Mild positive ──
-    "good": (+25, +10, +10, 0), "nice": (+20, +5, +5, 0),
-    "okay": (+10, -5, +5, 0), "fine": (+10, -5, +5, 0),
-    "sure": (+10, 0, +10, +5), "yes": (+15, +5, +10, +5),
-    "thanks": (+20, +5, 0, 0), "cool": (+20, +5, +10, 0),
-    "interesting": (+15, +15, +10, +5), "better": (+20, +10, +10, +5),
+    "good": (+25, +10, +10, 0, +10), "nice": (+20, +5, +5, 0, +10),
+    "okay": (+10, -5, +5, 0, 0), "fine": (+10, -5, +5, 0, 0),
+    "sure": (+10, 0, +10, +5, 0), "yes": (+15, +5, +10, +5, +5),
+    "thanks": (+20, +5, 0, 0, +10), "cool": (+20, +5, +10, 0, +10),
+    "interesting": (+15, +15, +10, +5, +10), "better": (+20, +10, +10, +5, +10),
 
-    # ── Moderate positive ──
-    "great": (+35, +20, +15, 0), "happy": (+40, +20, +15, 0),
-    "glad": (+30, +15, +10, 0), "love": (+50, +30, +15, 0),
-    "like": (+20, +10, +5, 0), "enjoy": (+35, +15, +10, 0),
-    "beautiful": (+40, +15, +10, 0), "perfect": (+45, +20, +20, 0),
-    "wonderful": (+45, +25, +15, 0), "fantastic": (+45, +30, +20, 0),
-    "excellent": (+40, +20, +20, 0), "awesome": (+45, +35, +20, 0),
-    "magnificent": (+50, +35, +25, 0), "spectacular": (+50, +40, +25, 0),
-    "phenomenal": (+50, +40, +20, 0), "outstanding": (+45, +30, +25, 0),
-    "brilliant": (+45, +30, +25, 0), "genius": (+45, +30, +30, 0),
-    "remarkable": (+40, +25, +20, 0), "extraordinary": (+45, +35, +25, 0),
-    "superb": (+45, +25, +25, 0), "marvelous": (+45, +30, +20, 0),
-    "glorious": (+50, +35, +30, 0), "blessed": (+40, +15, +20, 0),
-    "grateful": (+35, +15, +15, 0), "thankful": (+30, +10, +10, 0),
-    "proud": (+35, +25, +30, 0), "accomplished": (+35, +20, +30, 0),
-    "triumphant": (+45, +40, +40, 0), "victorious": (+45, +40, +40, 0),
-    "successful": (+40, +25, +30, 0), "thriving": (+40, +25, +25, 0),
-    "flourishing": (+40, +20, +25, 0), "radiant": (+40, +25, +15, 0),
-    "gorgeous": (+40, +20, +10, 0), "stunning": (+40, +35, +10, 0),
+    # ── Moderate positive ── (joy soars)
+    "great": (+35, +20, +15, 0, +20), "happy": (+40, +20, +15, 0, +30),
+    "glad": (+30, +15, +10, 0, +20), "love": (+50, +30, +15, 0, +40),
+    "like": (+20, +10, +5, 0, +10), "enjoy": (+35, +15, +10, 0, +20),
+    "beautiful": (+40, +15, +10, 0, +25), "perfect": (+45, +20, +20, 0, +30),
+    "wonderful": (+45, +25, +15, 0, +30), "fantastic": (+45, +30, +20, 0, +35),
+    "excellent": (+40, +20, +20, 0, +25), "awesome": (+45, +35, +20, 0, +35),
+    "magnificent": (+50, +35, +25, 0, +40), "spectacular": (+50, +40, +25, 0, +40),
+    "phenomenal": (+50, +40, +20, 0, +40), "outstanding": (+45, +30, +25, 0, +30),
+    "brilliant": (+45, +30, +25, 0, +35), "genius": (+45, +30, +30, 0, +30),
+    "remarkable": (+40, +25, +20, 0, +25), "extraordinary": (+45, +35, +25, 0, +35),
+    "superb": (+45, +25, +25, 0, +30), "marvelous": (+45, +30, +20, 0, +30),
+    "glorious": (+50, +35, +30, 0, +40), "blessed": (+40, +15, +20, 0, +25),
+    "grateful": (+35, +15, +15, 0, +20), "thankful": (+30, +10, +10, 0, +15),
+    "proud": (+35, +25, +30, 0, +25), "accomplished": (+35, +20, +30, 0, +25),
+    "triumphant": (+45, +40, +40, 0, +45), "victorious": (+45, +40, +40, 0, +45),
+    "successful": (+40, +25, +30, 0, +25), "thriving": (+40, +25, +25, 0, +25),
+    "flourishing": (+40, +20, +25, 0, +25), "radiant": (+40, +25, +15, 0, +30),
+    "gorgeous": (+40, +20, +10, 0, +25), "stunning": (+40, +35, +10, 0, +25),
 
-    # ── Strong positive ──
-    "amazing": (+50, +40, +20, 0), "incredible": (+50, +40, +20, 0),
-    "ecstatic": (+55, +55, +20, 0), "thrilled": (+50, +45, +20, 0),
-    "excited": (+40, +45, +15, +10), "celebrate": (+50, +45, +25, 0),
+    # ── Strong positive ── (soaring)
+    "amazing": (+50, +40, +20, 0, +40), "incredible": (+50, +40, +20, 0, +40),
+    "ecstatic": (+55, +55, +20, 0, +50), "thrilled": (+50, +45, +20, 0, +45),
+    "excited": (+40, +45, +15, +10, +35), "celebrate": (+50, +45, +25, 0, +45),
 
     # ── Social / emotional ──
-    "forgive": (+25, +10, +15, 0), "forget": (-5, -5, +5, 0),
-    "remember": (+10, +10, +5, +5), "miss": (-20, +15, -10, +5),
-    "belong": (+30, +10, +15, 0), "welcome": (+30, +10, +15, 0),
-    "accept": (+25, +5, +15, 0), "reject": (-35, +25, -25, +10),
-    "abandon": (-45, +30, -35, +20), "betray": (-50, +40, -30, +25),
-    "trust": (+30, +5, +20, 0), "loyal": (+30, +10, +20, 0),
-    "faithful": (+30, +10, +20, 0), "devoted": (+35, +15, +20, 0),
-    "cherish": (+40, +15, +15, 0), "adore": (+45, +25, +15, 0),
-    "treasure": (+35, +15, +15, 0), "appreciate": (+30, +10, +15, 0),
-    "respect": (+25, +10, +15, 0), "admire": (+30, +15, +15, 0),
-    "inspire": (+35, +25, +20, 0), "motivate": (+25, +25, +20, +5),
-    "encourage": (+25, +15, +15, 0), "support": (+25, +10, +15, 0),
-    "comfort": (+30, -10, +15, 0), "heal": (+25, +10, +15, 0),
-    "recover": (+20, +10, +15, +5), "grow": (+20, +10, +15, 0),
-    "overcome": (+25, +25, +30, +5), "survive": (+15, +20, +25, +10),
-    "endure": (+10, +15, +25, +5), "persevere": (+20, +20, +30, +5),
-    "resilient": (+25, +20, +35, +5), "alone": (-30, -10, -20, +5),
+    "forgive": (+25, +10, +15, 0, +15), "forget": (-5, -5, +5, 0, 0),
+    "remember": (+10, +10, +5, +5, +5), "miss": (-20, +15, -10, +5, -15),
+    "belong": (+30, +10, +15, 0, +10), "welcome": (+30, +10, +15, 0, +15),
+    "accept": (+25, +5, +15, 0, +10), "reject": (-35, +25, -25, +10, -20),
+    "abandon": (-45, +30, -35, +20, -35), "betray": (-50, +40, -30, +25, -25),
+    "trust": (+30, +5, +20, 0, +10), "loyal": (+30, +10, +20, 0, +10),
+    "faithful": (+30, +10, +20, 0, +10), "devoted": (+35, +15, +20, 0, +15),
+    "cherish": (+40, +15, +15, 0, +20), "adore": (+45, +25, +15, 0, +30),
+    "treasure": (+35, +15, +15, 0, +15), "appreciate": (+30, +10, +15, 0, +15),
+    "respect": (+25, +10, +15, 0, +10), "admire": (+30, +15, +15, 0, +15),
+    "inspire": (+35, +25, +20, 0, +30), "motivate": (+25, +25, +20, +5, +15),
+    "encourage": (+25, +15, +15, 0, +15), "support": (+25, +10, +15, 0, +10),
+    "comfort": (+30, -10, +15, 0, +10), "heal": (+25, +10, +15, 0, +15),
+    "recover": (+20, +10, +15, +5, +10), "grow": (+20, +10, +15, 0, +15),
+    "overcome": (+25, +25, +30, +5, +20), "survive": (+15, +20, +25, +10, +5),
+    "endure": (+10, +15, +25, +5, 0), "persevere": (+20, +20, +30, +5, +5),
+    "resilient": (+25, +20, +35, +5, +10), "alone": (-30, -10, -20, +5, -25),
 
     # ── Urgency / intensity (figurative usage) ──
-    "killing": (-30, +50, +15, +35), "dying": (-20, +40, -20, +30),
-    "screaming": (-25, +55, +10, +30), "scream": (-25, +55, +10, +30),
-    "exploding": (-20, +55, +10, +35), "burning": (-20, +45, +10, +25),
-    "crashing": (-30, +45, -15, +30), "shattering": (-35, +40, -20, +25),
-    "breaking": (-30, +35, -15, +20), "falling": (-25, +30, -25, +20),
-    "drowning": (-35, +40, -30, +25), "suffocating": (-35, +45, -30, +30),
-    "choking": (-30, +40, -25, +30), "crushing": (-30, +35, -20, +20),
+    "killing": (-30, +50, +15, +35, +20), "dying": (-20, +40, -20, +30, -30),
+    "screaming": (-25, +55, +10, +30, +25), "scream": (-25, +55, +10, +30, +25),
+    "exploding": (-20, +55, +10, +35, +30), "burning": (-20, +45, +10, +25, +25),
+    "crashing": (-30, +45, -15, +30, -25), "shattering": (-35, +40, -20, +25, -15),
+    "breaking": (-30, +35, -15, +20, -15), "falling": (-25, +30, -25, +20, -40),
+    "drowning": (-35, +40, -30, +25, -50), "suffocating": (-35, +45, -30, +30, -45),
+    "choking": (-30, +40, -25, +30, -35), "crushing": (-30, +35, -20, +20, -55),
 
-    # ── Passive / resigned ──
-    "whatever": (-15, -10, -15, 0), "guess": (-10, -5, -10, 0),
-    "suppose": (-5, -5, -10, 0), "anyway": (-5, 0, -5, 0),
-    "nevermind": (-15, -10, -15, 0), "meh": (-10, -15, -10, 0),
-    "sigh": (-10, -10, -10, 0),
+    # ── Passive / resigned ── (heavy, sinking)
+    "whatever": (-15, -10, -15, 0, -10), "guess": (-10, -5, -10, 0, -5),
+    "suppose": (-5, -5, -10, 0, -5), "anyway": (-5, 0, -5, 0, 0),
+    "nevermind": (-15, -10, -15, 0, -10), "meh": (-10, -15, -10, 0, -10),
+    "sigh": (-10, -10, -10, 0, -10),
 
     # ── Context modifiers / intensifiers ──
-    "anymore": (-15, +10, -10, +5), "always": (0, +10, 0, +10),
-    "everyone": (0, +10, +5, +5), "forever": (0, +10, 0, +5),
-    "completely": (0, +10, 0, +5), "totally": (0, +10, 0, +5),
-    "entirely": (0, +10, 0, +5), "absolutely": (0, +15, +5, +5),
-    "literally": (0, +10, 0, +5),
+    "anymore": (-15, +10, -10, +5, -5), "always": (0, +10, 0, +10, 0),
+    "everyone": (0, +10, +5, +5, 0), "forever": (0, +10, 0, +5, 0),
+    "completely": (0, +10, 0, +5, 0), "totally": (0, +10, 0, +5, 0),
+    "entirely": (0, +10, 0, +5, 0), "absolutely": (0, +15, +5, +5, 0),
+    "literally": (0, +10, 0, +5, 0),
 
     # ── Religious / existential ──
-    "holy": (+10, +30, +10, +10), "believe": (+15, +10, +10, +5),
-    "pray": (+10, +10, -5, +10), "faith": (+20, +10, +15, 0),
-    "miracle": (+40, +35, +10, +5),
-    "god": (+5, +20, +5, +10), "hell": (-20, +25, +5, +10),
+    "holy": (+10, +30, +10, +10, +20), "believe": (+15, +10, +10, +5, +10),
+    "pray": (+10, +10, -5, +10, +10), "faith": (+20, +10, +15, 0, +15),
+    "miracle": (+40, +35, +10, +5, +40),
+    "god": (+5, +20, +5, +10, +15), "hell": (-20, +25, +5, +10, -20),
 
     # ── Weather / nature (metaphorical weight) ──
-    "storm": (-20, +35, -10, +20), "calm": (+20, -30, +15, -5),
-    "thunder": (-15, +40, +5, +15), "lightning": (-5, +45, +5, +15),
-    "darkness": (-25, +10, -15, +5), "light": (+20, +10, +10, 0),
-    "fire": (-10, +40, +15, +20), "ice": (-10, -10, +5, +5),
+    "storm": (-20, +35, -10, +20, -10), "calm": (+20, -30, +15, -5, +5),
+    "thunder": (-15, +40, +5, +15, -5), "lightning": (-5, +45, +5, +15, +15),
+    "darkness": (-25, +10, -15, +5, -20), "light": (+20, +10, +10, 0, +30),
+    "fire": (-10, +40, +15, +20, +25), "ice": (-10, -10, +5, +5, -10),
 
-    # ── Urgency markers ──
-    "now": (0, +10, +5, +40), "immediately": (0, +15, +5, +50),
-    "asap": (0, +15, +5, +55), "urgent": (-5, +20, -5, +60),
-    "emergency": (-20, +40, -20, +80), "hurry": (-5, +20, -5, +45),
-    "quickly": (0, +10, 0, +35), "soon": (0, +5, 0, +20),
-    "deadline": (-10, +20, -10, +45), "critical": (-15, +25, -5, +55),
-    "important": (0, +10, +5, +30),
+    # ── Urgency markers ── (adrenaline lift)
+    "now": (0, +10, +5, +40, +10), "immediately": (0, +15, +5, +50, +15),
+    "asap": (0, +15, +5, +55, +15), "urgent": (-5, +20, -5, +60, +15),
+    "emergency": (-20, +40, -20, +80, +10), "hurry": (-5, +20, -5, +45, +10),
+    "quickly": (0, +10, 0, +35, +10), "soon": (0, +5, 0, +20, +5),
+    "deadline": (-10, +20, -10, +45, +10), "critical": (-15, +25, -5, +55, +10),
+    "important": (0, +10, +5, +30, +5),
 
     # ── Key derived forms (override morpheme decomposition for accuracy) ──
-    "hopelessness": (-70, +20, -60, +40), "hopeless": (-70, +20, -60, +40),
-    "hopeful": (+40, +15, +20, 0), "hopefulness": (+40, +15, +20, 0),
-    "helpless": (-40, +15, -50, +20), "helplessness": (-40, +15, -50, +20),
-    "fearless": (+30, +20, +40, 0), "fearful": (-35, +40, -35, +20),
-    "joyful": (+55, +30, +25, 0), "joyless": (-40, -10, -25, +5),
-    "powerful": (+30, +30, +50, +5), "powerless": (-30, +10, -50, +15),
-    "wonderful": (+45, +25, +15, 0), "beautiful": (+40, +15, +10, 0),
-    "peaceful": (+35, -25, +20, 0), "graceful": (+30, -10, +20, 0),
-    "harmful": (-40, +25, +10, +15), "harmless": (+10, -10, -5, 0),
-    "ungrateful": (-30, +15, -10, +10),
-    "unacceptable": (-35, +25, +10, +15),
-    "unbearable": (-50, +30, -30, +25), "unbelievable": (+10, +45, +5, +10),
-    "underwhelming": (-15, -10, -10, +5),
+    "hopelessness": (-70, +20, -60, +40, -55), "hopeless": (-70, +20, -60, +40, -55),
+    "hopeful": (+40, +15, +20, 0, +30), "hopefulness": (+40, +15, +20, 0, +30),
+    "helpless": (-40, +15, -50, +20, -35), "helplessness": (-40, +15, -50, +20, -35),
+    "fearless": (+30, +20, +40, 0, +20), "fearful": (-35, +40, -35, +20, +15),
+    "joyful": (+55, +30, +25, 0, +45), "joyless": (-40, -10, -25, +5, -35),
+    "powerful": (+30, +30, +50, +5, +15), "powerless": (-30, +10, -50, +15, -35),
+    "wonderful": (+45, +25, +15, 0, +30), "beautiful": (+40, +15, +10, 0, +25),
+    "peaceful": (+35, -25, +20, 0, +10), "graceful": (+30, -10, +20, 0, +20),
+    "harmful": (-40, +25, +10, +15, +10), "harmless": (+10, -10, -5, 0, +5),
+    "ungrateful": (-30, +15, -10, +10, -15),
+    "unacceptable": (-35, +25, +10, +15, +15),
+    "unbearable": (-50, +30, -30, +25, -40), "unbelievable": (+10, +45, +5, +10, +20),
+    "underwhelming": (-15, -10, -10, +5, -10),
 
     # ── Social / greeting words (context-sensitive base values) ──
-    "hey": (+12, +12, +5, +5), "hi": (+15, +10, +5, 0),
-    "hello": (+15, +8, +5, 0), "yo": (+10, +15, +5, +5),
-    "buddy": (+15, +10, +5, 0), "friend": (+20, +10, +5, 0),
-    "pal": (+15, +10, +5, 0), "dude": (+10, +10, +5, 0),
-    "man": (+5, +5, +5, 0), "bro": (+10, +12, +5, 0),
-    "listen": (-5, +15, +15, +15), "look": (-5, +10, +10, +10),
-    "actually": (-8, +10, +10, +5), "well": (+5, +5, +5, 0),
+    "hey": (+12, +12, +5, +5, +5), "hi": (+15, +10, +5, 0, +5),
+    "hello": (+15, +8, +5, 0, +5), "yo": (+10, +15, +5, +5, +5),
+    "buddy": (+15, +10, +5, 0, +5), "friend": (+20, +10, +5, 0, +10),
+    "pal": (+15, +10, +5, 0, +5), "dude": (+10, +10, +5, 0, +5),
+    "man": (+5, +5, +5, 0, 0), "bro": (+10, +12, +5, 0, +5),
+    "listen": (-5, +15, +15, +15, 0), "look": (-5, +10, +10, +10, 0),
+    "actually": (-8, +10, +10, +5, 0), "well": (+5, +5, +5, 0, 0),
 
     # ── Pronouns (context-sensitive) ──
-    "i": (0, +3, +5, 0), "you": (0, +5, 0, +5),
-    "we": (+5, +5, +5, 0), "they": (0, +3, 0, 0),
-    "my": (0, +3, +5, 0), "your": (0, +5, 0, +5),
-    "me": (0, +3, -5, 0),
+    "i": (0, +3, +5, 0, 0), "you": (0, +5, 0, +5, 0),
+    "we": (+5, +5, +5, 0, 0), "they": (0, +3, 0, 0, 0),
+    "my": (0, +3, +5, 0, 0), "your": (0, +5, 0, +5, 0),
+    "me": (0, +3, -5, 0, 0),
 
-    # ── Profanity / strong exclamations ──
-    "bullshit": (-30, +30, +10, +15),
-    "bastard": (-35, +30, +15, +15), "ass": (-15, +15, +5, +5),
-    "asshole": (-40, +35, +15, +15), "jerk": (-25, +20, +10, +10),
-    "creep": (-25, +20, -5, +10), "freak": (-15, +25, -5, +10),
-    "psycho": (-30, +35, +10, +20), "insane": (-15, +40, +10, +15),
-    "crazy": (-10, +30, +5, +10),
+    # ── Profanity / strong exclamations ── (anger rises)
+    "bullshit": (-30, +30, +10, +15, +15),
+    "bastard": (-35, +30, +15, +15, +20), "ass": (-15, +15, +5, +5, +5),
+    "asshole": (-40, +35, +15, +15, +20), "jerk": (-25, +20, +10, +10, +10),
+    "creep": (-25, +20, -5, +10, +5), "freak": (-15, +25, -5, +10, +10),
+    "psycho": (-30, +35, +10, +20, +15), "insane": (-15, +40, +10, +15, +15),
+    "crazy": (-10, +30, +5, +10, +10),
 
-    # ── Achievement / effort ──
-    "won": (+35, +30, +30, 0), "win": (+35, +30, +30, +5),
-    "champion": (+40, +35, +35, 0), "hero": (+35, +30, +30, 0),
-    "legend": (+35, +25, +25, 0), "master": (+30, +20, +35, 0),
-    "achieve": (+30, +25, +25, +5), "earned": (+30, +20, +25, 0),
+    # ── Achievement / effort ── (soaring)
+    "won": (+35, +30, +30, 0, +35), "win": (+35, +30, +30, +5, +35),
+    "champion": (+40, +35, +35, 0, +40), "hero": (+35, +30, +30, 0, +35),
+    "legend": (+35, +25, +25, 0, +25), "master": (+30, +20, +35, 0, +20),
+    "achieve": (+30, +25, +25, +5, +25), "earned": (+30, +20, +25, 0, +20),
 
-    # ── Loss / grief ──
-    "grief": (-55, +25, -35, +15), "mourn": (-50, +15, -30, +10),
-    "sorrow": (-50, +10, -30, +10), "despair": (-65, +25, -55, +30),
-    "anguish": (-60, +40, -35, +25), "agony": (-55, +45, -30, +25),
-    "heartbreak": (-55, +30, -30, +15), "heartbroken": (-55, +30, -35, +15),
-    "devastation": (-60, +35, -40, +25), "tragedy": (-55, +30, -30, +20),
-    "doom": (-55, +20, -45, +25), "cursed": (-40, +25, -25, +15),
+    # ── Loss / grief ── (sinking, heavy)
+    "grief": (-55, +25, -35, +15, -45), "mourn": (-50, +15, -30, +10, -40),
+    "sorrow": (-50, +10, -30, +10, -40), "despair": (-65, +25, -55, +30, -60),
+    "anguish": (-60, +40, -35, +25, -35), "agony": (-55, +45, -30, +25, -30),
+    "heartbreak": (-55, +30, -30, +15, -40), "heartbroken": (-55, +30, -35, +15, -40),
+    "devastation": (-60, +35, -40, +25, -45), "tragedy": (-55, +30, -30, +20, -40),
+    "doom": (-55, +20, -45, +25, -50), "cursed": (-40, +25, -25, +15, -25),
 
     # ── Relationship ──
-    "sorry": (-10, +5, -10, +5), "apologize": (-5, +10, -15, +5),
-    "promise": (+15, +10, +15, +10), "swear": (-5, +20, +15, +10),
-    "blame": (-25, +25, +10, +10), "fault": (-20, +15, -5, +10),
-    "deserve": (+5, +15, +10, +5), "owe": (-5, +10, -5, +10),
-    "jealous": (-25, +25, -10, +10), "envy": (-20, +20, -10, +5),
+    "sorry": (-10, +5, -10, +5, -5), "apologize": (-5, +10, -15, +5, -5),
+    "promise": (+15, +10, +15, +10, +10), "swear": (-5, +20, +15, +10, +5),
+    "blame": (-25, +25, +10, +10, +10), "fault": (-20, +15, -5, +10, -10),
+    "deserve": (+5, +15, +10, +5, +5), "owe": (-5, +10, -5, +10, -5),
+    "jealous": (-25, +25, -10, +10, +10), "envy": (-20, +20, -10, +5, +5),
 
     # ── Physical state ──
-    "exhausted": (-20, -20, -25, +10), "drained": (-20, -15, -20, +10),
-    "numb": (-20, -25, -20, +5), "shaking": (-20, +40, -25, +20),
-    "trembling": (-20, +35, -25, +15), "crying": (-35, +30, -25, +15),
-    "tears": (-30, +25, -20, +10), "sobbing": (-40, +35, -30, +15),
-    "laughing": (+35, +30, +15, 0), "smiling": (+30, +15, +15, 0),
+    "exhausted": (-20, -20, -25, +10, -30), "drained": (-20, -15, -20, +10, -25),
+    "numb": (-20, -25, -20, +5, -20), "shaking": (-20, +40, -25, +20, +10),
+    "trembling": (-20, +35, -25, +15, +10), "crying": (-35, +30, -25, +15, -30),
+    "tears": (-30, +25, -20, +10, -25), "sobbing": (-40, +35, -30, +15, -35),
+    "laughing": (+35, +30, +15, 0, +35), "smiling": (+30, +15, +15, 0, +20),
 
     # ── Certainty / uncertainty ──
-    "certain": (+15, +10, +25, +5), "definite": (+15, +10, +25, +5),
-    "doubt": (-10, +10, -15, +10), "uncertain": (-10, +10, -15, +10),
-    "impossible": (-25, +15, -20, +10), "possible": (+10, +5, +5, +5),
-    "inevitable": (-10, +15, -10, +15), "obvious": (+5, +10, +15, +5),
-    "clearly": (+5, +10, +15, +5), "apparently": (-5, +5, +5, +5),
+    "certain": (+15, +10, +25, +5, +5), "definite": (+15, +10, +25, +5, +5),
+    "doubt": (-10, +10, -15, +10, -5), "uncertain": (-10, +10, -15, +10, -5),
+    "impossible": (-25, +15, -20, +10, -15), "possible": (+10, +5, +5, +5, +5),
+    "inevitable": (-10, +15, -10, +15, -10), "obvious": (+5, +10, +15, +5, +5),
+    "clearly": (+5, +10, +15, +5, +5), "apparently": (-5, +5, +5, +5, 0),
 
     # ── Time / existential ──
-    "final": (-10, +15, +10, +15), "last": (-10, +10, +5, +10),
-    "first": (+10, +10, +10, +5), "begin": (+10, +10, +10, +5),
-    "end": (-10, +10, +5, +10), "over": (-10, +5, 0, +5),
-    "done": (-5, +5, +5, +5), "finished": (-5, +5, +5, +5),
-    "enough": (-10, +15, +10, +10), "ever": (0, +10, 0, +5),
-    "entire": (0, +10, 0, +10), "whole": (0, +5, 0, +5),
-    "life": (+5, +10, +5, +5), "world": (+5, +10, +5, +5),
-    "best": (+40, +25, +20, 0), "works": (+5, +10, +10, +10),
+    "final": (-10, +15, +10, +15, -5), "last": (-10, +10, +5, +10, -5),
+    "first": (+10, +10, +10, +5, +10), "begin": (+10, +10, +10, +5, +10),
+    "end": (-10, +10, +5, +10, -10), "over": (-10, +5, 0, +5, -5),
+    "done": (-5, +5, +5, +5, 0), "finished": (-5, +5, +5, +5, 0),
+    "enough": (-10, +15, +10, +10, 0), "ever": (0, +10, 0, +5, 0),
+    "entire": (0, +10, 0, +10, 0), "whole": (0, +5, 0, +5, 0),
+    "life": (+5, +10, +5, +5, +5), "world": (+5, +10, +5, +5, +5),
+    "best": (+40, +25, +20, 0, +30), "works": (+5, +10, +10, +10, 0),
 }
 
 # Negation words flip the valence of the NEXT emotional word
@@ -594,9 +619,10 @@ class SequentialPendulum:
         self.a = 128.0
         self.d = 128.0
         self.u = 0.0
+        self.g = 128.0  # gravity: start grounded
         self.momentum = 0.65  # how much previous state carries forward (lower = more responsive)
         self.drift_rate = 0.02  # how fast pendulum drifts toward center per tick
-        self.history = []  # (word, v, a, d, u, state_label) per step
+        self.history = []  # (word, v, a, d, u, g, state_label) per step
         self.previous_words = []  # for idiom/context detection
         self.negate_next = False
         self.intensity = 1.0
@@ -606,7 +632,7 @@ class SequentialPendulum:
     @property
     def _pend_state(self):
         """Quick snapshot for context functions."""
-        return type('Pend', (), {'v': self.v, 'a': self.a, 'd': self.d, 'u': self.u})()
+        return type('Pend', (), {'v': self.v, 'a': self.a, 'd': self.d, 'u': self.u, 'g': self.g})()
 
     def _clamp(self):
         """Clamp all values to valid range."""
@@ -614,6 +640,7 @@ class SequentialPendulum:
         self.a = max(0.0, min(255.0, self.a))
         self.d = max(0.0, min(255.0, self.d))
         self.u = max(0.0, min(255.0, self.u))
+        self.g = max(0.0, min(255.0, self.g))
 
     def _drift_toward_center(self):
         """Pendulum drifts 10% toward neutral each tick (unless strong force)."""
@@ -621,6 +648,7 @@ class SequentialPendulum:
         self.a += (128.0 - self.a) * self.drift_rate
         self.d += (128.0 - self.d) * self.drift_rate
         self.u += (0.0 - self.u) * self.drift_rate
+        self.g += (128.0 - self.g) * self.drift_rate
 
     def _state_label(self) -> str:
         """Describe the current pendulum state in a few words."""
@@ -760,8 +788,8 @@ class SequentialPendulum:
         Returns (vf, af, df, uf, source_label) or None for bridge words.
         """
         if word in WORD_FORCES:
-            vf, af, df, uf = WORD_FORCES[word]
-            return (vf, af, df, uf, None)
+            vf, af, df, uf, gf = WORD_FORCES[word]
+            return (vf, af, df, uf, gf, None)
 
         # Skip morpheme decomposition for common function words
         if word in self.BRIDGE_WORDS:
@@ -778,13 +806,14 @@ class SequentialPendulum:
             af = result["a"]
             df = result["d"]
             uf = result["u"]
+            gf = result["g"]
             parts = []
             if result["prefix"]:
                 parts.append(result["prefix"] + "-")
             parts.append(result["root"])
             if result["suffix"]:
                 parts.append("-" + result["suffix"])
-            return (vf, af, df, uf, f"morpheme:{''.join(parts)}")
+            return (vf, af, df, uf, gf, f"morpheme:{''.join(parts)}")
 
         return None
 
@@ -803,6 +832,7 @@ class SequentialPendulum:
         idiom = self.check_idiom(words, current_idx)
         if idiom:
             vf, af, df, uf, label, idiom_len, idiom_start = idiom
+            gf = 0  # idioms don't carry G force in the idiom table (grounded)
             # Mark previous words in the idiom as consumed
             for j in range(idiom_start, current_idx):
                 self.idiom_consumed.add(j)
@@ -822,6 +852,7 @@ class SequentialPendulum:
             self.a = self.a * idiom_momentum + (128.0 + af * force_scale) * (1.0 - idiom_momentum) + af * idiom_push
             self.d = self.d * idiom_momentum + (128.0 + df * force_scale) * (1.0 - idiom_momentum) + df * idiom_push
             self.u = self.u * idiom_momentum + (uf * force_scale) * (1.0 - idiom_momentum) + uf * idiom_push
+            self.g = self.g * idiom_momentum + (128.0 + gf * force_scale) * (1.0 - idiom_momentum) + gf * idiom_push
             self._clamp()
             self.intensity = 1.0
             force_source = f"IDIOM: \"{label}\""

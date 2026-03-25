@@ -337,7 +337,7 @@ Clanker works today as a communication protocol. This is the proven foundation:
 
 - **Working decoder** with 33 passing tests that translates `.clank` scripts to any language via YAML dictionaries
 - **Real token reduction** -- measurable ~60-70% fewer tokens for structured tasks
-- **Real emotional encoding** -- 4.3 billion states in a 4-byte header, with validated psychological heritage
+- **Real emotional encoding** -- 1.1 trillion states in a 5-byte header, with validated psychological heritage
 - **Real metadata headers** -- certainty, source, intent, and relevance are structural
 - **Zero-overhead language addition** -- new languages are YAML files, not code changes
 - **Used by Octobrain** for inter-arm communication between specialist models
@@ -354,7 +354,7 @@ You don't need a Clanker corpus to get started. The spec **is** the teacher:
 4. That model now thinks in Clanker natively
 5. Use it to generate more training data, better and faster
 
-The from-scratch training path is key: the model learns VADU natively, not as a compression of English. Emotions are coordinates from birth, not words mapped to embeddings. Certainty is a native score, not a learned behavior. The model doesn't learn to say "I'm not sure" -- it learns to output CERT60.
+The from-scratch training path is key: the model learns VADUG natively, not as a compression of English. Emotions are coordinates from birth, not words mapped to embeddings. Certainty is a native score, not a learned behavior. The model doesn't learn to say "I'm not sure" -- it learns to output CERT60.
 
 The bootstrapping loop is self-reinforcing. Every model trained on Clanker can produce higher-quality Clanker training data for the next generation. No human annotation required. No parallel corpus to curate. The spec bootstraps itself.
 
@@ -366,7 +366,7 @@ Clanker is the native tongue for [Octobrain](https://github.com/deucebucket/octo
 
 In Octobrain, a central "brain" coordinates specialist "arm" models that each handle one domain -- code generation, conversation, hardware control, data analysis. Those arms communicate in Clanker natively. No English translation layer. No token waste. Pure opcode exchange.
 
-VADU serves as the routing header in the brain's supervisor -- urgency interrupts current work, emotional state determines which specialist handles the request, and relevance scores filter context before it reaches an arm.
+VADUG serves as the routing header in the brain's supervisor -- urgency interrupts current work, emotional state determines which specialist handles the request, and relevance scores filter context before it reaches an arm.
 
 The result: **sub-100M parameter specialists that load in 50ms** and communicate faster than any English-speaking model could. Clanker makes the small-model-swarm architecture practical.
 
@@ -462,4 +462,4 @@ MIT
 
 ---
 
-*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 4 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Opcodes are forever. Dictionaries are lenses. Machines deserve a language that thinks like they do.*
+*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 5 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Opcodes are forever. Dictionaries are lenses. Machines deserve a language that thinks like they do.*
