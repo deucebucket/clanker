@@ -6307,6 +6307,32 @@ WORD_FORCES = {
     "yet": (-10, 40, 15, 65, 10),
     "zero": (-15, -55, -45, 15, 50),
     "zipper": (10, 20, 15, 15, 0),
+
+    # ── Added: missing emotional words (benchmark fixes) ──
+    # Strong negative
+    "disgusted": (-50, +20, +10, +10, +15),
+    "revolting": (-50, +20, +10, +10, +15),
+    "repulsive": (-50, +20, +10, +10, +15),
+    "livid": (-55, +55, +30, +20, +25),
+    "raging": (-60, +60, +35, +25, +30),
+    "panicking": (-50, +55, -45, +50, -20),
+    # Moderate negative
+    "jealousy": (-30, +25, -15, +10, +5),
+    "envious": (-30, +25, -15, +10, +5),
+    "numbness": (-25, -30, -20, 0, -25),
+    "burdened": (-30, +10, -20, +10, -35),
+    # Mild negative
+    "paperwork": (-10, -10, -5, +5, -5),
+    "ugh": (-20, -10, -10, 0, -10),
+    # Positive
+    "relieved": (+25, -15, +15, -10, +10),
+    "euphoric": (+50, +45, +25, +5, +40),
+    "delightful": (+30, +15, +10, 0, +20),
+    # Slang
+    "hits": (+20, +15, +5, 0, +10),
+    # Other
+    "disappeared": (-15, +10, -10, +15, -10),
+    "vanish": (-15, +10, -10, +15, -10),
 }
 
 # Negation words flip the valence of the NEXT emotional word
@@ -6719,12 +6745,32 @@ class SequentialPendulum:
 
         return None
 
+    # Temporal shift markers — these words signal a narrative turn.
+    # When encountered, momentum is reduced by 40% to allow reversals.
+    SHIFT_MARKERS = {"then", "suddenly", "until"}
+    SHIFT_BIGRAMS = {("but", "then"), ("after", "that"), ("and", "then")}
+
     def process_word(self, word, words, current_idx):
         """Process a single word in sequence. Returns a trace dict."""
         state_label = ""
         force_source = ""
         applied_force = False
         idiom_hit = False
+
+        # Recency weighting: later words in a sequence get more influence
+        n_words = len(words)
+        recency_weight = 0.8 + 0.4 * (current_idx / max(n_words - 1, 1))
+
+        # Temporal shift marker detection — reduce momentum to allow reversals
+        is_shift = False
+        if word in self.SHIFT_MARKERS:
+            is_shift = True
+        if current_idx > 0:
+            bigram = (words[current_idx - 1], word)
+            if bigram in self.SHIFT_BIGRAMS:
+                is_shift = True
+        if is_shift:
+            self.momentum *= 0.6  # reduce momentum by 40%
 
         # 1. Drift toward center ONLY happens AFTER emotional words (see below)
         # Bridge/filler words are "zero mass" — they don't pull the pendulum
@@ -6742,7 +6788,7 @@ class SequentialPendulum:
             # Apply idiom force — idioms hit HARDER than single words because
             # they represent a recognized multi-word expression with clear intent.
             # Reduced momentum (0.7 vs 0.9) and stronger direct push (0.5 vs 0.3).
-            force_scale = 1.0 * self.intensity
+            force_scale = 1.0 * self.intensity * recency_weight
             if self.negate_next:
                 vf = -vf
                 df = -df
@@ -6835,7 +6881,7 @@ class SequentialPendulum:
                 elif source:
                     force_source = source
 
-                force_scale = self.intensity
+                force_scale = self.intensity * recency_weight
 
                 # Apply context modifier on top
                 ctx_label = ""
@@ -8231,12 +8277,17 @@ class SentenceGrader:
         a_values = [c['vadug'].a for c in chunks]
         u_values = [c['vadug'].u for c in chunks]
 
-        avg_v = sum(v_values) / len(v_values)
+        # Chunk recency weighting: later chunks have more influence
+        # Weights: [1, 2, 3, ...] normalized — last chunk has N× the influence of first
+        n = len(v_values)
+        weights = [(i + 1) for i in range(n)]
+        total_w = sum(weights)
+        avg_v = sum(v * w for v, w in zip(v_values, weights)) / total_w
         floor_v = min(v_values)
         ceiling_v = max(v_values)
         spread = ceiling_v - floor_v
         trend = v_values[-1] - v_values[0] if len(v_values) > 1 else 0
-        avg_g = sum(g_values) / len(g_values)
+        avg_g = sum(g * w for g, w in zip(g_values, weights)) / total_w
         floor_g = min(g_values)
         max_u = max(u_values)
 
