@@ -530,7 +530,9 @@ def decompose_word(word: str) -> dict:
 
     # Try to find a direct root match first (whole word)
     if word in ROOTS:
-        v, a, d, u, g = ROOTS[word]
+        root_vals = ROOTS[word]
+        v, a, d, u = root_vals[0], root_vals[1], root_vals[2], root_vals[3]
+        g = root_vals[4] if len(root_vals) > 4 else 0
         trace.append(f"    ROOT '{word}' \u2192 V{v:+} A{a:+} D{d:+} U{u:+} G{g:+}")
         return {
             "word": word, "prefix": None, "root": word, "suffix": None,
@@ -563,7 +565,8 @@ def decompose_word(word: str) -> dict:
             best_root = ROOTS[root_key]
             best_root_key = root_key
             found_root = root_key
-            trace.append(f"    ROOT '{root_key}' \u2192 V{best_root[0]:+} A{best_root[1]:+} D{best_root[2]:+} U{best_root[3]:+} G{best_root[4]:+}")
+            _g = best_root[4] if len(best_root) > 4 else 0
+            trace.append(f"    ROOT '{root_key}' \u2192 V{best_root[0]:+} A{best_root[1]:+} D{best_root[2]:+} U{best_root[3]:+} G{_g:+}")
             break
 
     if best_root is None:
