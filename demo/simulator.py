@@ -925,8 +925,8 @@ def classify_metadata(text: str, vadu: VADU) -> MetadataHeader:
         goal = 0x00  # HELP
     if any(w in text_lower for w in ["do it", "run", "execute", "deploy", "send"]):
         goal = 0x04  # EXECUTE
-    if vadu.v < 70 and vadu.d < 70:
-        goal = 0x06  # EMPATHIZE (negative + helpless = needs support)
+    if vadu.v < 80 and vadu.d < 90:
+        goal = 0x06  # EMPATHIZE (negative + low agency = needs support)
 
     # CERT: user input is their truth
     cert = 180
@@ -1069,7 +1069,9 @@ def generate_clanker(input_text: str, input_header: MetadataHeader,
 
     # Goal-based response opcode
     if goal == 0x06:  # EMPATHIZE
-        opcode_lines.append(f"06 SOCIAL intent [empathize]")
+        if not context_str:
+            # Only add standalone empathize if we didn't already add one above
+            opcode_lines.append(f"06 SOCIAL intent [empathize]")
         opcode_lines.append(f"  THINK [premise=\"acknowledge feelings first\"] CERT200 SRC_INFERRED")
     elif goal == 0x00:  # HELP
         opcode_lines.append(f"THINK [premise=\"user needs help\"] CERT{input_header.cert} SRC_USER")
