@@ -1,6 +1,6 @@
 # Adding a Language Dictionary
 
-This guide walks through contributing a new dictionary to Phin-Lang. A dictionary translates Phin opcodes to a specific human or programming language.
+This guide walks through contributing a new dictionary to Clank-Lang. A dictionary translates Clank opcodes to a specific human or programming language.
 
 ## Overview
 
@@ -25,7 +25,7 @@ Every dictionary must start with these fields:
 ```yaml
 language: es          # ISO 639-1 code or language name
 name: Spanish         # Human-readable name
-spec_version: "0.1"  # Phin spec version this targets
+spec_version: "0.1"  # Clank spec version this targets
 dictionary_version: "1.0"
 kind: human           # "human", "code", or "other"
 ```
@@ -83,7 +83,7 @@ You can start with a subset and expand over time, but aim for completeness.
 Use the reference decoder to verify your translations render correctly:
 
 ```python
-from phin_decoder import decode, DictionaryLoader
+from clank_decoder import decode, DictionaryLoader
 
 loader = DictionaryLoader()
 script = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}\n@ 0x00'

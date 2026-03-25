@@ -1,5 +1,5 @@
 """
-Dictionary loader for Phin-Lang.
+Dictionary loader for Clank-Lang.
 
 Loads YAML dictionary files and caches them for repeated use.
 Searches standard dictionary paths relative to the project root.
@@ -12,7 +12,7 @@ from typing import Dict, Optional
 
 
 class DictionaryLoader:
-    """Loads and caches Phin dictionary YAML files."""
+    """Loads and caches Clank dictionary YAML files."""
 
     def __init__(self, search_paths: Optional[list] = None):
         """

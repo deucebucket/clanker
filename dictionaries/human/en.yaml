@@ -1,4 +1,4 @@
-# English dictionary for Phin-Lang
+# English dictionary for Clank-Lang
 language: en
 name: English
 spec_version: "0.1"
@@ -138,3 +138,70 @@ opcodes:
   0xE3:
     template: "try:"
     with_param: "try (catch in {error_var}):"
+
+# Emotional Vector Region Mappings
+# Maps emotional vector ranges to human-readable labels.
+# Use with the Emotional Vector encoding (SPEC.md Section 9).
+emotional_regions:
+  joy:
+    valence: [64, 127]
+    arousal: [0, 80]
+    dominance: [20, 100]
+    description: "Content, happy, satisfied"
+  excitement:
+    valence: [60, 127]
+    arousal: [80, 127]
+    dominance: [40, 127]
+    description: "Thrilled, energized, exhilarated"
+  anger:
+    valence: [-127, -40]
+    arousal: [60, 127]
+    dominance: [40, 127]
+    description: "Frustrated, angry, furious"
+  fear:
+    valence: [-127, -20]
+    arousal: [60, 127]
+    dominance: [-127, -20]
+    description: "Anxious, scared, panicked"
+  sadness:
+    valence: [-127, -30]
+    arousal: [-127, -20]
+    dominance: [-127, 0]
+    description: "Down, sorrowful, grief"
+  calm:
+    valence: [-10, 40]
+    arousal: [-127, -40]
+    dominance: [-20, 40]
+    description: "Relaxed, peaceful, serene"
+  surprise:
+    valence: [-20, 80]
+    arousal: [80, 127]
+    dominance: [-40, 40]
+    description: "Startled, amazed, astonished"
+  disgust:
+    valence: [-127, -50]
+    arousal: [0, 60]
+    dominance: [20, 80]
+    description: "Repulsed, revolted, contemptuous"
+  trust:
+    valence: [30, 100]
+    arousal: [-40, 40]
+    dominance: [0, 60]
+    description: "Confident, secure, trusting"
+  neutral:
+    valence: [-15, 15]
+    arousal: [-15, 15]
+    dominance: [-15, 15]
+    description: "No significant emotional context"
+  urgency_low:
+    urgency: [0, 50]
+    description: "Routine, no time pressure"
+  urgency_medium:
+    urgency: [51, 150]
+    description: "Moderate priority, timely attention needed"
+  urgency_high:
+    urgency: [151, 220]
+    description: "High priority, prompt action required"
+  urgency_critical:
+    urgency: [221, 255]
+    description: "Critical, immediate action required"

@@ -1,4 +1,4 @@
-# data_pipeline.phin.txt
+# data_pipeline.clank.txt
 # A data processing pipeline that queries records, filters and transforms them,
 # then stores results with error handling.
 #

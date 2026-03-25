@@ -1,5 +1,5 @@
 # Hardware opcodes: 0xA0-0xAF
-# Device control operations originating from delphinOS PHIN-LANG.md
+# Device control operations originating from delphinOS CLANK-LANG.md
 
 opcodes:
   0xA0:

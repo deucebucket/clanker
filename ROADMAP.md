@@ -1,4 +1,4 @@
-# Phin-Lang Roadmap
+# Clank-Lang Roadmap
 
 ## v0.1 — Foundation (current)
 
@@ -19,30 +19,30 @@
 - [ ] Finalize full logic opcode range (0xE0-0xEF)
 - [ ] Add dictionaries: Spanish, Farsi, Arabic, Japanese
 - [ ] Add code dictionaries: Go, C, TypeScript
-- [ ] Validator: verify Phin scripts against opcode definitions
+- [ ] Validator: verify Clank scripts against opcode definitions
 - [ ] Decoder error messages with line numbers
 
 ## v0.3 — Binary Compiler
 
-- [ ] Binary format compiler: `.phin.txt` to `.phin`
-- [ ] Binary format decoder: `.phin` to text
+- [ ] Binary format compiler: `.clank.txt` to `.clank`
+- [ ] Binary format decoder: `.clank` to text
 - [ ] Streaming decoder for large programs
 - [ ] Size benchmarks: binary vs text vs gzip
 
 ## v0.4 — AI Training Data
 
-- [ ] Parallel corpus generator: English-to-Phin pairs
-- [ ] Multi-language corpus: Phin decoded to all available dictionaries
+- [ ] Parallel corpus generator: English-to-Clank pairs
+- [ ] Multi-language corpus: Clank decoded to all available dictionaries
 - [ ] Fine-tuning dataset format (JSONL with source/target)
-- [ ] Token count benchmarks: Phin vs English vs Chinese vs code
-- [ ] Self-bootstrapping guide: use an LLM to generate Phin training data from the spec
+- [ ] Token count benchmarks: Clank vs English vs Chinese vs code
+- [ ] Self-bootstrapping guide: use an LLM to generate Clank training data from the spec
 
 ## v0.5 — Community
 
 - [ ] Dictionary contribution guide with CI validation
 - [ ] Opcode proposal process (RFC-style)
-- [ ] Online playground: paste Phin, pick a dictionary, see output
-- [ ] VS Code extension for `.phin.txt` syntax highlighting
+- [ ] Online playground: paste Clank, pick a dictionary, see output
+- [ ] VS Code extension for `.clank.txt` syntax highlighting
 - [ ] Registry of community dictionaries
 
 ## v1.0 — Stable Specification

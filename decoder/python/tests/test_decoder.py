@@ -1,5 +1,5 @@
 """
-Tests for the Phin-Lang decoder.
+Tests for the Clank-Lang decoder.
 
 Verifies that decoding works correctly for English, Chinese, and Python dictionaries.
 """
@@ -11,7 +11,7 @@ import pytest
 # Add the package to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from phin_decoder import decode, PhinDecoder, DictionaryLoader
+from clank_decoder import decode, ClankDecoder, DictionaryLoader
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def loader():
 @pytest.fixture
 def decoder(loader):
     """Create a decoder with the test loader."""
-    return PhinDecoder(loader)
+    return ClankDecoder(loader)
 
 
 class TestDictionaryLoader:
@@ -83,35 +83,35 @@ class TestDictionaryLoader:
 
 
 class TestDecoder:
-    """Tests for the PhinDecoder."""
+    """Tests for the ClankDecoder."""
 
     def test_nop_done_english(self, decoder):
         result = decoder.decode("@ 0x00", "en")
         assert result.strip() == "done"
 
     def test_nop_done_with_message_english(self, decoder):
-        phin = '@ 0x00 $_ $_ 01 {message: "all finished"}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0x00 $_ $_ 01 {message: "all finished"}'
+        result = decoder.decode(clank, "en")
         assert 'done: "all finished"' in result
 
     def test_set_english(self, decoder):
-        phin = '@ 0x02 $0 $_ 02 {name: "x"} {value: "42"}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0x02 $0 $_ 02 {name: "x"} {value: "42"}'
+        result = decoder.decode(clank, "en")
         assert "set x to 42" in result
 
     def test_endpoint_english(self, decoder):
-        phin = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}'
+        result = decoder.decode(clank, "en")
         assert "define GET endpoint at /hello" in result
 
     def test_respond_english(self, decoder):
-        phin = '@ 0xC1 $1 $2 01 {status: 200}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0xC1 $1 $2 01 {status: 200}'
+        result = decoder.decode(clank, "en")
         assert "respond with status 200" in result
 
     def test_endpoint_chinese(self, decoder):
-        phin = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}'
-        result = decoder.decode(phin, "zh")
+        clank = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}'
+        result = decoder.decode(clank, "zh")
         assert "GET" in result
         assert "/hello" in result
         assert "定义" in result
@@ -121,29 +121,29 @@ class TestDecoder:
         assert "完成" in result
 
     def test_set_chinese(self, decoder):
-        phin = '@ 0x02 $0 $_ 02 {name: "x"} {value: "42"}'
-        result = decoder.decode(phin, "zh")
+        clank = '@ 0x02 $0 $_ 02 {name: "x"} {value: "42"}'
+        result = decoder.decode(clank, "zh")
         assert "设置" in result
         assert "x" in result
         assert "42" in result
 
     def test_endpoint_python(self, decoder):
-        phin = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}'
-        result = decoder.decode(phin, "python")
+        clank = '@ 0xC0 $0 $1 02 {method: "GET"} {path: "/hello"}'
+        result = decoder.decode(clank, "python")
         assert "@app.route" in result
         assert '"/hello"' in result
 
     def test_respond_python(self, decoder):
-        phin = '@ 0xC1 $1 $2 01 {status: 200}'
-        result = decoder.decode(phin, "python")
+        clank = '@ 0xC1 $1 $2 01 {status: 200}'
+        result = decoder.decode(clank, "python")
         assert "return" in result
         assert "200" in result
 
     def test_multiline_script_english(self, decoder):
-        phin = """@ 0xC0 $0 $1 02 {method: "GET"} {path: "/health"}
+        clank = """@ 0xC0 $0 $1 02 {method: "GET"} {path: "/health"}
 @ 0xC1 $1 $2 01 {status: 200}
 @ 0x00"""
-        result = decoder.decode(phin, "en")
+        result = decoder.decode(clank, "en")
         lines = result.strip().split("\n")
         assert len(lines) == 3
         assert "define GET endpoint at /health" in lines[0]
@@ -151,10 +151,10 @@ class TestDecoder:
         assert "done" in lines[2]
 
     def test_indentation_with_blocks(self, decoder):
-        phin = """@ 0xE0 $_ $_ 01 {condition: "x > 0"}
+        clank = """@ 0xE0 $_ $_ 01 {condition: "x > 0"}
 @ 0x03 $_ $_ 01 {value: "positive"}
 @ 0x0F"""
-        result = decoder.decode(phin, "en")
+        result = decoder.decode(clank, "en")
         lines = result.strip().split("\n")
         assert lines[0].startswith("when")
         # The emit line should be indented
@@ -163,36 +163,36 @@ class TestDecoder:
         assert lines[2] == "end"
 
     def test_unknown_opcode(self, decoder):
-        phin = "@ 0xFF $_ $_ 00"
-        result = decoder.decode(phin, "en")
+        clank = "@ 0xFF $_ $_ 00"
+        result = decoder.decode(clank, "en")
         assert "unknown opcode" in result.lower()
 
     def test_skip_comments_and_blanks(self, decoder):
-        phin = """# This is a comment
+        clank = """# This is a comment
 @ 0x00
 
 # Another comment"""
-        result = decoder.decode(phin, "en")
+        result = decoder.decode(clank, "en")
         assert result.strip() == "done"
 
     def test_query_data_english(self, decoder):
-        phin = '@ 0xD0 $0 $_ 01 {source: "users"}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0xD0 $0 $_ 01 {source: "users"}'
+        result = decoder.decode(clank, "en")
         assert "query users" in result
 
     def test_repeat_english(self, decoder):
-        phin = '@ 0xE2 $_ $_ 01 {count: 5}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0xE2 $_ $_ 01 {count: 5}'
+        result = decoder.decode(clank, "en")
         assert "repeat 5 times" in result
 
     def test_wait_english(self, decoder):
-        phin = '@ 0x01 $_ $_ 01 {duration: "5s"}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0x01 $_ $_ 01 {duration: "5s"}'
+        result = decoder.decode(clank, "en")
         assert "wait 5s" in result
 
     def test_log_english(self, decoder):
-        phin = '@ 0x04 $_ $_ 02 {level: "info"} {message: "server started"}'
-        result = decoder.decode(phin, "en")
+        clank = '@ 0x04 $_ $_ 02 {level: "info"} {message: "server started"}'
+        result = decoder.decode(clank, "en")
         assert "log [info] server started" in result
 
 
@@ -208,39 +208,39 @@ class TestConvenienceFunction:
         assert "完成" in result
 
     def test_decode_python(self, loader):
-        phin = '@ 0x02 $0 $_ 02 {name: "x"} {value: "42"}'
-        result = decode(phin, "python", loader=loader)
+        clank = '@ 0x02 $0 $_ 02 {name: "x"} {value: "42"}'
+        result = decode(clank, "python", loader=loader)
         assert "x = 42" in result
 
 
 class TestFullScript:
-    """Tests for complete Phin scripts end-to-end."""
+    """Tests for complete Clank scripts end-to-end."""
 
     def test_hello_world_english(self, decoder):
-        phin = """@ 0x10 $_ $_ 01 {text: "Hello World example"}
+        clank = """@ 0x10 $_ $_ 01 {text: "Hello World example"}
 @ 0x02 $0 $_ 02 {name: "greeting"} {value: "Hello, World!"}
 @ 0x03 $0 $_ 01 {value: "greeting"}
 @ 0x00"""
-        result = decoder.decode(phin, "en")
+        result = decoder.decode(clank, "en")
         assert "Hello World example" in result
         assert "set greeting to Hello, World!" in result
         assert "emit greeting" in result
         assert "done" in result
 
     def test_web_endpoint_multilang(self, decoder):
-        phin = """@ 0xC0 $0 $1 02 {method: "GET"} {path: "/api/status"}
+        clank = """@ 0xC0 $0 $1 02 {method: "GET"} {path: "/api/status"}
 @ 0xC1 $1 $2 01 {status: 200}
 @ 0x0F
 @ 0x00"""
 
-        en_result = decoder.decode(phin, "en")
+        en_result = decoder.decode(clank, "en")
         assert "define GET endpoint at /api/status" in en_result
 
-        zh_result = decoder.decode(phin, "zh")
+        zh_result = decoder.decode(clank, "zh")
         assert "定义" in zh_result
         assert "/api/status" in zh_result
 
-        py_result = decoder.decode(phin, "python")
+        py_result = decoder.decode(clank, "python")
         assert "@app.route" in py_result
 
 

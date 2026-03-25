@@ -1,4 +1,4 @@
-# Phin-Lang Type System
+# Clank-Lang Type System
 # Defines all valid parameter types for opcode definitions.
 
 types:
@@ -86,5 +86,5 @@ coercion:
 
 # Null/absent
 null_handling: >
-  Phin has no null type. Optional parameters are simply absent.
+  Clank has no null type. Optional parameters are simply absent.
   A varref to an unset slot ($N where N has not been assigned) is an error.

@@ -5,7 +5,7 @@ schema:
   required_fields:
     - language       # ISO 639-1 code (e.g., "en", "zh") or language name (e.g., "python")
     - name           # Human-readable name (e.g., "English", "Python")
-    - spec_version   # Phin spec version this dictionary targets
+    - spec_version   # Clank spec version this dictionary targets
     - dictionary_version  # Version of this dictionary
     - kind           # "human", "code", or "other"
     - opcodes        # Map of opcode hex strings to translation entries

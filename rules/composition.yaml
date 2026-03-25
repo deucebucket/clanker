@@ -1,4 +1,4 @@
-# Phin-Lang Composition Rules
+# Clank-Lang Composition Rules
 # How opcodes compose into programs, nesting, and scope.
 
 blocks:
@@ -41,7 +41,7 @@ nesting:
   max_depth: 4
   description: >
     Blocks may be nested to a maximum depth of 4 levels. This prevents
-    excessive complexity and keeps Phin programs flat and readable.
+    excessive complexity and keeps Clank programs flat and readable.
     A depth-5 block is a validation error.
 
   example:
@@ -67,7 +67,7 @@ scope:
     description: >
       Variables are global to the script. Setting a variable inside a block
       makes it visible everywhere, including after the block closes.
-      This is intentional: Phin is a flat register machine, not a lexically
+      This is intentional: Clank is a flat register machine, not a lexically
       scoped language.
 
     rules:
@@ -80,7 +80,7 @@ scope:
     description: >
       DEFINE blocks (functions) do not create a new variable scope.
       They operate on the same $0-$31 slots as the caller. This is
-      by design: Phin functions are macros, not closures.
+      by design: Clank functions are macros, not closures.
 
 execution:
   order: sequential

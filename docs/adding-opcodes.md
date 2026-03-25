@@ -1,6 +1,6 @@
 # Adding New Opcodes
 
-This guide explains how to propose and register new opcodes in Phin-Lang.
+This guide explains how to propose and register new opcodes in Clank-Lang.
 
 ## Guiding Principles
 
@@ -37,7 +37,7 @@ Create a GitHub issue with the label `spec` and include:
 - **Description** (one clear sentence)
 - **Parameters** (name, type, required/optional for each)
 - **Rationale** (why this needs its own opcode)
-- **Example** (at least one Phin instruction using this opcode)
+- **Example** (at least one Clank instruction using this opcode)
 - **Dictionary samples** (how it would render in English and at least one code language)
 
 Example issue:
@@ -104,7 +104,7 @@ For project-specific or experimental opcodes, use the REGISTER opcode (0x0E) to 
 - [ ] Description is one clear sentence
 - [ ] All parameters have name, type, and required/optional
 - [ ] Parameter types are defined in `rules/types.yaml`
-- [ ] At least one example Phin instruction is provided
+- [ ] At least one example Clank instruction is provided
 - [ ] English dictionary entry is provided
 - [ ] At least one code dictionary entry is provided
 - [ ] Rationale explains why a new opcode is needed

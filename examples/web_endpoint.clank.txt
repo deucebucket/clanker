@@ -1,4 +1,4 @@
-# web_endpoint.phin.txt
+# web_endpoint.clank.txt
 # Defines a REST API with two endpoints: a health check and a user lookup.
 #
 # Decoded to English:

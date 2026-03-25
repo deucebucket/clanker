@@ -1,8 +1,8 @@
-# Phin-Lang Specification v0.1
+# Clank-Lang Specification v0.1
 
 ## 1. Overview
 
-Phin is a bytecode-style intermediate representation for structured communication between AI systems. A Phin program is a sequence of instructions. Each instruction is an opcode with optional target, source, destination, and parameters. Phin programs can be decoded to any language (human or machine) via dictionary lookup.
+Clank is a bytecode-style intermediate representation for structured communication between AI systems. A Clank program is a sequence of instructions. Each instruction is an opcode with optional target, source, destination, and parameters. Clank programs can be decoded to any language (human or machine) via dictionary lookup.
 
 ## 2. Instruction Encoding
 
@@ -62,7 +62,7 @@ Each parameter is type-tagged:
 
 ## 3. Variable Store
 
-Phin provides 32 variable slots: `$0` through `$31`.
+Clank provides 32 variable slots: `$0` through `$31`.
 
 - Variables are **untyped** at the opcode level; the dictionary determines how they render.
 - Variables persist for the duration of the script execution.
@@ -150,11 +150,80 @@ spec_version: "0.1"
 dictionary_version: "1.0"
 ```
 
-## 8. Text Format Grammar (ABNF)
+## 8. Magic Bytes
+
+Compiled Clank binary files begin with the magic bytes:
+
+```
+CLK\x01
+```
+
+- `CLK` identifies the file as Clank bytecode.
+- `\x01` is the binary format version.
+
+## 9. Emotional Vector Encoding
+
+### 9.1 Overview
+
+Every Clank instruction can optionally carry emotional context via a 4-byte Emotional Vector suffix. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
+
+### 9.2 Format
+
+An optional 4-byte suffix may follow any instruction's parameters:
+
+```
+[valence: i8] [arousal: i8] [dominance: i8] [urgency: u8]
+```
+
+| Field     | Type | Range       | Normalized       | Description                              |
+|-----------|------|-------------|------------------|------------------------------------------|
+| valence   | i8   | -128 to 127 | -1.0 to +1.0    | Negative (disgust, anger) to positive (joy, trust) |
+| arousal   | i8   | -128 to 127 | -1.0 to +1.0    | Calm/bored to excited/alert              |
+| dominance | i8   | -128 to 127 | -1.0 to +1.0    | Submissive/uncertain to dominant/confident |
+| urgency   | u8   | 0 to 255    | 0.0 to 1.0      | Routine to critical/immediate            |
+
+### 9.3 Presence Flag
+
+In binary format, the presence of an emotional vector is indicated by a flag bit in the param_count byte:
+
+- Bit 7 (0x80): If set, a 4-byte emotional vector follows the parameters.
+- Bits 0-3: Actual parameter count (0-15).
+
+In text format, emotional vectors are written as a trailing `!` annotation:
+
+```
+@ 0xC1 $1 $2 01 {status: 500} ![v:-64 a:80 d:-32 u:200]
+```
+
+### 9.4 Normalization
+
+To convert raw bytes to normalized floats:
+- Valence/Arousal/Dominance: `value / 127.0` (clamped to [-1.0, +1.0])
+- Urgency: `value / 255.0` (clamped to [0.0, 1.0])
+
+### 9.5 Examples
+
+| Emotion        | V    | A    | D    | U   | Meaning                            |
+|---------------|------|------|------|-----|------------------------------------|
+| Calm success  | +100 | -20  | +60  | 10  | Happy, relaxed, confident, routine |
+| Urgent error  | -100 | +120 | -40  | 240 | Frustrated, alert, uncertain, critical |
+| Neutral ack   | 0    | 0    | 0    | 0   | No emotional context               |
+| Excited discovery | +120 | +110 | +80 | 60 | Joyful, energized, confident, moderate |
+
+### 9.6 Design Philosophy
+
+Every Clank expression can carry emotional context in just 4 bytes. This enables:
+
+- Sentiment-aware routing (escalate messages with high urgency + negative valence)
+- Emotional continuity across multi-agent conversations
+- Training data that preserves emotional intent alongside semantic content
+- Machine empathy as a protocol feature, not an application hack
+
+## 10. Text Format Grammar (ABNF)
 
 ```abnf
 program     = *(instruction LF)
-instruction = "@" SP opcode SP target SP source SP paramcount *(SP param)
+instruction = "@" SP opcode SP target SP source SP paramcount *(SP param) [SP emotion]
 opcode      = "0x" 2HEXDIG
 target      = varref
 source      = varref
@@ -166,20 +235,22 @@ value       = quoted-string / number / boolean / varref
 quoted-string = DQUOTE *(%x20-21 / %x23-7E) DQUOTE
 number      = ["-"] 1*DIGIT ["." 1*DIGIT]
 boolean     = "true" / "false"
+emotion     = "![" "v:" int SP "a:" int SP "d:" int SP "u:" uint "]"
 ```
 
-## 9. Conformance
+## 11. Conformance
 
-A conforming Phin decoder MUST:
+A conforming Clank decoder MUST:
 
-1. Accept any valid text-format Phin program.
+1. Accept any valid text-format Clank program.
 2. Load at least one dictionary.
 3. Produce output by substituting opcode parameters into dictionary templates.
 4. Reject opcodes not present in the loaded dictionary with a clear error.
 5. Validate parameter types against the opcode definition.
 
-A conforming Phin encoder MUST:
+A conforming Clank encoder MUST:
 
 1. Emit only valid opcodes (defined in the spec or registered at runtime).
 2. Provide all required parameters for each opcode.
 3. Use valid variable references ($0-$31 or $_).
+4. Prefix compiled binary output with the magic bytes `CLK\x01`.

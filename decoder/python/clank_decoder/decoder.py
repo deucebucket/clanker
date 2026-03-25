@@ -1,7 +1,7 @@
 """
-Phin-Lang Decoder — Core decoding logic.
+Clank-Lang Decoder — Core decoding logic.
 
-Takes Phin text-format scripts (@ lines) and decodes them to any
+Takes Clank text-format scripts (@ lines) and decodes them to any
 loaded dictionary language using template substitution.
 """
 
@@ -10,10 +10,10 @@ from typing import Optional
 from .loader import DictionaryLoader
 
 
-class PhinDecoder:
-    """Decodes Phin text-format scripts using dictionary lookup."""
+class ClankDecoder:
+    """Decodes Clank text-format scripts using dictionary lookup."""
 
-    # Regex for parsing a Phin instruction line
+    # Regex for parsing a Clank instruction line
     # Format: @ <opcode> <target> <src> <param_count> {key: "value"} ...
     INSTRUCTION_RE = re.compile(
         r'^@\s+(0x[0-9A-Fa-f]{2})\s+(\$[\d_]+)\s+(\$[\d_]+)\s+(\d{2})\s*(.*)?$'
@@ -33,12 +33,12 @@ class PhinDecoder:
         """
         self.loader = loader or DictionaryLoader()
 
-    def decode(self, phin_text: str, lang: str) -> str:
+    def decode(self, clank_text: str, lang: str) -> str:
         """
-        Decode a Phin text-format script to the specified language.
+        Decode a Clank text-format script to the specified language.
 
         Args:
-            phin_text: Phin script as a string (lines starting with @).
+            clank_text: Clank script as a string (lines starting with @).
             lang: Target language code (e.g., 'en', 'zh', 'python').
 
         Returns:
@@ -56,7 +56,7 @@ class PhinDecoder:
                 key_int = int(str(k), 16)
                 opcodes[f"0x{key_int:02X}"] = v
 
-        lines = phin_text.strip().split("\n")
+        lines = clank_text.strip().split("\n")
         output_lines = []
         indent_level = 0
 
@@ -158,14 +158,14 @@ class PhinDecoder:
 _default_decoder = None
 
 
-def decode(phin_text: str, lang: str, loader: Optional[DictionaryLoader] = None) -> str:
+def decode(clank_text: str, lang: str, loader: Optional[DictionaryLoader] = None) -> str:
     """
-    Decode a Phin text-format script to the specified language.
+    Decode a Clank text-format script to the specified language.
 
     Convenience function that uses a module-level decoder instance.
 
     Args:
-        phin_text: Phin script as a string (lines starting with @).
+        clank_text: Clank script as a string (lines starting with @).
         lang: Target language code (e.g., 'en', 'zh', 'python').
         loader: Optional custom DictionaryLoader.
 
@@ -174,9 +174,9 @@ def decode(phin_text: str, lang: str, loader: Optional[DictionaryLoader] = None)
     """
     global _default_decoder
     if loader:
-        decoder = PhinDecoder(loader)
-        return decoder.decode(phin_text, lang)
+        decoder = ClankDecoder(loader)
+        return decoder.decode(clank_text, lang)
 
     if _default_decoder is None:
-        _default_decoder = PhinDecoder()
-    return _default_decoder.decode(phin_text, lang)
+        _default_decoder = ClankDecoder()
+    return _default_decoder.decode(clank_text, lang)

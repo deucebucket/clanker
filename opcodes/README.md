@@ -1,6 +1,6 @@
 # Opcode Definitions
 
-Each YAML file in this directory defines opcodes for a specific range of the Phin opcode space.
+Each YAML file in this directory defines opcodes for a specific range of the Clank opcode space.
 
 ## Files
 

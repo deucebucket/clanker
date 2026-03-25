@@ -1,5 +1,5 @@
 """
-Phin-Lang Validator — Validates Phin scripts against opcode definitions.
+Clank-Lang Validator — Validates Clank scripts against opcode definitions.
 
 Checks for:
 - Valid opcode references
@@ -26,8 +26,8 @@ class ValidationError:
         return f"[{self.severity.upper()}] line {self.line_num}: {self.message}"
 
 
-class PhinValidator:
-    """Validates Phin text-format scripts."""
+class ClankValidator:
+    """Validates Clank text-format scripts."""
 
     INSTRUCTION_RE = re.compile(
         r'^@\s+(0x[0-9A-Fa-f]{2})\s+(\$[\d_]+)\s+(\$[\d_]+)\s+(\d{2})\s*(.*)?$'
@@ -69,18 +69,18 @@ class PhinValidator:
                     opcodes[code] = defn
         return opcodes
 
-    def validate(self, phin_text: str) -> List[ValidationError]:
+    def validate(self, clank_text: str) -> List[ValidationError]:
         """
-        Validate a Phin text-format script.
+        Validate a Clank text-format script.
 
         Args:
-            phin_text: The Phin script to validate.
+            clank_text: The Clank script to validate.
 
         Returns:
             List of ValidationError objects. Empty list means valid.
         """
         errors = []
-        lines = phin_text.strip().split("\n")
+        lines = clank_text.strip().split("\n")
         nesting_depth = 0
         block_stack = []
 
