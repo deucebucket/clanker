@@ -143,3 +143,10 @@ opcodes:
   0xE3:
     template: "match (|| -> Result<_, Box<dyn std::error::Error>> {{"
     block_close: "}})() {{ Ok(v) => v, Err(e) => {{ /* handle error */ }} }}"
+
+# Emotional region mappings for code output
+# Code dictionaries map emotions to comment annotations
+emotional_regions:
+  positive: "// sentiment: positive ({valence})"
+  negative: "// sentiment: negative ({valence})"
+  neutral: "// sentiment: neutral"

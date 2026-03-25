@@ -138,3 +138,105 @@ opcodes:
   0xE3:
     template: "尝试："
     with_param: "尝试（错误存入 {error_var}）："
+
+# 情感区域映射 (效价, 唤醒度 -> 最近的词)
+emotional_regions:
+  joy:
+    valence: [64, 127]
+    arousal: [0, 80]
+    dominance: [20, 100]
+    description: "满足、快乐、满意"
+  excitement:
+    valence: [60, 127]
+    arousal: [80, 127]
+    dominance: [40, 127]
+    description: "激动、兴奋、振奋"
+  anger:
+    valence: [-127, -40]
+    arousal: [60, 127]
+    dominance: [40, 127]
+    description: "沮丧、愤怒、暴怒"
+  fear:
+    valence: [-127, -20]
+    arousal: [60, 127]
+    dominance: [-127, -20]
+    description: "焦虑、害怕、恐慌"
+  sadness:
+    valence: [-127, -30]
+    arousal: [-127, -20]
+    dominance: [-127, 0]
+    description: "低落、悲伤、哀痛"
+  calm:
+    valence: [-10, 40]
+    arousal: [-127, -40]
+    dominance: [-20, 40]
+    description: "放松、平静、安详"
+  surprise:
+    valence: [-20, 80]
+    arousal: [80, 127]
+    dominance: [-40, 40]
+    description: "惊讶、惊奇、惊叹"
+  disgust:
+    valence: [-127, -50]
+    arousal: [0, 60]
+    dominance: [20, 80]
+    description: "厌恶、反感、鄙视"
+  trust:
+    valence: [30, 100]
+    arousal: [-40, 40]
+    dominance: [0, 60]
+    description: "信任、安心、可靠"
+  neutral:
+    valence: [-15, 15]
+    arousal: [-15, 15]
+    dominance: [-15, 15]
+    description: "无明显情感"
+  urgency_low:
+    urgency: [0, 50]
+    description: "日常，无时间压力"
+  urgency_medium:
+    urgency: [51, 150]
+    description: "中等优先级，需要及时关注"
+  urgency_high:
+    urgency: [151, 220]
+    description: "高优先级，需要迅速行动"
+  urgency_critical:
+    urgency: [221, 255]
+    description: "紧急，需要立即行动"
+
+# 情感坐标映射 (效价, 唤醒度 -> 最近的词)
+emotional_coordinates:
+  "+0.9,+0.9": "狂喜"
+  "+0.8,+0.7": "激动"
+  "+0.7,+0.5": "兴奋"
+  "+0.6,+0.3": "快乐"
+  "+0.4,+0.1": "愉悦"
+  "+0.3,-0.2": "满足"
+  "+0.2,-0.5": "宁静"
+  "+0.1,-0.7": "平和"
+  "0.0,0.0": "中性"
+  "-0.2,-0.3": "忧郁"
+  "-0.3,-0.1": "失望"
+  "-0.4,+0.2": "沮丧"
+  "-0.5,+0.4": "烦躁"
+  "-0.6,+0.6": "愤怒"
+  "-0.8,+0.8": "暴怒"
+  "-0.9,+0.9": "狂怒"
+  "-0.3,+0.7": "焦虑"
+  "-0.5,+0.8": "恐慌"
+  "-0.6,-0.4": "悲伤"
+  "-0.8,-0.6": "绝望"
+  "-0.1,+0.9": "惊吓"
+  "+0.1,+0.8": "惊叹"
+
+intent_mappings:
+  request: "能否{action}？"
+  inform: "{content}"
+  question: "{content}？"
+  command: "{action}！"
+  empathize: "我理解，{content}"
+  greet: "你好"
+  farewell: "再见"
+  agree: "是的，{content}"
+  disagree: "不，{content}"
+  apologize: "抱歉，{content}"

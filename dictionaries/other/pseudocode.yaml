@@ -130,3 +130,10 @@ opcodes:
     with_param: "WHILE {condition} DO"
   0xE3:
     template: "TRY"
+
+# Emotional region mappings for pseudocode output
+# Maps emotions to annotation comments
+emotional_regions:
+  positive: "// SENTIMENT: POSITIVE ({valence})"
+  negative: "// SENTIMENT: NEGATIVE ({valence})"
+  neutral: "// SENTIMENT: NEUTRAL"
