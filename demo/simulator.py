@@ -6354,7 +6354,7 @@ IDIOMS = {
 
     # Defeat / disappointment
     ("let", "down"):              (-30, +10, -20, +10, "disappointed"),
-    ("give", "up"):               (-35, +5, -40, +10, "defeat/surrender"),
+    ("give", "up"):               (-40, -15, -40, +10, "surrender"),
     ("gave", "up"):               (-35, +5, -40, +10, "defeat/surrender"),
     ("no", "way"):                (0, +40, +10, +15, "disbelief"),
     ("worn", "out"):              (-20, -15, -20, +5, "exhausted"),
@@ -6373,11 +6373,11 @@ IDIOMS = {
     ("can't", "wait"):            (+30, +35, +15, +20, "eager anticipation"),
 
     # Panic / crisis
-    ("freak", "out"):             (-40, +60, -30, +40, "panic"),
+    ("freak", "out"):             (-35, +60, -30, +40, "panic"),
     ("freaked", "out"):           (-40, +55, -30, +35, "panicked"),
     ("freaking", "out"):          (-40, +60, -30, +40, "panicking"),
     ("melt", "down"):             (-45, +50, -40, +35, "meltdown"),
-    ("break", "down"):            (-40, +35, -40, +25, "breaking down"),
+    ("break", "down"):            (-45, +35, -35, +25, "collapse/cry"),
     ("end", "of", "the", "world"): (-50, +50, -50, +40, "catastrophizing"),
 
     # De-escalation
@@ -6386,6 +6386,31 @@ IDIOMS = {
     ("it's", "okay"):             (+20, -15, +15, -5, "reassurance"),
     ("no", "worries"):            (+20, -20, +15, -5, "reassurance"),
     ("hang", "in", "there"):      (+15, +5, +10, +5, "encouragement"),
+
+    # Death/grief idioms — override individual word scores (#41)
+    ("passed", "away"):           (-55, +30, -35, +20, "death/loss"),
+    ("passed", "on"):             (-50, +25, -30, +15, "death/loss"),
+    ("rest", "in", "peace"):      (-30, -20, +20, 0, "memorial"),
+    ("better", "place"):          (-15, -10, +15, 0, "consolation (often hollow)"),
+    ("gone", "too", "soon"):      (-60, +35, -40, +20, "premature death"),
+    ("taken", "from", "us"):      (-65, +40, -45, +25, "unjust death"),
+    ("lost", "the", "battle"):    (-60, +30, -40, +20, "death after illness"),
+    ("laid", "to", "rest"):       (-40, -15, +15, +5, "funeral/burial"),
+    ("at", "peace", "now"):       (-20, -25, +20, 0, "consolation"),
+    ("in", "our", "hearts"):      (+20, +10, +15, 0, "memorial positive"),
+    ("deepest", "sympathy"):      (-30, -10, +10, +5, "condolence"),
+    ("thoughts", "and", "prayers"): (-15, -10, +5, +5, "standard condolence"),
+
+    # Threat/aggression idioms (#37)
+    ("eat", "alive"):             (-40, +50, +40, +30, "threat/dominance"),
+    ("rip", "apart"):             (-50, +55, +35, +40, "aggressive destruction"),
+    ("beat", "up"):               (-55, +55, +30, +45, "physical threat"),
+    ("mess", "up"):               (-35, +30, -15, +20, "ruin/damage"),
+    ("screw", "over"):            (-50, +40, -20, +25, "betrayal"),
+    ("throw", "shade"):           (-30, +35, +20, +15, "disrespect"),
+    ("talk", "shit"):             (-45, +40, +15, +20, "gossip/insult"),
+    ("lose", "it"):               (-40, +55, -30, +35, "emotional breakdown"),
+    ("burn", "out"):              (-50, -20, -40, +10, "exhaustion"),
 }
 
 # Build a lookup: first word -> list of (full_tuple, forces)
@@ -7861,6 +7886,102 @@ class ResponseBuilder:
         }
         return closers.get(arc, "")
 
+    def compute_response_length(self, chunks):
+        """G axis controls response length. Heavy = brief. Light = can expand."""
+        avg_g = sum(c['vadug'].g for c in chunks) / len(chunks)
+        avg_v = sum(c['vadug'].v for c in chunks) / len(chunks)
+        total_weight = sum(abs(128 - c['vadug'].v) for c in chunks)
+
+        if avg_g < 60:      # crushing
+            max_sentences = 1
+        elif avg_g < 90:    # sinking
+            max_sentences = 2
+        elif avg_g < 140:   # grounded
+            max_sentences = min(len(chunks), 3)
+        else:               # floating/soaring
+            max_sentences = min(len(chunks), 4)
+
+        # Heavier total weight = fewer words needed
+        if total_weight > 200:
+            max_sentences = min(max_sentences, 2)
+        if total_weight > 300:
+            max_sentences = 1
+
+        return max_sentences
+
+    def build_summary_response(self, chunks, arc, grade, grade_rules, personality,
+                                verbose=False):
+        """Build ONE response that summarizes the emotional story, not per-chunk."""
+        max_sentences = self.compute_response_length(chunks)
+
+        # Overall VADUG (average across chunks)
+        avg_v = sum(c['vadug'].v for c in chunks) / len(chunks)
+        avg_a = sum(c['vadug'].a for c in chunks) / len(chunks)
+        avg_d = sum(c['vadug'].d for c in chunks) / len(chunks)
+        avg_u = sum(c['vadug'].u for c in chunks) / len(chunks)
+        avg_g = sum(c['vadug'].g for c in chunks) / len(chunks)
+
+        # Compute target response VADUG from harmony on the OVERALL emotion
+        overall_vadug = VADUG(v=int(avg_v), a=int(avg_a), d=int(avg_d), u=int(avg_u), g=int(avg_g))
+        response_vadug = compute_harmony(overall_vadug, personality if personality else PersonalityVector())
+
+        if verbose:
+            print(f"  Summary mode: avg_g={avg_g:.0f}, max_sentences={max_sentences}, arc={arc}")
+
+        parts = []
+
+        # Neutral/operational inputs (V 118-165, G grounded): brief operational response
+        if 118 <= avg_v <= 165 and avg_g >= 90:
+            if avg_v > 145:
+                # Mildly positive
+                ack = self.build_positive_acknowledge(overall_vadug, response_vadug)
+                if ack:
+                    parts.append(ack)
+            else:
+                # Dead neutral / operational -- minimal acknowledgment
+                parts.append("On it.")
+            if verbose:
+                print(f"  Summary built {len(parts)} part(s): {parts}")
+            return ' '.join(parts) if parts else "I hear you."
+
+        # Sentence 1: acknowledge the overall weight
+        if avg_v > 150:
+            ack = self.build_positive_acknowledge(overall_vadug, response_vadug)
+        else:
+            ack = self.build_acknowledge(overall_vadug, response_vadug)
+        if ack:
+            parts.append(ack)
+
+        # Sentence 2 (if allowed): stabilize or arc-closer
+        if max_sentences >= 2:
+            if grade in ("F-", "F", "F+"):
+                parts.append("I'm here.")
+            elif arc == "valley" and avg_v > 100:
+                # Valley that ends positive -- acknowledge the good part
+                closer = self._build_arc_closer(arc, grade, grade_rules)
+                if closer:
+                    parts.append(closer)
+            elif avg_d < 90:
+                # Low dominance -- offer stability
+                stab = self.build_stabilize(response_vadug)
+                if stab:
+                    parts.append(stab)
+            else:
+                closer = self._build_arc_closer(arc, grade, grade_rules)
+                if closer:
+                    parts.append(closer)
+
+        # Sentence 3 (only if G > 120 and max allows)
+        if max_sentences >= 3 and avg_g > 120:
+            red = self.build_redirect(response_vadug, grade_rules)
+            if red:
+                parts.append(red)
+
+        if verbose:
+            print(f"  Summary built {len(parts)} part(s): {parts}")
+
+        return ' '.join(parts) if parts else "I hear you."
+
     def reset_for_new_response(self):
         """Call between responses to reset per-response tracking."""
         self.used_words.clear()
@@ -8585,12 +8706,12 @@ class ChunkedPipeline:
             verbose=verbose
         )
 
-        # 4. Generate per-chunk responses via ResponseBuilder (math-based)
+        # 4. Generate response via ResponseBuilder (math-based, summary mode)
         if verbose:
-            print(f"\n--- STEP 2: Per-Chunk Harmony (ResponseBuilder) ---")
+            print(f"\n--- STEP 2: Emotional Density (ResponseBuilder) ---")
 
         builder = ResponseBuilder()
-        builder_response = builder.build_full_response(
+        builder_response = builder.build_summary_response(
             chunk_results, arc, grade, grade_rules, personality,
             verbose=verbose
         )
@@ -9344,13 +9465,13 @@ def run_pipeline(text: str, personality: PersonalityVector,
             print(f"    {line}")
 
     # Step 6: Decode via ResponseBuilder (math-based word selection)
+    # Use summary mode even for single chunks to respect G-based brevity
     builder = ResponseBuilder()
-    response = builder.build_chunk_response(
-        input_vadu, response_vadu, grade_rules,
-        is_first=True, is_reversal=False,
-        is_subsequent_negative=False,
-        is_positive=(input_vadu.v > 150),
-        chunk_text=text,
+    single_chunk_result = [{'vadug': input_vadu, 'text': text}]
+    response = builder.build_summary_response(
+        single_chunk_result, "flat_negative" if input_vadu.v < 135 else "flat_positive",
+        grade, grade_rules, personality,
+        verbose=verbose,
     )
 
     # Fallback to template system if ResponseBuilder produced empty/trivial
