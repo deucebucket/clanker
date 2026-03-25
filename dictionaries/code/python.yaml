@@ -65,6 +65,22 @@ opcodes:
     template: "msg = await {channel}.receive()"
     with_param: "msg = await asyncio.wait_for({channel}.receive(), timeout={timeout})"
 
+  # Reasoning (0x20-0x26)
+  0x20:
+    template: "# Consider: {premise}"
+  0x21:
+    template: "assert {condition}  # -> {result}"
+  0x22:
+    template: "if {if_condition}:  # then {then_conclusion}"
+  0x23:
+    template: "# Therefore: {conclusion}"
+  0x24:
+    template: "return {result}  # certainty: {cert}"
+  0x25:
+    template: "# DOUBT: step {step_ref} - {reason}"
+  0x26:
+    template: "# ASSUME: {assumption}"
+
   # Hardware (0xA0-0xAB)
   0xA0:
     template: "GPIO.output({pin}, GPIO.{'HIGH' if {state} else 'LOW'})"

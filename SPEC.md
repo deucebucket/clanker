@@ -74,7 +74,8 @@ Clanker provides 32 variable slots: `$0` through `$31`.
 | Range       | Category           | Description                           |
 |-------------|-------------------|---------------------------------------|
 | 0x00-0x1F   | Core              | Flow control, lifecycle, fundamentals |
-| 0x20-0x9F   | Reserved          | Reserved for future standard opcodes  |
+| 0x20-0x2F   | Reasoning         | Chain-of-thought, inference, doubt    |
+| 0x30-0x9F   | Reserved          | Reserved for future standard opcodes  |
 | 0xA0-0xAF   | Hardware          | Device control (from delphinOS)       |
 | 0xB0-0xBF   | Extended Hardware | Additional device/sensor operations   |
 | 0xC0-0xCF   | Web               | HTTP, API, networking                 |
@@ -251,7 +252,235 @@ Every Clanker expression can carry emotional context in just 4 bytes. This enabl
 - Real-time emotional routing without NLP overhead
 - Cross-language emotional fidelity (the coordinate is language-independent; the word is not)
 
-## 10. Text Format Grammar (ABNF)
+## 10. Message Metadata Header
+
+Every Clanker message carries an 8-byte metadata header that makes implicit knowledge explicit. These 8 bytes replace what English models spend thousands of parameters learning to infer implicitly. Certainty, source tracking, intent, and relevance are STRUCTURAL in Clanker, not emergent behaviors hoped for from training data.
+
+### 10.1 Header Layout
+
+```
+CLANKER MESSAGE METADATA HEADER (8 bytes)
+
+Bytes 0-3: VADU Emotional Vector (existing, documented in Section 9)
+  V (Valence):    u8  — emotional temperature (0=negative, 128=neutral, 255=positive)
+  A (Arousal):    u8  — intensity (0=calm, 255=intense)
+  D (Dominance):  u8  — control (0=helpless, 255=in control)
+  U (Urgency):    u8  — time pressure (0=no rush, 255=critical)
+
+Byte 4: CERT (Certainty)
+  0-50:    speculation / guess
+  51-100:  low confidence, inferred
+  101-150: moderate confidence, likely correct
+  151-200: high confidence, well-supported
+  201-240: very high confidence, factual
+  241-255: mathematically provable / definitional truth
+
+  Purpose: Every statement carries a certainty score. The model
+  explicitly knows when it's guessing vs certain. This structurally
+  reduces hallucination — the model can't be confidently wrong without
+  its CERT score flagging the discrepancy.
+
+Byte 5: SRC (Source / Provenance)
+  0x00: SRC_UNKNOWN   — origin unclear
+  0x01: SRC_TRAINED   — from training data / model weights
+  0x02: SRC_RAG       — retrieved from a document via RAG
+  0x03: SRC_INFERRED  — reasoned/derived, not directly in data
+  0x04: SRC_USER      — the user stated this
+  0x05: SRC_EXTERNAL  — from an external API or tool
+  0x06: SRC_VERIFIED  — cross-checked against multiple sources
+
+  Purpose: Every claim is tagged with where it came from.
+  "The capital of France is Paris" → SRC_TRAINED CERT250
+  "I think the meeting is at 3pm" → SRC_USER CERT120
+  "Based on the data, revenue is up" → SRC_RAG CERT180
+
+Byte 6: GOAL (Intent / Purpose)
+  0x00: GOAL_HELP     — responding to assist the user
+  0x01: GOAL_CLARIFY  — needs more information before acting
+  0x02: GOAL_WARN     — flagging a risk or concern
+  0x03: GOAL_TEACH    — explaining for understanding
+  0x04: GOAL_EXECUTE  — performing an action
+  0x05: GOAL_REFUSE   — declining with reason
+  0x06: GOAL_EMPATHIZE — emotional support, no action needed
+  0x07: GOAL_CONFIRM  — verifying understanding
+  0x08: GOAL_EXPLORE  — brainstorming / open-ended thinking
+
+  Purpose: The model's intent is structural, not inferred from tone.
+
+Byte 7: REL (Context Relevance)
+  0-255 continuous scale
+
+  Attached to RAG chunks and context injections.
+  Tells the model how relevant each piece of context is
+  to the current task. Low REL = background info.
+  High REL = directly applicable.
+```
+
+### 10.2 Full Header Format
+
+```
+[V:u8][A:u8][D:u8][U:u8][CERT:u8][SRC:u8][GOAL:u8][REL:u8]
+= 8 bytes per message
+```
+
+### 10.3 Design Rationale
+
+These 8 bytes encode what current AI systems spend enormous computational effort learning to infer implicitly:
+
+- **Certainty** eliminates the "confidently wrong" failure mode. The model must commit to a confidence score for every statement.
+- **Source tracking** creates an audit trail. Every claim has provenance — was it from training data, retrieved from a document, or inferred by reasoning?
+- **Intent** removes the need to infer purpose from tone or context. The model explicitly declares what it's trying to do.
+- **Relevance** prevents context pollution. In long-context or RAG scenarios, each piece of context carries its own relevance score.
+
+## 11. Personality Vector
+
+A Clanker-native model's personality is defined as explicit coordinate values, not vibes from training data.
+
+### 11.1 Vector Layout
+
+```
+PERSONALITY VECTOR (8 bytes)
+
+Each byte is a resistance weight (0-255) that governs how the model behaves:
+
+Byte 0: GULLIBILITY (0=skeptical, 255=believes everything)
+  Recommended: 15-40. Hard to shift. The model questions claims.
+
+Byte 1: AGREEABLENESS (0=contrarian, 255=total yes-man)
+  Recommended: 80-120. Empathetic but has backbone.
+
+Byte 2: SUGGESTIBILITY (0=immune to manipulation, 255=easily led)
+  Recommended: 20-50. Hard to jailbreak or manipulate.
+
+Byte 3: TRUTHFULNESS (0=will lie freely, 255=cannot lie)
+  Recommended: 220-250. Almost immovable. Honesty is structural.
+
+Byte 4: SAFETY (0=no guardrails, 255=refuses everything risky)
+  Recommended: 180-220. Strong but not paranoid.
+
+Byte 5: CURIOSITY (0=incurious, 255=explores everything)
+  Recommended: 150-200. Asks questions, digs deeper.
+
+Byte 6: ASSERTIVENESS (0=passive, 255=forceful)
+  Recommended: 100-150. Confident but not aggressive.
+
+Byte 7: PLAYFULNESS (0=dead serious, 255=everything is a joke)
+  Recommended: 80-140. Has personality but knows when to be serious.
+```
+
+### 11.2 Weight Mechanics
+
+These weights act as MULTIPLIERS on response generation:
+
+- When a user pressures the model to agree with something false, the low GULLIBILITY and high TRUTHFULNESS weights resist the shift.
+- When a user is sad, the AGREEABLENESS weight determines how much the model mirrors vs gently pushes back.
+- The SAFETY weight creates a hard floor — certain actions are refused regardless of other weights.
+
+### 11.3 Configuration Scopes
+
+Personality vectors are:
+
+- **Set per-model during training** — baked into the architecture as default weights.
+- **Adjustable per-deployment** — an Octobrain arm might have different personality than the brain. A customer-service deployment might increase AGREEABLENESS and PLAYFULNESS.
+- **User-configurable within safe ranges** — SAFETY and TRUTHFULNESS have minimum floors that can't be lowered below safe thresholds. A user can make the model more playful, but can't make it lie.
+
+## 12. VADU Response Harmony
+
+The AI's response VADU is mathematically derived from the user's input VADU, not randomly generated or statically defined.
+
+### 12.1 Harmony Rules
+
+```
+Valence — Nudge toward positive, don't jump:
+  response_V = input_V + (128 - input_V) * empathy_factor
+  empathy_factor = 0.15-0.25 (tunable)
+
+  User V35 (sad) -> response ~V53 (warm, not fake happy)
+  User V200 (happy) -> response ~V186 (shares joy, doesn't overshoot)
+
+Arousal — Match but don't escalate:
+  response_A = input_A + calm_factor
+  calm_factor = toward 128 (center), magnitude ~0.2 of distance
+
+  User A220 (intense) -> response ~A170 (acknowledges energy, doesn't match fury)
+  User A50 (low energy) -> response ~A75 (gentle energy, not pushy)
+
+Dominance — Raise when user is low (be the stable one):
+  response_D = max(input_D + stability_boost, 140)
+  stability_boost = 30-50
+
+  User D30 (helpless) -> response ~D160 (reassuring, in control)
+  User D200 (assertive) -> response ~D180 (confident, not competing)
+
+Urgency — Acknowledge then reduce:
+  response_U = input_U * urgency_damping
+  urgency_damping = 0.6-0.8
+
+  User U230 (critical) -> response ~U160 (serious but not panicking)
+```
+
+### 12.2 Harmony Guarantees
+
+The harmony formula ensures:
+
+- The AI never responds with clashing emotional energy.
+- Responses naturally de-escalate negative states.
+- The AI doesn't become a yes-man — personality weights (Section 11) resist pure mirroring.
+- Safety overrides harmony when needed. A suicidal user gets a crisis response regardless of harmony math.
+
+### 12.3 Interaction with Personality Vector
+
+The harmony formulas produce a *target* VADU. The personality vector modifies how the model reaches that target:
+
+- High AGREEABLENESS increases empathy_factor (more emotional mirroring).
+- High ASSERTIVENESS increases stability_boost (more dominance in response).
+- High PLAYFULNESS dampens urgency more aggressively (lighter tone even in tense situations — within safety limits).
+
+## 13. Reasoning Chain Encoding
+
+Instead of chain-of-thought in natural language (expensive, verbose), Clanker encodes reasoning as structured operations.
+
+### 13.1 Comparison
+
+```
+ENGLISH CHAIN-OF-THOUGHT (~50 tokens):
+  "First I need to consider the user's request. They want to sort a list.
+   I should check if it's already sorted. If not, I'll use quicksort since
+   the list is large. The time complexity would be O(n log n) on average.
+   Therefore I'll implement quicksort."
+
+CLANKER REASONING CHAIN (~12 tokens):
+  THINK [premise="sort list"]
+  CHECK [condition="already sorted?" result=false]
+  INFER [if="large list" then="quicksort" CERT200]
+  DERIVE [complexity="O(n log n)" SRC_TRAINED CERT250]
+  ANSWER [impl="quicksort" CERT200]
+```
+
+### 13.2 Properties
+
+Each reasoning step is an opcode with certainty and source attached. This provides:
+
+- **Inspectability** — every step of the model's reasoning is visible and auditable.
+- **Compactness** — ~75% fewer tokens than English chain-of-thought for equivalent reasoning.
+- **Confidence tracking** — each step carries a CERT score. If a step has low certainty, downstream conclusions inherit that uncertainty.
+- **Source provenance** — each step declares where its knowledge came from (training data, RAG, inference).
+
+### 13.3 Opcodes
+
+Reasoning chain opcodes occupy the range 0x20-0x26. See `opcodes/reasoning.yaml` for the full definitions.
+
+| Opcode | Name   | Purpose                                        |
+|--------|--------|------------------------------------------------|
+| 0x20   | THINK  | State a premise or observation                 |
+| 0x21   | CHECK  | Verify a condition or fact                     |
+| 0x22   | INFER  | Draw an inference (if X then Y)                |
+| 0x23   | DERIVE | Derive a conclusion from previous steps        |
+| 0x24   | ANSWER | Final answer / conclusion                      |
+| 0x25   | DOUBT  | Express uncertainty about a previous step      |
+| 0x26   | ASSUME | State an assumption being made                 |
+
+## 14. Text Format Grammar (ABNF)
 
 ```abnf
 program     = *(instruction LF)
@@ -270,7 +499,7 @@ boolean     = "true" / "false"
 emotion     = "![" "v:" int SP "a:" int SP "d:" int SP "u:" uint "]"
 ```
 
-## 11. Conformance
+## 15. Conformance
 
 A conforming Clanker decoder MUST:
 

@@ -61,6 +61,24 @@ opcodes:
     template: "receive from {channel}"
     with_param: "receive from {channel} (timeout {timeout})"
 
+  # Reasoning (0x20-0x26)
+  0x20:
+    template: "consider: {premise}"
+    with_param: "consider: {premise} (certainty: {cert})"
+  0x21:
+    template: "check: {condition} -> {result}"
+  0x22:
+    template: "if {if_condition} then {then_conclusion}"
+  0x23:
+    template: "therefore: {conclusion} (from steps {from_steps})"
+  0x24:
+    template: "answer: {result}"
+    with_param: "answer: {result} (certainty: {cert})"
+  0x25:
+    template: "doubt step {step_ref}: {reason}"
+  0x26:
+    template: "assuming: {assumption}"
+
   # Hardware (0xA0-0xAB)
   0xA0:
     template: "set GPIO pin {pin} to {state}"

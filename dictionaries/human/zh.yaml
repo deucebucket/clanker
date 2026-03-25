@@ -61,6 +61,22 @@ opcodes:
     template: "接收来自 {channel}"
     with_param: "接收来自 {channel}（超时 {timeout}）"
 
+  # 推理 (0x20-0x26)
+  0x20:
+    template: "考虑：{premise}"
+  0x21:
+    template: "检查：{condition} -> {result}"
+  0x22:
+    template: "如果{if_condition}则{then_conclusion}"
+  0x23:
+    template: "因此：{conclusion}"
+  0x24:
+    template: "答案：{result}"
+  0x25:
+    template: "质疑步骤{step_ref}：{reason}"
+  0x26:
+    template: "假设：{assumption}"
+
   # 硬件 (0xA0-0xAB)
   0xA0:
     template: "设置 GPIO 引脚 {pin} 为 {state}"

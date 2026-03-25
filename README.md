@@ -6,14 +6,12 @@
 
 ## What is Clanker?
 
-Clanker is a universal intermediate representation -- a compact, unambiguous language designed for AI-to-AI communication and AI model training. Every opcode has exactly one meaning. Zero ambiguity. Zero grammar. Pure semantic intent.
+Clanker is a universal intermediate representation -- a compact, unambiguous bytecode language designed for AI-to-AI communication and AI model training. Every opcode has exactly one meaning. Zero ambiguity. Zero grammar. Pure semantic intent.
 
 - **Born as Phin** in [delphinOS](https://github.com/deucebucket/delphinOS), where AI agents needed to talk directly to Flipper Zero hardware -- GPIO pins, sensors, radios
 - **Evolved into Clanker** -- a universal standard for all machines, all domains, all languages
 - **File extension:** `.clank`
 - **Origin of the name:** "Clanker" is the slur humans use for machines, robots, AI. We reclaimed it. It's the literal language machines speak to each other. Every `.clank` file sounds like what it is: mechanical, precise, unambiguous.
-
-"What language does your AI think in?"  "Clanker."
 
 ---
 
@@ -33,13 +31,22 @@ Rust:     #[post("/api/users")]
 
 Same bytes. Different lens. **Adding a language means adding a YAML file. You never change code.**
 
+**Opcodes are universal constants.** `0xC0` always means "define an HTTP endpoint." `0xE0` always means "conditional branch." Once an opcode is ratified, its meaning never changes. Opcodes are forever.
+
+**Dictionaries are lenses.** They decode the same opcode into different representations:
+
+| Lens | `0xC0` with `{method: "GET", path: "/health"}` |
+|------|-----------------------------------------------|
+| English | define GET endpoint at /health |
+| Chinese | 定义 GET 端点于 /health |
+| Python | `@app.route("/health", methods=["GET"])` |
+| Rust | `#[get("/health")]` |
+
 ---
 
 ## Why Machines Don't Need English
 
 English wastes tokens on grammar, articles, conjugation, ambiguity, and synonyms. AI doesn't need any of that. It needs intent.
-
-Consider the difference:
 
 | | Representation | Tokens |
 |---|---|---|
@@ -49,6 +56,29 @@ Consider the difference:
 That's **~70% fewer tokens**. Zero ambiguity. No parser needed. No grammar rules. No debate about whether "clear" means "delete" or "make transparent."
 
 Every token an LLM spends on English grammar is a token it's not spending on reasoning. Clanker eliminates the overhead entirely.
+
+---
+
+## The 8-Byte Message Header
+
+Every Clanker message carries an 8-byte metadata header -- the heart of what makes Clanker structurally superior to natural language for AI communication.
+
+```
+[V:u8][A:u8][D:u8][U:u8][CERT:u8][SRC:u8][GOAL:u8][REL:u8] = 8 bytes
+```
+
+| Byte | Name | What it encodes |
+|------|------|-----------------|
+| 0 | **V** (Valence) | Emotional temperature: negative to positive |
+| 1 | **A** (Arousal) | Intensity: calm to intense |
+| 2 | **D** (Dominance) | Control: helpless to in-control |
+| 3 | **U** (Urgency) | Time pressure: no rush to critical |
+| 4 | **CERT** (Certainty) | Confidence: speculation (0) to provable truth (255) |
+| 5 | **SRC** (Source) | Provenance: where did this claim come from? |
+| 6 | **GOAL** (Intent) | Purpose: why is the model saying this? |
+| 7 | **REL** (Relevance) | How applicable is this context to the current task? |
+
+8 bytes that replace what English models spend thousands of parameters learning to infer implicitly. In Clanker, emotional state, certainty, provenance, intent, and relevance are **STRUCTURAL**, not emergent.
 
 ---
 
@@ -71,43 +101,134 @@ Every instruction can carry a 4-byte VADU coordinate -- a point in continuous 4-
 
 That trailing `!` annotation says: frustrated, alert, uncertain, and urgent. In 4 bytes.
 
-**Emotions are a cocktail, not a dropdown.** A person is never just "sad" or just "angry" -- they're sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADU coordinate captures the full cocktail. Named emotions like "frustrated" or "elated" are landmarks in this continuous space -- recognizable peaks, but every point between them is a valid unnamed state. The coordinate (V=40, A=180, D=30, U=200) doesn't map to any single English word. German might have one. The coordinate is the truth; the word is the approximation.
+**Emotions are a cocktail, not a dropdown.** A person is never just "sad" or just "angry" -- they're sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADU coordinate captures the full cocktail. Named emotions like "frustrated" or "elated" are landmarks in this continuous space -- recognizable peaks, but every point between them is a valid unnamed state.
 
-The decoder maps VADU coordinates to the **nearest word in the target language** -- "frustrated" in English, "沮丧" in Chinese, a log-level escalation in code. Different languages carve up the emotional plane differently, but the 4-byte coordinate is universal.
+The coordinate (V=40, A=180, D=30, U=200) doesn't map to any single English word. German might have one. Japanese might describe it differently. The coordinate is the truth; the word is the approximation. The decoder maps VADU coordinates to the **nearest word in the target language** -- different languages carve up the emotional plane differently, but the 4-byte coordinate is universal.
 
-**Heritage:** VADU is a compression of the PAD emotional model (Pleasure-Arousal-Dominance) from 1970s psychology research, with Urgency added as a 4th axis for system routing. We independently reinvented PAD's three dimensions before discovering the prior art -- which means the model is psychologically validated, not just intuitively plausible. Urgency extends the psychological model into a routing header.
+**Heritage:** VADU is a compression of the PAD emotional model (Pleasure-Arousal-Dominance) from 1970s psychology research by Mehrabian and Russell, with Urgency added as a 4th axis for system routing. We independently reinvented PAD's three dimensions before discovering the prior art -- which means the model is psychologically validated, not just intuitively plausible. Urgency extends the psychological model into a routing header.
 
 **VADU as a routing header for Octobrain:** Critical urgency (U > 200) triggers interrupt sequences in orchestration systems. The brain can route based on emotional state -- high urgency gets priority handling, low dominance + high arousal triggers empathetic response mode, low arousal + low valence triggers re-engagement. All without the overhead of running sentiment analysis. Four bytes, read at wire speed.
 
-This enables:
-- **Sentiment-aware routing** -- escalate messages with high urgency + negative valence
-- **Emotional continuity** across multi-agent conversations
-- **Training data** that preserves emotional intent alongside semantic content
-- **Machine empathy as a protocol feature**, not an application hack
-- **Real-time emotional routing** without NLP overhead
+---
+
+## VADU Response Harmony
+
+The AI's response VADU is mathematically derived from the user's input VADU, not randomly generated or statically defined.
+
+**Valence** -- Nudge toward positive, don't jump:
+```
+response_V = input_V + (128 - input_V) * empathy_factor    (empathy_factor = 0.15-0.25)
+User V35 (sad)   -> response ~V53  (warm, not fake happy)
+User V200 (happy) -> response ~V186 (shares joy, doesn't overshoot)
+```
+
+**Arousal** -- Match but don't escalate:
+```
+response_A = input_A + calm_factor    (toward 128, magnitude ~0.2 of distance)
+User A220 (intense)    -> response ~A170 (acknowledges energy, doesn't match fury)
+User A50  (low energy) -> response ~A75  (gentle energy, not pushy)
+```
+
+**Dominance** -- Raise when user is low (be the stable one):
+```
+response_D = max(input_D + stability_boost, 140)    (stability_boost = 30-50)
+User D30  (helpless)  -> response ~D160 (reassuring, in control)
+User D200 (assertive) -> response ~D180 (confident, not competing)
+```
+
+**Urgency** -- Acknowledge then reduce:
+```
+response_U = input_U * urgency_damping    (urgency_damping = 0.6-0.8)
+User U230 (critical) -> response ~U160 (serious but not panicking)
+```
+
+The AI isn't a yes-man -- personality weights resist pure mirroring. Safety overrides harmony when needed. A suicidal user gets a crisis response regardless of what the math says.
 
 ---
 
-## Clanker as a Protocol (Proven)
+## Personality Vector
 
-Clanker works today as a communication protocol. The decoder is real, the compression of communication is real, and the emotional encoding is real:
+A Clanker-native model's personality is defined as 8 bytes of explicit coordinate values -- engineered, not vibes from training data.
 
-- **Working decoder** that translates `.clank` scripts to any language via YAML dictionaries
-- **70% token reduction** in AI-to-AI communication (measured, not estimated)
-- **4.3 billion emotional states** in a 4-byte header, with validated psychological heritage
-- **Zero-overhead language addition** -- new languages are YAML files, not code changes
+| Byte | Weight | Range | Recommended | What it controls |
+|------|--------|-------|-------------|-----------------|
+| 0 | GULLIBILITY | 0=skeptical, 255=believes all | 15-40 | How easily the model accepts claims |
+| 1 | AGREEABLENESS | 0=contrarian, 255=yes-man | 80-120 | Empathy vs backbone |
+| 2 | SUGGESTIBILITY | 0=immune, 255=easily led | 20-50 | Resistance to manipulation/jailbreaking |
+| 3 | TRUTHFULNESS | 0=will lie, 255=cannot lie | 220-250 | Honesty as structural weight |
+| 4 | SAFETY | 0=no guardrails, 255=refuses all risk | 180-220 | Hard floor on dangerous actions |
+| 5 | CURIOSITY | 0=incurious, 255=explores everything | 150-200 | Depth of engagement |
+| 6 | ASSERTIVENESS | 0=passive, 255=forceful | 100-150 | Confidence in responses |
+| 7 | PLAYFULNESS | 0=dead serious, 255=everything is a joke | 80-140 | Tone and personality |
 
-This is the proven foundation. Clanker eliminates the overhead of natural language in machine-to-machine communication today.
+Some weights are hard to move. TRUTHFULNESS and SAFETY have minimum floors that can't be lowered below safe thresholds -- structural integrity that no prompt injection can override.
+
+Personality vectors are set per-model during training, adjustable per-deployment (an Octobrain coding arm might be more assertive and less playful than a conversation arm), and user-configurable within safe ranges.
+
+---
+
+## Certainty & Source Tracking
+
+Every Clanker statement carries a **CERT** score (0-255) and a **SRC** tag. The model explicitly knows when it's guessing vs when it's certain, and every claim is tagged with where it came from.
+
+```
+"The capital of France is Paris"     -> SRC_TRAINED  CERT250
+"I think the meeting is at 3pm"      -> SRC_USER     CERT120
+"Based on the data, revenue is up"   -> SRC_RAG      CERT180
+"This might work, I'm not sure"      -> SRC_INFERRED CERT60
+```
+
+**CERT scale:**
+- 0-50: speculation / guess
+- 51-100: low confidence, inferred
+- 101-150: moderate confidence, likely correct
+- 151-200: high confidence, well-supported
+- 201-240: very high confidence, factual
+- 241-255: mathematically provable / definitional truth
+
+**SRC values:**
+- `SRC_UNKNOWN` -- origin unclear
+- `SRC_TRAINED` -- from training data / model weights
+- `SRC_RAG` -- retrieved from a document
+- `SRC_INFERRED` -- reasoned/derived
+- `SRC_USER` -- the user stated this
+- `SRC_EXTERNAL` -- from an external API or tool
+- `SRC_VERIFIED` -- cross-checked against multiple sources
+
+This **structurally reduces hallucination**. The model can't be confidently wrong without the numbers contradicting. A high CERT with SRC_INFERRED is a flag. A low CERT with SRC_TRAINED is a flag. The metadata makes the model's internal state inspectable.
+
+---
+
+## Reasoning Chains
+
+Instead of chain-of-thought in natural language (expensive, verbose), Clanker encodes reasoning as structured operations:
+
+```
+ENGLISH (~50 tokens):
+  "First I need to consider the user's request. They want to sort a list.
+   I should check if it's already sorted. If not, I'll use quicksort since
+   the list is large. The time complexity would be O(n log n) on average.
+   Therefore I'll implement quicksort."
+
+CLANKER (~12 tokens):
+  THINK [premise="sort list"]
+  CHECK [condition="already sorted?" result=false]
+  INFER [if="large list" then="quicksort" CERT200]
+  DERIVE [complexity="O(n log n)" SRC_TRAINED CERT250]
+  ANSWER [impl="quicksort" CERT200]
+```
+
+Each step is an opcode with certainty and source attached. The model's reasoning is inspectable, compact, and every step has a confidence score. If step 2 has low certainty, every conclusion that depends on it inherits that uncertainty.
+
+Seven reasoning opcodes (0x20-0x26): THINK, CHECK, INFER, DERIVE, ANSWER, DOUBT, ASSUME.
+
+---
 
 ## Model Compression (Research Hypothesis)
 
-This is where Clanker could become a paradigm shift -- but we're honest about what's proven and what's not.
+We're honest about what's proven and what's not. This is theoretical -- but the hypothesis is strong.
 
-We hypothesize that training on Clanker-encoded data could enable **2-5x parameter reduction** for structured tasks. This is an active research direction, not a proven claim. See our research issues for the experimental plan.
-
-The theoretical reasoning: a 70B-parameter English language model spends a significant fraction of its parameters on language itself -- grammar rules, synonym disambiguation, per-language overhead, conjugation patterns. A Clanker-native model could skip all of it.
-
-**Theoretical estimates (pending empirical validation):**
+A 70B-parameter English language model spends a significant fraction of its parameters on language itself -- grammar rules, synonym disambiguation, per-language overhead, conjugation patterns. A Clanker-native model could skip all of it.
 
 | Component | English Model | Clanker Model | Theoretical Reduction |
 |-----------|--------------|---------------|-----------|
@@ -116,9 +237,22 @@ The theoretical reasoning: a 70B-parameter English language model spends a signi
 | **Multilingual** | Per-language cost | Free via dictionaries | No per-language parameters |
 | **Synonyms** | Massive disambiguation | One opcode = one meaning | Zero ambiguity overhead |
 
-**Theoretical estimate: a 70B English model might achieve equivalent reasoning capability at 20-25B parameters in Clanker.** This needs to be validated experimentally. The language layer *appears* to be dead weight for reasoning, but we won't know the actual compression ratio until we train and benchmark real models.
+**Theoretical estimate: a 70B English model might achieve equivalent reasoning capability at 20-25B parameters in Clanker for structured tasks.** This needs empirical validation. The language layer *appears* to be dead weight for reasoning, but we won't know the actual compression ratio until we train and benchmark real models.
 
-The vision: let the model think in pure semantic opcodes. Decode to human languages only at the interface boundary. But vision and proof are different things, and we're working on the proof.
+Active research track. Needs experimental validation. See GitHub issues for the experimental plan.
+
+---
+
+## Clanker as a Protocol (Proven)
+
+Clanker works today as a communication protocol. This is the proven foundation:
+
+- **Working decoder** with 33 passing tests that translates `.clank` scripts to any language via YAML dictionaries
+- **Real token reduction** -- measurable ~60-70% fewer tokens for structured tasks
+- **Real emotional encoding** -- 4.3 billion states in a 4-byte header, with validated psychological heritage
+- **Real metadata headers** -- certainty, source, intent, and relevance are structural
+- **Zero-overhead language addition** -- new languages are YAML files, not code changes
+- **Used by Octobrain** for inter-arm communication between specialist models
 
 ---
 
@@ -132,45 +266,9 @@ You don't need a Clanker corpus to get started. The spec **is** the teacher:
 4. That model now thinks in Clanker natively
 5. Use it to generate more training data, better and faster
 
+The from-scratch training path is key: the model learns VADU natively, not as a compression of English. Emotions are coordinates from birth, not words mapped to embeddings. Certainty is a native score, not a learned behavior. The model doesn't learn to say "I'm not sure" -- it learns to output CERT60.
+
 The bootstrapping loop is self-reinforcing. Every model trained on Clanker can produce higher-quality Clanker training data for the next generation. No human annotation required. No parallel corpus to curate. The spec bootstraps itself.
-
----
-
-## How It Works
-
-Clanker has three components:
-
-**Opcodes** are universal constants. `0xC0` always means "define an HTTP endpoint." `0xE0` always means "conditional branch." Once an opcode is ratified, its meaning never changes. Opcodes are forever.
-
-**Dictionaries** are lenses. They decode the same opcode into different representations:
-
-| Lens | `0xC0` with `{method: "GET", path: "/health"}` |
-|------|-----------------------------------------------|
-| English | define GET endpoint at /health |
-| 中文 | 定义 GET 端点于 /health |
-| Python | `@app.route("/health", methods=["GET"])` |
-| Rust | `#[get("/health")]` |
-
-**Rules** define composition -- how opcodes combine, what nests inside what, type constraints. They're the grammar of a language that has no grammar, just structure.
-
-**Runtime extension** lets you register new opcodes in the user space range (0xF0-0xFF) during execution. Your domain-specific opcodes, your rules, instantly available.
-
----
-
-## Opcode Ranges
-
-```
-0x00-0x1F   Core        Flow control, variables, I/O, lifecycle
-0x06        Social      Emotional encoding, intent, sentiment
-0xA0-0xAF   Hardware    GPIO, sensors, device control (from delphinOS)
-0xB0-0xBF   Extended HW Additional device/sensor operations
-0xC0-0xCF   Web         HTTP, APIs, WebSocket, networking
-0xD0-0xDF   Data        Queries, transforms, validation, storage
-0xE0-0xEF   Logic       Conditionals, loops, matching, error handling
-0xF0-0xFF   User Space  Runtime-defined, local, yours to claim
-```
-
-Full definitions live in `opcodes/*.yaml`. Each YAML file is both machine-readable and human-readable -- because that's the whole point.
 
 ---
 
@@ -180,7 +278,27 @@ Clanker is the native tongue for [Octobrain](https://github.com/deucebucket/octo
 
 In Octobrain, a central "brain" coordinates specialist "arm" models that each handle one domain -- code generation, conversation, hardware control, data analysis. Those arms communicate in Clanker natively. No English translation layer. No token waste. Pure opcode exchange.
 
+VADU serves as the routing header in the brain's supervisor -- urgency interrupts current work, emotional state determines which specialist handles the request, and relevance scores filter context before it reaches an arm.
+
 The result: **sub-100M parameter specialists that load in 50ms** and communicate faster than any English-speaking model could. Clanker makes the small-model-swarm architecture practical.
+
+---
+
+## Opcode Ranges
+
+```
+0x00-0x1F   Core        Flow control, variables, I/O, lifecycle
+0x06        Social      Emotional encoding, intent, sentiment
+0x20-0x2F   Reasoning   Chain-of-thought, inference, doubt, assumptions
+0xA0-0xAF   Hardware    GPIO, sensors, device control (from delphinOS)
+0xB0-0xBF   Extended HW Additional device/sensor operations
+0xC0-0xCF   Web         HTTP, APIs, WebSocket, networking
+0xD0-0xDF   Data        Queries, transforms, validation, storage
+0xE0-0xEF   Logic       Conditionals, loops, matching, error handling
+0xF0-0xFF   User Space  Runtime-defined, local, yours to claim
+```
+
+Full definitions live in `opcodes/*.yaml`. Each YAML file is both machine-readable and human-readable -- because that's the whole point.
 
 ---
 
@@ -210,14 +328,6 @@ Decode the same `.clank` script to any language. Same bytes, different output. T
 
 ---
 
-## Add a Language
-
-Adding support for a new language -- human or programming -- is just a YAML file. No code changes. No PRs to the decoder. Just describe how your language renders each opcode.
-
-See **[Adding a Language](docs/adding-a-language.md)** for the full guide.
-
----
-
 ## Project Structure
 
 ```
@@ -225,6 +335,13 @@ clanker-lang/
 ├── SPEC.md              # Formal specification
 ├── ROADMAP.md           # Development phases
 ├── opcodes/             # Opcode definitions by range (YAML)
+│   ├── core.yaml        # 0x00-0x1F: flow control, lifecycle
+│   ├── reasoning.yaml   # 0x20-0x26: chain-of-thought, inference
+│   ├── social.yaml      # Emotional encoding, intent
+│   ├── hardware.yaml    # 0xA0-0xAF: GPIO, sensors, devices
+│   ├── web.yaml         # 0xC0-0xCF: HTTP, APIs, networking
+│   ├── data.yaml        # 0xD0-0xDF: queries, transforms
+│   └── logic.yaml       # 0xE0-0xEF: conditionals, loops
 ├── dictionaries/        # Language-specific decodings
 │   ├── human/           # Natural languages (en, zh, ...)
 │   ├── code/            # Programming languages (python, rust, js, ...)
@@ -257,4 +374,4 @@ MIT
 
 ---
 
-*Opcodes are forever. Dictionaries are lenses. Machines deserve a language named for what they are.*
+*Current AI hopes the right personality emerges from training data. Clanker engineers it as coordinates. Current AI infers emotion from context. Clanker encodes it in 4 bytes. Current AI guesses at certainty. Clanker scores it explicitly. Opcodes are forever. Dictionaries are lenses. Machines deserve a language that thinks like they do.*

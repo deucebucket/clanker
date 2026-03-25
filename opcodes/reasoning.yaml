@@ -1,0 +1,60 @@
+# Reasoning Chain opcodes for Clanker
+# Compact, inspectable chain-of-thought with certainty at each step
+
+opcodes:
+  0x20:
+    name: THINK
+    description: "Begin a reasoning step — state a premise or observation"
+    params:
+      - {name: premise, type: str, required: true}
+      - {name: cert, type: u8, optional: true, description: "Certainty of this premise"}
+      - {name: src, type: u8, optional: true, description: "Source of this premise"}
+
+  0x21:
+    name: CHECK
+    description: "Verify a condition or check a fact"
+    params:
+      - {name: condition, type: str, required: true}
+      - {name: result, type: bool, required: true}
+      - {name: cert, type: u8, optional: true}
+
+  0x22:
+    name: INFER
+    description: "Draw an inference — if X then Y"
+    params:
+      - {name: if_condition, type: str, required: true}
+      - {name: then_conclusion, type: str, required: true}
+      - {name: cert, type: u8, optional: true}
+      - {name: src, type: u8, optional: true}
+
+  0x23:
+    name: DERIVE
+    description: "Derive a result from previous reasoning steps"
+    params:
+      - {name: from_steps, type: list, required: true, description: "Which previous steps"}
+      - {name: conclusion, type: str, required: true}
+      - {name: cert, type: u8, optional: true}
+
+  0x24:
+    name: ANSWER
+    description: "Final answer / conclusion of reasoning chain"
+    params:
+      - {name: result, type: str, required: true}
+      - {name: cert, type: u8, optional: true}
+      - {name: explanation, type: str, optional: true}
+
+  0x25:
+    name: DOUBT
+    description: "Express uncertainty about a previous step"
+    params:
+      - {name: step_ref, type: int, required: true, description: "Which step is uncertain"}
+      - {name: reason, type: str, required: true}
+      - {name: alt_conclusion, type: str, optional: true}
+
+  0x26:
+    name: ASSUME
+    description: "State an assumption being made"
+    params:
+      - {name: assumption, type: str, required: true}
+      - {name: impact_if_wrong, type: str, optional: true}
+      - {name: cert, type: u8, optional: true}
