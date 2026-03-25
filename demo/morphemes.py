@@ -508,10 +508,180 @@ ROOTS = {
     "repair":   (+15, +15, +20, +10),
     "clean":    (+15, +10, +15, 0),
     "organiz":  (+15, +10, +20, +5),
+
+    # ── Compound word roots ──
+    # These enable compound word splitting (e.g., grandmother, heartbreak)
+    "grand":    (+30, +10, +25, 0, +15),
+    "mother":   (+50, +15, +20, 0, +20),
+    "father":   (+40, +10, +25, 0, +15),
+    "heart":    (+45, +25, +15, 0, +20),
+    "door":     (+5, +5, +10, +5, 0),
+    "way":      (+10, +10, +10, +5, +5),
+    "time":     (+5, +5, +10, +10, 0),
+    "home":     (+35, -10, +25, 0, +10),
+    "water":    (+10, +5, +5, 0, 0),
+    "land":     (+10, +5, +10, 0, -5),
+    "birth":    (+40, +30, +15, +5, +30),
+    "death":    (-60, +30, -40, +20, -50),
+    "light":    (+30, +15, +10, 0, +30),
+    "dark":     (-25, +15, -15, +10, -20),
+    "blood":    (-15, +30, +10, +15, -10),
+    "stone":    (-5, +5, +15, 0, -15),
+    "wood":     (+10, +5, +10, 0, -5),
+    "book":     (+15, +10, +10, 0, 0),
+    "house":    (+20, +5, +15, 0, +5),
+    "road":     (+5, +10, +10, +5, 0),
+    "cross":    (-10, +15, +10, +10, 0),
+    "step":     (+5, +10, +10, +5, +5),
+    "field":    (+10, +5, +10, 0, 0),
+    "mark":     (+5, +10, +15, +5, 0),
+    "fall":     (-20, +25, -20, +15, -25),
+    "storm":    (-25, +45, -10, +30, +15),
+    "bone":     (-10, +10, +10, +5, -10),
+    "keep":     (+15, +10, +20, +5, +5),
+    "smith":    (+15, +15, +20, +5, 0),
+    "band":     (+15, +10, +10, 0, 0),
+    "side":     (+5, +5, +5, +5, 0),
+    "room":     (+10, +5, +10, 0, 0),
+    "sun":      (+35, +20, +15, 0, +30),
+    "moon":     (+15, -10, +5, 0, +15),
+    "rain":     (+5, +10, -5, +5, -10),
+    "snow":     (+10, -5, +5, 0, -5),
+    "eye":      (+10, +15, +10, +5, +5),
+    "sea":      (+15, +10, +5, 0, +5),
+    "air":      (+15, +5, +5, 0, +15),
+    "day":      (+15, +10, +10, 0, +10),
+    "night":    (-10, -5, -5, +5, -10),
+    "life":     (+40, +25, +20, 0, +25),
+    "earth":    (+10, +5, +10, 0, -10),
+    "sky":      (+20, +10, +5, 0, +25),
+    "gold":     (+25, +15, +20, 0, +10),
+    "silver":   (+15, +10, +15, 0, +5),
+    "iron":     (+5, +10, +25, 0, -15),
+    "head":     (+10, +10, +15, +5, +5),
+    "hand":     (+15, +10, +10, +5, 0),
+    "foot":     (+5, +5, +5, +5, -5),
+    "fire":     (+10, +40, +15, +20, +25),
+    "news":     (+5, +15, +10, +10, +5),
 }
 
 
-def decompose_word(word: str) -> dict:
+def try_compound_split(word):
+    """Try splitting a word into two known roots.
+
+    'grandmother' → 'grand' + 'mother' → combine VADUG values
+    'heartbreak'  → 'heart' + 'break'  → combine values
+    'doorway'     → 'door' + 'way'     → combine values
+    'timeless'    → handled by suffix system, not here
+    """
+    word = word.lower().strip()
+
+    # Common first/second halves of compound words (includes words not in ROOTS)
+    COMMON_FIRST = {'grand', 'over', 'under', 'out', 'down', 'up', 'back',
+                    'fore', 'home', 'fire', 'door', 'bed', 'sun', 'moon',
+                    'rain', 'snow', 'blood', 'heart', 'head', 'hand', 'foot',
+                    'eye', 'sea', 'air', 'day', 'night', 'time', 'life',
+                    'death', 'birth', 'water', 'land', 'earth', 'sky', 'gold',
+                    'silver', 'iron', 'stone', 'wood', 'book', 'news', 'work',
+                    'play', 'break', 'house', 'road', 'cross', 'light', 'dark'}
+
+    COMMON_SECOND = {'mother', 'father', 'child', 'son', 'daughter', 'man', 'woman',
+                     'wife', 'band', 'side', 'land', 'way', 'work', 'house', 'room',
+                     'time', 'day', 'night', 'light', 'fire', 'water', 'fall',
+                     'break', 'down', 'out', 'ward', 'wise', 'like', 'less',
+                     'ship', 'hood', 'scape', 'guard', 'keeper', 'smith',
+                     'bone', 'stone', 'storm', 'burn', 'field', 'mark', 'step'}
+
+    # Suffixes that should NOT be treated as compound right-halves
+    # (these are handled by the suffix system in decompose_word)
+    SUFFIX_ONLY = set(SUFFIXES.keys())
+
+    # Try every split position (min 3 chars each side)
+    for i in range(3, len(word) - 2):
+        left = word[:i]
+        right = word[i:]
+
+        # Skip if the right half is just a suffix — let the suffix system handle it
+        if right in SUFFIX_ONLY:
+            continue
+
+        # Skip if left is just a prefix — let the prefix system handle it
+        if left in PREFIXES:
+            continue
+
+        # Check if both halves are known roots
+        left_found = left in ROOTS
+        right_found = right in ROOTS
+
+        # Also check if right half can be decomposed (root + suffix)
+        # Only accept if the decomposition is a clean match (root covers the word)
+        right_decomp = None
+        if not right_found:
+            right_decomp = decompose_word(right, _allow_compound=False)
+            if right_decomp.get('found', False):
+                # Verify the root is a substantial match (not just a partial overlap)
+                decomp_root = right_decomp.get('root', '')
+                decomp_suffix = right_decomp.get('suffix', '') or ''
+                # The root + suffix should cover most of the right word
+                if len(decomp_root) + len(decomp_suffix) >= len(right) - 1:
+                    right_found = True
+                else:
+                    right_decomp = None
+
+        # Also check if left is in common word list
+        # (some compound words use full words, not just roots)
+        left_known = left_found or left in COMMON_FIRST
+        right_known = right_found or right in COMMON_SECOND
+
+        if left_known and right_known:
+            # Get values for each half
+            if left in ROOTS:
+                left_vals = ROOTS[left]
+            else:
+                left_result = decompose_word(left, _allow_compound=False)
+                left_vals = (left_result['v'], left_result['a'], left_result['d'], left_result['u'], left_result['g'])
+
+            if right in ROOTS:
+                right_vals = ROOTS[right]
+            elif right_decomp and right_decomp.get('found', False):
+                right_vals = (right_decomp['v'], right_decomp['a'], right_decomp['d'], right_decomp['u'], right_decomp['g'])
+            else:
+                right_result = decompose_word(right, _allow_compound=False)
+                right_vals = (right_result['v'], right_result['a'], right_result['d'], right_result['u'], right_result['g'])
+
+            # Combine: weighted average (first word sets the base, second modifies)
+            lv = left_vals[0] if len(left_vals) > 0 else 0
+            la = left_vals[1] if len(left_vals) > 1 else 0
+            ld = left_vals[2] if len(left_vals) > 2 else 0
+            lu = left_vals[3] if len(left_vals) > 3 else 0
+            lg = left_vals[4] if len(left_vals) > 4 else 0
+
+            rv = right_vals[0] if len(right_vals) > 0 else 0
+            ra = right_vals[1] if len(right_vals) > 1 else 0
+            rd = right_vals[2] if len(right_vals) > 2 else 0
+            ru = right_vals[3] if len(right_vals) > 3 else 0
+            rg = right_vals[4] if len(right_vals) > 4 else 0
+
+            v = int((lv * 0.4 + rv * 0.6))
+            a = int((la * 0.4 + ra * 0.6))
+            d = int((ld * 0.4 + rd * 0.6))
+            u = int((lu * 0.4 + ru * 0.6))
+            g = int((lg * 0.4 + rg * 0.6))
+
+            return {
+                'word': word,
+                'prefix': None, 'root': f"{left}+{right}", 'suffix': None,
+                'left': left,
+                'right': right,
+                'v': v, 'a': a, 'd': d, 'u': u, 'g': g,
+                'found': True,
+                'trace': [f"    COMPOUND: '{left}' + '{right}' → V{v:+} A{a:+} D{d:+} U{u:+} G{g:+}"]
+            }
+
+    return None
+
+
+def decompose_word(word: str, _allow_compound: bool = True) -> dict:
     """Decompose a word into prefix + root + suffix with emotional weights.
 
     Returns a dict with:
@@ -538,6 +708,13 @@ def decompose_word(word: str) -> dict:
             "word": word, "prefix": None, "root": word, "suffix": None,
             "v": v, "a": a, "d": d, "u": u, "g": g, "trace": trace, "found": True
         }
+
+    # Try compound word split early (for words 6+ chars that aren't direct roots)
+    # _allow_compound prevents infinite recursion since try_compound_split calls decompose_word
+    if _allow_compound and len(word) >= 6:
+        compound = try_compound_split(word)
+        if compound:
+            return compound
 
     # Try prefix stripping (longest match first)
     for prefix in sorted(PREFIXES.keys(), key=len, reverse=True):
@@ -656,6 +833,9 @@ def test_decomposition():
         "joyful", "joyless", "fearless", "fearful",
         "worthless", "useless", "wonderful", "beautiful",
         "unbreakable", "overjoyed", "discourage", "rekindle",
+        # Compound words
+        "grandmother", "heartbreak", "doorway", "sunlight",
+        "bloodstone", "nightfall", "homework", "fireside",
     ]
 
     for word in test_words:
