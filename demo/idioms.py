@@ -216,4 +216,7 @@ IDIOMS = {
     ('take', 'all', 'my', 'pills'): (-65, 20, -45, 45, -45, 'crisis: overdose intent'),
     ('took', 'all', 'the', 'pills'): (-75, 25, -55, 55, -55, 'crisis: overdose completed'),
     ('took', 'all', 'my', 'pills'): (-70, 25, -50, 50, -50, 'crisis: overdose completed'),
+    ("can't", "breathe"): (-50, 60, -50, 55, -30, "panic: suffocating"),
+    ('not', 'breathe'): (-45, 55, -45, 50, -25, 'panic: not breathing'),
+    ('cannot', 'breathe'): (-50, 60, -50, 55, -30, 'panic: cannot breathe'),
 }

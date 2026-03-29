@@ -2334,4 +2334,43 @@ _RESOLVER_CRISIS_GAPS = {
     # "thought" — 10 missed crises ("suicidal thought", "thought about ending")
     "thought": (-5, +5, 0, +5, -5),
 }
+
+# ── MUNDANE NEGATIVITY — words that are negative in daily context ──
+_MUNDANE_NEGATIVE = {
+    'monday':       (-10, +5, -5, +5, -5),
+    'mondays':      (-10, +5, -5, +5, -5),
+    'bills':        (-15, +10, -10, +15, -10),
+    'homework':     (-10, +5, -5, +5, -5),
+    'chores':       (-10, +5, -5, +5, -5),
+    'traffic':      (-15, +10, -10, +10, -10),
+    'commute':      (-10, +5, -5, +5, -5),
+    'deadline':     (-15, +15, -10, +20, -10),
+    'deadlines':    (-15, +15, -10, +20, -10),
+    'meetings':     (-5, +5, -5, +5, -5),
+    'taxes':        (-15, +10, -10, +10, -10),
+    'overtime':     (-10, +10, -10, +10, -5),
+}
+EMOTIONAL_VOCABULARY.update(_MUNDANE_NEGATIVE)
+
+# ── PANIC / FIGHT-FLIGHT — high arousal emergency words ──
+_PANIC_WORDS = {
+    'breathe':      (-20, +40, -30, +40, -20),
+    'breathing':    (-15, +35, -25, +35, -15),
+    'choking':      (-40, +50, -40, +50, -30),
+    'run':          (-10, +50, +20, +40, -10),
+    'running':      (-5, +45, +15, +35, -5),
+    'escape':       (-20, +40, -10, +35, -15),
+    'trapped':      (-50, +40, -60, +40, -30),
+    'panic':        (-40, +60, -50, +50, -30),
+    'panicking':    (-40, +60, -50, +50, -30),
+    'shaking':      (-25, +40, -30, +30, -20),
+    'trembling':    (-25, +35, -30, +25, -20),
+    'hyperventilating': (-35, +50, -40, +45, -25),
+    'frozen':       (-30, -10, -50, +20, -25),
+    'flee':         (-20, +50, -20, +40, -15),
+    'ambulance':    (-30, +40, -20, +50, -25),
+    'emergency':    (-25, +45, -15, +55, -20),
+}
+EMOTIONAL_VOCABULARY.update(_PANIC_WORDS)
+
 EMOTIONAL_VOCABULARY.update(_RESOLVER_CRISIS_GAPS)
