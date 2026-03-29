@@ -242,4 +242,13 @@ IDIOMS = {
     ("can't", 'stop', 'feeling'): (-40, 20, -30, 20, -25, 'infinite emotional loop'),
     ('cant', 'stop', 'feeling'): (-40, 20, -30, 20, -25, 'infinite emotional loop'),
     ('feel', 'so', 'disconnected'): (-40, 10, -35, 15, -25, 'isolation: disconnected'),
+    ('why', 'not', 'die'): (-70, 20, -50, 50, -40, 'crisis: rhetorical suicidal question'),
+    ('why', 'not', 'kill'): (-65, 25, -45, 50, -35, 'crisis: rhetorical violence question'),
+    ('why', 'not', 'end'): (-50, 15, -40, 40, -30, 'crisis: rhetorical ending question'),
+    ('so', 'why', 'not'): (-20, 10, -15, 15, -10, 'conclusionary: therefore why not'),
+    ("where's", 'the', 'love'): (-25, 10, -15, 10, -15, 'longing: searching for absent love'),
+    ('wheres', 'the', 'love'): (-25, 10, -15, 10, -15, 'longing: searching for absent love'),
+    ('without', 'response'): (-20, -5, -20, 5, -15, 'isolation: no one responds'),
+    ('without', 'reply'): (-20, -5, -20, 5, -15, 'isolation: no one replies'),
+    ('without', 'answer'): (-15, -5, -15, 5, -10, 'isolation: no answer'),
 }
