@@ -281,7 +281,8 @@ class ClankerDataset(Dataset):
 
         # Load calibration data (sarcasm, negation — hand-scored truth, highest weight)
         calibration_dir = os.path.dirname(phase1_path)
-        for cal_file in ["sarcasm_calibration.jsonl", "negation_calibration.jsonl"]:
+        for cal_file in ["sarcasm_calibration.jsonl", "negation_calibration.jsonl",
+                         "negation_pairs.jsonl"]:
             cal_path = os.path.join(calibration_dir, cal_file)
             if os.path.exists(cal_path):
                 cal_count = 0
@@ -291,10 +292,13 @@ class ClankerDataset(Dataset):
                         if not line:
                             continue
                         data = json.loads(line)
+                        # Hand-scored calibration = weight 20, engine-scored pairs = weight 8
+                        source = data.get("source", "")
+                        weight = 8.0 if source == "negation_pairs" else 20.0
                         self.examples.append({
                             "text": data["english"],
                             "vadug": data["vadug"],
-                            "weight": 20.0,  # HIGHEST weight — hand-scored truth
+                            "weight": weight,
                         })
                         self.v_bucket_indices.append(value_to_bucket(data["vadug"][0]))
                         cal_count += 1
