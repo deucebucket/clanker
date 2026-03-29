@@ -194,7 +194,14 @@ class SarcasmTemplateDetector:
                          "again", "another", "same", "repeat"}
         has_mundane = any(w in mundane_tasks for w in words[3:])
 
-        if has_self and has_pos and (has_neg_context or has_nothing or has_mundane):
+        # Conviction guard: "fight for", "stand for" = genuine determination, not sarcasm
+        conviction_pairs = {("fight", "for"), ("stand", "for"), ("ready", "to"),
+                            ("believe", "in"), ("strive", "for")}
+        has_conviction = any(
+            words[j] == a and j + 1 < len(words) and words[j + 1] == b
+            for j in range(len(words)) for a, b in conviction_pairs
+        )
+        if has_self and has_pos and (has_neg_context or has_nothing or has_mundane) and not has_conviction:
             conf = 0.8 if has_intense else 0.6
             return SarcasmTemplateResult(True, 5, conf,
                 "self + positive claim + negative reality = ironic self-report")

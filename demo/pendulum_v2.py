@@ -946,7 +946,10 @@ class PendulumV2:
         tmpl = _SARCASM_TEMPLATES.detect(words)
         if tmpl.detected and tmpl.confidence >= 0.5 and state["v"] > 120:
             # Only nudge if V is positive-ish (don't push already-negative further)
-            nudge = 15 if tmpl.confidence >= 0.8 else (12 if tmpl.confidence >= 0.6 else 8)
+            # Scale nudge with distance from neutral — stronger words get stronger correction
+            base_nudge = 15 if tmpl.confidence >= 0.8 else (12 if tmpl.confidence >= 0.6 else 8)
+            distance = state["v"] - 128
+            nudge = base_nudge + max(0, distance * 0.5)  # 50% of excess beyond neutral
             state["v"] -= nudge
             state["g"] -= 5
             trace.append({
