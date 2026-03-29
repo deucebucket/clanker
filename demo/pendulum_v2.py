@@ -485,8 +485,10 @@ class PendulumV2:
         litotes_dampener: float = LITOTES_DAMPENER,
         weaponized_d_boost: float = WEAPONIZED_D_BOOST,
         tag_d_offset: float = TAG_D_OFFSET,
+        personality=None,
     ):
         self.momentum = momentum
+        self.personality = personality
         self.force_scale = force_scale
         self.direct_push_cap = direct_push_cap
         self.direct_push_trigger = direct_push_trigger
@@ -1082,6 +1084,12 @@ class PendulumV2:
         """
         dv, da, dd, du, dg = force
         fs = self.force_scale * scale
+
+        # Personality modifies how hard forces land
+        if self.personality:
+            fs *= self.personality.emotional_sensitivity
+            d_offset += self.personality.dominance_baseline
+
         m = self.momentum
 
         # Per-dimension scaling

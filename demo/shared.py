@@ -120,6 +120,53 @@ class PersonalityVector:
     assertiveness: int = 120   # 0=passive, 255=forceful
     playfulness: int = 100     # 0=dead serious, 255=everything is a joke
 
+    @property
+    def emotional_sensitivity(self) -> float:
+        """How much emotional forces affect this personality.
+
+        High sensitivity (>1.0): forces hit harder
+          - High gullibility, high suggestibility, low assertiveness
+          - A scared kid feels everything more intensely
+
+        Low sensitivity (<1.0): forces are dampened
+          - Low gullibility, low suggestibility, high assertiveness
+          - A grizzled veteran barely flinches
+
+        Returns multiplier: 0.5 (stoic) to 2.0 (hypersensitive)
+        """
+        # Factors that INCREASE sensitivity
+        amplifiers = (self.gullibility + self.suggestibility + self.agreeableness) / 3
+        # Factors that DECREASE sensitivity
+        dampeners = (self.assertiveness + (255 - self.suggestibility)) / 2
+
+        # Normalize to 0-1 range, then map to 0.5-2.0 multiplier
+        raw = amplifiers / (dampeners + 1)
+        return max(0.5, min(2.0, 0.5 + raw * 0.8))
+
+    @property
+    def gravity_bias(self) -> float:
+        """Personality's baseline gravity tendency.
+
+        Negative bias = things feel heavier (anxious, traumatized)
+        Positive bias = things feel lighter (playful, resilient)
+
+        Returns offset: -30 to +30 applied to G dimension.
+        """
+        lightness = (self.playfulness + self.curiosity) / 2
+        heaviness = (self.safety + (255 - self.playfulness)) / 2
+        return (lightness - heaviness) / 255 * 30
+
+    @property
+    def dominance_baseline(self) -> float:
+        """Personality's baseline sense of control.
+
+        High assertiveness = starts with more agency (D shifted up)
+        Low assertiveness = starts feeling helpless (D shifted down)
+
+        Returns offset: -20 to +20 applied to D dimension.
+        """
+        return (self.assertiveness - 128) / 128 * 20
+
     def __str__(self):
         return (f"GUL={self.gullibility} AGR={self.agreeableness} "
                 f"SUG={self.suggestibility} TRU={self.truthfulness} "
