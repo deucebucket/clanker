@@ -1,5 +1,5 @@
 {
-  "overall_accuracy": 55.8,
+  "overall_accuracy": 55.0,
   "total_sentences": 120,
   "missing_words": {
     "just": 4,
@@ -59,11 +59,11 @@
       "coverage": 27.6
     },
     "grief": {
-      "accuracy": 46.7,
+      "accuracy": 40.0,
       "coverage": 21.2
     },
     "rage": {
-      "accuracy": 73.3,
+      "accuracy": 60.0,
       "coverage": 20.3
     },
     "joy": {
@@ -71,7 +71,7 @@
       "coverage": 29.7
     },
     "conviction": {
-      "accuracy": 73.3,
+      "accuracy": 66.7,
       "coverage": 24.4
     },
     "fear": {
@@ -83,7 +83,7 @@
       "coverage": 12.7
     },
     "conditional_hedging": {
-      "accuracy": 40.0,
+      "accuracy": 60.0,
       "coverage": 19.7
     }
   }

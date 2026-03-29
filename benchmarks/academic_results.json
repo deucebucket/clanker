@@ -22,8 +22,8 @@
           "samples": 872
         },
         "ClankerV2": {
-          "accuracy": 60.9,
-          "f1": 39.3,
+          "accuracy": 61.5,
+          "f1": 39.6,
           "neutral_pct": 0.0,
           "samples": 872
         },
@@ -57,9 +57,9 @@
           "samples": 1000
         },
         "ClankerV2": {
-          "accuracy": 56.9,
-          "f1": 56.5,
-          "neutral_pct": 39.2,
+          "accuracy": 57.0,
+          "f1": 56.4,
+          "neutral_pct": 41.1,
           "samples": 1000
         },
         "RoBERTa": {
@@ -92,8 +92,8 @@
           "samples": 1000
         },
         "ClankerV2": {
-          "accuracy": 62.9,
-          "f1": 41.7,
+          "accuracy": 62.5,
+          "f1": 41.5,
           "neutral_pct": 0.0,
           "samples": 1000
         },
