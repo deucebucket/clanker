@@ -269,4 +269,11 @@ IDIOMS = {
     ('pretty', 'close'): (-15, 10, -10, 15, -10, 'proximity: near a threshold'),
     ('getting', 'close'): (-15, 10, -10, 15, -10, 'proximity: approaching threshold'),
     ('getting', 'pretty', 'close'): (-20, 15, -10, 20, -10, 'proximity: very near threshold'),
+    ('get', 'the', 'rope'): (-55, 20, -40, 45, -35, 'crisis: acquiring method - rope'),
+    ('get', 'a', 'rope'): (-55, 20, -40, 45, -35, 'crisis: acquiring method - rope'),
+    ('found', 'the', 'location'): (-20, 10, -10, 20, -15, 'planning: location scouted'),
+    ('found', 'a', 'location'): (-20, 10, -10, 20, -15, 'planning: location scouted'),
+    ('next', 'step'): (-10, 10, 5, 15, -5, 'planning: checklist progression'),
+    ('hold', 'off'): (-15, -5, -10, 10, -10, 'restraint: holding back from action'),
+    ('the', 'date', 'comes'): (-15, 5, -10, 15, -10, 'planning: waiting for chosen time'),
 }
