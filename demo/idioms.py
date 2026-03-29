@@ -262,4 +262,11 @@ IDIOMS = {
     ('seems', 'meaningless'): (-40, 5, -35, 10, -30, 'existential: meaningless'),
     ('stay', 'alive'): (-30, 15, -20, 20, -20, 'crisis adjacent: questioning staying alive'),
     ('want', 'to', 'stay', 'alive'): (-25, 15, -20, 20, -20, 'crisis: dont want to stay alive'),
+    ('any', 'other', 'option'): (-30, 10, -25, 15, -20, 'exhaustion: no other options left'),
+    ('no', 'other', 'option'): (-35, 10, -30, 15, -25, 'exhaustion: no options remain'),
+    ('no', 'other', 'choice'): (-35, 10, -30, 15, -25, 'exhaustion: no choices remain'),
+    ('at', 'this', 'point'): (-10, 5, -10, 5, -10, 'conclusionary: temporal exhaustion anchor'),
+    ('pretty', 'close'): (-15, 10, -10, 15, -10, 'proximity: near a threshold'),
+    ('getting', 'close'): (-15, 10, -10, 15, -10, 'proximity: approaching threshold'),
+    ('getting', 'pretty', 'close'): (-20, 15, -10, 20, -10, 'proximity: very near threshold'),
 }
