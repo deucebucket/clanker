@@ -65,6 +65,7 @@ def run_clanker_v2(text):
     global _v2_engine
     if _v2_engine is None:
         _v2_engine = PendulumV2(
+            # 27-param champion (EXP-0059, 56M evals)
             momentum=0.903, force_scale=2.894, direct_push_cap=0.085,
             direct_push_trigger=158.7, crisis_v=68.9, crisis_u=95.5,
             question_dampener=0.529, scale_v=1.920, scale_a=0.789,
@@ -72,6 +73,12 @@ def run_clanker_v2(text):
             threshold_low=116.7, threshold_high=155.2,
             negation_decay_operator=0.850, negation_decay_neutral=0.60,
             negation_decay_payload=0.523,
+            # 10 new force params (genetically tuned)
+            evoker_decay=0.704, conditional_dampener=0.339,
+            clinical_dampener=0.319, passive_d_offset=-21.6,
+            comparative_amplifier=1.152, superlative_amplifier=2.313,
+            filler_d_offset=-6.0, litotes_dampener=0.825,
+            weaponized_d_boost=9.6, tag_d_offset=-7.8,
         )
     vadug, _ = _v2_engine.process_text(text)
     label = _v2_engine.classify(vadug.v, mode=_v2_classify_mode)
