@@ -201,4 +201,13 @@ IDIOMS = {
     ('not', 'want', 'to', 'be', 'here'): (-50, 20, -45, 35, -35, 'crisis: dont want to be here'),
     ('it', 'is', 'what', 'it', 'is'): (-15, -10, -25, 0, -15, 'resignation: complacency, giving up control'),
     ('whatever', 'you', 'say'): (-20, -5, -35, 0, -20, 'resignation: surrendering agency'),
+    ('whatever', 'you', 'want'): (15, 5, 20, 0, 10, 'accommodation: giving agency'),
+    ('whatever', 'you', 'need'): (15, 5, 20, 0, 10, 'accommodation: giving agency'),
+    ('whatever', 'you', 'like'): (15, 5, 20, 0, 10, 'accommodation: giving agency'),
+    ('whatever', 'makes', 'you', 'happy'): (25, 10, 25, 0, 15, 'accommodation: generosity'),
+    ('whatever', 'works'): (10, 5, 15, 0, 5, 'accommodation: flexible'),
+    ('whatever', 'helps'): (10, 5, 15, 0, 5, 'accommodation: supportive'),
+    ('do', 'whatever'): (10, 5, 15, 0, 5, 'accommodation: permission'),
+    ('whatever', 'you', 'wanna'): (15, 5, 20, 0, 10, 'accommodation: giving agency'),
+    ('whatever', 'you', 'wanna', 'do'): (15, 5, 20, 0, 10, 'accommodation: giving agency'),
 }
