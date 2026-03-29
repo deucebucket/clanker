@@ -1,5 +1,5 @@
 {
-  "overall_accuracy": 56.7,
+  "overall_accuracy": 57.5,
   "total_sentences": 120,
   "missing_words": {
     "just": 4,
@@ -55,7 +55,7 @@
   },
   "per_essay": {
     "sarcastic": {
-      "accuracy": 26.7,
+      "accuracy": 33.3,
       "coverage": 27.6
     },
     "grief": {

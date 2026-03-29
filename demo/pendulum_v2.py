@@ -43,8 +43,10 @@ from demo.context_operators import (
 from demo.pendulum import IDIOMS
 from demo.bigrams import BIGRAM_EXPRESSIONS
 from demo.sarcasm import SarcasmDetector
+from demo.tonal import TonalAnalyzer, apply_tonal_adjustment
 
 _SARCASM_DETECTOR = SarcasmDetector()
+_TONAL_ANALYZER = TonalAnalyzer()
 
 # Merge bigrams into idiom lookup — bigrams are just 2-word idioms.
 # IDIOMS take priority for overlapping keys (they have gravity values).
@@ -671,9 +673,10 @@ class PendulumV2:
                          and t['v'] > 140)
         neg_payloads = sum(1 for t in trace if t['role'] in ('PAYLOAD', 'EVOKER+PAY')
                          and t['v'] < 115)
-        # If positive words dominate AND no negative payloads explain the drop → suspicious
-        # Key: neg_payloads == 0 means nothing SHOULD have pulled V down
-        if pos_payloads >= 2 and neg_payloads == 0 and state["v"] < 140:
+        # If positive words dominate AND no negative payloads AND no negation explains
+        # the drop → suspicious. Negation naturally pulls V down — not sarcasm.
+        has_negation = len(pre.negation_positions) > 0 if pre else False
+        if pos_payloads >= 2 and neg_payloads == 0 and not has_negation and state["v"] < 130:
             sarcasm_conf = max(conf1, SarcasmDetector.MODERATE)
             sarcasm_detected = True
         # Layer 1 results
@@ -693,6 +696,26 @@ class PendulumV2:
                 "g": round(state["g"], 1),
                 "note": f"conf={sarcasm_conf} pos={pos_payloads} neg={neg_payloads} → V inverted"
             })
+
+        # --- Tonal analysis (6-signal trajectory detector) ---
+        # Complements the bigram-based sarcasm detection above
+        tone_result = _TONAL_ANALYZER.analyze(trace)
+        if tone_result['tone'] == 'sarcastic' and tone_result['confidence'] >= 0.7 and sarcasm_detected:
+            # Lower threshold from 0.7 to 0.5 for single-sentence (noisier than arc)
+            old_v = state["v"]
+            state["v"], state["a"], state["d"], state["u"], state["g"] = apply_tonal_adjustment(
+                state["v"], state["a"], state["d"], state["u"], state["g"],
+                {**tone_result, 'confidence': max(tone_result['confidence'], 0.7)},  # force the threshold
+                None,  # no intent mode in raw V2
+            )
+            if state["v"] != old_v:
+                trace.append({
+                    "word": "[TONAL]", "role": "TONAL",
+                    "v": round(state["v"], 1), "a": round(state["a"], 1),
+                    "d": round(state["d"], 1), "u": round(state["u"], 1),
+                    "g": round(state["g"], 1),
+                    "note": f"tone={tone_result['tone']} conf={tone_result['confidence']:.2f} V:{old_v:.0f}→{state['v']:.0f}"
+                })
 
         final = self._post_pass(state, pre)
 
