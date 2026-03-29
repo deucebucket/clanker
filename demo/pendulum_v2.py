@@ -257,6 +257,23 @@ UNIVERSAL_QUANTIFIERS = {
     "everywhere":   1.3,
 }
 
+# ---------------------------------------------------------------------------
+# Lookahead operators — words that change role based on what's NEXT
+# "pretty lame" → pretty amplifies lame (1.2x)
+# "pretty girl" → pretty describes girl (positive adjective)
+# "you are pretty" → pretty IS the payload (positive)
+# ---------------------------------------------------------------------------
+
+LOOKAHEAD_AMPLIFIERS = {
+    # word -> (amplifier_coeff, payload_force_if_standalone)
+    # If next word is in EMOTIONAL_VOCABULARY → use as amplifier
+    # If next word is neutral/end → use payload_force as own emotion
+    "pretty":   (1.2, (30, 10, 15, 0, 15)),    # attractive/nice
+    "fairly":   (1.2, (10, 5, 10, 0, 5)),       # moderately
+    "quite":    (1.25, (15, 5, 10, 0, 5)),       # considerably
+    "real":     (1.3, (10, 5, 15, 0, 5)),        # genuine/authentic
+}
+
 EVOKER_DECAY = 0.88  # How fast gravitational priming decays per word
 
 # ---------------------------------------------------------------------------
@@ -706,6 +723,39 @@ class PendulumV2:
                         word, "NEGATOR", state,
                         f"neg_f={negation_force:.2f}"
                     ))
+                i += 1
+                continue
+
+            # Lookahead amplifiers — role depends on what's NEXT
+            if word_lower in LOOKAHEAD_AMPLIFIERS:
+                amp_coeff, standalone_force = LOOKAHEAD_AMPLIFIERS[word_lower]
+                # Look ahead: is the next non-operator word emotional?
+                next_is_emotional = False
+                for j in range(i + 1, min(i + 3, len(words))):
+                    next_w = words[j].lower()
+                    if next_w in EMOTIONAL_VOCABULARY:
+                        next_is_emotional = True
+                        break
+                    if next_w in CONTEXT_OPERATORS or next_w in NEGATORS:
+                        continue  # skip operators, keep looking
+                    break  # hit a neutral word — stop looking
+
+                if next_is_emotional:
+                    # Amplifier mode: boost the next payload
+                    pending_operators["lookahead_amp"] = (amp_coeff, 0)
+                    trace.append(self._trace_entry(
+                        word, "AMPLIFIER", state,
+                        f"lookahead: next is emotional, amp={amp_coeff}"))
+                else:
+                    # Standalone mode: BE the payload
+                    coeff, d_off = self._compute_coefficient(pending_operators, pre)
+                    neg_scale = self._negation_scale(negation_force)
+                    state = self._apply_force(state, standalone_force, coeff * neg_scale, d_off)
+                    trace.append(self._trace_entry(
+                        word, "PAYLOAD", state,
+                        f"lookahead: standalone adjective, force={standalone_force[:2]}..."))
+                    pending_operators = {}
+                    negation_force *= self.negation_decay_payload
                 i += 1
                 continue
 
