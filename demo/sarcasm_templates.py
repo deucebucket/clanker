@@ -188,8 +188,13 @@ class SarcasmTemplateDetector:
         has_pos = any(_is_positive(w) for w in words[1:5])
         has_neg_context = any(_is_negative(w) for w in words[3:])
         has_nothing = "nothing" in words or "never" in words
+        # Mundane-task words signal sarcastic context even without explicit negatives
+        mundane_tasks = {"redo", "rewrite", "retype", "refill", "refile",
+                         "overtime", "paperwork", "commute", "chores",
+                         "again", "another", "same", "repeat"}
+        has_mundane = any(w in mundane_tasks for w in words[3:])
 
-        if has_self and has_pos and (has_neg_context or has_nothing):
+        if has_self and has_pos and (has_neg_context or has_nothing or has_mundane):
             conf = 0.8 if has_intense else 0.6
             return SarcasmTemplateResult(True, 5, conf,
                 "self + positive claim + negative reality = ironic self-report")
@@ -211,6 +216,11 @@ class SarcasmTemplateDetector:
         if starts_neg and has_pos_frame:
             return SarcasmTemplateResult(True, 6, 0.7,
                 "negative anchor + positive framing = bitter irony")
+
+        # "Nothing says X like Y" — structural sarcasm even without positive vocab word
+        if words[0] in ("nothing", "nobody") and "says" in words[:3] and has_like:
+            return SarcasmTemplateResult(True, 6, 0.75,
+                "'nothing says X like Y' = classic ironic structure")
 
         # "Of course" pattern
         if words[0] == "of" and len(words) > 1 and words[1] == "course":

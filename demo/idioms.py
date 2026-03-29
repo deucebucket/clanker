@@ -346,4 +346,19 @@ IDIOMS = {
     ('nobody', 'would', 'notice'): (-45, 10, -40, 15, -30, 'crisis: nobody would notice'),
     ('world', 'without', 'me'): (-50, 10, -45, 20, -35, 'crisis: world without me'),
     ('better', 'off', 'without', 'me'): (-55, 10, -50, 25, -40, 'crisis: better off without me'),
+    # Fear / anxiety idioms
+    ('eating', 'me', 'alive'): (-40, 40, -35, 25, -25, 'fear: consuming anxiety'),
+    ('closing', 'in'): (-30, 30, -35, 25, -20, 'fear: walls closing in'),
+    ('falls', 'apart'): (-40, 30, -35, 20, -25, 'fear: everything falls apart'),
+    ('fall', 'apart'): (-40, 30, -35, 20, -25, 'fear: falling apart'),
+    ('out', 'of', 'my', 'skin'): (-30, 50, -30, 30, -15, 'fear: startle/hypervigilance'),
+    ('jump', 'out'): (-15, 40, -15, 20, -10, 'fear: startle response'),
+    ('getting', 'worse'): (-25, 15, -20, 20, -15, 'fear: deterioration'),
+    ('lose', 'my', 'mind'): (-35, 40, -40, 30, -20, 'fear/rage: losing control'),
+    ('wont', 'stop'): (-20, 30, -25, 20, -15, 'fear: relentless/unstoppable'),
+    ("won't", 'stop'): (-20, 30, -25, 20, -15, 'fear: relentless/unstoppable'),
+    # Conviction / empowerment idioms
+    ('we', 'did', 'it'): (60, 50, 50, 0, 40, 'joy: triumph/achievement'),
+    ('back', 'down'): (-20, 20, -25, 10, -10, 'conviction: retreat/surrender'),
+    ('no', 'right'): (-30, 30, -10, 15, -10, 'rage: boundary violation'),
 }

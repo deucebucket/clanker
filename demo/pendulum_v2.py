@@ -944,9 +944,9 @@ class PendulumV2:
 
         # Layer 0: Template detection — subtle nudge only
         tmpl = _SARCASM_TEMPLATES.detect(words)
-        if tmpl.detected and tmpl.confidence >= 0.7 and state["v"] > 120:
+        if tmpl.detected and tmpl.confidence >= 0.5 and state["v"] > 120:
             # Only nudge if V is positive-ish (don't push already-negative further)
-            nudge = 15 if tmpl.confidence >= 0.8 else 10
+            nudge = 15 if tmpl.confidence >= 0.8 else (12 if tmpl.confidence >= 0.6 else 8)
             state["v"] -= nudge
             state["g"] -= 5
             trace.append({

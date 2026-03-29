@@ -169,7 +169,7 @@ EMOTIONAL_VOCABULARY = {
     'terrified': (-122,  +79, -120, +127,  +45),  # freq=366
     'terror': (-127, +127, -127, +127,  +48),  # freq=7
     'thrill': ( +41,  +27,  +29,   +2,  +16),  # freq=15
-    'thrilled': ( +35,  +19,  +14,   +0,  +25),  # freq=46
+    'thrilled': ( +80,  +50,  +40,   +0,  +35),  # boosted — strong joy word like ecstatic
     'torn': ( -52,  +49,  -67,  +31,  -29),  # freq=36
     'trust': ( +28,   +4,  +34,   +0,   +8),  # freq=438
     'uncomfortable': ( -42,  +38,  -67,  +31,   -9),  # freq=51
@@ -291,7 +291,7 @@ EMOTIONAL_VOCABULARY = {
 
     # ── SLANG — Informal emotional language ──
     'amazing': ( +48,  +38,  +34,   +0,  +29),  # freq=995
-    'awesome': ( +31,  +15,  +14,   +0,  +20),  # freq=1741
+    'awesome': ( +65,  +35,  +30,   +0,  +25),  # boosted — strong positive exclamation
     'awful': (-127,  +74,  -82,  +57,  -61),  # freq=473
     'basic': ( -77,  -45,  -54,   +0,  +12),  # freq=25
     'blessed': ( +28,   +6,  +14,   +0,  +14),  # freq=67
@@ -485,7 +485,7 @@ EMOTIONAL_VOCABULARY = {
     'aunt': ( +32,   +9,  +34,   +0,   +8),  # freq=116
     'autoimmune': ( -94,  +90, -124,  +66,  -53),  # freq=12
     'available': ( +28,  -11,  +17,   +0,  +10),  # freq=52
-    'average': ( +39,  -40,  -14,   +0,   +9),  # freq=37
+    # 'average' removed — neutral factual word causing positive drift
     'award': ( +37,  +20,  +22,   +2,  +14),  # freq=53
     'awkward': ( -32,  +38,  -92,  +15,   -9),  # freq=92
     'babies': ( +42,  +27,  -27,   +2,   +8),  # freq=108
@@ -581,7 +581,7 @@ EMOTIONAL_VOCABULARY = {
     'buddy': ( +29,  +20,  +17,   +0,   +8),  # freq=155
     'buffet': ( +34,   +9,   +7,   +2,  +10),  # freq=24
     'bug': ( -32,  +38,  -44,  +81,   -9),  # freq=56
-    'building': ( +29,  +20, +127,  +12, +121),  # freq=90
+    # 'building' removed — neutral factual word with extreme D/G bias
     'bully': ( -57,  +58,  +22,  +35,  -16),  # freq=10
     'bummer': ( -94,   +0, -104,   +0,  -48),  # freq=139
     'bump': ( -51,   -9,  -49,   +0,  -25),  # freq=14
@@ -786,7 +786,7 @@ EMOTIONAL_VOCABULARY = {
     'dementia': (-114,  +74,  -69,  +57,  -51),  # freq=21
     'denied': ( -86,  +27,  -69,  +19,  -40),  # freq=11
     'dent': ( -44,  +24,  -64,  +13,  -25),  # freq=81
-    'department': ( +46,  -24,  +39,   +0,  +20),  # freq=47
+    # 'department' removed — neutral factual word causing positive drift
     'depressing': (-100,  +15, -124,  +11,  -55),  # freq=37
     'desires': ( +58,  +63,  -54,  +12,   +8),  # freq=13
     'desperate': ( -77,  +90, -127,  +77,  -48),  # freq=14
@@ -1341,7 +1341,7 @@ EMOTIONAL_VOCABULARY = {
     'mid': ( -52,  -49,  -22,   +0,   +9),  # freq=21
     'middle': ( +28,   +0,  +99,  +18,  +23),  # freq=178
     'milestone': ( +50,  +29,  +54,   +0,  +24),  # freq=16
-    'million': ( +80,  +69, +127,  +30,  +76),  # freq=70
+    # 'million' removed — number word, noise (context-dependent: "a million dollars" vs "one in a million")
     'millionaire': ( +43,  +22,  +47,   +1,  +20),  # freq=11
     'mind': ( +29,  +29,  +54,  +25,   -8),  # freq=397
     'mine': ( +42,  -13,  +22,   +0,  +16),  # freq=623
@@ -1495,8 +1495,8 @@ EMOTIONAL_VOCABULARY = {
     'poison': (-127, +127, +127, +127,  +61),  # freq=10
     'poisoning': (-114,  +90,   +9,  +70,  -36),  # freq=20
     'poisonous': (-112,  +99,  +17,  +77,  -36),  # freq=21
-    'pokemon': ( +32,   -2,   +2,   +0,   +9),  # freq=67
-    'policy': ( -40,  +51, +122,  +31,   +5),  # freq=16
+    # 'pokemon' removed — proper noun, noise
+    # 'policy' removed — neutral factual word with extreme D bias
     'political': ( -36,  +51, +127,  +29,   +9),  # freq=36
     'politics': ( -59,   +6, +126,   +3,   +1),  # freq=12
     'poo': ( -96,  -29, -124,   +0,  -55),  # freq=18
@@ -1552,7 +1552,7 @@ EMOTIONAL_VOCABULARY = {
     'promotion': ( +32,  +27,  +42,  +12,  +19),  # freq=362
     'properly': ( +35,  -20,  +22,   +0,  +13),  # freq=43
     'property': ( +51,  -40,  +87,   +0,  +31),  # freq=50
-    'proposal': ( +41,  +13,  +12,   +1,  +13),  # freq=19
+    # 'proposal' removed — neutral factual word causing positive drift
     'proposed': ( +35,  +56,  +57,  +15,  +20),  # freq=24
     'protein': ( +56,  -29,  +42,   +0,  +24),  # freq=17
     'provider': ( +56,   -2,  +72,   +0,  +28),  # freq=15
@@ -1620,7 +1620,7 @@ EMOTIONAL_VOCABULARY = {
     'removed': (-100,  -90,  -97,   +0,  -51),  # freq=26
     'rent': ( -42,  +49,  -67,  +81,  -29),  # freq=103
     'replaced': ( -42,  +47,  -99,  +29,  -32),  # freq=44
-    'report': ( +28,  +96, +127, +127,  +89),  # freq=103
+    # 'report' removed — neutral factual word with extreme A/D/U/G bias
     'rescue': ( +39,  +58,  +72,  +51,  +24),  # freq=75
     'rescued': ( +51,  +22,  -57,   +0,   +5),  # freq=37
     'research': ( +28,  +40,  +49,  +35,  +10),  # freq=93
@@ -1682,7 +1682,7 @@ EMOTIONAL_VOCABULARY = {
     'scariest': ( -94,  +99,  +17,  +70,  -28),  # freq=15
     'scary': ( -77, +103, -127,  +57,  +36),  # freq=904
     'scenery': ( +55,  -42,  +24,   +0,  +20),  # freq=10
-    'scheduled': ( +35,  -58,  +74,   +0,  +23),  # freq=36
+    # 'scheduled' removed — neutral factual word causing positive drift
     'scholarship': ( +32,  +22,  +34,   +0,  +23),  # freq=67
     'science': ( +42,  +27,  +67,  +18,  +14),  # freq=63
     'scold': ( -86,  +67,  +54,  +46,  -19),  # freq=18
@@ -1866,7 +1866,7 @@ EMOTIONAL_VOCABULARY = {
     'swim': ( +90,  +56,  +77,  +24,  -19),  # freq=57
     'swimming': ( +28,  +40,  +24,  +18,  +23),  # freq=92
     'switch': ( +39,  +69, +127, +127,  +16),  # freq=109
-    'system': ( +29,  +20, +107,  +38,  +32),  # freq=94
+    # 'system' removed — neutral factual word with extreme D bias
     'taco': ( +42,  +10,  +10,  +25,   -3),  # freq=26
     'talent': ( +48,   +9,  +47,   +0,  +21),  # freq=70
     'talented': ( +44,  +11,  +59,   +0,  +23),  # freq=58
@@ -1894,10 +1894,10 @@ EMOTIONAL_VOCABULARY = {
     'thieves': (-127,  +90, +127,  +77,  -24),  # freq=13
     'thoughtful': ( +50,   +9,  +54,   +0,  +24),  # freq=56
     'thoughts': ( +55,  -22,  +54,   +0,  +25),  # freq=59
-    'thousand': ( +51,  +47, +112,  +18,  +65),  # freq=25
+    # 'thousand' removed — number word, noise
     'threatened': (-125, +117,  -64,  +93,  -53),  # freq=4
     'threatening': (-119, +101,  +64,  +81,  -31),  # freq=10
-    'three': ( +34,  -49,  -34,   +0,   +2),  # freq=238
+    # 'three' removed — number word, pure noise
     'threw': ( -77,   +9,  -42,   +7,  -34),  # freq=233
     'thrift': ( +58,  -49,  +42,   +0,  +24),  # freq=13
     'thunderstorm': (-102,  +94, +124,  +73,  -14),  # freq=14
@@ -2192,7 +2192,7 @@ _BENCHMARK_WORDS = {
     "left": (-32, +38, -44, +31, -9),
     "sleep": (+28, -69, +24, 0, -10),
     "coming": (+34, -13, 0, 0, +9),
-    "meeting": (-32, -13, -12, 0, -10),
+    # "meeting" removed — neutral factual word (sarcasm context handled by templates)
     "same": (-24, -54, -14, 0, -10),
     "plan": (+51, +9, +34, +12, +8),
     "jammed": (-51, +38, -22, +31, -9),
@@ -2388,7 +2388,7 @@ _SARCASM_GAPS = {
     'fabulous': (50, 20, 15, 0, 25),
     'marvelous': (50, 20, 15, 0, 25),
     'splendid': (45, 15, 15, 0, 20),
-    'policy': (-5, 5, -5, 5, -5),
+    # 'policy' removed — neutral factual word
     'paperwork': (-10, 5, -5, 5, -5),
 }
 EMOTIONAL_VOCABULARY.update(_SARCASM_GAPS)
@@ -2411,3 +2411,35 @@ _CYCLE6_CRISIS_VOCAB = {
 EMOTIONAL_VOCABULARY.update(_CYCLE6_CRISIS_VOCAB)
 
 EMOTIONAL_VOCABULARY.update(_RESOLVER_CRISIS_GAPS)
+
+# ── Cycle 11: Missing emotional words for rage, fear, joy, conviction ──
+_CYCLE11_EMOTIONAL_GAPS = {
+    # RAGE — words that are clearly angry but were missing
+    'break':        (-30, +40, +20, +30, -15),   # destructive intent
+    'boils':        (-35, +50, +10, +20, -10),   # "blood boils" = rage
+    'boiling':      (-35, +50, +10, +20, -10),
+    'smash':        (-40, +60, +20, +30, -15),
+    'punch':        (-40, +60, +20, +25, -15),
+    'snap':         (-30, +50, +10, +25, -10),   # "going to snap"
+    # FEAR — missing anxiety/panic words
+    'racing':       (-20, +50, -30, +30, -15),   # "mind won't stop racing"
+    'closing':      (-25, +30, -30, +25, -20),   # "walls closing in"
+    'walls':        (-15, +10, -20, +10, -15),   # mild negative in fear context
+    'falling':      (-30, +30, -30, +20, -25),   # loss of control
+    'falls':        (-20, +20, -20, +15, -15),
+    # 'apart' already in main vocab — skip
+    # JOY / CONVICTION — missing positive force words
+    'dreamed':      (+50, +20, +20, +0, +25),    # "everything I've dreamed of"
+    'seize':        (+40, +40, +50, +20, +20),   # "seize the moment" = empowerment
+    'moment':       (+15, +10, +10, +0, +10),    # mildly positive, context-dependent
+    'challenge':    (+10, +20, +15, +10, +5),    # mild positive — opportunity
+    'excellence':   (+60, +30, +50, +10, +30),   # strong positive aspiration
+    'achieving':    (+40, +25, +45, +10, +25),
+    'overjoyed':    (+90, +60, +40, +0, +40),    # very strong joy
+    'elated':       (+80, +50, +40, +0, +35),    # strong joy
+    'jubilant':     (+85, +55, +45, +0, +38),    # strong joy
+    'exhilarated':  (+75, +60, +40, +0, +30),    # strong joy + high arousal
+    # NEUTRAL — words that should NOT carry emotional charge
+    'meetings':     (0, 0, 0, 0, 0),             # override mundane-negative — truly neutral
+}
+EMOTIONAL_VOCABULARY.update(_CYCLE11_EMOTIONAL_GAPS)
