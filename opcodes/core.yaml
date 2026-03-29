@@ -1,0 +1,206 @@
+# Core opcodes: 0x00-0x1F
+# Flow control, lifecycle, and fundamental operations
+
+opcodes:
+  0x00:
+    name: NOP_DONE
+    description: "End script or no-op. Signals completion of a program or block."
+    params:
+      - {name: message, type: str, optional: true}
+
+  0x01:
+    name: WAIT
+    description: "Delay execution for a specified duration."
+    params:
+      - {name: duration, type: duration, required: true}
+
+  0x02:
+    name: SET
+    description: "Assign a value to a variable slot."
+    params:
+      - {name: name, type: str, required: true}
+      - {name: value, type: str, required: true}
+
+  0x03:
+    name: EMIT
+    description: "Output a value or message to the current output channel."
+    params:
+      - {name: value, type: str, required: true}
+
+  0x04:
+    name: LOG
+    description: "Write a log entry at the specified level."
+    params:
+      - {name: level, type: str, required: true}
+      - {name: message, type: str, required: true}
+
+  0x05:
+    name: CALL
+    description: "Invoke a named function or subroutine."
+    params:
+      - {name: function, type: str, required: true}
+      - {name: args, type: list, optional: true}
+
+  0x06:
+    name: RETURN
+    description: "Return a value from the current scope."
+    params:
+      - {name: value, type: str, optional: true}
+
+  0x07:
+    name: LOAD
+    description: "Load a resource or module by name."
+    params:
+      - {name: source, type: str, required: true}
+      - {name: alias, type: str, optional: true}
+
+  0x08:
+    name: STORE
+    description: "Persist a value to a named storage location."
+    params:
+      - {name: key, type: str, required: true}
+      - {name: value, type: str, required: true}
+
+  0x09:
+    name: DELETE
+    description: "Remove a value from storage or unset a variable."
+    params:
+      - {name: key, type: str, required: true}
+
+  0x0A:
+    name: ASSERT
+    description: "Verify a condition is true; halt on failure."
+    params:
+      - {name: condition, type: str, required: true}
+      - {name: message, type: str, optional: true}
+
+  0x0B:
+    name: DEFINE
+    description: "Define a named reusable block or function."
+    params:
+      - {name: name, type: str, required: true}
+      - {name: params, type: list, optional: true}
+
+  0x0C:
+    name: LABEL
+    description: "Mark a named point in the instruction stream for jumps."
+    params:
+      - {name: name, type: str, required: true}
+
+  0x0D:
+    name: GOTO
+    description: "Jump to a named label."
+    params:
+      - {name: label, type: str, required: true}
+
+  0x0E:
+    name: REGISTER
+    description: "Register a custom opcode in user space (0xF0-0xFF)."
+    params:
+      - {name: opcode, type: int, required: true}
+      - {name: name, type: str, required: true}
+      - {name: params, type: list, optional: true}
+
+  0x0F:
+    name: END
+    description: "Close a block opened by WHEN, REPEAT, MATCH, TRY, or DEFINE."
+    params: []
+
+  0x10:
+    name: COMMENT
+    description: "A non-executing annotation or comment."
+    params:
+      - {name: text, type: str, required: true}
+
+  0x11:
+    name: YIELD
+    description: "Yield control, allowing other tasks to execute."
+    params:
+      - {name: value, type: str, optional: true}
+
+  0x12:
+    name: SPAWN
+    description: "Start a concurrent task."
+    params:
+      - {name: function, type: str, required: true}
+      - {name: args, type: list, optional: true}
+
+  0x13:
+    name: JOIN
+    description: "Wait for a spawned task to complete."
+    params:
+      - {name: task, type: varref, required: true}
+
+  0x14:
+    name: SEND
+    description: "Send a message to another agent or channel."
+    params:
+      - {name: target, type: str, required: true}
+      - {name: message, type: str, required: true}
+
+  0x15:
+    name: RECEIVE
+    description: "Wait for and receive a message from a channel."
+    params:
+      - {name: channel, type: str, required: true}
+      - {name: timeout, type: duration, optional: true}
+
+  0x16:
+    name: COPY
+    description: "Copy the value from one variable slot to another."
+    params: []
+
+  0x17:
+    name: HALT
+    description: "Immediately terminate execution with an error code and message."
+    params:
+      - {name: code, type: int, required: true}
+      - {name: message, type: str, optional: true}
+
+  0x18:
+    name: SWAP
+    description: "Swap the values of the target and source variable slots."
+    params: []
+
+  0x19:
+    name: PUSH
+    description: "Push a value onto the stack (heap space $128-$255)."
+    params:
+      - {name: value, type: str, required: true}
+
+  0x1A:
+    name: POP
+    description: "Pop the top value from the stack into the target variable."
+    params: []
+
+  0x1B:
+    name: CAST
+    description: "Convert a variable's value to the specified type."
+    params:
+      - {name: to_type, type: str, required: true}
+
+  0x1C:
+    name: EVENT
+    description: "Emit a named event with optional payload data."
+    params:
+      - {name: name, type: str, required: true}
+      - {name: data, type: str, optional: true}
+
+  0x1D:
+    name: LISTEN
+    description: "Register a handler for a named event."
+    params:
+      - {name: event, type: str, required: true}
+      - {name: handler, type: str, required: true}
+
+  0x1E:
+    name: CLEAR
+    description: "Clear all variable slots or a specific range back to unset."
+    params:
+      - {name: scope, type: str, optional: true}
+
+  0x1F:
+    name: VERSION
+    description: "Declare the Clanker spec version this script targets."
+    params:
+      - {name: spec, type: str, required: true}

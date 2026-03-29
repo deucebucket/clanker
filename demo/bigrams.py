@@ -1,0 +1,117 @@
+"""Bigram pair scoring — word pairs that change meaning when together.
+
+These are 2-word expressions that should OVERRIDE individual word forces.
+Format: (word1, word2) -> (dv, da, dd, du, dg, label)
+
+Bigrams are merged into the IDIOM detection path in pendulum_v2.py.
+They use the same 6-element tuple format as idioms.
+"""
+
+
+# Bigrams that DON'T overlap with IDIOMS (idioms take priority for overlapping entries).
+# These are unique to the bigram system — phrasal verbs, negation patterns,
+# declarations, hedging, and apology patterns that idioms don't cover.
+BIGRAM_EXPRESSIONS = {
+    # Temporal/pattern signals
+    ("every", "time"): (0, 10, 0, 10, 0, "temporal: recurring pattern"),
+    ("used", "to"): (-10, -5, 0, 0, -10, "nostalgia: past habit"),
+    ("going", "to"): (0, 10, 5, 15, 5, "intent: future action"),
+    ("have", "to"): (-5, 10, -10, 20, -5, "obligation: must do"),
+    ("want", "to"): (5, 15, 5, 15, 5, "desire: wanting"),
+    ("need", "to"): (-5, 15, -10, 25, -5, "urgency: requirement"),
+    ("able", "to"): (10, 5, 15, 0, 10, "capability: can do"),
+
+    # Philosophical/existential
+    ("life", "death"): (-15, 20, 0, 10, -5, "existential: life and death"),
+    ("meaning", "life"): (5, 15, 10, 5, 10, "philosophical: purpose"),
+
+    # Phrasal verbs (non-overlapping with idioms)
+    ("move", "on"): (10, 10, 15, 5, 10, "recovery: moving forward"),
+    ("let", "go"): (5, -5, 10, -5, 10, "release: letting go"),
+    ("hold", "on"): (5, 15, 15, 15, 5, "persistence: holding on"),
+    ("turn", "out"): (0, 10, 5, 5, 0, "result: outcome"),
+    ("find", "out"): (0, 15, 5, 10, 0, "discovery: learning"),
+    ("work", "out"): (15, 15, 15, 5, 15, "resolution: things worked out"),
+    ("run", "out"): (-15, 15, -10, 20, -10, "depletion: exhausted resource"),
+    ("open", "up"): (10, 15, -10, 5, 5, "vulnerability: sharing"),
+    ("cheer", "up"): (25, 15, 10, 0, 20, "encouragement: cheering up"),
+    ("make", "up"): (15, 10, 10, 5, 10, "reconciliation: making up"),
+    ("pick", "up"): (10, 10, 10, 5, 10, "recovery: picking up"),
+    ("stand", "up"): (15, 20, 25, 10, 20, "courage: standing up"),
+    ("show", "up"): (10, 15, 15, 10, 10, "appearance: arriving/proving"),
+    ("get", "over"): (10, 10, 15, 5, 10, "recovery: getting over it"),
+    ("break", "up"): (-40, 30, -20, 20, -25, "heartbreak: ending relationship"),
+    ("fall", "love"): (40, 30, -10, 15, 30, "romance: falling in love"),
+
+    # Internet/casual
+    ("for", "real"): (0, 15, 10, 10, 5, "emphasis: confirming"),
+    ("kind", "of"): (-5, -5, -5, 0, 0, "hedging: softening"),
+    ("sort", "of"): (-5, -5, -5, 0, 0, "hedging: softening"),
+    ("a", "lot"): (0, 15, 0, 5, 0, "amplifier: intensity"),
+    ("at", "least"): (5, -5, 5, 0, 5, "silver lining: minimum positive"),
+    ("at", "all"): (0, 10, 0, 5, 0, "emphasis: totality"),
+
+    # Apology/sympathy patterns
+    ("sorry", "to"): (-15, 10, -5, 5, -10, "sympathy: sorry to hear/see"),
+    ("sorry", "for"): (-10, 5, -5, 0, -5, "apology: sorry for"),
+    ("sorry", "about"): (-10, 5, -5, 0, -5, "apology: sorry about"),
+
+    # Strong positive declarations
+    ("i", "love"): (35, 20, 15, 0, 25, "declaration: i love"),
+    ("i", "loved"): (30, 15, 10, 0, 20, "past love: i loved"),
+    ("i", "appreciate"): (25, 10, 10, 0, 15, "gratitude: i appreciate"),
+    ("i", "enjoy"): (25, 15, 10, 0, 15, "enjoyment: i enjoy"),
+    ("i", "adore"): (35, 20, 10, 0, 25, "adoration: i adore"),
+
+    # Negation bigrams — hand-tuned forces for common "not X" patterns.
+    # These bypass the continuous negation decay for exact, calibrated results.
+    ("not", "good"): (-15, 5, -5, 5, -5, "negation: not good"),
+    ("not", "great"): (-15, 5, -5, 5, -5, "negation: not great"),
+    ("not", "okay"): (-20, 10, -10, 10, -10, "negation: not okay"),
+    ("not", "happy"): (-25, 10, -10, 10, -10, "negation: not happy"),
+    ("not", "bad"): (15, 5, 5, 0, 5, "understatement: not bad"),
+    ("not", "fair"): (-25, 15, -15, 15, -10, "injustice: not fair"),
+    ("not", "safe"): (-30, 20, -20, 25, -15, "danger: not safe"),
+    ("not", "funny"): (-15, 10, 5, 5, -5, "disapproval: not funny"),
+    ("not", "impressed"): (-15, 5, 10, 5, -5, "dismissal: not impressed"),
+    ("not", "sure"): (-5, 5, -10, 5, -5, "uncertainty: not sure"),
+    ("not", "ready"): (-10, 10, -15, 10, -5, "unpreparedness: not ready"),
+    ("not", "enough"): (-20, 10, -15, 15, -10, "insufficiency: not enough"),
+    ("not", "right"): (-20, 10, -10, 10, -10, "wrongness: not right"),
+    ("not", "true"): (-15, 10, 5, 10, -5, "denial: not true"),
+    ("never", "again"): (-20, 25, 20, 15, -10, "resolve: never again"),
+    ("no", "longer"): (-15, 5, 5, 5, -10, "ending: no longer"),
+    ("no", "more"): (-15, 10, 10, 10, -5, "finality: no more"),
+}
+
+
+class BigramDetector:
+    """Detect word pairs that change meaning when adjacent or near each other.
+
+    Note: In V2, bigrams are merged into the idiom pre-pass for greedy
+    left-to-right detection. This class is kept for V1 compatibility.
+    """
+
+    BIGRAMS = BIGRAM_EXPRESSIONS
+
+    def detect(self, words: list, position: int) -> tuple | None:
+        """Check if current word forms a bigram with nearby words.
+
+        Checks word at position against words within 3 positions.
+        Returns the bigram force if found, None otherwise.
+        """
+        word = words[position]
+
+        # Check forward: current word is first in pair
+        for offset in range(1, min(4, len(words) - position)):
+            pair = (word, words[position + offset])
+            if pair in self.BIGRAMS:
+                return self.BIGRAMS[pair]
+
+        # Check backward: current word is second in pair
+        for offset in range(1, min(4, position + 1)):
+            pair = (words[position - offset], word)
+            if pair in self.BIGRAMS:
+                return self.BIGRAMS[pair]
+
+        return None

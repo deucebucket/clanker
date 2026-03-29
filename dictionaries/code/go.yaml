@@ -1,0 +1,302 @@
+# Go code dictionary for Clanker-Lang
+language: go
+name: Go
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: code
+
+opcodes:
+  # Core (0x00-0x1F)
+  0x00:
+    template: "return"
+    with_param: "fmt.Println(\"{message}\")"
+    imports: ["fmt"]
+  0x01:
+    template: "time.Sleep({duration})"
+    imports: ["time"]
+  0x02:
+    template: "{name} := {value}"
+  0x03:
+    template: "fmt.Println({value})"
+    imports: ["fmt"]
+  0x04:
+    template: "log.Printf(\"[%s] %s\", \"{level}\", \"{message}\")"
+    imports: ["log"]
+  0x05:
+    template: "{function}()"
+    with_param: "{function}({args})"
+  0x06:
+    template: "return"
+    with_param: "return {value}"
+  0x07:
+    template: "import \"{source}\""
+    with_param: "import {alias} \"{source}\""
+  0x08:
+    template: "store[{key}] = {value}"
+  0x09:
+    template: "delete(store, {key})"
+  0x0A:
+    template: "if !({condition}) {\n\tpanic(\"assertion failed\")\n}"
+    with_param: "if !({condition}) {\n\tpanic(\"{message}\")\n}"
+  0x0B:
+    template: "func {name}()"
+    with_param: "func {name}({params})"
+    block_open: "func {name}({params}) {"
+    block_close: "}"
+  0x0C:
+    template: "// label: {name}"
+  0x0D:
+    template: "goto {label}"
+  0x0E:
+    template: "opcodes[{opcode}] = {name}"
+  0x0F:
+    template: ""
+    block_close: "}"
+  0x10:
+    template: "// {text}"
+  0x11:
+    template: "ch <- nil"
+    with_param: "ch <- {value}"
+  0x12:
+    template: "go {function}()"
+    with_param: "go {function}({args})"
+  0x13:
+    template: "wg.Wait()"
+    imports: ["sync"]
+  0x14:
+    template: "{target} <- \"{message}\""
+  0x15:
+    template: "msg := <-{channel}"
+    with_param: "msg := <-{channel} // timeout: {timeout}"
+  0x16:
+    template: "dst = src"
+  0x17:
+    template: "os.Exit({code})"
+    with_param: "os.Exit({code}) // {message}"
+    imports: ["os"]
+  0x18:
+    template: "target, source = source, target"
+  0x19:
+    template: "stack = append(stack, {value})"
+  0x1A:
+    template: "target = stack[len(stack)-1]\nstack = stack[:len(stack)-1]"
+  0x1B:
+    template: "target = {to_type}(target)"
+  0x1C:
+    template: "eventBus.Emit(\"{name}\")"
+    with_param: "eventBus.Emit(\"{name}\", {data})"
+  0x1D:
+    template: "eventBus.On(\"{event}\", {handler})"
+  0x1E:
+    template: "// clear all variables"
+    with_param: "// clear scope: {scope}"
+  0x1F:
+    template: "// clanker spec version: {spec}"
+
+  # Reasoning (0x20-0x26)
+  0x20:
+    template: "// Consider: {premise}"
+  0x21:
+    template: "// assert {condition} -> {result}"
+  0x22:
+    template: "if {if_condition} { // then {then_conclusion}"
+  0x23:
+    template: "// Therefore: {conclusion}"
+  0x24:
+    template: "return {result} // certainty: {cert}"
+  0x25:
+    template: "// DOUBT: step {step_ref} - {reason}"
+  0x26:
+    template: "// ASSUME: {assumption}"
+
+  # Hardware (0xA0-0xAB)
+  0xA0:
+    template: "gpio.PinOut({pin}, {state})"
+  0xA1:
+    template: "gpio.PinIn({pin})"
+  0xA2:
+    template: "pwm.SetDuty({pin}, {duty})"
+  0xA3:
+    template: "i2cBus.WriteByteData({address}, {register}, {data})"
+  0xA4:
+    template: "i2cBus.ReadBlockData({address}, {register}, {length})"
+  0xA5:
+    template: "spi.Transfer({data})"
+  0xA6:
+    template: "serialPort.Write([]byte({data}))"
+    context: "serialPort, _ := serial.OpenPort(&serial.Config{Name: {port}, Baud: {baud}})"
+  0xA7:
+    template: "buf := make([]byte, {length})\nserialPort.Read(buf)"
+    context: "serialPort, _ := serial.OpenPort(&serial.Config{Name: {port}})"
+  0xA8:
+    template: "adc.Read({channel})"
+  0xA9:
+    template: "sensor.Read({sensor})"
+  0xAA:
+    template: "motor[{motor}].SetSpeed({speed})"
+  0xAB:
+    template: "display[{display}].Write(\"{content}\")"
+
+  # Web (0xC0-0xCF)
+  0xC0:
+    template: "http.HandleFunc(\"{path}\", func(w http.ResponseWriter, r *http.Request) {"
+    block_close: "})"
+    imports: ["net/http"]
+  0xC1:
+    template: "w.WriteHeader({status})"
+    with_param: "w.WriteHeader({status})\nw.Write([]byte({body}))"
+    imports: ["net/http"]
+  0xC2:
+    template: "resp, err := http.{method}(\"{url}\")"
+    with_param: "resp, err := http.Post(\"{url}\", \"application/json\", bytes.NewBuffer({body}))"
+    imports: ["net/http"]
+  0xC3:
+    template: "r.Header.Set(\"{name}\", \"{value}\")"
+    imports: ["net/http"]
+  0xC4:
+    template: "// middleware: {name}"
+    block_open: "func {name}(next http.Handler) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {"
+    block_close: "\t\tnext.ServeHTTP(w, r)\n\t})\n}"
+    imports: ["net/http"]
+  0xC5:
+    template: "// websocket: {path}"
+    imports: ["net/http"]
+    context: "use gorilla/websocket or nhooyr.io/websocket"
+  0xC6:
+    template: "// @auth required"
+    with_param: "// @auth role: {role}"
+  0xC7:
+    template: "// rate limit: {max_requests} per {window}"
+  0xC8:
+    template: "w.Header().Set(\"Access-Control-Allow-Origin\", \"{origin}\")"
+    with_param: "w.Header().Set(\"Access-Control-Allow-Origin\", \"{origin}\")\nw.Header().Set(\"Access-Control-Allow-Methods\", {methods})\nw.Header().Set(\"Access-Control-Allow-Headers\", {headers})"
+    imports: ["net/http"]
+  0xC9:
+    template: "http.SetCookie(w, &http.Cookie{Name: \"{name}\", Value: \"{value}\"})"
+    with_param: "http.SetCookie(w, &http.Cookie{Name: \"{name}\", Value: \"{value}\", MaxAge: {max_age}})"
+    imports: ["net/http"]
+  0xCA:
+    template: "session.{action}()"
+    with_param: "session.Get(\"{key}\")"
+  0xCB:
+    template: "tlsConfig := &tls.Config{}\nserver.TLSConfig = tlsConfig\nserver.ListenAndServeTLS(\"{cert}\", \"{key}\")"
+    with_param: "tlsConfig := &tls.Config{MinVersion: tls.{min_version}}\nserver.TLSConfig = tlsConfig\nserver.ListenAndServeTLS(\"{cert}\", \"{key}\")"
+    imports: ["crypto/tls", "net/http"]
+  0xCC:
+    template: "http.Handle(\"{path}\", graphqlHandler)"
+    with_param: "http.Handle(\"{path}\", graphql.Handler{Schema: {schema}})"
+    imports: ["net/http"]
+  0xCD:
+    template: "http.HandleFunc(\"{path}\", func(w http.ResponseWriter, r *http.Request) {\n\tw.Header().Set(\"Content-Type\", \"text/event-stream\")\n\tfmt.Fprintf(w, \"data: %s\\n\\n\", data)\n})"
+    with_param: "http.HandleFunc(\"{path}\", func(w http.ResponseWriter, r *http.Request) {\n\tw.Header().Set(\"Content-Type\", \"text/event-stream\")\n\tfmt.Fprintf(w, \"event: {event}\\ndata: %s\\n\\n\", data)\n})"
+    imports: ["net/http", "fmt"]
+  0xCE:
+    template: "file, _, err := r.FormFile(\"{field}\")"
+    with_param: "r.ParseMultipartForm({max_size})\nfile, _, err := r.FormFile(\"{field}\")"
+    imports: ["net/http"]
+  0xCF:
+    template: "http.Redirect(w, r, \"{url}\", http.StatusFound)"
+    with_param: "http.Redirect(w, r, \"{url}\", {status})"
+    imports: ["net/http"]
+
+  # Data (0xD0-0xDF)
+  0xD0:
+    template: "rows, err := db.Query(\"SELECT * FROM {source}\")"
+    with_param: "rows, err := db.Query(\"SELECT * FROM {source} WHERE {filter}\")"
+    imports: ["database/sql"]
+  0xD1:
+    template: "data = {operation}(data)"
+    with_param: "data[\"{field}\"] = {operation}(data[\"{field}\"])"
+  0xD2:
+    template: "if err := validate(data, \"{schema}\"); err != nil {\n\treturn err\n}"
+  0xD3:
+    template: "for i, v := range collection {\n\tresult[i] = {function}(v)\n}"
+  0xD4:
+    template: "for _, v := range collection {\n\tif {predicate} {\n\t\tresult = append(result, v)\n\t}\n}"
+  0xD5:
+    template: "var result T\nfor _, v := range collection {\n\tresult = {operation}(result, v)\n}"
+    with_param: "var result T\nfor _, v := range collection {\n\tresult = {operation}(result, v.{field})\n}"
+  0xD6:
+    template: "sort.Slice(collection, func(i, j int) bool {\n\treturn collection[i].{field} < collection[j].{field}\n})"
+    with_param: "sort.Slice(collection, func(i, j int) bool {\n\tif \"{order}\" == \"desc\" {\n\t\treturn collection[i].{field} > collection[j].{field}\n\t}\n\treturn collection[i].{field} < collection[j].{field}\n})"
+    imports: ["sort"]
+  0xD7:
+    template: "groups := make(map[string][]T)\nfor _, v := range collection {\n\tgroups[v.{field}] = append(groups[v.{field}], v)\n}"
+  0xD8:
+    template: "for _, a := range {left} {\n\tfor _, b := range {right} {\n\t\tresult = append(result, merge(a, b))\n\t}\n}"
+    with_param: "for _, a := range {left} {\n\tfor _, b := range {right} {\n\t\tif a.{on} == b.{on} {\n\t\t\tresult = append(result, merge(a, b))\n\t\t}\n\t}\n}"
+  0xD9:
+    template: "seen := make(map[string]bool)\nfor _, v := range collection {\n\tif !seen[v.ID] {\n\t\tseen[v.ID] = true\n\t\tresult = append(result, v)\n\t}\n}"
+    with_param: "seen := make(map[string]bool)\nfor _, v := range collection {\n\tif !seen[v.{field}] {\n\t\tseen[v.{field}] = true\n\t\tresult = append(result, v)\n\t}\n}"
+  0xDA:
+    template: "for k, v := range {source} {\n\t{target}[k] = v\n}"
+    with_param: "for k, v := range {source} {\n\t{target}[k] = v // strategy: {strategy}\n}"
+  0xDB:
+    template: "type {name} struct{}"
+    with_param: "type {name} struct {\n\t{fields}\n}"
+  0xDC:
+    template: "index := make(map[string]T)\nfor _, v := range collection {\n\tindex[v.{field}] = v\n}"
+  0xDD:
+    template: "for i := 0; i < len(collection); i += {size} {\n\tend := i + {size}\n\tif end > len(collection) {\n\t\tend = len(collection)\n\t}\n\tbatch := collection[i:end]"
+    block_close: "}"
+  0xDE:
+    template: "for item := range streamIter(\"{source}\") {"
+    with_param: "for item := range streamIter(\"{source}\", {handler}) {"
+    block_close: "}"
+  0xDF:
+    template: "var cache sync.Map\nfunc get{key}() T {\n\tif v, ok := cache.Load(\"{key}\"); ok {\n\t\treturn v.(T)\n\t}\n}"
+    with_param: "var cache sync.Map // ttl: {ttl}\nfunc get{key}() T {\n\tif v, ok := cache.Load(\"{key}\"); ok {\n\t\treturn v.(T)\n\t}\n}"
+    imports: ["sync"]
+
+  # Logic (0xE0-0xED)
+  0xE0:
+    template: "if {condition} {"
+    block_close: "}"
+  0xE1:
+    template: "switch {value} {"
+    block_close: "}"
+  0xE2:
+    template: "for i := 0; i < {count}; i++ {"
+    with_param: "for {condition} {"
+    block_close: "}"
+  0xE3:
+    template: "func() {"
+    block_close: "}() // recover from panic"
+    context: "defer func() { if r := recover(); r != nil { /* handle */ } }()"
+  0xE4:
+    template: "} else {"
+    with_param: "} else if {condition} {"
+  0xE5:
+    template: "break"
+  0xE6:
+    template: "continue"
+  0xE7:
+    template: "if err != nil {"
+    with_param: "if errors.Is(err, {error_type}) {"
+    imports: ["errors"]
+  0xE8:
+    template: "defer func() {"
+    block_close: "}()"
+  0xE9:
+    template: "panic(\"{error_type}\")"
+    with_param: "return fmt.Errorf(\"{error_type}: %w\", {message})"
+    imports: ["fmt"]
+  0xEA:
+    template: "switch {value} {"
+    block_close: "}"
+  0xEB:
+    template: "for _, {element_var} := range {collection} {"
+    block_close: "}"
+  0xEC:
+    template: "for {condition} {"
+    block_close: "}"
+  0xED:
+    template: "// type assert: {variable}.({expected_type})"
+    with_param: "if _, ok := {variable}.({expected_type}); !ok {\n\tpanic(\"{message}\")\n}"
+
+# Emotional region mappings for code output
+# Code dictionaries map emotions to comment annotations
+emotional_regions:
+  positive: "// sentiment: positive ({valence})"
+  negative: "// sentiment: negative ({valence})"
+  neutral: "// sentiment: neutral"

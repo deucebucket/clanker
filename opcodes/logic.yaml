@@ -1,0 +1,93 @@
+# Logic opcodes: 0xE0-0xEF
+# Branching, matching, loops, and error handling
+
+opcodes:
+  0xE0:
+    name: WHEN
+    description: "Conditional branch. Opens a block that executes if the condition is true."
+    params:
+      - {name: condition, type: str, required: true}
+
+  0xE1:
+    name: MATCH
+    description: "Pattern match against a value. Opens a block with CASE sub-blocks."
+    params:
+      - {name: value, type: varref, required: true}
+
+  0xE2:
+    name: REPEAT
+    description: "Loop. Opens a block that repeats based on count, condition, or collection."
+    params:
+      - {name: count, type: int, optional: true}
+      - {name: condition, type: str, optional: true}
+      - {name: collection, type: varref, optional: true}
+
+  0xE3:
+    name: TRY
+    description: "Try/catch error handling. Opens a block; errors jump to CATCH sub-block."
+    params:
+      - {name: error_var, type: varref, optional: true}
+
+  0xE4:
+    name: ELSE
+    description: "Else branch — executes when preceding WHEN condition is false."
+    params:
+      - {name: condition, type: str, optional: true}
+
+  0xE5:
+    name: BREAK
+    description: "Break out of the current REPEAT loop."
+    params: []
+
+  0xE6:
+    name: CONTINUE
+    description: "Skip to next iteration of the current REPEAT loop."
+    params: []
+
+  0xE7:
+    name: CATCH
+    description: "Catch a specific error type from a TRY block."
+    params:
+      - {name: error_type, type: str, required: true}
+      - {name: target, type: var, optional: true}
+
+  0xE8:
+    name: FINALLY
+    description: "Block that always executes after TRY/CATCH, regardless of errors."
+    params: []
+
+  0xE9:
+    name: THROW
+    description: "Raise an error with a type and message."
+    params:
+      - {name: error_type, type: str, required: true}
+      - {name: message, type: str, optional: true}
+
+  0xEA:
+    name: SWITCH
+    description: "Multi-way branch based on a value. Each WHEN inside is a case."
+    params:
+      - {name: value, type: any, required: true}
+
+  0xEB:
+    name: FOR_EACH
+    description: "Iterate over each element in a collection."
+    params:
+      - {name: collection, type: list, required: true}
+      - {name: element_var, type: var, required: true}
+
+  0xEC:
+    name: WHILE
+    description: "Loop while a condition is true."
+    params:
+      - {name: condition, type: str, required: true}
+
+  0xED:
+    name: ASSERT_TYPE
+    description: "Assert that a variable matches an expected type at runtime."
+    params:
+      - {name: variable, type: var, required: true}
+      - {name: expected_type, type: str, required: true}
+      - {name: message, type: str, optional: true}
+
+  # 0xEE-0xEF: Reserved for future use

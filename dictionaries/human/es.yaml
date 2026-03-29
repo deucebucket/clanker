@@ -1,0 +1,338 @@
+# Spanish dictionary for Clanker-Lang
+language: es
+name: Spanish
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: human
+
+opcodes:
+  # Core (0x00-0x15)
+  0x00:
+    template: "hecho"
+    with_param: "hecho: \"{message}\""
+  0x01:
+    template: "esperar {duration}"
+  0x02:
+    template: "asignar {name} = {value}"
+  0x03:
+    template: "emitir {value}"
+  0x04:
+    template: "registrar [{level}] {message}"
+  0x05:
+    template: "llamar {function}"
+    with_param: "llamar {function} con {args}"
+  0x06:
+    template: "retornar"
+    with_param: "retornar {value}"
+  0x07:
+    template: "cargar {source}"
+    with_param: "cargar {source} como {alias}"
+  0x08:
+    template: "almacenar {key} = {value}"
+  0x09:
+    template: "eliminar {key}"
+  0x0A:
+    template: "afirmar {condition}"
+    with_param: "afirmar {condition}: \"{message}\""
+  0x0B:
+    template: "definir {name}"
+    with_param: "definir {name}({params})"
+  0x0C:
+    template: "etiqueta {name}"
+  0x0D:
+    template: "ir a {label}"
+  0x0E:
+    template: "registrar opcode {opcode} como {name}"
+  0x0F:
+    template: "fin"
+  0x10:
+    template: "# {text}"
+  0x11:
+    template: "ceder"
+    with_param: "ceder {value}"
+  0x12:
+    template: "lanzar {function}"
+    with_param: "lanzar {function} con {args}"
+  0x13:
+    template: "esperar tarea {task}"
+  0x14:
+    template: "enviar {message} a {target}"
+  0x15:
+    template: "recibir de {channel}"
+    with_param: "recibir de {channel} (tiempo límite {timeout})"
+
+  # Reasoning (0x20-0x26)
+  0x20:
+    template: "considerar: {premise}"
+    with_param: "considerar: {premise} (certeza: {cert})"
+  0x21:
+    template: "verificar: {condition} -> {result}"
+  0x22:
+    template: "si {if_condition} entonces {then_conclusion}"
+  0x23:
+    template: "por lo tanto: {conclusion} (de los pasos {from_steps})"
+  0x24:
+    template: "respuesta: {result}"
+    with_param: "respuesta: {result} (certeza: {cert})"
+  0x25:
+    template: "dudar del paso {step_ref}: {reason}"
+  0x26:
+    template: "suponiendo: {assumption}"
+
+  # Hardware (0xA0-0xAB)
+  0xA0:
+    template: "establecer pin GPIO {pin} a {state}"
+  0xA1:
+    template: "leer pin GPIO {pin}"
+  0xA2:
+    template: "establecer PWM en pin {pin} a {duty}%"
+    with_param: "establecer PWM en pin {pin} a {duty}% a {frequency}Hz"
+  0xA3:
+    template: "escribir {data} al dispositivo I2C {address} registro {register}"
+  0xA4:
+    template: "leer {length} bytes del dispositivo I2C {address} registro {register}"
+  0xA5:
+    template: "transferencia SPI al dispositivo {device}: {data}"
+  0xA6:
+    template: "enviar \"{data}\" por UART {port}"
+  0xA7:
+    template: "recibir {length} bytes del UART {port}"
+  0xA8:
+    template: "leer canal ADC {channel}"
+  0xA9:
+    template: "leer sensor {sensor}"
+    with_param: "leer sensor {sensor} en {unit}"
+  0xAA:
+    template: "establecer velocidad del motor {motor} a {speed}"
+    with_param: "establecer velocidad del motor {motor} a {speed} dirección {direction}"
+  0xAB:
+    template: "escribir \"{content}\" en pantalla {display}"
+
+  # Web (0xC0-0xCF)
+  0xC0:
+    template: "definir endpoint {method} en {path}"
+  0xC1:
+    template: "responder con estado {status}"
+    with_param: "responder con estado {status}: {body}"
+  0xC2:
+    template: "solicitud {method} a {url}"
+    with_param: "solicitud {method} a {url} con cuerpo {body}"
+  0xC3:
+    template: "establecer encabezado {name}: {value}"
+  0xC4:
+    template: "usar middleware {name}"
+    with_param: "usar middleware {name} en fase {phase}"
+  0xC5:
+    template: "websocket en {path}"
+    with_param: "websocket en {path} al evento {event}"
+  0xC6:
+    template: "requerir autenticación {scheme}"
+    with_param: "requerir autenticación {scheme} con rol {role}"
+  0xC7:
+    template: "límite de tasa: {max_requests} solicitudes por {window}"
+  0xC8:
+    template: "permitir CORS desde {origin}"
+    with_param: "permitir CORS desde {origin} métodos {methods} encabezados {headers}"
+  0xC9:
+    template: "establecer cookie {name} a {value}"
+    with_param: "establecer cookie {name} a {value} edad máxima {max_age}"
+  0xCA:
+    template: "{action} sesión"
+    with_param: "{action} sesión clave {key}"
+  0xCB:
+    template: "configurar SSL cert {cert} clave {key}"
+    with_param: "configurar SSL cert {cert} clave {key} TLS mínimo {min_version}"
+  0xCC:
+    template: "endpoint GraphQL en {path}"
+    with_param: "endpoint GraphQL en {path} esquema {schema}"
+  0xCD:
+    template: "flujo SSE en {path}"
+    with_param: "flujo SSE en {path} evento {event}"
+  0xCE:
+    template: "aceptar carga campo {field}"
+    with_param: "aceptar carga campo {field} máximo {max_size}"
+  0xCF:
+    template: "redirigir a {url}"
+    with_param: "redirigir a {url} con estado {status}"
+
+  # Data (0xD0-0xDF)
+  0xD0:
+    template: "consultar {source}"
+    with_param: "consultar {source} donde {filter}"
+  0xD1:
+    template: "transformar: {operation}"
+    with_param: "transformar {field}: {operation}"
+  0xD2:
+    template: "validar contra {schema}"
+  0xD3:
+    template: "mapear {function} sobre la colección"
+  0xD4:
+    template: "filtrar donde {predicate}"
+  0xD5:
+    template: "reducir: {operation}"
+    with_param: "reducir {field}: {operation}"
+  0xD6:
+    template: "ordenar por {field}"
+    with_param: "ordenar por {field} {order}"
+  0xD7:
+    template: "agrupar por {field}"
+  0xD8:
+    template: "unir {left} con {right}"
+    with_param: "unir {left} con {right} en {on}"
+  0xD9:
+    template: "distintos"
+    with_param: "distintos en {field}"
+  0xDA:
+    template: "fusionar {source} en {target}"
+    with_param: "fusionar {source} en {target} ({strategy})"
+  0xDB:
+    template: "esquema {name}"
+    with_param: "esquema {name} ({fields})"
+  0xDC:
+    template: "indexar {field}"
+  0xDD:
+    template: "lote {size}"
+  0xDE:
+    template: "flujo {source}"
+    with_param: "flujo {source} vía {handler}"
+  0xDF:
+    template: "caché {key}"
+    with_param: "caché {key} (ttl: {ttl})"
+
+  # Logic (0xE0-0xED)
+  0xE0:
+    template: "cuando {condition}:"
+  0xE1:
+    template: "comparar {value}:"
+  0xE2:
+    template: "repetir {count} veces:"
+    with_param: "repetir mientras {condition}:"
+  0xE3:
+    template: "intentar:"
+    with_param: "intentar (capturar en {error_var}):"
+  0xE4:
+    template: "de lo contrario:"
+    with_param: "de lo contrario, si {condition}:"
+  0xE5:
+    template: "dejar de repetir"
+  0xE6:
+    template: "saltar al siguiente"
+  0xE7:
+    template: "si ocurre error {error_type}:"
+    with_param: "si ocurre error {error_type} (como {target}):"
+  0xE8:
+    template: "siempre hacer:"
+  0xE9:
+    template: "señalar error: {error_type}"
+    with_param: "señalar error: {error_type} — {message}"
+  0xEA:
+    template: "según {value}:"
+  0xEB:
+    template: "para cada {element_var} en {collection}:"
+  0xEC:
+    template: "mientras {condition}:"
+  0xED:
+    template: "afirmar que {variable} es {expected_type}"
+    with_param: "afirmar que {variable} es {expected_type}: \"{message}\""
+
+# Emotional Vector Region Mappings
+emotional_regions:
+  joy:
+    valence: [64, 127]
+    arousal: [0, 80]
+    dominance: [20, 100]
+    description: "Contento, feliz, satisfecho"
+  excitement:
+    valence: [60, 127]
+    arousal: [80, 127]
+    dominance: [40, 127]
+    description: "Emocionado, energizado, eufórico"
+  anger:
+    valence: [-127, -40]
+    arousal: [60, 127]
+    dominance: [40, 127]
+    description: "Frustrado, enojado, furioso"
+  fear:
+    valence: [-127, -20]
+    arousal: [60, 127]
+    dominance: [-127, -20]
+    description: "Ansioso, asustado, en pánico"
+  sadness:
+    valence: [-127, -30]
+    arousal: [-127, -20]
+    dominance: [-127, 0]
+    description: "Decaído, triste, en duelo"
+  calm:
+    valence: [-10, 40]
+    arousal: [-127, -40]
+    dominance: [-20, 40]
+    description: "Relajado, tranquilo, sereno"
+  surprise:
+    valence: [-20, 80]
+    arousal: [80, 127]
+    dominance: [-40, 40]
+    description: "Sobresaltado, asombrado, atónito"
+  disgust:
+    valence: [-127, -50]
+    arousal: [0, 60]
+    dominance: [20, 80]
+    description: "Repugnado, asqueado, despreciativo"
+  trust:
+    valence: [30, 100]
+    arousal: [-40, 40]
+    dominance: [0, 60]
+    description: "Confiado, seguro, que confía"
+  neutral:
+    valence: [-15, 15]
+    arousal: [-15, 15]
+    dominance: [-15, 15]
+    description: "Sin contexto emocional significativo"
+  urgency_low:
+    urgency: [0, 50]
+    description: "Rutinario, sin presión de tiempo"
+  urgency_medium:
+    urgency: [51, 150]
+    description: "Prioridad moderada, requiere atención oportuna"
+  urgency_high:
+    urgency: [151, 220]
+    description: "Alta prioridad, se requiere acción inmediata"
+  urgency_critical:
+    urgency: [221, 255]
+    description: "Crítico, se requiere acción inmediata"
+
+# Emotional region mappings (valence, arousal -> closest word)
+emotional_coordinates:
+  "+0.9,+0.9": "extasiado"
+  "+0.8,+0.7": "emocionadísimo"
+  "+0.7,+0.5": "entusiasmado"
+  "+0.6,+0.3": "feliz"
+  "+0.4,+0.1": "complacido"
+  "+0.3,-0.2": "contento"
+  "+0.2,-0.5": "sereno"
+  "+0.1,-0.7": "en paz"
+  "0.0,0.0": "neutral"
+  "-0.2,-0.3": "melancólico"
+  "-0.3,-0.1": "decepcionado"
+  "-0.4,+0.2": "frustrado"
+  "-0.5,+0.4": "irritado"
+  "-0.6,+0.6": "enojado"
+  "-0.8,+0.8": "furioso"
+  "-0.9,+0.9": "enfurecido"
+  "-0.3,+0.7": "ansioso"
+  "-0.5,+0.8": "en pánico"
+  "-0.6,-0.4": "triste"
+  "-0.8,-0.6": "desesperado"
+  "-0.1,+0.9": "sobresaltado"
+  "+0.1,+0.8": "asombrado"
+
+intent_mappings:
+  request: "¿podrías {action}?"
+  inform: "{content}"
+  question: "¿{content}?"
+  command: "¡{action}!"
+  empathize: "entiendo, {content}"
+  greet: "hola"
+  farewell: "adiós"
+  agree: "sí, {content}"
+  disagree: "no, {content}"
+  apologize: "perdón, {content}"

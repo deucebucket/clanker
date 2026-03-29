@@ -1,0 +1,109 @@
+{
+  "benchmarks": [
+    {
+      "dataset": "SST-2",
+      "results": {
+        "VADER": {
+          "accuracy": 55.7,
+          "f1": 39.6,
+          "neutral_pct": 18.1,
+          "samples": 872
+        },
+        "TextBlob": {
+          "accuracy": 53.8,
+          "f1": 39.0,
+          "neutral_pct": 22.7,
+          "samples": 872
+        },
+        "Clanker": {
+          "accuracy": 56.8,
+          "f1": 39.5,
+          "neutral_pct": 13.8,
+          "samples": 872
+        },
+        "ClankerV2": {
+          "accuracy": 60.8,
+          "f1": 39.2,
+          "neutral_pct": 0.0,
+          "samples": 872
+        },
+        "RoBERTa": {
+          "accuracy": 69.0,
+          "f1": 52.3,
+          "neutral_pct": 24.1,
+          "samples": 872
+        }
+      }
+    },
+    {
+      "dataset": "GoEmotions",
+      "results": {
+        "VADER": {
+          "accuracy": 60.6,
+          "f1": 59.3,
+          "neutral_pct": 20.3,
+          "samples": 1000
+        },
+        "TextBlob": {
+          "accuracy": 57.8,
+          "f1": 57.4,
+          "neutral_pct": 35.5,
+          "samples": 1000
+        },
+        "Clanker": {
+          "accuracy": 51.5,
+          "f1": 50.4,
+          "neutral_pct": 20.6,
+          "samples": 1000
+        },
+        "ClankerV2": {
+          "accuracy": 56.7,
+          "f1": 56.4,
+          "neutral_pct": 37.7,
+          "samples": 1000
+        },
+        "RoBERTa": {
+          "accuracy": 62.1,
+          "f1": 62.1,
+          "neutral_pct": 27.6,
+          "samples": 1000
+        }
+      }
+    },
+    {
+      "dataset": "TweetEval",
+      "results": {
+        "VADER": {
+          "accuracy": 74.1,
+          "f1": 50.9,
+          "neutral_pct": 9.3,
+          "samples": 1000
+        },
+        "TextBlob": {
+          "accuracy": 50.7,
+          "f1": 39.9,
+          "neutral_pct": 30.6,
+          "samples": 1000
+        },
+        "Clanker": {
+          "accuracy": 69.7,
+          "f1": 48.1,
+          "neutral_pct": 12.5,
+          "samples": 1000
+        },
+        "ClankerV2": {
+          "accuracy": 63.3,
+          "f1": 42.0,
+          "neutral_pct": 0.0,
+          "samples": 1000
+        },
+        "RoBERTa": {
+          "accuracy": 77.7,
+          "f1": 54.3,
+          "neutral_pct": 16.5,
+          "samples": 1000
+        }
+      }
+    }
+  ]
+}

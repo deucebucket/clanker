@@ -1,0 +1,112 @@
+# Clanker-Lang Validation Constraints
+# Used by validators and dictionaries to enforce parameter correctness.
+
+constraints:
+  # Presence constraints
+  required:
+    description: "Parameter must be present. Absence is an error."
+    applies_to: [all]
+
+  optional:
+    description: "Parameter may be absent. If absent, the template uses the default rendering."
+    applies_to: [all]
+
+  # String constraints
+  min_length:
+    description: "Minimum string length in characters."
+    applies_to: [str, str_ext]
+    param_type: int
+    example: {min_length: 1}
+
+  max_length:
+    description: "Maximum string length in characters."
+    applies_to: [str, str_ext]
+    param_type: int
+    example: {max_length: 255}
+
+  pattern:
+    description: "String must match a regex pattern."
+    applies_to: [str, str_ext]
+    param_type: str
+    example: {pattern: "^[a-z_]+$"}
+
+  match:
+    description: "String must match a well-known format."
+    applies_to: [str, str_ext]
+    values:
+      email: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      url: "^https?://.*"
+      uuid: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      ipv4: "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$"
+      path: "^/[a-zA-Z0-9/_{}.-]*$"
+      http_method: "^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)$"
+
+  # Numeric constraints
+  range:
+    description: "Value must be within an inclusive range."
+    applies_to: [int, float]
+    params: [min, max]
+    example: {range: {min: 0, max: 255}}
+
+  min:
+    description: "Value must be greater than or equal to minimum."
+    applies_to: [int, float, duration]
+    param_type: number
+    example: {min: 0}
+
+  max:
+    description: "Value must be less than or equal to maximum."
+    applies_to: [int, float, duration]
+    param_type: number
+    example: {max: 65535}
+
+  # Enum constraint
+  one_of:
+    description: "Value must be one of the listed options."
+    applies_to: [str, int]
+    param_type: list
+    example: {one_of: ["GET", "POST", "PUT", "DELETE"]}
+
+  # List constraints
+  min_items:
+    description: "List must have at least this many items."
+    applies_to: [list]
+    param_type: int
+    example: {min_items: 1}
+
+  max_items:
+    description: "List must have at most this many items."
+    applies_to: [list]
+    param_type: int
+    example: {max_items: 15}
+
+  item_type:
+    description: "All items in a list must be of this type."
+    applies_to: [list]
+    param_type: str
+    example: {item_type: "str"}
+
+  # Variable reference constraints
+  slot_range:
+    description: "Variable slot must be within range."
+    applies_to: [varref]
+    default: {min: 0, max: 31}
+
+  # Opcode-level constraints
+  opcode_range:
+    description: "Opcode must be within a specific range."
+    applies_to: [int]
+    example: {opcode_range: {min: "0xF0", max: "0xFF"}}
+
+# Constraint application syntax in opcode definitions:
+# params:
+#   - name: method
+#     type: str
+#     required: true
+#     constraints:
+#       match: http_method
+#   - name: port
+#     type: int
+#     required: true
+#     constraints:
+#       range: {min: 1, max: 65535}

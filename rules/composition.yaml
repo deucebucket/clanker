@@ -1,0 +1,121 @@
+# Clanker-Lang Composition Rules
+# How opcodes compose into programs, nesting, and scope.
+
+blocks:
+  description: >
+    Certain opcodes open a block scope. A block must be closed with END (0x0F).
+    Instructions inside a block belong to that block's scope.
+
+  openers:
+    - opcode: 0xE0
+      name: WHEN
+      description: "Opens a conditional block. Instructions inside execute only if condition is true."
+      requires_end: true
+    - opcode: 0xE1
+      name: MATCH
+      description: "Opens a match block. Contains CASE sub-blocks."
+      requires_end: true
+    - opcode: 0xE2
+      name: REPEAT
+      description: "Opens a loop block. Instructions inside repeat."
+      requires_end: true
+    - opcode: 0xE3
+      name: TRY
+      description: "Opens a try block. Errors jump to catch section before END."
+      requires_end: true
+    - opcode: 0x0B
+      name: DEFINE
+      description: "Opens a function definition block."
+      requires_end: true
+    - opcode: 0xC0
+      name: ENDPOINT
+      description: "Opens an endpoint handler block."
+      requires_end: true
+
+  closer:
+    opcode: 0x0F
+    name: END
+    description: "Closes the most recently opened block."
+
+nesting:
+  max_depth: 4
+  description: >
+    Blocks may be nested to a maximum depth of 4 levels. This prevents
+    excessive complexity and keeps Clank programs flat and readable.
+    A depth-5 block is a validation error.
+
+  example:
+    valid: |
+      @ 0xE0 $_ $_ 01 {condition: "$0 > 0"}     # depth 1
+        @ 0xE2 $_ $_ 01 {count: 10}              # depth 2
+          @ 0xE0 $_ $_ 01 {condition: "$1 == 5"}  # depth 3
+            @ 0x03 $_ $_ 01 {value: "found it"}   # inside depth 3
+          @ 0x0F                                    # close depth 3
+        @ 0x0F                                      # close depth 2
+      @ 0x0F                                        # close depth 1
+
+    invalid: |
+      # ERROR: depth 5 is not allowed
+      @ 0xE0 ... # depth 1
+        @ 0xE0 ... # depth 2
+          @ 0xE0 ... # depth 3
+            @ 0xE0 ... # depth 4
+              @ 0xE0 ... # depth 5 - VALIDATION ERROR
+
+scope:
+  variable_visibility:
+    description: >
+      Variables are global to the script. Setting a variable inside a block
+      makes it visible everywhere, including after the block closes.
+      This is intentional: Clank is a flat register machine, not a lexically
+      scoped language.
+
+    rules:
+      - "Variables $0-$31 are globally visible once set."
+      - "A variable set inside a WHEN block is visible after the block closes."
+      - "A variable set inside a REPEAT block persists its last value after the loop."
+      - "DEFINE blocks create named reusable sequences but share the global variable space."
+
+  function_scope:
+    description: >
+      DEFINE blocks (functions) do not create a new variable scope.
+      They operate on the same $0-$31 slots as the caller. This is
+      by design: Clank functions are macros, not closures.
+
+execution:
+  order: sequential
+  description: >
+    Instructions execute top to bottom. Block-opening opcodes may cause
+    instructions to be skipped (WHEN condition is false) or repeated
+    (REPEAT), but the fundamental model is sequential.
+
+  rules:
+    - "NOP_DONE (0x00) terminates the program."
+    - "GOTO (0x0D) jumps to a LABEL. Forward and backward jumps are allowed."
+    - "RETURN (0x06) exits the current DEFINE block and returns to the caller."
+    - "REPEAT with count=0 skips the block entirely."
+    - "WHEN with a false condition skips to the matching END."
+
+  error_handling:
+    - "Undefined opcode: runtime error, program halts."
+    - "Missing required parameter: validation error before execution."
+    - "Variable reference to unset slot: runtime error."
+    - "Block nesting exceeds depth 4: validation error."
+    - "Unmatched END: validation error."
+    - "Unclosed block at program end: validation error."
+
+composition_patterns:
+  request_handler:
+    description: "Common pattern: define an endpoint, validate input, query data, respond."
+    pattern: |
+      ENDPOINT -> VALIDATE -> QUERY -> TRANSFORM -> RESPOND -> END
+
+  pipeline:
+    description: "Common pattern: load data, transform in steps, emit result."
+    pattern: |
+      LOAD -> QUERY -> MAP -> FILTER -> TRANSFORM -> EMIT
+
+  retry_loop:
+    description: "Common pattern: try an operation, retry on failure."
+    pattern: |
+      REPEAT -> TRY -> operation -> END(try) -> END(repeat)

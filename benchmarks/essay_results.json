@@ -1,0 +1,90 @@
+{
+  "overall_accuracy": 55.8,
+  "total_sentences": 120,
+  "missing_words": {
+    "just": 4,
+    "another": 3,
+    "out": 3,
+    "moment": 3,
+    "single": 3,
+    "work": 2,
+    "hear": 2,
+    "words": 2,
+    "done": 2,
+    "no": 2,
+    "thing": 2,
+    "situation": 2,
+    "life": 2,
+    "toward": 2,
+    "not": 2,
+    "seven": 2,
+    "potentially": 2,
+    "needed": 1,
+    "expert": 1,
+    "printer": 1,
+    "moved": 1,
+    "clearly": 1,
+    "put": 1,
+    "teamwork": 1,
+    "delightful": 1,
+    "asked": 1,
+    "reach": 1,
+    "phone": 1,
+    "house": 1,
+    "song": 1,
+    "waves": 1,
+    "predict": 1,
+    "vital": 1,
+    "voice": 1,
+    "barely": 1,
+    "get": 1,
+    "world": 1,
+    "kept": 1,
+    "moving": 1,
+    "frozen": 1,
+    "used": 1,
+    "drowning": 1,
+    "happened": 1,
+    "dare": 1,
+    "talk": 1,
+    "swear": 1,
+    "anyone": 1,
+    "selfishness": 1,
+    "break": 1,
+    "blood": 1
+  },
+  "per_essay": {
+    "sarcastic": {
+      "accuracy": 13.3,
+      "coverage": 27.6
+    },
+    "grief": {
+      "accuracy": 46.7,
+      "coverage": 21.2
+    },
+    "rage": {
+      "accuracy": 73.3,
+      "coverage": 20.3
+    },
+    "joy": {
+      "accuracy": 86.7,
+      "coverage": 29.7
+    },
+    "conviction": {
+      "accuracy": 73.3,
+      "coverage": 24.4
+    },
+    "fear": {
+      "accuracy": 60.0,
+      "coverage": 30.5
+    },
+    "neutral_report": {
+      "accuracy": 53.3,
+      "coverage": 12.7
+    },
+    "conditional_hedging": {
+      "accuracy": 40.0,
+      "coverage": 19.7
+    }
+  }
+}

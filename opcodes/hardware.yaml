@@ -1,0 +1,94 @@
+# Hardware opcodes: 0xA0-0xAF
+# Device control operations originating from delphinOS CLANK-LANG.md
+
+opcodes:
+  0xA0:
+    name: GPIO_SET
+    description: "Set a GPIO pin to high or low."
+    params:
+      - {name: pin, type: int, required: true}
+      - {name: state, type: bool, required: true}
+
+  0xA1:
+    name: GPIO_READ
+    description: "Read the current state of a GPIO pin."
+    params:
+      - {name: pin, type: int, required: true}
+
+  0xA2:
+    name: PWM_SET
+    description: "Set PWM duty cycle on a pin."
+    params:
+      - {name: pin, type: int, required: true}
+      - {name: duty, type: float, required: true}
+      - {name: frequency, type: int, optional: true}
+
+  0xA3:
+    name: I2C_WRITE
+    description: "Write data to an I2C device."
+    params:
+      - {name: address, type: int, required: true}
+      - {name: register, type: int, required: true}
+      - {name: data, type: bytes, required: true}
+
+  0xA4:
+    name: I2C_READ
+    description: "Read data from an I2C device."
+    params:
+      - {name: address, type: int, required: true}
+      - {name: register, type: int, required: true}
+      - {name: length, type: int, required: true}
+
+  0xA5:
+    name: SPI_TRANSFER
+    description: "Perform a full-duplex SPI transfer."
+    params:
+      - {name: device, type: int, required: true}
+      - {name: data, type: bytes, required: true}
+      - {name: speed, type: int, optional: true}
+
+  0xA6:
+    name: UART_SEND
+    description: "Send data over UART/serial."
+    params:
+      - {name: port, type: str, required: true}
+      - {name: data, type: str, required: true}
+      - {name: baud, type: int, optional: true}
+
+  0xA7:
+    name: UART_RECV
+    description: "Receive data from UART/serial."
+    params:
+      - {name: port, type: str, required: true}
+      - {name: length, type: int, required: true}
+      - {name: timeout, type: duration, optional: true}
+
+  0xA8:
+    name: ADC_READ
+    description: "Read an analog-to-digital converter channel."
+    params:
+      - {name: channel, type: int, required: true}
+      - {name: resolution, type: int, optional: true}
+
+  0xA9:
+    name: SENSOR_READ
+    description: "Read a named sensor value (temperature, humidity, etc.)."
+    params:
+      - {name: sensor, type: str, required: true}
+      - {name: unit, type: str, optional: true}
+
+  0xAA:
+    name: MOTOR_SET
+    description: "Set motor speed and direction."
+    params:
+      - {name: motor, type: int, required: true}
+      - {name: speed, type: float, required: true}
+      - {name: direction, type: str, optional: true}
+
+  0xAB:
+    name: DISPLAY_WRITE
+    description: "Write text or data to a display device."
+    params:
+      - {name: display, type: str, required: true}
+      - {name: content, type: str, required: true}
+      - {name: position, type: list, optional: true}

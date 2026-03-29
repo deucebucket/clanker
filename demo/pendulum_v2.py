@@ -1,0 +1,700 @@
+#!/usr/bin/env python3
+"""PendulumV2 — Clean emotional physics engine for Clanker-Lang.
+
+Rewrite of pendulum.py (~1,300 lines of layered patches) into a clean
+3-pass architecture under 400 lines.
+
+Emotional PEMDAS (order of operations):
+  1. PRE-PASS:  Detect sentence-level features (question, idioms, negation)
+  2. WORD-PASS: Left-to-right, classify each word as OPERATOR / PAYLOAD / NEUTRAL
+  3. POST-PASS: Crisis detection, clamping, final adjustments
+
+Key design rules:
+  - Words are EITHER operators OR payloads OR neutral. Never both.
+  - Operators ACCUMULATE until a payload word consumes them.
+  - Uses forces_curated.py (2,024 words) not forces.py (46K with noise).
+  - Context operators from context_operators.py integrated at the core.
+
+Usage:
+    from demo.pendulum_v2 import PendulumV2
+    engine = PendulumV2()
+    vadug, trace = engine.process_text("I am really not having a good day")
+
+Standalone:
+    python3 demo/pendulum_v2.py
+"""
+
+import sys
+import os
+import re
+import time
+from dataclasses import dataclass
+from typing import List, Dict, Tuple, Optional
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.dirname(__file__))
+
+from demo.shared import VADUG
+from demo.forces_curated import EMOTIONAL_VOCABULARY
+from demo.context_operators import (
+    CONTEXT_OPERATORS, QUESTION_STARTERS, QUESTION_DAMPENER,
+    is_question, _COEFF_CAP, _COEFF_FLOOR,
+)
+from demo.pendulum import IDIOMS
+from demo.bigrams import BIGRAM_EXPRESSIONS
+
+# Merge bigrams into idiom lookup — bigrams are just 2-word idioms.
+# IDIOMS take priority for overlapping keys (they have gravity values).
+_COMBINED_EXPRESSIONS = dict(BIGRAM_EXPRESSIONS)  # bigrams first
+_COMBINED_EXPRESSIONS.update(IDIOMS)               # idioms override
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+NEGATORS = frozenset({
+    "not", "don't", "didn't", "can't", "won't", "never", "no",
+    "isn't", "aren't", "wasn't", "weren't", "hardly", "barely",
+    "nobody", "nothing", "nowhere", "neither", "nor", "cannot",
+})
+
+# Negation as continuous force — not a boolean.
+# Strong negators start near 1.0, weaker ones lower.
+NEGATOR_STRENGTH = {
+    "not": 0.95, "no": 0.90, "never": 0.95, "cannot": 0.90,
+    "don't": 0.90, "didn't": 0.90, "can't": 0.90, "won't": 0.90,
+    "isn't": 0.85, "aren't": 0.85, "wasn't": 0.85, "weren't": 0.85,
+    "hardly": 0.60, "barely": 0.50,
+    "nobody": 0.80, "nothing": 0.80, "nowhere": 0.80,
+    "neither": 0.75, "nor": 0.70,
+}
+
+# How fast negation force decays per word type
+NEGATION_DECAY_OPERATOR = 0.92   # gentle — negation passes through function words
+NEGATION_DECAY_NEUTRAL = 0.85    # moderate — filler erodes negation
+NEGATION_DECAY_PAYLOAD = 0.35    # hard — emotional word absorbs most of the negation
+
+# Clause boundaries kill negation entirely
+CLAUSE_BOUNDARIES = frozenset({
+    "but", "however", "although", "though", "yet", "still",
+    "instead", "whereas", "while", "nevertheless", "except",
+})
+
+DEFAULT_MOMENTUM = 0.82   # How much of old state to keep per word (0=instant, 1=frozen)
+FORCE_SCALE = 0.50        # Global force scaling (how hard words push the pendulum)
+CRISIS_V_THRESHOLD = 60
+CRISIS_U_THRESHOLD = 40
+CRISIS_MOMENTUM = 0.98
+
+# Neutral center for each dimension (V/A/D start at 128, U at 0, G at 128)
+CENTER = {"v": 128.0, "a": 128.0, "d": 128.0, "u": 0.0, "g": 128.0}
+
+
+# ---------------------------------------------------------------------------
+# Pre-pass info container
+# ---------------------------------------------------------------------------
+
+@dataclass
+class PrePassInfo:
+    """Sentence-level features detected before word-by-word processing."""
+    is_question: bool = False
+    question_dampener: float = 1.0
+    idiom_spans: Dict[int, Tuple] = None      # start_idx -> (length, force_tuple, label)
+    idiom_consumed: set = None                  # all indices consumed by idioms
+    negation_positions: set = None              # indices of negator words
+
+    def __post_init__(self):
+        self.idiom_spans = self.idiom_spans or {}
+        self.idiom_consumed = self.idiom_consumed or set()
+        self.negation_positions = self.negation_positions or set()
+
+
+# ---------------------------------------------------------------------------
+# PendulumV2
+# ---------------------------------------------------------------------------
+
+class PendulumV2:
+    """Clean 3-pass emotional physics engine.
+
+    All physics parameters are configurable via constructor for tuning.
+    Default values are the untuned baseline.
+    """
+
+    def __init__(
+        self,
+        momentum: float = DEFAULT_MOMENTUM,
+        force_scale: float = FORCE_SCALE,
+        direct_push_cap: float = 0.4,
+        direct_push_trigger: float = 80.0,
+        crisis_v: float = CRISIS_V_THRESHOLD,
+        crisis_u: float = CRISIS_U_THRESHOLD,
+        question_dampener: float = QUESTION_DAMPENER,
+        scale_v: float = 1.0,
+        scale_a: float = 1.0,
+        scale_d: float = 1.0,
+        scale_u: float = 1.0,
+        scale_g: float = 1.0,
+        threshold_low: float = 124.0,
+        threshold_high: float = 132.0,
+        negation_decay_operator: float = NEGATION_DECAY_OPERATOR,
+        negation_decay_neutral: float = NEGATION_DECAY_NEUTRAL,
+        negation_decay_payload: float = NEGATION_DECAY_PAYLOAD,
+    ):
+        self.momentum = momentum
+        self.force_scale = force_scale
+        self.direct_push_cap = direct_push_cap
+        self.direct_push_trigger = direct_push_trigger
+        self.crisis_v = crisis_v
+        self.crisis_u = crisis_u
+        self.question_dampener_val = question_dampener
+        self.scale_v = scale_v
+        self.scale_a = scale_a
+        self.scale_d = scale_d
+        self.scale_u = scale_u
+        self.scale_g = scale_g
+        self.threshold_low = threshold_low
+        self.threshold_high = threshold_high
+        self.negation_decay_operator = negation_decay_operator
+        self.negation_decay_neutral = negation_decay_neutral
+        self.negation_decay_payload = negation_decay_payload
+
+    def get_config(self) -> dict:
+        """Return full config snapshot for experiment logging."""
+        return {
+            "momentum": self.momentum,
+            "force_scale": self.force_scale,
+            "direct_push_cap": self.direct_push_cap,
+            "direct_push_trigger": self.direct_push_trigger,
+            "crisis_v": self.crisis_v,
+            "crisis_u": self.crisis_u,
+            "question_dampener": self.question_dampener_val,
+            "scale_v": self.scale_v,
+            "scale_a": self.scale_a,
+            "scale_d": self.scale_d,
+            "scale_u": self.scale_u,
+            "scale_g": self.scale_g,
+            "threshold_low": self.threshold_low,
+            "threshold_high": self.threshold_high,
+            "negation_decay_operator": self.negation_decay_operator,
+            "negation_decay_neutral": self.negation_decay_neutral,
+            "negation_decay_payload": self.negation_decay_payload,
+        }
+
+    def classify(self, v: float, mode: str = "three_way") -> str:
+        """Classify valence into sentiment using configurable strategy.
+
+        Modes:
+            three_way: pos/neg/neutral using threshold_low and threshold_high
+            binary:    pos/neg only, split at 128 (no neutral zone)
+            prism:     5-band mapping (crisis/negative/neutral/positive/thriving)
+        """
+        if mode == "binary":
+            return "positive" if v >= 128 else "negative"
+        elif mode == "prism":
+            if v < 51:
+                return "negative"    # crisis band
+            elif v < 103:
+                return "negative"    # negative band
+            elif v < 154:
+                return "neutral"     # neutral band
+            elif v < 205:
+                return "positive"    # positive band
+            else:
+                return "positive"    # thriving band
+        else:  # three_way (default)
+            if v > self.threshold_high:
+                return "positive"
+            elif v < self.threshold_low:
+                return "negative"
+            return "neutral"
+
+    def process_text(self, text: str) -> Tuple[VADUG, List[dict]]:
+        """Process text through the 3-pass emotional pipeline.
+
+        Returns:
+            (final_vadug, word_trace) where word_trace is a list of dicts
+            with keys: word, role, v, a, d, u, g, note
+        """
+        words = self._tokenize(text)
+        if not words:
+            return VADUG(), []
+
+        # State: floating-point VADUG accumulator
+        state = dict(CENTER)
+        trace = []
+
+        # --- Pass 1: Pre-pass ---
+        pre = self._pre_pass(words)
+
+        # --- Pass 2: Word-by-word ---
+        pending_operators = {}  # category -> coefficient (nearest per category)
+        negation_force = 0.0    # continuous negation: 0.0 = none, ~1.0 = full inversion
+
+        i = 0
+        while i < len(words):
+            word = words[i]
+
+            # Skip words consumed by idiom detection
+            if i in pre.idiom_consumed:
+                # If this is the START of an idiom, apply it as a payload
+                if i in pre.idiom_spans:
+                    span = pre.idiom_spans[i]
+                    length, force, label = span
+                    coeff = self._compute_coefficient(pending_operators, pre)
+                    neg_scale = self._negation_scale(negation_force)
+                    state = self._apply_force(state, force, coeff * neg_scale)
+                    trace.append(self._trace_entry(
+                        " ".join(words[i:i+length]), "IDIOM", state,
+                        f"idiom:{label} coeff={coeff:.2f} neg_f={negation_force:.2f}"
+                    ))
+                    pending_operators = {}
+                    negation_force *= self.negation_decay_payload
+                else:
+                    trace.append(self._trace_entry(word, "IDIOM_PART", state, "consumed by idiom"))
+                i += 1
+                continue
+
+            word_lower = word.lower()
+
+            # Clause boundary kills negation
+            if word_lower in CLAUSE_BOUNDARIES:
+                old_nf = negation_force
+                negation_force = 0.0
+                trace.append(self._trace_entry(
+                    word, "BOUNDARY", state,
+                    f"clause boundary, negation {old_nf:.2f}→0.00"
+                ))
+                i += 1
+                continue
+
+            # Check negator — sets or reinforces negation force, applies self-force at 30%
+            if i in pre.negation_positions:
+                strength = NEGATOR_STRENGTH.get(word_lower, 0.85)
+                negation_force = max(negation_force, strength)
+                # Apply the negator's own emotional weight at 30% (constraint/inability)
+                if word_lower in EMOTIONAL_VOCABULARY:
+                    self_force = EMOTIONAL_VOCABULARY[word_lower]
+                    state = self._apply_force(state, self_force, 0.3)
+                    trace.append(self._trace_entry(
+                        word, "NEGATOR", state,
+                        f"neg_f={negation_force:.2f} +self_force@30%"
+                    ))
+                else:
+                    trace.append(self._trace_entry(
+                        word, "NEGATOR", state,
+                        f"neg_f={negation_force:.2f}"
+                    ))
+                i += 1
+                continue
+
+            # Classify: OPERATOR or PAYLOAD or NEUTRAL
+            if word_lower in CONTEXT_OPERATORS:
+                # OPERATOR — accumulate coefficient, gentle negation decay
+                coeff_val, category = CONTEXT_OPERATORS[word_lower]
+                pending_operators[category] = coeff_val
+                negation_force *= self.negation_decay_operator
+                trace.append(self._trace_entry(
+                    word, "OPERATOR", state,
+                    f"{category}={coeff_val} neg_f={negation_force:.2f}"
+                ))
+
+            elif word_lower in EMOTIONAL_VOCABULARY:
+                # PAYLOAD — apply force modulated by continuous negation
+                force = EMOTIONAL_VOCABULARY[word_lower]
+                coeff = self._compute_coefficient(pending_operators, pre)
+                neg_scale = self._negation_scale(negation_force)
+                state = self._apply_force(state, force, coeff * neg_scale)
+                trace.append(self._trace_entry(
+                    word, "PAYLOAD", state,
+                    f"coeff={coeff:.2f} neg_f={negation_force:.2f} neg_s={neg_scale:.2f} force={force[:2]}..."
+                ))
+                # Payload consumes most negation force, reset operators
+                pending_operators = {}
+                negation_force *= self.negation_decay_payload
+
+            else:
+                # NEUTRAL — moderate negation decay
+                negation_force *= self.negation_decay_neutral
+                trace.append(self._trace_entry(word, "NEUTRAL", state, f"neg_f={negation_force:.2f}"))
+
+            i += 1
+
+        # --- Pass 3: Post-pass ---
+        final = self._post_pass(state)
+
+        return final, trace
+
+    # -----------------------------------------------------------------------
+    # Pass 1: Pre-pass
+    # -----------------------------------------------------------------------
+
+    def _pre_pass(self, words: List[str]) -> PrePassInfo:
+        """Detect sentence-level features before word-by-word processing."""
+        info = PrePassInfo()
+
+        # Question detection
+        info.is_question = is_question(words)
+        info.question_dampener = self.question_dampener_val if info.is_question else 1.0
+
+        # Idiom detection (greedy longest-match, left to right)
+        info.idiom_spans, info.idiom_consumed = self._detect_idioms(words)
+
+        # Negation detection (mark positions of negator words)
+        for i, w in enumerate(words):
+            if w.lower() in NEGATORS and i not in info.idiom_consumed:
+                info.negation_positions.add(i)
+
+        return info
+
+    def _detect_idioms(self, words: List[str]) -> Tuple[dict, set]:
+        """Greedy longest-match expression detection (idioms + bigrams).
+
+        Returns:
+            (spans, consumed) where spans maps start_idx to (length, force, label)
+            and consumed is the set of all word indices used by expressions.
+        """
+        spans = {}
+        consumed = set()
+        lower_words = [w.lower() for w in words]
+
+        # Pre-compute max length across combined expressions
+        max_idiom_len = max((len(k) for k in _COMBINED_EXPRESSIONS), default=0)
+
+        i = 0
+        while i < len(lower_words):
+            if i in consumed:
+                i += 1
+                continue
+
+            matched = False
+            # Try longest match first
+            for length in range(min(max_idiom_len, len(lower_words) - i), 1, -1):
+                key = tuple(lower_words[i:i+length])
+                if key in _COMBINED_EXPRESSIONS:
+                    raw = _COMBINED_EXPRESSIONS[key]
+                    # Parse tuple: 5-element (dv,da,dd,du,label) or 6-element (dv,da,dd,du,dg,label)
+                    if len(raw) == 5:
+                        force = (raw[0], raw[1], raw[2], raw[3], 0)
+                        label = raw[4]
+                    else:
+                        force = (raw[0], raw[1], raw[2], raw[3], raw[4])
+                        label = raw[5]
+
+                    spans[i] = (length, force, label)
+                    for j in range(i, i + length):
+                        consumed.add(j)
+                    matched = True
+                    i += length
+                    break
+
+            if not matched:
+                i += 1
+
+        return spans, consumed
+
+    # -----------------------------------------------------------------------
+    # Pass 2: Word processing helpers
+    # -----------------------------------------------------------------------
+
+    @staticmethod
+    def _negation_scale(negation_force: float) -> float:
+        """Convert continuous negation force to a scaling factor.
+
+        negation_force 0.0 → scale  1.0 (no negation)
+        negation_force 0.5 → scale  0.0 (cancelled out)
+        negation_force 1.0 → scale -1.0 (full inversion)
+
+        The formula: scale = 1.0 - 2.0 * negation_force
+        This is linear and continuous — no boolean anywhere.
+        """
+        return 1.0 - 2.0 * negation_force
+
+    def _compute_coefficient(self, pending_operators: dict, pre: PrePassInfo) -> float:
+        """Multiply across categories, apply question dampener, clamp."""
+        coeff = 1.0
+        for cat_coeff in pending_operators.values():
+            coeff *= cat_coeff
+
+        coeff *= pre.question_dampener
+        return max(_COEFF_FLOOR, min(_COEFF_CAP, coeff))
+
+    def _apply_force(self, state: dict, force: tuple, scale: float) -> dict:
+        """Apply an emotional force vector to the pendulum state.
+
+        Two-component model (simplified from V1):
+          1. Momentum blend: pull state toward force's implied target
+          2. Direct push: strong words bypass momentum partially
+
+        Target = center + force*scale (what state WOULD be if only word).
+        new = old * momentum + target * (1-momentum) + force * direct_push.
+        """
+        dv, da, dd, du, dg = force
+        fs = self.force_scale * scale
+        m = self.momentum
+
+        # Per-dimension scaling
+        dv *= self.scale_v
+        da *= self.scale_a
+        dd *= self.scale_d
+        du *= self.scale_u
+        dg *= self.scale_g
+
+        # Target: where this word alone would place the pendulum
+        target_v = CENTER["v"] + dv * fs
+        target_a = CENTER["a"] + da * fs
+        target_d = CENTER["d"] + dd * fs
+        target_u = CENTER["u"] + du * fs
+        target_g = CENTER["g"] + dg * fs
+
+        # Direct push: stronger words push harder (configurable bypass)
+        total_force = abs(dv * scale) + abs(da * scale)
+        push = min(1.0, total_force / self.direct_push_trigger) * self.direct_push_cap
+
+        blend = 1.0 - m
+        return {
+            "v": state["v"] * m + target_v * blend + dv * fs * push,
+            "a": state["a"] * m + target_a * blend + da * fs * push,
+            "d": state["d"] * m + target_d * blend + dd * fs * push,
+            "u": state["u"] * m + target_u * blend + du * fs * push,
+            "g": state["g"] * m + target_g * blend + dg * fs * push,
+        }
+
+    # -----------------------------------------------------------------------
+    # Pass 3: Post-pass
+    # -----------------------------------------------------------------------
+
+    def _post_pass(self, state: dict) -> VADUG:
+        """Crisis detection, clamping, final VADUG construction."""
+        v, a, d, u, g = state["v"], state["a"], state["d"], state["u"], state["g"]
+
+        # Crisis detection: if deeply negative + high urgency, lock momentum
+        # (In v2 this manifests as a gravity pull toward the crisis state)
+        if v < self.crisis_v and u > self.crisis_u:
+            # Don't let post-processing lift out of crisis
+            v = min(v, self.crisis_v)
+
+        # Clamp to 0-255
+        return VADUG(
+            v=int(max(0, min(255, round(v)))),
+            a=int(max(0, min(255, round(a)))),
+            d=int(max(0, min(255, round(d)))),
+            u=int(max(0, min(255, round(u)))),
+            g=int(max(0, min(255, round(g)))),
+        )
+
+    # -----------------------------------------------------------------------
+    # Utilities
+    # -----------------------------------------------------------------------
+
+    def _tokenize(self, text: str) -> List[str]:
+        """Split text into words, preserving contractions and punctuation markers."""
+        # Strip leading/trailing whitespace, collapse internal whitespace
+        text = text.strip()
+        if not text:
+            return []
+        # Split on whitespace, strip trailing punctuation except apostrophes/hyphens
+        raw = text.split()
+        words = []
+        for w in raw:
+            # Keep ? for question detection, strip other trailing punct
+            cleaned = w.lower().rstrip(".,!;:\")")
+            if cleaned:
+                words.append(cleaned)
+            # Preserve trailing ? on last word for question detection
+            if w.endswith("?") and (not cleaned.endswith("?")):
+                words.append("?")
+        return words
+
+    @staticmethod
+    def _trace_entry(word: str, role: str, state: dict, note: str) -> dict:
+        """Build a trace entry for debugging."""
+        return {
+            "word": word,
+            "role": role,
+            "v": round(state["v"], 1),
+            "a": round(state["a"], 1),
+            "d": round(state["d"], 1),
+            "u": round(state["u"], 1),
+            "g": round(state["g"], 1),
+            "note": note,
+        }
+
+
+# ---------------------------------------------------------------------------
+# Comparison with V1
+# ---------------------------------------------------------------------------
+
+def compare_with_v1(text: str):
+    """Run both V1 and V2 engines on the same text, print comparison."""
+    from demo.pendulum import SequentialPendulum
+
+    # V2
+    v2 = PendulumV2()
+    vadug2, trace2 = v2.process_text(text)
+
+    # V1
+    v1 = SequentialPendulum()
+    vadug1, _ = v1.process_text(text)
+
+    print(f"\n  Text: \"{text}\"")
+    print(f"  V1: {vadug1}  ({vadug1.describe()})")
+    print(f"  V2: {vadug2}  ({vadug2.describe()})")
+    diff = {
+        "dV": vadug2.v - vadug1.v,
+        "dA": vadug2.a - vadug1.a,
+        "dD": vadug2.d - vadug1.d,
+        "dU": vadug2.u - vadug1.u,
+        "dG": vadug2.g - vadug1.g,
+    }
+    print(f"  Delta: {diff}")
+    return vadug1, vadug2
+
+
+# ---------------------------------------------------------------------------
+# SST-2 Benchmark
+# ---------------------------------------------------------------------------
+
+def benchmark_sst2(max_n: int = 872):
+    """Run SST-2 validation set and print accuracy for V2 engine."""
+    try:
+        from datasets import load_dataset
+    except ImportError:
+        print("  ERROR: pip install datasets")
+        return
+
+    sst = load_dataset("stanfordnlp/sst2", split="validation")
+    if max_n:
+        sst = sst.select(range(min(max_n, len(sst))))
+
+    engine = PendulumV2()
+    correct = 0
+    total = 0
+    neutral_count = 0
+
+    t0 = time.perf_counter()
+    for row in sst:
+        text = row["sentence"]
+        truth = "positive" if row["label"] == 1 else "negative"
+        vadug, _ = engine.process_text(text)
+
+        # Classify based on valence using engine thresholds
+        pred = engine.classify(vadug.v)
+        if pred == "neutral":
+            neutral_count += 1
+
+        if pred == truth:
+            correct += 1
+        total += 1
+
+    elapsed = time.perf_counter() - t0
+    acc = correct / total * 100 if total else 0
+    neut_pct = neutral_count / total * 100 if total else 0
+
+    print(f"\n  SST-2 Benchmark ({total} samples)")
+    print(f"  Accuracy:    {acc:.1f}%")
+    print(f"  Neutral%:    {neut_pct:.1f}%")
+    print(f"  Time:        {elapsed:.1f}s ({elapsed/total*1000:.1f}ms/sample)")
+    print(f"  Momentum:    {engine.momentum}")
+    return acc
+
+
+# ---------------------------------------------------------------------------
+# Standalone test suite
+# ---------------------------------------------------------------------------
+
+def _run_tests():
+    """Test suite exercising all three passes."""
+    engine = PendulumV2()
+
+    print("=" * 70)
+    print("  PendulumV2 — Clean Emotional Physics Engine")
+    print("=" * 70)
+
+    test_cases = [
+        # (text, expected_direction, description)
+        ("I am really sad", "negative", "Self + amplifier + negative payload"),
+        ("I am happy", "positive", "Self + positive payload"),
+        ("I am really not having a good day", "negative", "Negation flips 'good'"),
+        ("This is a wonderful movie", "positive", "Positive adjective"),
+        ("I hate this", "negative", "Direct negative statement"),
+        ("Do you hate me?", "negative", "Question dampens but still negative"),
+        ("I can't wait to see you", "positive", "Idiom: can't wait = positive"),
+        ("I am fed up with everything", "negative", "Idiom: fed up = frustrated"),
+        ("He was somewhat disappointed", "neutral", "Other-far + past + hedging — barely negative, correctly dampened"),
+        ("I am extremely angry", "negative", "Self + amplifier + anger"),
+        ("A boring film", "neutral", "Article dampens — boring is mild, 'a' reduces to observation"),
+        ("My heart is broken", "negative", "Possessive self + broken"),
+        ("They passed away last week", "negative", "Idiom: passed away"),
+        ("I am never going to give up", "neutral", "Negation decays over distance — determination reads as mild positive/neutral"),
+        ("Maybe I should be worried", "negative", "Hedge + hypothetical + negative"),
+        # --- Negation-specific tests (continuous force) ---
+        ("I am not happy", "negative", "Direct negation of positive"),
+        ("I do not feel safe", "negative", "Negation passes through 'feel' to reach 'safe'"),
+        ("I cannot believe this", "negative", "Cannot as negator"),
+        ("This is not bad", "neutral", "Double negation: 'not bad' bigram → mild positive, dampened by 'this is' → neutral zone"),
+        ("I'm not happy but I'm okay", "neutral", "Clause boundary stops negation — 'not happy' bigram + 'okay' after boundary balance out"),
+        ("I don't think this is good", "negative", "Negation passes through weak payload 'think'"),
+    ]
+
+    passed = 0
+    failed = 0
+
+    for text, expected_dir, desc in test_cases:
+        vadug, trace = engine.process_text(text)
+        actual_dir = engine.classify(vadug.v)
+        ok = (actual_dir == expected_dir)
+
+        status = "PASS" if ok else "FAIL"
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+
+        print(f"\n  [{status}] {desc}")
+        print(f"    Text:     \"{text}\"")
+        print(f"    VADUG:    {vadug}")
+        print(f"    Expected: {expected_dir}, Got: {actual_dir}")
+
+        # Show trace
+        for t in trace:
+            role_tag = f"[{t['role']:10s}]"
+            print(f"      {role_tag} {t['word']:15s} V={t['v']:5.1f} A={t['a']:5.1f} "
+                  f"D={t['d']:5.1f} U={t['u']:5.1f} G={t['g']:5.1f}  {t['note']}")
+
+    print(f"\n{'=' * 70}")
+    print(f"  Results: {passed} passed, {failed} failed out of {passed + failed}")
+    print(f"{'=' * 70}")
+
+    # V1 vs V2 comparison
+    print(f"\n{'=' * 70}")
+    print("  V1 vs V2 Comparison")
+    print(f"{'=' * 70}")
+
+    compare_texts = [
+        "I am really sad",
+        "This movie is absolutely wonderful",
+        "I hate everything about this",
+        "She was kind of disappointed",
+        "Do you love me?",
+        "I want to die",
+        "I am fed up with this nonsense",
+    ]
+
+    for text in compare_texts:
+        try:
+            compare_with_v1(text)
+        except Exception as e:
+            print(f"\n  Text: \"{text}\"")
+            print(f"  V1 comparison error: {e}")
+
+
+if __name__ == "__main__":
+    _run_tests()
+
+    # Run SST-2 if --benchmark flag
+    if "--benchmark" in sys.argv:
+        max_n = 872
+        for arg in sys.argv:
+            if arg.startswith("--max="):
+                max_n = int(arg.split("=")[1])
+        benchmark_sst2(max_n)

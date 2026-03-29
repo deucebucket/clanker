@@ -1,0 +1,124 @@
+# Web opcodes: 0xC0-0xCF
+# HTTP, API, and networking operations
+
+opcodes:
+  0xC0:
+    name: ENDPOINT
+    description: "Define an HTTP endpoint with a method and path."
+    params:
+      - {name: method, type: str, required: true}
+      - {name: path, type: str, required: true}
+
+  0xC1:
+    name: RESPOND
+    description: "Send an HTTP response with status and optional body."
+    params:
+      - {name: status, type: int, required: true}
+      - {name: body, type: str, optional: true}
+      - {name: content_type, type: str, optional: true}
+
+  0xC2:
+    name: REQUEST
+    description: "Make an outbound HTTP request."
+    params:
+      - {name: method, type: str, required: true}
+      - {name: url, type: str, required: true}
+      - {name: body, type: str, optional: true}
+      - {name: headers, type: map, optional: true}
+
+  0xC3:
+    name: HEADER
+    description: "Set or read an HTTP header."
+    params:
+      - {name: name, type: str, required: true}
+      - {name: value, type: str, optional: true}
+
+  0xC4:
+    name: MIDDLEWARE
+    description: "Register middleware for request processing."
+    params:
+      - {name: name, type: str, required: true}
+      - {name: phase, type: str, optional: true}
+
+  0xC5:
+    name: WEBSOCKET
+    description: "Open or handle a WebSocket connection."
+    params:
+      - {name: path, type: str, required: true}
+      - {name: event, type: str, optional: true}
+
+  0xC6:
+    name: AUTH
+    description: "Apply authentication/authorization to the current scope."
+    params:
+      - {name: scheme, type: str, required: true}
+      - {name: role, type: str, optional: true}
+
+  0xC7:
+    name: RATE_LIMIT
+    description: "Apply rate limiting to the current endpoint."
+    params:
+      - {name: max_requests, type: int, required: true}
+      - {name: window, type: duration, required: true}
+
+  0xC8:
+    name: CORS
+    description: "Configure Cross-Origin Resource Sharing policy."
+    params:
+      - {name: origin, type: str, required: true}
+      - {name: methods, type: str, optional: true}
+      - {name: headers, type: str, optional: true}
+
+  0xC9:
+    name: COOKIE
+    description: "Set or read an HTTP cookie."
+    params:
+      - {name: name, type: str, required: true}
+      - {name: value, type: str, optional: true}
+      - {name: max_age, type: int, optional: true}
+      - {name: secure, type: bool, optional: true}
+
+  0xCA:
+    name: SESSION
+    description: "Manage a user session (create, read, or destroy)."
+    params:
+      - {name: action, type: str, required: true}
+      - {name: key, type: str, optional: true}
+      - {name: value, type: str, optional: true}
+
+  0xCB:
+    name: SSL
+    description: "Configure SSL/TLS certificate and options."
+    params:
+      - {name: cert, type: str, required: true}
+      - {name: key, type: str, required: true}
+      - {name: min_version, type: str, optional: true}
+
+  0xCC:
+    name: GRAPHQL
+    description: "Define a GraphQL endpoint with schema and resolvers."
+    params:
+      - {name: path, type: str, required: true}
+      - {name: schema, type: str, optional: true}
+
+  0xCD:
+    name: SSE
+    description: "Open a Server-Sent Events stream."
+    params:
+      - {name: path, type: str, required: true}
+      - {name: event, type: str, optional: true}
+
+  0xCE:
+    name: UPLOAD
+    description: "Handle a file upload from the client."
+    params:
+      - {name: field, type: str, required: true}
+      - {name: max_size, type: str, optional: true}
+      - {name: accept, type: str, optional: true}
+
+  0xCF:
+    name: REDIRECT
+    description: "Send an HTTP redirect response."
+    params:
+      - {name: url, type: str, required: true}
+      - {name: status, type: int, optional: true}

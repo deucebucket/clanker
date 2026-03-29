@@ -1,0 +1,312 @@
+# Chinese (Mandarin) dictionary for Clanker-Lang
+language: zh
+name: 中文
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: human
+
+opcodes:
+  # 核心 (0x00-0x15)
+  0x00:
+    template: "完成"
+    with_param: "完成：\"{message}\""
+  0x01:
+    template: "等待 {duration}"
+  0x02:
+    template: "设置 {name} 为 {value}"
+  0x03:
+    template: "输出 {value}"
+  0x04:
+    template: "日志 [{level}] {message}"
+  0x05:
+    template: "调用 {function}"
+    with_param: "调用 {function}，参数为 {args}"
+  0x06:
+    template: "返回"
+    with_param: "返回 {value}"
+  0x07:
+    template: "加载 {source}"
+    with_param: "加载 {source}，别名为 {alias}"
+  0x08:
+    template: "存储 {key} = {value}"
+  0x09:
+    template: "删除 {key}"
+  0x0A:
+    template: "断言 {condition}"
+    with_param: "断言 {condition}：\"{message}\""
+  0x0B:
+    template: "定义 {name}"
+    with_param: "定义 {name}({params})"
+  0x0C:
+    template: "标签 {name}"
+  0x0D:
+    template: "跳转到 {label}"
+  0x0E:
+    template: "注册操作码 {opcode} 为 {name}"
+  0x0F:
+    template: "结束"
+  0x10:
+    template: "# {text}"
+  0x11:
+    template: "让出"
+    with_param: "让出 {value}"
+  0x12:
+    template: "派生 {function}"
+    with_param: "派生 {function}，参数为 {args}"
+  0x13:
+    template: "等待合并 {task}"
+  0x14:
+    template: "发送 {message} 到 {target}"
+  0x15:
+    template: "接收来自 {channel}"
+    with_param: "接收来自 {channel}（超时 {timeout}）"
+
+  # 推理 (0x20-0x26)
+  0x20:
+    template: "考虑：{premise}"
+  0x21:
+    template: "检查：{condition} -> {result}"
+  0x22:
+    template: "如果{if_condition}则{then_conclusion}"
+  0x23:
+    template: "因此：{conclusion}"
+  0x24:
+    template: "答案：{result}"
+  0x25:
+    template: "质疑步骤{step_ref}：{reason}"
+  0x26:
+    template: "假设：{assumption}"
+
+  # 硬件 (0xA0-0xAB)
+  0xA0:
+    template: "设置 GPIO 引脚 {pin} 为 {state}"
+  0xA1:
+    template: "读取 GPIO 引脚 {pin}"
+  0xA2:
+    template: "设置引脚 {pin} 的 PWM 占空比为 {duty}%"
+    with_param: "设置引脚 {pin} 的 PWM 占空比为 {duty}%，频率 {frequency}Hz"
+  0xA3:
+    template: "向 I2C 设备 {address} 寄存器 {register} 写入 {data}"
+  0xA4:
+    template: "从 I2C 设备 {address} 寄存器 {register} 读取 {length} 字节"
+  0xA5:
+    template: "SPI 传输至设备 {device}：{data}"
+  0xA6:
+    template: "通过 UART {port} 发送 \"{data}\""
+  0xA7:
+    template: "从 UART {port} 接收 {length} 字节"
+  0xA8:
+    template: "读取 ADC 通道 {channel}"
+  0xA9:
+    template: "读取传感器 {sensor}"
+    with_param: "读取传感器 {sensor}，单位 {unit}"
+  0xAA:
+    template: "设置电机 {motor} 速度为 {speed}"
+    with_param: "设置电机 {motor} 速度为 {speed}，方向 {direction}"
+  0xAB:
+    template: "向显示器 {display} 写入 \"{content}\""
+
+  # 网络 (0xC0-0xCF)
+  0xC0:
+    template: "定义 {method} 端点于 {path}"
+  0xC1:
+    template: "以状态码 {status} 响应"
+    with_param: "以状态码 {status} 响应：{body}"
+  0xC2:
+    template: "发起 {method} 请求到 {url}"
+    with_param: "发起 {method} 请求到 {url}，请求体 {body}"
+  0xC3:
+    template: "设置请求头 {name}：{value}"
+  0xC4:
+    template: "使用中间件 {name}"
+    with_param: "使用中间件 {name}，阶段 {phase}"
+  0xC5:
+    template: "WebSocket 于 {path}"
+    with_param: "WebSocket 于 {path}，事件 {event}"
+  0xC6:
+    template: "要求 {scheme} 认证"
+    with_param: "要求 {scheme} 认证，角色 {role}"
+  0xC7:
+    template: "限速：每 {window} 最多 {max_requests} 请求"
+  0xC8:
+    template: "允许来自 {origin} 的跨域请求"
+    with_param: "允许来自 {origin} 的跨域请求，方法 {methods}，头部 {headers}"
+  0xC9:
+    template: "设置 Cookie {name} 为 {value}"
+    with_param: "设置 Cookie {name} 为 {value}，最大存活 {max_age}"
+  0xCA:
+    template: "{action} 会话"
+    with_param: "{action} 会话键 {key}"
+  0xCB:
+    template: "配置 SSL 证书 {cert} 密钥 {key}"
+    with_param: "配置 SSL 证书 {cert} 密钥 {key}，最低 TLS {min_version}"
+  0xCC:
+    template: "GraphQL 端点于 {path}"
+    with_param: "GraphQL 端点于 {path}，模式 {schema}"
+  0xCD:
+    template: "SSE 流于 {path}"
+    with_param: "SSE 流于 {path}，事件 {event}"
+  0xCE:
+    template: "接受上传字段 {field}"
+    with_param: "接受上传字段 {field}，最大 {max_size}"
+  0xCF:
+    template: "重定向到 {url}"
+    with_param: "重定向到 {url}，状态码 {status}"
+
+  # 数据 (0xD0-0xDF)
+  0xD0:
+    template: "查询 {source}"
+    with_param: "查询 {source}，条件 {filter}"
+  0xD1:
+    template: "转换：{operation}"
+    with_param: "转换 {field}：{operation}"
+  0xD2:
+    template: "验证符合 {schema}"
+  0xD3:
+    template: "对集合映射 {function}"
+  0xD4:
+    template: "过滤条件 {predicate}"
+  0xD5:
+    template: "聚合：{operation}"
+    with_param: "聚合 {field}：{operation}"
+  0xD6:
+    template: "排序按 {field}"
+    with_param: "排序按 {field} {order}"
+  0xD7:
+    template: "分组按 {field}"
+  0xD8:
+    template: "合并 {left} 与 {right}"
+    with_param: "合并 {left} 与 {right}，键 {on}"
+  0xD9:
+    template: "去重"
+    with_param: "去重按 {field}"
+  0xDA:
+    template: "融合 {source} 到 {target}"
+    with_param: "融合 {source} 到 {target}（策略：{strategy}）"
+  0xDB:
+    template: "模式 {name}"
+    with_param: "模式 {name}（{fields}）"
+  0xDC:
+    template: "索引 {field}"
+  0xDD:
+    template: "批处理 {size}"
+  0xDE:
+    template: "流处理 {source}"
+    with_param: "流处理 {source} 通过 {handler}"
+  0xDF:
+    template: "缓存 {key}"
+    with_param: "缓存 {key}（有效期：{ttl}）"
+
+  # 逻辑 (0xE0-0xE3)
+  0xE0:
+    template: "当 {condition}："
+  0xE1:
+    template: "匹配 {value}："
+  0xE2:
+    template: "重复 {count} 次："
+    with_param: "当 {condition} 时重复："
+  0xE3:
+    template: "尝试："
+    with_param: "尝试（错误存入 {error_var}）："
+
+# 情感区域映射 (效价, 唤醒度 -> 最近的词)
+emotional_regions:
+  joy:
+    valence: [64, 127]
+    arousal: [0, 80]
+    dominance: [20, 100]
+    description: "满足、快乐、满意"
+  excitement:
+    valence: [60, 127]
+    arousal: [80, 127]
+    dominance: [40, 127]
+    description: "激动、兴奋、振奋"
+  anger:
+    valence: [-127, -40]
+    arousal: [60, 127]
+    dominance: [40, 127]
+    description: "沮丧、愤怒、暴怒"
+  fear:
+    valence: [-127, -20]
+    arousal: [60, 127]
+    dominance: [-127, -20]
+    description: "焦虑、害怕、恐慌"
+  sadness:
+    valence: [-127, -30]
+    arousal: [-127, -20]
+    dominance: [-127, 0]
+    description: "低落、悲伤、哀痛"
+  calm:
+    valence: [-10, 40]
+    arousal: [-127, -40]
+    dominance: [-20, 40]
+    description: "放松、平静、安详"
+  surprise:
+    valence: [-20, 80]
+    arousal: [80, 127]
+    dominance: [-40, 40]
+    description: "惊讶、惊奇、惊叹"
+  disgust:
+    valence: [-127, -50]
+    arousal: [0, 60]
+    dominance: [20, 80]
+    description: "厌恶、反感、鄙视"
+  trust:
+    valence: [30, 100]
+    arousal: [-40, 40]
+    dominance: [0, 60]
+    description: "信任、安心、可靠"
+  neutral:
+    valence: [-15, 15]
+    arousal: [-15, 15]
+    dominance: [-15, 15]
+    description: "无明显情感"
+  urgency_low:
+    urgency: [0, 50]
+    description: "日常，无时间压力"
+  urgency_medium:
+    urgency: [51, 150]
+    description: "中等优先级，需要及时关注"
+  urgency_high:
+    urgency: [151, 220]
+    description: "高优先级，需要迅速行动"
+  urgency_critical:
+    urgency: [221, 255]
+    description: "紧急，需要立即行动"
+
+# 情感坐标映射 (效价, 唤醒度 -> 最近的词)
+emotional_coordinates:
+  "+0.9,+0.9": "狂喜"
+  "+0.8,+0.7": "激动"
+  "+0.7,+0.5": "兴奋"
+  "+0.6,+0.3": "快乐"
+  "+0.4,+0.1": "愉悦"
+  "+0.3,-0.2": "满足"
+  "+0.2,-0.5": "宁静"
+  "+0.1,-0.7": "平和"
+  "0.0,0.0": "中性"
+  "-0.2,-0.3": "忧郁"
+  "-0.3,-0.1": "失望"
+  "-0.4,+0.2": "沮丧"
+  "-0.5,+0.4": "烦躁"
+  "-0.6,+0.6": "愤怒"
+  "-0.8,+0.8": "暴怒"
+  "-0.9,+0.9": "狂怒"
+  "-0.3,+0.7": "焦虑"
+  "-0.5,+0.8": "恐慌"
+  "-0.6,-0.4": "悲伤"
+  "-0.8,-0.6": "绝望"
+  "-0.1,+0.9": "惊吓"
+  "+0.1,+0.8": "惊叹"
+
+intent_mappings:
+  request: "能否{action}？"
+  inform: "{content}"
+  question: "{content}？"
+  command: "{action}！"
+  empathize: "我理解，{content}"
+  greet: "你好"
+  farewell: "再见"
+  agree: "是的，{content}"
+  disagree: "不，{content}"
+  apologize: "抱歉，{content}"

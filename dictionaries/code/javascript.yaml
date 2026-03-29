@@ -1,0 +1,208 @@
+# JavaScript code dictionary for Clanker-Lang
+language: javascript
+name: JavaScript
+spec_version: "0.1"
+dictionary_version: "1.0"
+kind: code
+
+opcodes:
+  # Core (0x00-0x15)
+  0x00:
+    template: "// done"
+    with_param: "console.log(\"{message}\");"
+  0x01:
+    template: "await new Promise(r => setTimeout(r, {duration}));"
+  0x02:
+    template: "let {name} = {value};"
+  0x03:
+    template: "console.log({value});"
+  0x04:
+    template: "console.{level}(\"{message}\");"
+  0x05:
+    template: "{function}();"
+    with_param: "{function}({args});"
+  0x06:
+    template: "return;"
+    with_param: "return {value};"
+  0x07:
+    template: "const {alias} = require(\"{source}\");"
+    imports: []
+  0x08:
+    template: "store[\"{key}\"] = {value};"
+  0x09:
+    template: "delete store[\"{key}\"];"
+  0x0A:
+    template: "console.assert({condition});"
+    with_param: "console.assert({condition}, \"{message}\");"
+  0x0B:
+    template: "function {name}() {{"
+    with_param: "function {name}({params}) {{"
+  0x0C:
+    template: "// label: {name}"
+  0x0D:
+    template: "// goto {label} (not supported in JS)"
+  0x0E:
+    template: "opcodes[{opcode}] = \"{name}\";"
+  0x0F:
+    template: "}}"
+  0x10:
+    template: "// {text}"
+  0x11:
+    template: "yield;"
+    with_param: "yield {value};"
+  0x12:
+    template: "{function}();"
+    with_param: "{function}({args});"
+  0x13:
+    template: "await {task};"
+  0x14:
+    template: "{target}.send(\"{message}\");"
+  0x15:
+    template: "const msg = await {channel}.receive();"
+
+  # Hardware (0xA0-0xAB)
+  0xA0:
+    template: "gpio.write({pin}, {state});"
+    imports: ["const Gpio = require('onoff').Gpio;"]
+  0xA1:
+    template: "const val = gpio.readSync({pin});"
+    imports: ["const Gpio = require('onoff').Gpio;"]
+  0xA2:
+    template: "pwm.write({pin}, {duty});"
+  0xA3:
+    template: "i2c.writeByteSync({address}, {register}, {data});"
+    imports: ["const i2c = require('i2c-bus');"]
+  0xA4:
+    template: "const buf = Buffer.alloc({length}); i2c.readI2cBlockSync({address}, {register}, {length}, buf);"
+    imports: ["const i2c = require('i2c-bus');"]
+  0xA5:
+    template: "spi.transfer([{{ sendBuffer: Buffer.from({data}) }}]);"
+    imports: ["const SPI = require('spi-device');"]
+  0xA6:
+    template: "port.write(\"{data}\");"
+    imports: ["const SerialPort = require('serialport');"]
+  0xA7:
+    template: "const data = await port.read({length});"
+    imports: ["const SerialPort = require('serialport');"]
+  0xA8:
+    template: "const val = adc.read({channel});"
+  0xA9:
+    template: "const val = sensor.read(\"{sensor}\");"
+  0xAA:
+    template: "motor[{motor}].setSpeed({speed});"
+  0xAB:
+    template: "display['{display}'].write(\"{content}\");"
+
+  # Web (0xC0-0xCF)
+  0xC0:
+    template: "app.{method}(\"{path}\", async (req, res) => {{"
+    imports: ["const express = require('express');", "const app = express();"]
+  0xC1:
+    template: "res.status({status}).end();"
+    with_param: "res.status({status}).send({body});"
+  0xC2:
+    template: "await fetch(\"{url}\", {{ method: \"{method}\" }});"
+    with_param: "await fetch(\"{url}\", {{ method: \"{method}\", body: JSON.stringify({body}) }});"
+  0xC3:
+    template: "res.setHeader(\"{name}\", \"{value}\");"
+  0xC4:
+    template: "app.use({name});"
+  0xC5:
+    template: "io.on(\"connection\", (socket) => {{ // {path}"
+    imports: ["const io = require('socket.io')(server);"]
+  0xC6:
+    template: "// auth: {scheme}"
+    with_param: "// auth: {scheme}, role: {role}"
+  0xC7:
+    template: "// rate limit: {max_requests} per {window}"
+  0xC8:
+    template: "app.use(cors({{ origin: \"{origin}\" }}));"
+    with_param: "app.use(cors({{ origin: \"{origin}\", methods: [{methods}], allowedHeaders: [{headers}] }}));"
+    imports: ["const cors = require('cors');"]
+  0xC9:
+    template: "res.cookie(\"{name}\", \"{value}\");"
+    with_param: "res.cookie(\"{name}\", \"{value}\", {{ maxAge: {max_age} }});"
+  0xCA:
+    template: "req.session.{action}();"
+    with_param: "req.session.{key};"
+  0xCB:
+    template: "const server = https.createServer({{ cert: fs.readFileSync(\"{cert}\"), key: fs.readFileSync(\"{key}\") }}, app);"
+    with_param: "const server = https.createServer({{ cert: fs.readFileSync(\"{cert}\"), key: fs.readFileSync(\"{key}\"), minVersion: \"{min_version}\" }}, app);"
+    imports: ["const https = require('https');", "const fs = require('fs');"]
+  0xCC:
+    template: "app.use(\"{path}\", graphqlHTTP({{ graphiql: true }}));"
+    with_param: "app.use(\"{path}\", graphqlHTTP({{ schema: {schema}, graphiql: true }}));"
+    imports: ["const {{ graphqlHTTP }} = require('express-graphql');"]
+  0xCD:
+    template: "app.get(\"{path}\", (req, res) => {{ res.setHeader(\"Content-Type\", \"text/event-stream\"); }});"
+    with_param: "app.get(\"{path}\", (req, res) => {{ res.setHeader(\"Content-Type\", \"text/event-stream\"); res.write(\"event: {event}\\n\"); }});"
+  0xCE:
+    template: "const file = req.files.{field};"
+    with_param: "const file = req.files.{field};  // max: {max_size}"
+    imports: ["const multer = require('multer');"]
+  0xCF:
+    template: "res.redirect(\"{url}\");"
+    with_param: "res.redirect({status}, \"{url}\");"
+
+  # Data (0xD0-0xDF)
+  0xD0:
+    template: "const results = await db.query(\"{source}\");"
+    with_param: "const results = await db.query(\"{source}\").where({filter});"
+  0xD1:
+    template: "data = {operation}(data);"
+    with_param: "data.{field} = {operation}(data.{field});"
+  0xD2:
+    template: "validate(data, \"{schema}\");"
+  0xD3:
+    template: "const result = collection.map({function});"
+  0xD4:
+    template: "const result = collection.filter(x => {predicate});"
+  0xD5:
+    template: "const result = collection.reduce({operation});"
+    with_param: "const result = collection.reduce((acc, x) => {operation}(acc, x.{field}), 0);"
+  0xD6:
+    template: "collection.sort((a, b) => a.{field} - b.{field});"
+    with_param: "collection.sort((a, b) => {order} === \"desc\" ? b.{field} - a.{field} : a.{field} - b.{field});"
+  0xD7:
+    template: "const groups = Object.groupBy(collection, x => x.{field});"
+  0xD8:
+    template: "const result = {left}.flatMap(a => {right}.map(b => ({{...a, ...b}})));"
+    with_param: "const result = {left}.flatMap(a => {right}.filter(b => a.{on} === b.{on}).map(b => ({{...a, ...b}})));"
+  0xD9:
+    template: "const result = [...new Set(collection)];"
+    with_param: "const result = [...new Map(collection.map(x => [x.{field}, x])).values()];"
+  0xDA:
+    template: "Object.assign({target}, {source});"
+    with_param: "Object.assign({target}, {source});  // strategy: {strategy}"
+  0xDB:
+    template: "const {name}Schema = {{}};"
+    with_param: "const {name}Schema = {{ {fields} }};"
+  0xDC:
+    template: "const index = new Map(collection.map(x => [x.{field}, x]));"
+  0xDD:
+    template: "for (let i = 0; i < collection.length; i += {size}) {{ const batch = collection.slice(i, i + {size});"
+  0xDE:
+    template: "for await (const item of stream(\"{source}\")) {{"
+    with_param: "for await (const item of stream(\"{source}\").pipe({handler})) {{"
+  0xDF:
+    template: "const cached = cache.get(\"{key}\") ?? cache.set(\"{key}\", compute());"
+    with_param: "const cached = cache.get(\"{key}\", {{ ttl: {ttl} }}) ?? cache.set(\"{key}\", compute(), {{ ttl: {ttl} }});"
+
+  # Logic (0xE0-0xE3)
+  0xE0:
+    template: "if ({condition}) {{"
+  0xE1:
+    template: "switch ({value}) {{"
+  0xE2:
+    template: "for (let i = 0; i < {count}; i++) {{"
+    with_param: "while ({condition}) {{"
+  0xE3:
+    template: "try {{"
+    block_close: "}} catch (e) {{"
+
+# Emotional region mappings for code output
+# Code dictionaries map emotions to comment annotations
+emotional_regions:
+  positive: "// sentiment: positive ({valence})"
+  negative: "// sentiment: negative ({valence})"
+  neutral: "// sentiment: neutral"

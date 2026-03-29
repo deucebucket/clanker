@@ -1,0 +1,14 @@
+{
+  "pad_token": "<pad>",
+  "bos_token": "<bos>",
+  "eos_token": "<eos>",
+  "unk_token": "<unk>",
+  "sep_token": "<sep>",
+  "additional_special_tokens": [
+    "<emotion>",
+    "<round>",
+    "<context>",
+    "<header>",
+    "<newline>"
+  ]
+}

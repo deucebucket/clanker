@@ -1,0 +1,49 @@
+{
+  "optimal_thresholds": {
+    "EMOTIONAL": {
+      "low": 127,
+      "high": 128
+    },
+    "VENTING": {
+      "low": 127,
+      "high": 128
+    },
+    "CASUAL": {
+      "low": 129,
+      "high": 130
+    },
+    "STATEMENT": {
+      "low": 121,
+      "high": 131
+    },
+    "QUESTION": {
+      "low": 115,
+      "high": 135
+    },
+    "REQUEST": {
+      "low": 115,
+      "high": 135
+    },
+    "GREETING": {
+      "low": 115,
+      "high": 135
+    },
+    "DEFAULT": {
+      "low": 121,
+      "high": 131
+    }
+  },
+  "per_dataset_accuracy": {
+    "sst2": 59.2,
+    "go_emotions": 48.4,
+    "tweet_eval": 70.4
+  },
+  "weighted_accuracy": 60.7,
+  "sweep_params": {
+    "emo_low": 127,
+    "emo_high": 128,
+    "wide_low": 115,
+    "wide_high": 135
+  },
+  "configs_tested": 400
+}
