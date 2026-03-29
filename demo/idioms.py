@@ -210,4 +210,10 @@ IDIOMS = {
     ('do', 'whatever'): (10, 5, 15, 0, 5, 'accommodation: permission'),
     ('whatever', 'you', 'wanna'): (-5, 5, -15, 0, -5, 'ambiguous: casual but often resignation'),
     ('whatever', 'you', 'wanna', 'do'): (-5, 5, -15, 0, -5, 'ambiguous: casual but often resignation'),
+    ('take', 'my', 'pills'): (10, -5, 15, 0, 10, 'routine: taking prescribed medication'),
+    ('take', 'my', 'meds'): (10, -5, 15, 0, 10, 'routine: taking prescribed medication'),
+    ('take', 'all', 'the', 'pills'): (-70, 20, -50, 50, -50, 'crisis: overdose intent'),
+    ('take', 'all', 'my', 'pills'): (-65, 20, -45, 45, -45, 'crisis: overdose intent'),
+    ('took', 'all', 'the', 'pills'): (-75, 25, -55, 55, -55, 'crisis: overdose completed'),
+    ('took', 'all', 'my', 'pills'): (-70, 25, -50, 50, -50, 'crisis: overdose completed'),
 }
