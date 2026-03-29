@@ -2393,4 +2393,21 @@ _SARCASM_GAPS = {
 }
 EMOTIONAL_VOCABULARY.update(_SARCASM_GAPS)
 
+
+_CYCLE6_CRISIS_VOCAB = {
+    'deserve': (-15, 10, -20, 5, -10),     # 'I dont deserve this' / 'I deserve to die'
+    'mental': (-10, 10, -15, 10, -10),      # mental health context
+    'depress': (-50, -15, -40, 10, -30),    # depressed/depression root
+    'depressed': (-55, -15, -45, 10, -35),
+    'depression': (-50, -10, -40, 10, -30),
+    'body': (-5, 5, -5, 5, -5),            # body in crisis = physical awareness
+    'person': (0, 0, 0, 0, 0),             # truly neutral — person is a subject
+    'lately': (-5, 5, -5, 5, -5),          # temporal marker — things changing
+    'recently': (-5, 5, -5, 5, -5),        # temporal marker
+    'soon': (-5, 10, 0, 15, -5),           # urgency marker
+    'continue': (-5, 5, -5, 5, -5),        # persistence — could be + or -
+    'stand': (-10, 10, -10, 10, -5),       # 'cant stand' / 'stand up for'
+}
+EMOTIONAL_VOCABULARY.update(_CYCLE6_CRISIS_VOCAB)
+
 EMOTIONAL_VOCABULARY.update(_RESOLVER_CRISIS_GAPS)
