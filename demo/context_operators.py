@@ -181,6 +181,9 @@ CONTEXT_OPERATORS = {
     "man":          (0.80, "exasperation", -10),
     "dude":         (0.80, "exasperation", -10),
     "bro":          (0.80, "exasperation", -10),
+    # Temporal urgency slang
+    "rn":           (1.2, "amplifiers", -5),
+
 
 
     # --- Evidential markers (reported speech, distance from experience) ---
