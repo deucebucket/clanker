@@ -1284,12 +1284,12 @@ class PendulumV2:
         raw = text.split()
         words = []
         for w in raw:
-            # Keep ? for question detection, strip other trailing punct
-            cleaned = w.lower().rstrip(".,!;:\")")
+            # Strip trailing punctuation including ? from word
+            cleaned = w.lower().rstrip(".,!;:\")?")
             if cleaned:
                 words.append(cleaned)
-            # Preserve trailing ? on last word for question detection
-            if w.endswith("?") and (not cleaned.endswith("?")):
+            # Add ? as separate token for question detection
+            if w.endswith("?"):
                 words.append("?")
         return words
 

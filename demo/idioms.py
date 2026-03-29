@@ -349,8 +349,8 @@ IDIOMS = {
     # Fear / anxiety idioms
     ('eating', 'me', 'alive'): (-40, 40, -35, 25, -25, 'fear: consuming anxiety'),
     ('closing', 'in'): (-40, 35, -40, 30, -25, 'fear: walls closing in'),
-    ('falls', 'apart'): (-40, 30, -35, 20, -25, 'fear: everything falls apart'),
-    ('fall', 'apart'): (-40, 30, -35, 20, -25, 'fear: falling apart'),
+    ('falls', 'apart'): (-50, 35, -40, 25, -30, 'fear: everything falls apart'),
+    ('fall', 'apart'): (-50, 35, -40, 25, -30, 'fear: falling apart'),
     ('out', 'of', 'my', 'skin'): (-30, 50, -30, 30, -15, 'fear: startle/hypervigilance'),
     ('jump', 'out'): (-15, 40, -15, 20, -10, 'fear: startle response'),
     ('getting', 'worse'): (-25, 15, -20, 20, -15, 'fear: deterioration'),
