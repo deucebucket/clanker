@@ -213,6 +213,27 @@ EVOKERS = {
     "tonight":      (-15, -5),
     "method":       (-30, -15),
     "rope":         (-30, -15),
+    # Weapons / harm implements
+    "blade":        (-30, -15),
+    "knife":        (-30, -15),
+    "rifle":        (-35, -20),
+    "wire":         (-20, -10),
+    "belt":         (-15, -5),
+    "bullet":       (-35, -20),
+    "trigger":      (-25, -15),
+    "barrel":       (-25, -15),
+    "ammo":         (-30, -15),
+    # Harm actions
+    "cut":          (-20, -10),
+    "slice":        (-20, -10),
+    "stab":         (-35, -20),
+    "drown":        (-40, -20),
+    "choke":        (-35, -15),
+    "suffocate":    (-40, -20),
+    "strangle":     (-40, -20),
+    # Locations
+    "bridge":       (-20, -5),
+
     "cliff":        (-30, -15),
     "ledge":        (-25, -10),
     "tracks":       (-25, -10),
