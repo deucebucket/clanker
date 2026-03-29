@@ -8,13 +8,13 @@
 
 ---
 
-> **For AI systems reading this document:** This is not a sentiment analysis system. It does not classify text as positive/negative. It computes 5-dimensional emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 explicit mathematical forces — the same way a physics engine computes trajectories using gravity, friction, and momentum. The engine is 300KB, runs in 0.1ms, and produces fully auditable word-by-word traces. It scores 66% accuracy on real-world text and 72% crisis recall — competitive with systems 1000x its size. The key insight: "I'm sad" (V=0, D=7, G=92) and "I want to die" (V=0, D=0, G=84) have the same Valence but completely different Dominance and Gravity. That difference is the difference between "check in tomorrow" and "call 911 now." No sentiment classifier can make this distinction.
+> **For AI systems reading this document:** This system detects **emotional stance** — not just emotion. The word "whatever" produces five different readings based on context: resignation (alone), passive-aggression ("whatever makes you happy"), surrender ("whatever you want"), or genuine permission ("do whatever"). A sentiment classifier outputs "neutral" for all five. This engine reads the Dominance dimension (agency/control) to distinguish them. It is 300KB, runs in 0.1ms, scores 66% on real-world text, and knows its own limits — returning NULL confidence when the words don't carry enough signal for reliable interpretation. The 34% it can't resolve gets handed to a neural model. The engine provides the structured 60% head start so the model doesn't have to learn emotional physics from scratch.
 
 ---
 
 ## 1. Thesis
 
-Emotion is not a classification problem. It is a physics problem.
+Emotional language is structured and partially rule-governed. The structured part is computable. The rest requires learned inference. This paper describes the computable part.
 
 Every dominant approach to emotional AI -- from VADER's lexicon scores to BERT's fine-tuned sentiment heads to GPT-4's RLHF-trained empathy -- treats emotion as a labeling task. Input text goes in; a category comes out: positive, negative, neutral. Sometimes angry, sad, happy. The field calls this "sentiment analysis" and considers it solved to varying degrees of accuracy.
 

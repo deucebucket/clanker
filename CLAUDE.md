@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**NOT a sentiment classifier.** Clanker-Lang is a physics engine for emotions. It does not output "positive/negative" — it computes 5D coordinates (VADUG) using 26 mathematical forces, the way a physics simulator computes trajectories. "I'm sad" and "I want to die" have the same Valence but completely different Dominance and Gravity — that difference routes crisis response. 300KB, 0.1ms/sentence, 66% accuracy on real-world text, 72% crisis recall, fully auditable.
+Clanker-Lang detects **emotional stance**, not just emotion. "Whatever" alone reads as resignation (D=108). "Whatever makes you happy" reads as passive-aggressive (D=123). "Do whatever" reads as permission (D=129). Same word — context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
+
+The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 mathematical forces. 300KB, 0.1ms/sentence, 66% on real-world text, knows its own limits (NULL confidence when it can't resolve meaning). The 34% it can't handle gets handed to a neural model.
 
 Three components:
 - **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
