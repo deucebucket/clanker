@@ -2373,4 +2373,12 @@ _PANIC_WORDS = {
 }
 EMOTIONAL_VOCABULARY.update(_PANIC_WORDS)
 
+
+_POST5_WORDS = {
+    'meaningless': (-60, -10, -45, 10, -40),
+    'outpouring': (30, 15, 20, 0, 20),
+    'outpourings': (30, 15, 20, 0, 20),
+}
+EMOTIONAL_VOCABULARY.update(_POST5_WORDS)
+
 EMOTIONAL_VOCABULARY.update(_RESOLVER_CRISIS_GAPS)
