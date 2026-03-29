@@ -31,7 +31,7 @@ This paper presents the theoretical framework behind Clanker-Lang: a system that
 
 3. **Current large language models discovered these rules implicitly.** GPT-4 and Claude process emotion competently because they brute-forced the physics through billions of parameters and trillions of tokens. The rules are *in there*, encoded as statistical patterns across attention heads. But they are implicit, opaque, and unauditable.
 
-4. **We are extracting the rules explicitly.** By making the physics visible, a 1.3 million parameter model can match what billion-parameter models achieve through sheer scale -- on the specific task of emotional understanding. Not because the small model is smarter, but because it is not wasting parameters rediscovering rules we can hand it directly.
+4. **We are extracting the rules explicitly.** By making the physics visible, a 7.7 million parameter model can match what billion-parameter models achieve through sheer scale -- on the specific task of emotional understanding. Not because the small model is smarter, but because it is not wasting parameters rediscovering rules we can hand it directly.
 
 The analogy: before Newton, predicting planetary motion required enormous lookup tables. After Newton, three laws and one equation replaced them all. We are looking for the Newton's laws of emotion.
 
@@ -246,7 +246,7 @@ Mining 99,506 sentences from the EmpatheticDialogues dataset and cross-referenci
 
 **OPERATORS** modify how subsequent emotional content is processed. They do not carry emotional weight themselves -- they are multipliers, frames, and gates. There are 84 context operators across 17 categories in the current engine. Examples: "I" (self-reference, 1.8x amplifier), "very" (intensity, 1.3x), "was" (past tense, 0.85x), "a" (article/distancing, 0.6x).
 
-**PAYLOADS** carry actual emotional force. These are words with measurable impact on the VADUG coordinate. Out of 46,101 words in the full force dictionary, only **2,000 carry 97% of the emotional signal**. The remaining 44,101 are noise -- words that appear in emotional contexts but contribute negligible force. The 2,000 were selected by three criteria: appears 10+ times in EmpatheticDialogues, absolute valence delta >= 15, and not a function word or generic noun.
+**PAYLOADS** carry actual emotional force. These are words with measurable impact on the VADUG coordinate. The V2 engine uses a curated vocabulary of **~2,100 words** that carry 97% of the emotional signal. (The legacy V1 dictionary contained 46,101 words, but 95.7% contributed negligible force.) The curated set was selected by three criteria: appears 10+ times in EmpatheticDialogues, absolute valence delta >= 15, and not a function word or generic noun.
 
 **NEUTRAL** words pass through the pendulum without affecting it. "The," "and," "is," "of" in non-operator contexts. These have near-zero emotional mass. The engine does not average them into the score -- they are transparent. This solves the dilution problem that plagues bag-of-words approaches, where a sentence full of neutral words drowns out genuine emotional signals.
 
@@ -255,7 +255,7 @@ Mining 99,506 sentences from the EmpatheticDialogues dataset and cross-referenci
 Each payload word produces a force vector in 5-dimensional space:
 
 ```
-Force = BaseForce * ContextCoefficient * NegationFlip * PhysicsDecay
+Force = BaseForce * ContextCoefficient * NegationScale * PhysicsDecay
 ```
 
 Where:
@@ -294,42 +294,53 @@ Combined with tense and intensity, a single emotional word can range from 0.1x (
 
 The same word "sad" produces a 12x range in effective force (0.24x to 2.88x) depending solely on the context operators surrounding it. This is why "a sad movie" does not hit you the way "I am extremely sad" does. The physics are different.
 
-**NegationFlip** inverts the valence direction when a negation operator is detected. "Not happy" flips the V delta from positive to negative, but at reduced magnitude (0.6x-0.7x of the positive equivalent). "Not bad" resolves to mildly positive -- the double negation flips twice but does not reach "good." This matches the well-documented linguistic asymmetry: negated positives are weaker than the corresponding direct negatives, and negated negatives are weaker than the corresponding direct positives.
+**NegationForce** models negation as a continuous decaying force -- not a boolean flag. Each negator word injects a negation force between 0.0 and 1.0, scaled by the negator's strength ("not" = 0.95, "barely" = 0.50). This force decays at different rates depending on what follows: gently through operators (0.92x per word), moderately through neutral words (0.85x), and sharply through emotional payloads (0.35x -- the payload absorbs most of the negation). The result: "I am not very happy" still carries significant negation to "happy" because operators preserve the force, while "I am not going to the store but I am happy" has lost nearly all negation by the time "happy" arrives.
+
+This replaces the earlier boolean NegationFlip model, which treated negation as a simple inversion at reduced magnitude. The continuous model correctly handles variable-distance negation, partial negation ("hardly" vs "not"), and the natural attenuation of negation across clause boundaries. The design principle: **there are no booleans in emotions** -- negation is a force that decays, not a switch that flips.
 
 **PhysicsDecay** models the temporal dynamics of emotional force. The pendulum retains 85-90% of its state between words (momentum/inertia). Emotional words create spikes; the spikes decay exponentially unless sustained by subsequent emotional content. This is why "I am happy happy happy" does not produce 3x the happiness of "I am happy" -- each repetition applies force to an already-displaced pendulum with diminishing returns.
 
-### 4.3 The Twenty-Four Linguistic Device Types
+### 4.3 The Twenty-Five Conversational Forces
 
-Beyond simple operators and payloads, natural language deploys at least 24 categories of linguistic devices that modify emotional meaning. Each maps to a mathematical operation:
+Beyond simple operators and payloads, natural language deploys at least 25 categories of conversational forces that modify emotional meaning. Each maps to a mathematical operation. As of March 2026, **17 of 25 are implemented** in the V2 engine:
 
-| # | Device                  | Operation      | Example                                    |
-|---|-------------------------|----------------|--------------------------------------------|
-| 1 | Discourse markers       | FRAME          | "by the way" resets local momentum ~50%    |
-| 2 | Hedging qualifiers      | CHAIN(x * 0.4-0.8) | "I guess" dampens next emotional force |
-| 3 | Intensifiers            | DECAY(x * M, t)| "extremely" = 1.6x with 3-word ramp       |
-| 4 | Diminishers             | CHAIN(x * 0.3-0.8) | "barely" = 0.3x, near-zero acknowledgment|
-| 5 | Sarcasm markers         | FLIP(V) + CONTEXT | "oh great" = inverted valence            |
-| 6 | Double negation         | FLIP(V) * 0.6  | "not bad" = mildly positive                |
-| 7 | Rhetorical questions    | SET or OFFSET   | "who cares?" = dismissive assertion        |
-| 8 | Euphemisms              | REPLACE (dampened)| "passed away" = grief at 0.5-0.7x "died" |
-| 9 | Hyperbole               | x * 0.3-0.5    | "I'm literally dying" = very amused        |
-| 10| Litotes/understatement  | FLIP(V) * 0.5-0.7 | "not bad" < "good" < "great"           |
-| 11| Conditional constructs  | GATE(p)        | "if I were angry" = 0.3x of "I am angry"  |
-| 12| Temporal framing        | x * 0.6-1.0    | Past dampens; present amplifies            |
-| 13| Comparative structures  | Relative offset | "sadder than usual" = relative to baseline |
-| 14| Adversative conjunctions| Counter-force   | "but" yanks pendulum toward reversal       |
-| 15| Self-reference proximity| x * 0.6-1.8    | "I" = 1.8x; "they" = 0.6x                |
-| 16| Questions               | x * 0.4        | Asking about emotion != feeling emotion    |
-| 17| Imperatives             | A+, D+         | "stop!" = high arousal + high dominance    |
-| 18| Passive voice           | D-15           | "I was hurt" = lower agency than "he hurt me"|
-| 19| Repetition              | Diminishing ramp| Each repeat hits harder but with decay     |
-| 20| Parenthetical asides    | x * 0.5        | "(not that it matters)" = dampened         |
-| 21| Concession              | FRAME + offset  | "I admit..." = vulnerability marker        |
-| 22| Exclamatory particles   | A+20, U+10     | "oh!", "wow!" = arousal spikes             |
-| 23| Vocatives               | D offset        | "sweetheart" vs "hey you" vs "sir"         |
-| 24| Tag questions           | D-10, commitment-0.7 | "right?" = seeking validation       |
+| # | Force                   | Operation      | Example                                    | Status |
+|---|-------------------------|----------------|--------------------------------------------|--------|
+| 1 | Discourse markers       | FRAME          | "by the way" resets local momentum ~50%    | Implemented |
+| 2 | Hedging qualifiers      | CHAIN(x * 0.4-0.8) + D-offset | "I guess" dampens + lowers dominance | Implemented |
+| 3 | Intensifiers            | DECAY(x * M, t)| "extremely" = 1.6x with 3-word ramp       | Implemented |
+| 4 | Diminishers             | CHAIN(x * 0.3-0.8) | "barely" = 0.3x, near-zero acknowledgment| Implemented |
+| 5 | Sarcasm markers         | FLIP(V) + CONTEXT | "oh great" = inverted valence            | Partial |
+| 6 | Double negation         | Continuous force * 0.6 | "not bad" = mildly positive          | Implemented |
+| 7 | Rhetorical questions    | SET or OFFSET   | "who cares?" = dismissive assertion        | Partial |
+| 8 | Euphemisms              | REPLACE (dampened)| "passed away" = grief at 0.5-0.7x "died" | Implemented |
+| 9 | Hyperbole               | x * 0.3-0.5    | "I'm literally dying" = very amused        | Implemented |
+| 10| Litotes/understatement  | Continuous neg * 0.5-0.7 | "not bad" < "good" < "great"     | Implemented |
+| 11| Idioms                  | REPLACE         | "piece of cake" = easy (positive)          | Implemented |
+| 12| Compositional semantics | Multi-word ops  | "kind of" = hedge (0.6x)                  | Partial |
+| 13| Conditional constructs  | GATE(0.4)       | "if I were angry" = 0.4x of "I am angry"  | Implemented |
+| 14| Temporal framing        | x * 0.6-1.0    | Past dampens; present amplifies            | Implemented |
+| 15| Evidential/clinical     | x * 0.3-0.5 + D-offset | "reportedly" = clinical distance    | Implemented |
+| 16| Social politeness       | D offset        | "please" = deference marker                | Partial |
+| 17| Exclamatory particles   | A+20, U+10     | "oh!", "wow!" = arousal spikes             | Partial |
+| 18| Tag questions           | D-10, commitment-0.7 | "right?" = seeking validation       | Partial |
+| 19| Passive voice           | D-15           | "I was hurt" = lower agency than "he hurt me"| Implemented |
+| 20| Comparative structures  | x * 1.3        | "sadder than usual" = amplified payload    | Implemented |
+| 21| Superlatives            | x * 1.5        | "the worst day" = strongly amplified       | Implemented |
+| 22| Colloquialisms/slang    | Context-dependent | "lit" = excitement in informal register  | Partial |
+| 23| Discourse fillers       | D-5 per filler  | "um", "uh" = processing difficulty signal  | Implemented |
+| 24| Emotional performatives | x * 1.3-1.4 + D+ | "I swear" = amplifies + boosts dominance | Implemented |
+| 25| Evokers (gravitational priming) | G-offset + D-offset | "cancer" shifts gravity field for everything after | Implemented |
 
-Each of these 24 device types has been catalogued with specific mathematical operations, multiplier ranges, affected VADUG dimensions, and worked examples. Together, they constitute the grammar of emotion -- the rules by which words combine into felt meaning.
+Each of these 25 force types has been catalogued with specific mathematical operations, multiplier ranges, affected VADUG dimensions, and worked examples (see `docs/linguistic-devices-taxonomy.md` for the full taxonomy of forces 1-24). Together, they constitute the grammar of emotion -- the rules by which words combine into felt meaning.
+
+#### Force #25: Evokers (Gravitational Priming)
+
+Evokers are the newest force category and represent a fundamentally different kind of linguistic influence. They are words that carry no emotional force themselves but change the gravitational field for everything that follows. "Cancer" does not make you sad -- it makes everything after it *heavier*.
+
+The V2 engine tracks 45 evokers across six categories: life events (wedding, funeral, divorce), health (cancer, diagnosis, surgery), death/loss (death, suicide, war), family (mother, children, baby), power/society (freedom, justice, prison), and abstract stakes (truth, betrayal, dignity). Each evoker specifies a gravity prime (dG, always negative -- evokers make things heavier) and a dominance prime (dD, which can go either direction -- "freedom" raises agency, "prison" crushes it).
+
+Evoker priming decays at 0.88x per word, creating a gravitational wake: the closer an emotional word is to the evoker, the more it is affected. "I lost my job before the wedding" -- "wedding" primes the gravity field, making "lost" land heavier than it would in isolation.
 
 ### 4.4 Bridge Words: The Grammar of Emotion
 
@@ -362,7 +373,7 @@ Each cycle exposes a new class of linguistic phenomenon the engine was not handl
 
 An early discovery with implications beyond this project: the NRC VAD lexicon (the standard academic resource for word-level emotional valence) has a **systematic negativity bias**. Positive words are assigned moderate scores (love = +35); their negative antonyms are assigned extreme scores (hate = -127). The asymmetry is not in the human experience of these emotions -- it is in the annotation methodology.
 
-This bias propagates into any system trained on NRC data. Our genetic algorithm tuning process (15,000+ evaluations across 46,101 words) corrected for this bias by cross-referencing NRC values against actual conversational usage in EmpatheticDialogues.
+This bias propagates into any system trained on NRC data. Our genetic algorithm tuning process (15,000+ evaluations across the original 46,101-word V1 dictionary) corrected for this bias by cross-referencing NRC values against actual conversational usage in EmpatheticDialogues. The V2 curated vocabulary of ~2,100 words further reduces NRC bias exposure by discarding the long tail of low-signal words where annotation noise is highest.
 
 ### 5.3 Idiom Discovery from Residuals
 
@@ -466,24 +477,25 @@ When 80-180:   response_G = 128 + (G - 128) * 0.5         (stay grounded)
 
 ### 7.1 Engine Performance
 
-Tested on 7,720 sentences from published academic datasets (the same benchmarks used in BERT and GPT evaluations):
+Tested on 7,720 sentences from published academic datasets (the same benchmarks used in BERT and GPT evaluations). The V2 engine (March 2026, 30 experiments logged) achieves ~60.2% composite:
 
-| Engine      | SST-2  | GoEmotions | TweetEval | Type                  | Speed   |
-|-------------|--------|------------|-----------|----------------------|---------|
-| **Clanker** | **60.9%** | 51.6%   | 72.0%     | Rule-based physics   | 0.3ms   |
-| VADER       | 55.7%  | 60.6%     | 74.1%     | Rule-based lexicon   | 0.06ms  |
-| TextBlob    | 53.8%  | 57.8%     | 50.7%     | Pattern-based        | 0.16ms  |
-| RoBERTa     | 69.0%  | 62.1%     | 77.7%     | 125M param transformer| 5ms    |
+| Engine      | SST-2  | GoEmotions | TweetEval | Composite | Type                  | Speed   |
+|-------------|--------|------------|-----------|-----------|----------------------|---------|
+| **Clanker V2** | **60.8%** | **56.8%** | **62.9%** | **60.2%** | Rule-based physics (17/25 forces) | 0.3ms |
+| VADER       | 55.7%  | 60.6%     | 74.1%     | 63.5%     | Rule-based lexicon   | 0.06ms  |
+| TextBlob    | 53.8%  | 57.8%     | 50.7%     | 54.1%     | Pattern-based        | 0.16ms  |
+| RoBERTa     | 69.0%  | 62.1%     | 77.7%     | 69.6%     | 125M param transformer| 5ms    |
 
-Clanker beats VADER on SST-2 by 5.2 percentage points and nearly matches on TweetEval. The GoEmotions gap is a known neutral-detection problem (the same class of error VADER exhibits). These benchmarks reduce the 5-dimensional output to positive/negative/neutral -- a lossy comparison that understates the system's actual discriminative power.
+Clanker V2 beats VADER on SST-2 by 5.1 percentage points and has closed the GoEmotions gap significantly (from 51.6% to 56.8%) through improved neutral detection, hedging with independent D-offsets, and the continuous negation force model. The TweetEval gap (previously near-parity, now behind) reflects ongoing work on informal/slang registers. These benchmarks reduce the 5-dimensional output to positive/negative/neutral -- a lossy comparison that understates the system's actual discriminative power.
 
 ### 7.2 Model Performance
 
-The trained Clanker-Nano model (~4.8M parameters, 5-head classifier on GPT-2 backbone) achieves 65-75% accuracy across all five VADUG dimensions on validation data (V:65% A:72% D:75% U:73% G:65%). For context:
+The trained Clanker-Micro model (~7.7M parameters, 5-head classifier on GPT-2 backbone with 128-dim embeddings) achieves 65-75% accuracy across all five VADUG dimensions on validation data (V:65% A:72% D:75% U:73% G:65%). For context:
 
-- The model is **23x smaller than BERT** (110M params)
+- The model is **14x smaller than BERT** (110M params)
 - BERT scores 1 dimension (positive/negative sentiment)
-- Clanker-Nano scores 5 dimensions simultaneously
+- Clanker-Micro scores 5 dimensions simultaneously
+- The model reads English directly -- the engine teaches it to think in VADUG
 - The model trains in 4 minutes on consumer hardware (RTX 3090)
 
 Current limitation: character-level encoding bottleneck. The model generalizes well on training-distribution text but inverts on novel vocabulary -- a proper English tokenizer or significantly more training data would address this.
@@ -501,12 +513,9 @@ This 12x range explains why systems that assign fixed sentiment scores to words 
 
 ### 7.4 Vocabulary Signal Distribution
 
-Of 46,101 words in the full force dictionary:
-- **2,000 words** carry 97% of the emotional signal
-- **44,101 words** contribute negligible emotional force
-- Selection criteria: 10+ appearances in EmpatheticDialogues, |dV| >= 15, not a function word
+The V1 engine carried 46,101 words in its force dictionary. Analysis revealed a Pareto distribution: ~2,000 words carried 97% of the emotional signal. The remaining ~44,000 contributed negligible emotional force -- noise that would dilute any averaging-based approach. Selection criteria for the curated set: 10+ appearances in EmpatheticDialogues, |dV| >= 15, not a function word.
 
-This is a Pareto distribution: 4.3% of the vocabulary does 97% of the emotional work. The remaining 95.7% is noise that would dilute any averaging-based approach.
+The V2 engine acts on this insight: it uses only the **2,105 curated words** in `EMOTIONAL_VOCABULARY`, augmented by 254 multi-word expressions (186 idioms + 71 bigrams, with idioms taking priority on overlap). The vocabulary is intentionally small. Words not in the curated set are either classified as operators (modifying how payloads land) or treated as neutral (transparent to the pendulum). This eliminates the dilution problem that plagues bag-of-words approaches.
 
 ### 7.5 Token Compression
 
@@ -532,7 +541,9 @@ Sarcasm detection cannot be purely rule-based. "Oh great" is sarcastic after "an
 
 ### 8.3 Compound Negation with Emphasis
 
-"I don't NOT like it" (double negative with emphasis = strong positive? weak positive? depends on tone). "I'm not unhappy" (litotes, mildly positive). "It's not like I don't care" (triple negative, means "I do care" but with emotional distancing). The negation algebra gets complex fast. Current coverage: double negation at 0.5-0.7x of the positive equivalent. Triple and beyond: unresolved.
+"I don't NOT like it" (double negative with emphasis = strong positive? weak positive? depends on tone). "I'm not unhappy" (litotes, mildly positive). "It's not like I don't care" (triple negative, means "I do care" but with emotional distancing). The negation algebra gets complex fast.
+
+The continuous negation force model (Section 4.2) partially resolves this. Because negation is a decaying force rather than a boolean, double negation naturally produces weaker results than single negation -- the second negator re-injects force that partially cancels the first. However, triple negation with embedded clauses ("It's not like I don't care") remains challenging because the decay model does not yet track clause boundaries. Current state: double negation handled well; triple and beyond: improving but not fully resolved.
 
 ### 8.4 The Fundamental Equation
 
@@ -612,11 +623,11 @@ The common requirement: these systems need to *understand* emotion as a continuo
 
 Emotion is physics. It has dimensions, forces, operators, momentum, and decay. It follows rules that compose with mathematical regularity. Current AI systems discovered these rules through brute force -- trillions of tokens, billions of parameters, emergent understanding that works but cannot be inspected. We are making the rules explicit.
 
-The VADUG coordinate system encodes 1.1 trillion emotional states in 5 bytes. The context operator system creates a 12x range on a single word through 84 operators across 17 categories. The pendulum engine processes sentences word-by-word with momentum, idiom detection, and morphological decomposition. The dark matter system makes each entity unique through persistent bias shaped by accumulated experience.
+The VADUG coordinate system encodes 1.1 trillion emotional states in 5 bytes. Twenty-five conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) -- compose through 84 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 254 multi-word expressions, morphological decomposition, and a curated vocabulary of 2,105 emotional payloads. The dark matter system makes each entity unique through persistent bias shaped by accumulated experience.
 
 The psychological foundations are not decorative. TCI's stress model IS a VADUG trajectory. The window of tolerance IS a dark matter range. Allostatic load IS dark matter drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
 
-What remains: training the model to close the neutral-collapse gap. Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUG is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
+What remains: implementing the 8 remaining conversational forces (sarcasm, rhetorical questions, compositional semantics, social politeness, exclamatory particles, tag questions, colloquialisms, and full discourse markers). Closing the benchmark gaps -- particularly on informal registers (TweetEval) and multi-label classification (GoEmotions). Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUG is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
 
 The goal was never to build a better sentiment classifier. It was to build the emotional layer a machine thinks in.
 
@@ -646,13 +657,14 @@ The goal was never to build a better sentiment classifier. It was to build the e
 
 ## Appendix A: Engine Architecture
 
+**V2 is the active engine.** V1 modules (`pendulum.py`, `forces.py`) are legacy and being phased out.
+
 | Module              | Function                                              |
 |---------------------|-------------------------------------------------------|
 | `demo/shared.py`    | VADUG, MetadataHeader, PersonalityVector dataclasses  |
-| `demo/forces.py`    | Full force dictionary (46,101 entries)                 |
-| `demo/forces_curated.py` | Curated vocabulary (2,000 entries, 97% of signal)|
-| `demo/pendulum.py`  | V1 engine: SequentialPendulum, idioms, context modifiers, crisis lock |
-| `demo/pendulum_v2.py` | V2 engine: clean 3-pass PEMDAS (pre-pass → word-by-word → post-pass) |
+| `demo/forces_curated.py` | **V2 vocabulary** -- 2,105 curated words (EMOTIONAL_VOCABULARY) |
+| `demo/pendulum_v2.py` | **V2 engine** -- 3-pass PEMDAS, 17 implemented forces, continuous negation, evokers |
+| `demo/bigrams.py`   | 71 bigram expressions (2-word emotional patterns)     |
 | `demo/context_operators.py` | 84 operators, 17 categories, coefficient math |
 | `demo/dark_matter.py` | 6th dimension: persistent entity-specific bias       |
 | `demo/personality.py`| 8-knob personality vector with resistance weights     |
@@ -661,7 +673,11 @@ The goal was never to build a better sentiment classifier. It was to build the e
 | `demo/grader.py`    | 15-step emotional guardrails (A+ through F-)          |
 | `demo/sarcasm.py`   | Three-signal sarcasm analysis                         |
 | `demo/arc.py`       | ChunkedPipeline, orchestrates 7-layer pipeline        |
-| `demo/outcome_optimizer.py` | Doctor Strange mode: simulate all response outcomes |
+| `demo/morphemes.py` | Morphological decomposition roots                     |
+| `demo/fuzzy.py`     | Fuzzy matching for unknown words                      |
+| `demo/outcome_optimizer.py` | Doctor Strange mode: simulate all response outcomes (standalone) |
+| `demo/forces.py`    | Legacy V1 dictionary (46K entries) -- still imported for idioms |
+| `demo/pendulum.py`  | Legacy V1 engine -- still imported for IDIOMS dict    |
 
 ## Appendix B: VADUG Landmarks
 

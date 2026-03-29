@@ -65,11 +65,13 @@ def run_clanker_v2(text):
     global _v2_engine
     if _v2_engine is None:
         _v2_engine = PendulumV2(
-            momentum=0.987, force_scale=1.547, direct_push_cap=0.635,
-            direct_push_trigger=94.68, crisis_v=95.0, crisis_u=72.0,
-            question_dampener=0.52, scale_v=1.151, scale_a=1.561,
-            scale_d=3.0, scale_u=0.415, scale_g=2.744,
-            threshold_low=116.6, threshold_high=152.8,
+            momentum=0.987, force_scale=1.541, direct_push_cap=0.558,
+            direct_push_trigger=94.68, crisis_v=86.4, crisis_u=64.2,
+            question_dampener=0.495, scale_v=1.151, scale_a=1.561,
+            scale_d=3.0, scale_u=0.453, scale_g=2.744,
+            threshold_low=119.2, threshold_high=152.8,
+            negation_decay_operator=0.783, negation_decay_neutral=0.60,
+            negation_decay_payload=0.60,
         )
     vadug, _ = _v2_engine.process_text(text)
     label = _v2_engine.classify(vadug.v, mode=_v2_classify_mode)
