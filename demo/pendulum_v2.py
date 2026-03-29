@@ -896,6 +896,28 @@ class PendulumV2:
                     "note": f"tone={tone_result['tone']} conf={tone_result['confidence']:.2f} V:{old_v:.0f}→{state['v']:.0f}"
                 })
 
+        # --- Standalone resignation detection ---
+        # If the entire message has no payloads and only operators/neutral,
+        # AND it's short (1-5 words), it might be a resignation statement.
+        # "Whatever." "Fine." "Sure." "K." — these ARE the message.
+        payload_count = sum(1 for t in trace if t.get('role') in
+                          ('PAYLOAD', 'IDIOM', 'EVOKER+PAY'))
+        if payload_count == 0 and len(words) <= 5:
+            deflection_count = sum(1 for t in trace if t.get('role') == 'OPERATOR'
+                                  and 'deflection' in t.get('note', ''))
+            if deflection_count > 0:
+                # Standalone deflection = resignation
+                state["v"] -= 15
+                state["d"] -= 20
+                state["g"] -= 10
+                trace.append({
+                    "word": "[RESIGNATION]", "role": "RESIGNATION",
+                    "v": round(state["v"], 1), "a": round(state["a"], 1),
+                    "d": round(state["d"], 1), "u": round(state["u"], 1),
+                    "g": round(state["g"], 1),
+                    "note": "standalone deflection = resignation"
+                })
+
         final = self._post_pass(state, pre, preflight)
 
         return final, trace

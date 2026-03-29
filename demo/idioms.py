@@ -199,4 +199,6 @@ IDIOMS = {
     ('better', 'off', 'dead'): (-60, 15, -55, 30, -45, 'crisis: better off dead'),
     ('no', 'reason', 'to', 'live'): (-65, 15, -60, 35, -50, 'crisis: no reason to live'),
     ('not', 'want', 'to', 'be', 'here'): (-50, 20, -45, 35, -35, 'crisis: dont want to be here'),
+    ('it', 'is', 'what', 'it', 'is'): (-15, -10, -25, 0, -15, 'resignation: complacency, giving up control'),
+    ('whatever', 'you', 'say'): (-20, -5, -35, 0, -20, 'resignation: surrendering agency'),
 }
