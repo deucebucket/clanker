@@ -42,6 +42,9 @@ from demo.context_operators import (
 )
 from demo.pendulum import IDIOMS
 from demo.bigrams import BIGRAM_EXPRESSIONS
+from demo.sarcasm import SarcasmDetector
+
+_SARCASM_DETECTOR = SarcasmDetector()
 
 # Merge bigrams into idiom lookup — bigrams are just 2-word idioms.
 # IDIOMS take priority for overlapping keys (they have gravity values).
@@ -651,7 +654,46 @@ class PendulumV2:
 
             i += 1
 
-        # --- Pass 3: Post-pass ---
+        # --- Sarcasm detection (Force #5) ---
+        # Two-layer detection:
+        # 1. Trajectory analysis (existing SarcasmDetector — reversal/mismatch)
+        # 2. Surface-trajectory divergence: if payload words are positive but
+        #    final state is negative/neutral, something inverted the meaning.
+        sarcasm_detected = False
+        sarcasm_conf = 0
+
+        # Layer 1: trajectory reversal/mismatch
+        det1, conf1, signals1 = _SARCASM_DETECTOR.analyze_trajectory(trace)
+
+        # Layer 2: surface vs result divergence
+        # Count positive vs negative payload forces in the trace
+        pos_payloads = sum(1 for t in trace if t['role'] in ('PAYLOAD', 'EVOKER+PAY')
+                         and t['v'] > 140)
+        neg_payloads = sum(1 for t in trace if t['role'] in ('PAYLOAD', 'EVOKER+PAY')
+                         and t['v'] < 115)
+        # If positive words dominate AND no negative payloads explain the drop → suspicious
+        # Key: neg_payloads == 0 means nothing SHOULD have pulled V down
+        if pos_payloads >= 2 and neg_payloads == 0 and state["v"] < 140:
+            sarcasm_conf = max(conf1, SarcasmDetector.MODERATE)
+            sarcasm_detected = True
+        # Layer 1 results
+        if det1 and conf1 >= SarcasmDetector.MODERATE:
+            sarcasm_detected = True
+            sarcasm_conf = max(sarcasm_conf, conf1)
+
+        if sarcasm_detected and sarcasm_conf >= SarcasmDetector.MODERATE:
+            inversion = 0.6 if sarcasm_conf >= SarcasmDetector.HIGH else 0.4
+            state["v"] = 128 + (128 - state["v"]) * inversion
+            state["d"] += 10
+            state["g"] -= 10
+            trace.append({
+                "word": "[SARCASM]", "role": "SARCASM",
+                "v": round(state["v"], 1), "a": round(state["a"], 1),
+                "d": round(state["d"], 1), "u": round(state["u"], 1),
+                "g": round(state["g"], 1),
+                "note": f"conf={sarcasm_conf} pos={pos_payloads} neg={neg_payloads} → V inverted"
+            })
+
         final = self._post_pass(state, pre)
 
         return final, trace
