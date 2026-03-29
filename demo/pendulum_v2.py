@@ -38,7 +38,7 @@ from demo.shared import VADUG
 from demo.forces_curated import EMOTIONAL_VOCABULARY
 from demo.context_operators import (
     CONTEXT_OPERATORS, QUESTION_STARTERS, QUESTION_DAMPENER,
-    is_question, _COEFF_CAP, _COEFF_FLOOR,
+    is_question, _COEFF_CAP, _COEFF_FLOOR, _parse_operator,
 )
 from demo.pendulum import IDIOMS
 from demo.bigrams import BIGRAM_EXPRESSIONS
@@ -227,7 +227,7 @@ class PendulumV2:
         pre = self._pre_pass(words)
 
         # --- Pass 2: Word-by-word ---
-        pending_operators = {}  # category -> coefficient (nearest per category)
+        pending_operators = {}  # category -> (coefficient, d_offset)
         negation_force = 0.0    # continuous negation: 0.0 = none, ~1.0 = full inversion
 
         i = 0
@@ -240,12 +240,12 @@ class PendulumV2:
                 if i in pre.idiom_spans:
                     span = pre.idiom_spans[i]
                     length, force, label = span
-                    coeff = self._compute_coefficient(pending_operators, pre)
+                    coeff, d_off = self._compute_coefficient(pending_operators, pre)
                     neg_scale = self._negation_scale(negation_force)
-                    state = self._apply_force(state, force, coeff * neg_scale)
+                    state = self._apply_force(state, force, coeff * neg_scale, d_off)
                     trace.append(self._trace_entry(
                         " ".join(words[i:i+length]), "IDIOM", state,
-                        f"idiom:{label} coeff={coeff:.2f} neg_f={negation_force:.2f}"
+                        f"idiom:{label} coeff={coeff:.2f} d_off={d_off:.0f} neg_f={negation_force:.2f}"
                     ))
                     pending_operators = {}
                     negation_force *= self.negation_decay_payload
@@ -290,8 +290,8 @@ class PendulumV2:
             # Classify: OPERATOR or PAYLOAD or NEUTRAL
             if word_lower in CONTEXT_OPERATORS:
                 # OPERATOR — accumulate coefficient, gentle negation decay
-                coeff_val, category = CONTEXT_OPERATORS[word_lower]
-                pending_operators[category] = coeff_val
+                coeff_val, category, d_off = _parse_operator(CONTEXT_OPERATORS[word_lower])
+                pending_operators[category] = (coeff_val, d_off)
                 negation_force *= self.negation_decay_operator
                 trace.append(self._trace_entry(
                     word, "OPERATOR", state,
@@ -301,12 +301,12 @@ class PendulumV2:
             elif word_lower in EMOTIONAL_VOCABULARY:
                 # PAYLOAD — apply force modulated by continuous negation
                 force = EMOTIONAL_VOCABULARY[word_lower]
-                coeff = self._compute_coefficient(pending_operators, pre)
+                coeff, d_off = self._compute_coefficient(pending_operators, pre)
                 neg_scale = self._negation_scale(negation_force)
-                state = self._apply_force(state, force, coeff * neg_scale)
+                state = self._apply_force(state, force, coeff * neg_scale, d_off)
                 trace.append(self._trace_entry(
                     word, "PAYLOAD", state,
-                    f"coeff={coeff:.2f} neg_f={negation_force:.2f} neg_s={neg_scale:.2f} force={force[:2]}..."
+                    f"coeff={coeff:.2f} d_off={d_off:.0f} neg_f={negation_force:.2f} neg_s={neg_scale:.2f} force={force[:2]}..."
                 ))
                 # Payload consumes most negation force, reset operators
                 pending_operators = {}
@@ -409,21 +409,30 @@ class PendulumV2:
         """
         return 1.0 - 2.0 * negation_force
 
-    def _compute_coefficient(self, pending_operators: dict, pre: PrePassInfo) -> float:
-        """Multiply across categories, apply question dampener, clamp."""
+    def _compute_coefficient(self, pending_operators: dict, pre: PrePassInfo) -> tuple:
+        """Multiply across categories, apply question dampener, clamp.
+
+        Returns:
+            (coeff, d_offset) where coeff is the scalar multiplier and
+            d_offset is the accumulated Dominance shift from hedging/uncertainty.
+        """
         coeff = 1.0
-        for cat_coeff in pending_operators.values():
+        d_offset = 0.0
+        for cat_val in pending_operators.values():
+            cat_coeff, cat_d = cat_val
             coeff *= cat_coeff
+            d_offset += cat_d
 
         coeff *= pre.question_dampener
-        return max(_COEFF_FLOOR, min(_COEFF_CAP, coeff))
+        return max(_COEFF_FLOOR, min(_COEFF_CAP, coeff)), d_offset
 
-    def _apply_force(self, state: dict, force: tuple, scale: float) -> dict:
+    def _apply_force(self, state: dict, force: tuple, scale: float, d_offset: float = 0.0) -> dict:
         """Apply an emotional force vector to the pendulum state.
 
         Two-component model (simplified from V1):
           1. Momentum blend: pull state toward force's implied target
           2. Direct push: strong words bypass momentum partially
+          3. D-offset: independent Dominance shift from hedging/uncertainty
 
         Target = center + force*scale (what state WOULD be if only word).
         new = old * momentum + target * (1-momentum) + force * direct_push.
@@ -454,7 +463,7 @@ class PendulumV2:
         return {
             "v": state["v"] * m + target_v * blend + dv * fs * push,
             "a": state["a"] * m + target_a * blend + da * fs * push,
-            "d": state["d"] * m + target_d * blend + dd * fs * push,
+            "d": state["d"] * m + target_d * blend + dd * fs * push + d_offset * self.force_scale,
             "u": state["u"] * m + target_u * blend + du * fs * push,
             "g": state["g"] * m + target_g * blend + dg * fs * push,
         }

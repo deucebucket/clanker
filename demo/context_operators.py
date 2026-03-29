@@ -30,8 +30,10 @@ Usage:
 #       Total coefficient is capped at 3.0 and floored at 0.1.
 # ---------------------------------------------------------------------------
 
-# Each entry: word -> (coefficient, category_name)
+# Each entry: word -> (coefficient, category_name) or (coefficient, category_name, d_offset)
 # Category names used to prevent intra-category multiplication.
+# Optional d_offset shifts Dominance independently of the coefficient scaling.
+# This is how hedges express uncertainty: dampen magnitude AND lower confidence.
 
 CONTEXT_OPERATORS = {
     # --- Self-reference high ---
@@ -110,17 +112,34 @@ CONTEXT_OPERATORS = {
     "kinda":    (0.7, "diminishers"),
     "sorta":    (0.7, "diminishers"),
 
-    # --- Hedging qualifiers (reduce certainty/commitment) ---
-    "generally":    (0.7, "hedging"),
-    "usually":      (0.75, "hedging"),
-    "sometimes":    (0.5, "hedging"),
-    "occasionally": (0.4, "hedging"),
-    "often":        (0.8, "hedging"),
-    "rarely":       (0.3, "hedging"),
-    "typically":    (0.7, "hedging"),
-    "maybe":        (0.5, "hedging"),
-    "perhaps":      (0.5, "hedging"),
-    "probably":     (0.6, "hedging"),
+    # --- Hedging qualifiers (reduce certainty/commitment + lower Dominance) ---
+    # Third element is D-offset: how much to depress Dominance independently.
+    # Hedging = "I feel this but I'm not confident about it."
+    "generally":    (0.70, "hedging", -5),
+    "usually":      (0.75, "hedging", -5),
+    "sometimes":    (0.50, "hedging", -10),
+    "occasionally": (0.40, "hedging", -10),
+    "often":        (0.80, "hedging", -5),
+    "rarely":       (0.30, "hedging", -10),
+    "typically":    (0.70, "hedging", -5),
+    "maybe":        (0.50, "hedging", -15),
+    "perhaps":      (0.50, "hedging", -15),
+    "probably":     (0.60, "hedging", -10),
+    "possibly":     (0.40, "hedging", -15),
+    "arguably":     (0.60, "hedging", -10),
+    "seemingly":    (0.60, "hedging", -15),
+    "apparently":   (0.60, "hedging", -15),
+    "supposedly":   (0.50, "hedging", -15),
+    # Cognitive hedges — "I think", "I guess", "I feel like"
+    # These dampen after "I" (self_high 1.8x), net: 1.8 * 0.7 = 1.26x
+    "think":        (0.70, "hedging", -10),
+    "guess":        (0.50, "hedging", -20),
+    "suppose":      (0.60, "hedging", -15),
+    # NOTE: "believe" excluded — too context-dependent. "I believe it's X" = hedge,
+    # but "I cannot believe this" = exclamation. Let it fall through to vocabulary.
+    "reckon":       (0.60, "hedging", -10),
+    "assume":       (0.60, "hedging", -10),
+    "wonder":       (0.50, "hedging", -15),
 
     # --- Present tense ---
     "am":       (1.0, "present_tense"),
@@ -134,18 +153,30 @@ CONTEXT_OPERATORS = {
     "did":      (0.85, "past_tense"),
     "been":     (0.8, "past_tense"),
 
-    # --- Hypothetical ---
-    "would":    (0.6, "hypothetical"),
-    "could":    (0.6, "hypothetical"),
-    "might":    (0.5, "hypothetical"),
-    "should":   (0.7, "hypothetical"),
-    "will":     (0.7, "hypothetical"),
-    "can":      (0.8, "hypothetical"),
-    "may":      (0.6, "hypothetical"),
+    # --- Hypothetical (modals reduce certainty + lower Dominance) ---
+    "would":    (0.60, "hypothetical", -10),
+    "could":    (0.60, "hypothetical", -10),
+    "might":    (0.50, "hypothetical", -15),
+    "should":   (0.70, "hypothetical", -5),
+    "will":     (0.70, "hypothetical", 0),
+    "can":      (0.80, "hypothetical", 0),
+    "may":      (0.60, "hypothetical", -10),
+
+    # --- Evidential markers (reported speech, distance from experience) ---
+    "allegedly":    (0.40, "evidential", -20),
+    "reportedly":   (0.40, "evidential", -20),
+    "presumably":   (0.50, "evidential", -15),
 }
 
 # Legacy alias for backward compatibility
 CONTEXT_COEFFICIENTS = {k: v[0] for k, v in CONTEXT_OPERATORS.items()}
+
+
+def _parse_operator(entry):
+    """Parse an operator entry — handles both 2-tuple and 3-tuple formats."""
+    if len(entry) == 3:
+        return entry[0], entry[1], entry[2]
+    return entry[0], entry[1], 0
 
 
 # ---------------------------------------------------------------------------
@@ -335,7 +366,7 @@ def _find_combined_context(words, current_idx):
     for i in range(current_idx - 1, search_start - 1, -1):
         w = words[i].lower().strip("\"'()")
         if w in CONTEXT_OPERATORS:
-            coeff, category = CONTEXT_OPERATORS[w]
+            coeff, category, _ = _parse_operator(CONTEXT_OPERATORS[w])
             if category not in seen_categories:
                 seen_categories[category] = coeff
 
