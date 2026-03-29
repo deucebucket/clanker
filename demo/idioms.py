@@ -219,4 +219,11 @@ IDIOMS = {
     ("can't", "breathe"): (-50, 60, -50, 55, -30, "panic: suffocating"),
     ('not', 'breathe'): (-45, 55, -45, 50, -25, 'panic: not breathing'),
     ('cannot', 'breathe'): (-50, 60, -50, 55, -30, 'panic: cannot breathe'),
+    ('did', 'that', 'to', 'me'): (-30, 15, -25, 15, -20, 'vague harm: unnamed action against self'),
+    ('do', 'that', 'to', 'me'): (-30, 15, -25, 15, -20, 'vague harm: unnamed action against self'),
+    ('done', 'to', 'me'): (-25, 10, -20, 10, -15, 'vague harm: past unnamed action'),
+    ('did', 'this', 'to', 'me'): (-30, 15, -25, 15, -20, 'vague harm: unnamed action against self'),
+    ('happened', 'to', 'me'): (-20, 10, -15, 10, -15, 'vague harm: unnamed event against self'),
+    ('same', 'thing'): (-10, 5, -10, 5, -10, 'historical reference: this has happened before'),
+    ('happened', 'again'): (-15, 10, -10, 10, -10, 'repetition: it keeps happening'),
 }
