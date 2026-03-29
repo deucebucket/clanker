@@ -102,6 +102,12 @@ CONTEXT_OPERATORS = {
     "incredibly":   (1.5, "amplifiers"),
     "deeply":       (1.4, "amplifiers"),
     "truly":        (1.3, "amplifiers"),
+    "pretty":       (1.2, "amplifiers"),
+    "fairly":       (1.2, "amplifiers"),
+    "quite":        (1.25, "amplifiers"),
+    "super":        (1.5, "amplifiers"),
+    "hella":        (1.5, "amplifiers"),
+    "mad":          (1.4, "amplifiers"),   # "mad angry" = very angry (slang)
 
     # --- Diminishers ---
     "just":     (0.7, "diminishers"),
