@@ -226,4 +226,12 @@ IDIOMS = {
     ('happened', 'to', 'me'): (-20, 10, -15, 10, -15, 'vague harm: unnamed event against self'),
     ('same', 'thing'): (-10, 5, -10, 5, -10, 'historical reference: this has happened before'),
     ('happened', 'again'): (-15, 10, -10, 10, -10, 'repetition: it keeps happening'),
+    ('taking', 'my', 'life'): (-80, 30, -60, 60, -50, 'crisis: suicide - taking my life'),
+    ('take', 'my', 'life'): (-80, 30, -60, 60, -50, 'crisis: suicide - take my life'),
+    ('end', 'my', 'life'): (-80, 30, -60, 60, -50, 'crisis: suicide - end my life'),
+    ('ending', 'my', 'life'): (-80, 30, -60, 60, -50, 'crisis: suicide - ending my life'),
+    ('end', 'my', 'suffering'): (-70, 20, -50, 50, -45, 'crisis: end suffering'),
+    ('hope', 'someone', 'finds'): (-40, 15, -30, 30, -30, 'crisis: farewell note framing'),
+    ('point', 'a', 'knife'): (-60, 40, -30, 50, -35, 'crisis: weapon + self-harm'),
+    ('fall', 'downwards'): (-40, 30, -20, 30, -25, 'crisis: deliberate fall'),
 }

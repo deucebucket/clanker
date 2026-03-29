@@ -174,6 +174,11 @@ CONTEXT_OPERATORS = {
     "nvm":          (0.45, "deflection", -20),
     "nevermind":    (0.45, "deflection", -20),
     "dunno":        (0.50, "deflection", -20),
+    # Exasperation starters — "man..." "dude..." at sentence start
+    "man":          (0.80, "exasperation", -10),
+    "dude":         (0.80, "exasperation", -10),
+    "bro":          (0.80, "exasperation", -10),
+
 
     # --- Evidential markers (reported speech, distance from experience) ---
     "allegedly":    (0.40, "evidential", -20),
