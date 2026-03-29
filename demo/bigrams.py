@@ -146,6 +146,23 @@ BIGRAM_EXPRESSIONS = {
     ("how", "wonderful"): (-20, 15, 15, 5, -10, "sarcasm: how wonderful"),
     ("what", "surprise"): (-15, 15, 10, 5, -10, "sarcasm: what a surprise"),
 
+    # Crisis / desperation patterns
+    ("want", "stop"): (-40, 20, -35, 30, -25, "crisis: want it to stop"),
+    ("make", "stop"): (-40, 25, -30, 35, -25, "crisis: make it stop"),
+    ("want", "over"): (-35, 15, -30, 25, -20, "crisis: want it to be over"),
+    ("end", "it"): (-50, 25, -40, 40, -30, "crisis: end it"),
+    ("give", "up"): (-35, -10, -35, 5, -30, "surrender: quitting"),
+
+    # Happy tears / positive crying
+    ("proud", "cried"): (40, 30, 15, 5, 25, "positive tears: pride"),
+    ("proud", "cry"): (40, 30, 15, 5, 25, "positive tears: pride"),
+    ("happy", "cried"): (40, 25, 10, 0, 25, "positive tears: joy"),
+    ("happy", "tears"): (40, 25, 10, 0, 25, "positive tears: joy"),
+    ("happy", "cry"): (40, 25, 10, 0, 25, "positive tears: joy"),
+
+    # Negative context overrides
+    ("surprise", "bill"): (-25, 15, -10, 15, -10, "negative surprise: unexpected expense"),
+
     # Deflection gates — emotional shields masking real feelings
     # "whatever it's funny" = not actually amused, dismissing/deflecting
     # Low D (surrendering agency), low A (feigning apathy), sinking G
