@@ -1,2 +1,1 @@
-gradio>=4.0
 pyyaml>=6.0
