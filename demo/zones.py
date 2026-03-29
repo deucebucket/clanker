@@ -136,6 +136,64 @@ class ZoneClassifier:
             alternatives=alternatives,
         )
 
+    def classify_cascading(self, vadug: VADUG) -> ZoneResult:
+        """Cascading classification — precision first, then coverage.
+
+        Level 1: Strong zone match (distance < 1.0) → high confidence
+        Level 2: Near zone boundary (1.0-1.5) → medium confidence, check alternatives
+        Level 3: No clear zone → return closest with low confidence + alternatives
+
+        This gives precision when the signal is clear and coverage
+        when it's ambiguous — without sacrificing either.
+        """
+        result = self.classify(vadug)
+
+        if result.distance < 1.0:
+            # Strong match — high confidence
+            return result
+
+        if result.distance < 1.5:
+            # Near boundary — check if alternatives are close
+            if result.alternatives and result.alternatives[0][1] < 1.0:
+                # Alternative is also close — ambiguous, report both
+                alt_name = result.alternatives[0][0]
+                result.zone = f"{result.zone}/{alt_name}"
+                result.confidence = max(0.0, result.confidence - 0.15)
+            return result
+
+        # No clear zone — low confidence
+        result.confidence = max(0.0, result.confidence - 0.3)
+        return result
+
+    def is_negative_zone(self, zone: str, mode: str = "balanced") -> bool:
+        """Check if a zone is negative, with configurable strictness.
+
+        Modes:
+            strict:   only CRISIS (highest precision, lowest recall)
+            balanced: CRISIS + GRIEF (best accuracy)
+            broad:    CRISIS + GRIEF + RESIGNATION + ANXIETY (high recall)
+            safety:   everything except JOY, EMPOWERMENT, NEUTRAL (max recall)
+        """
+        strict = {"CRISIS"}
+        balanced = {"CRISIS", "GRIEF"}
+        broad = {"CRISIS", "GRIEF", "RESIGNATION", "ANXIETY"}
+        safety = {"CRISIS", "GRIEF", "RESIGNATION", "ANXIETY", "RAGE", "DEFLECTION"}
+
+        zones_map = {
+            "strict": strict,
+            "balanced": balanced,
+            "broad": broad,
+            "safety": safety,
+        }
+
+        check_zones = zones_map.get(mode, balanced)
+
+        # Handle cascading dual-zone labels like "CRISIS/GRIEF"
+        for part in zone.split("/"):
+            if part in check_zones:
+                return True
+        return False
+
     def describe(self, zone_name: str) -> str:
         """Get the description of a zone."""
         if zone_name in self.zones:
