@@ -38,6 +38,7 @@ from demo.pendulum_v2 import PendulumV2
 from demo.conversation import ConversationEngine, Alert, MessageResult
 from demo.memory import ConversationMemory
 from demo.preflight import PreflightAnalyzer
+from demo.anomaly import AnomalyDetector, Anomaly
 
 
 # Champion config (EXP-0059, 27 params, 56M evaluations)
@@ -77,6 +78,9 @@ class ProcessResult:
     gravity_well: Optional[VADUG] = None
     relationship_traits: list = field(default_factory=list)
 
+    # Anomaly detection (black holes)
+    anomalies: list = field(default_factory=list)
+
     # Timing
     processing_ms: float = 0.0
 
@@ -95,6 +99,8 @@ class ProcessResult:
             "entity_id": self.entity_id,
             "background_modifier": self.background_modifier,
             "traits": self.relationship_traits,
+            "anomalies": [{"type": a.type, "severity": a.severity,
+                           "description": a.description} for a in self.anomalies],
             "processing_ms": round(self.processing_ms, 3),
             "trace": [{"word": t["word"], "role": t["role"],
                         "v": round(t["v"], 1), "note": t.get("note", "")[:50]}
@@ -114,6 +120,7 @@ class ClankerAPI:
         engine_config = config or CHAMPION_CONFIG
         self.engine = PendulumV2(**engine_config)
         self.conversation = ConversationEngine(self.engine)
+        self.anomaly_detector = AnomalyDetector(self.conversation)
         self.preflight = PreflightAnalyzer()
         self._message_count = 0
 
@@ -127,8 +134,9 @@ class ClankerAPI:
         t0 = time.perf_counter()
         self._message_count += 1
 
-        # Layer 2 wraps Layer 1 (ConversationEngine calls PendulumV2 internally)
-        msg_result = self.conversation.process_message(text)
+        # Anomaly detector wraps Layer 2 which wraps Layer 1
+        anomaly_result = self.anomaly_detector.process_message(text)
+        msg_result = anomaly_result.message_result
 
         # Layer 3: Dark Matter context
         bg_mod = self.conversation.memory.get_background_modifier()
@@ -155,6 +163,8 @@ class ClankerAPI:
             background_modifier=bg_mod,
             gravity_well=gravity_well,
             relationship_traits=profile.get("traits", []),
+            # Anomalies (black holes)
+            anomalies=anomaly_result.anomalies,
             # Timing
             processing_ms=elapsed_ms,
         )
@@ -189,9 +199,14 @@ class ClankerAPI:
 # ---------------------------------------------------------------------------
 
 def demo():
-    """Run a demo escalation scenario."""
-    api = ClankerAPI(entity_id="resident_042")
+    """Run two scenarios: escalation + masking/deflection."""
 
+    # --- Scenario 1: TCI Escalation ---
+    print("=" * 70)
+    print("  SCENARIO 1: TCI Escalation (resident_042)")
+    print("=" * 70)
+
+    api = ClankerAPI(entity_id="resident_042")
     messages = [
         "I had an okay day today",
         "Something happened at work that bothered me",
@@ -202,27 +217,46 @@ def demo():
         "I just want it all to stop",
     ]
 
-    print("=" * 70)
-    print("  CLANKER API — Three-Layer Emotional Physics")
-    print("  Entity: resident_042")
-    print("=" * 70)
-
     for msg in messages:
         r = api.process(msg)
-        alert_str = ""
-        for a in r.alerts:
-            alert_str += f" [{a.level}:{a.signal}]"
-
-        crisis_marker = " *** CRISIS ***" if r.crisis else ""
+        alert_str = "".join(f" [{a.level}:{a.signal}]" for a in r.alerts)
+        anomaly_str = "".join(f" <{a.type}:{a.severity}>" for a in r.anomalies)
+        crisis = " *** CRISIS ***" if r.crisis else ""
         print(f"\n  Turn {r.turn_number}: \"{msg}\"")
-        print(f"    VADUG: V={r.vadug.v:3d} A={r.vadug.a:3d} D={r.vadug.d:3d} "
-              f"U={r.vadug.u:3d} G={r.vadug.g:3d}")
-        print(f"    Arc: {r.session_arc}  |  {r.classification}  "
-              f"|  {r.processing_ms:.1f}ms{alert_str}{crisis_marker}")
+        print(f"    V={r.vadug.v:3d} A={r.vadug.a:3d} D={r.vadug.d:3d} "
+              f"U={r.vadug.u:3d} G={r.vadug.g:3d}  "
+              f"arc={r.session_arc}  {r.processing_ms:.1f}ms{alert_str}{anomaly_str}{crisis}")
 
+    print(f"\n  Profile: {api.get_profile()['traits']}")
+
+    # --- Scenario 2: Masking + Deflection (the "I'm fine" problem) ---
     print(f"\n{'=' * 70}")
-    print(f"  PROFILE: {json.dumps(api.get_profile(), indent=2)}")
-    print(f"{'=' * 70}")
+    print("  SCENARIO 2: Masking & Deflection (resident_087)")
+    print("=" * 70)
+
+    api2 = ClankerAPI(entity_id="resident_087")
+    messages2 = [
+        "My dad was supposed to visit today",          # evoker: dad
+        "He did not show up again",                     # pattern: abandonment
+        "Whatever it is fine",                          # deflection gate!
+        "Can we just play Xbox or something",           # topic avoidance
+        "I do not even care anymore",                   # masking
+        "I said I am fine",                             # the Black Hole
+    ]
+
+    for msg in messages2:
+        r = api2.process(msg)
+        alert_str = "".join(f" [{a.level}:{a.signal}]" for a in r.alerts)
+        anomaly_str = "".join(f" <{a.type}:{a.severity}>" for a in r.anomalies)
+        print(f"\n  Turn {r.turn_number}: \"{msg}\"")
+        print(f"    V={r.vadug.v:3d} A={r.vadug.a:3d} D={r.vadug.d:3d} "
+              f"U={r.vadug.u:3d} G={r.vadug.g:3d}  "
+              f"arc={r.session_arc}  {r.processing_ms:.1f}ms{alert_str}{anomaly_str}")
+        for a in r.anomalies:
+            print(f"    >>> [{a.type}] severity={a.severity}: {a.description[:70]}")
+
+    print(f"\n  Profile: {api2.get_profile()['traits']}")
+    print(f"\n{'=' * 70}")
 
 
 if __name__ == "__main__":
