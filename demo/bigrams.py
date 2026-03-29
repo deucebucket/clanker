@@ -84,6 +84,18 @@ BIGRAM_EXPRESSIONS = {
     ("no", "longer"): (-15, 5, 5, 5, -10, "ending: no longer"),
     ("no", "more"): (-15, 10, 10, 10, -5, "finality: no more"),
 
+    # Grief/loss patterns
+    ("ripped", "away"): (-55, 40, -40, 30, -35, "grief: torn from someone"),
+    ("give", "anything"): (-30, 20, -25, 20, -25, "grief: desperate yearning"),
+    ("one", "more"): (-15, 10, -10, 10, -10, "grief: yearning for more"),
+    ("cannot", "stop"): (-25, 20, -30, 20, -20, "inability: overwhelmed, cannot stop"),
+    ("go", "on"): (-20, 10, -15, 10, -15, "grief: struggling to continue"),
+    ("this", "hurts"): (-50, 25, -30, 30, -30, "grief: direct pain statement"),
+    ("how", "much"): (0, 10, 0, 5, 0, "amplifier: degree emphasis"),
+    ("without", "you"): (-50, 15, -40, 15, -35, "grief: absence of loved one"),
+    ("can", "barely"): (-40, 15, -40, 20, -25, "grief: struggling to function"),
+    ("the", "same"): (-30, -5, -20, 0, -15, "grief: loss of normalcy, finality"),
+
     # Euphemisms — surface is mild, actual force is strong
     ("passed", "on"): (-50, 10, -20, 10, -40, "euphemism: died"),
     ("taken", "from"): (-45, 20, -30, 20, -35, "euphemism: stolen/killed"),

@@ -113,6 +113,7 @@ EMOTIONAL_VOCABULARY = {
     'horrified': (-127, +103,  -59,  +86,  -53),  # freq=16
     'humiliated': (-112,  +56, -124,  +43,  -58),  # freq=28
     'hurt': ( -78,  +33,  -44,  +47,  -36),  # freq=507
+    'hurts': ( -78,  +33,  -44,  +47,  -36),  # inflected form of hurt
     'insecure': ( -42,  +38, -114,  +31,  -29),  # freq=13
     'inspired': ( +49,  +15,  +32,   +0,  +20),  # freq=14
     'irritated': ( -81,  +83,  -97,  +57,  -43),  # freq=75
@@ -270,6 +271,7 @@ EMOTIONAL_VOCABULARY = {
     'homeless': (-127,  +90, -127, +127, -108),  # freq=90
     'hospital': ( -77,  +90, -127, +127,  -48),  # freq=192
     'killing': ( -77, +127,  +82, +127,  +48),  # freq=34
+    'loss': ( -60,  +20,  -55,  +35,  -40),  # grief: bereavement, deprivation
     'lost': ( -46,  +11,  -55,  +40,  -30),  # freq=808
     'murder': (-123, +119,  +49,  +97,  -34),  # freq=10
     'poverty': (-127,  +20, -109, +127,  +80),  # freq=4
@@ -333,6 +335,8 @@ EMOTIONAL_VOCABULARY = {
 
     # ── COGNITIVE/EVALUATIVE — Right, wrong, fair, deserve ──
     'accomplishment': ( +43,  +15,  +52,   +1,  +21),  # freq=89
+    'ache': ( -52,  +20,  -44,  +25,  -30),  # grief: persistent pain
+    'aching': ( -52,  +20,  -44,  +25,  -30),  # grief: persistent pain
     'achieve': ( +28,  +22,  +42,   +6,  +19),  # freq=43
     'achievement': ( +42,  +27,  +34,   +2,  +17),  # freq=32
     'agree': ( +29,   +9,  +34,   +0,  +16),  # freq=625
@@ -488,6 +492,7 @@ EMOTIONAL_VOCABULARY = {
     'babysit': ( +48,  +15,  -29,   +2,   +9),  # freq=30
     'bacon': ( +66,  +33,  +34,  +30,  +10),  # freq=12
     'bad': ( -77,  +29,  -54,  +39,  -24),  # freq=2987
+    'barely': ( -50,  +15,  -45,  +25,  -30),  # grief: struggling, minimal capacity
     'badly': (-119,   +2,  -92,   +3,  -58),  # freq=99
     'bahamas': ( +35,  +20,   +0,   +2,   +9),  # freq=20
     'bake': ( +39,  +20,  +54,   +0,  +16),  # freq=22
@@ -836,6 +841,7 @@ EMOTIONAL_VOCABULARY = {
     'drop': ( -77, +127, -127, +127, +127),  # freq=78
     'dropped': ( -51,  +45, -114,  +29,  -36),  # freq=140
     'dropping': ( -89,  +90, -119,  +62,  -51),  # freq=19
+    'drowning': ( -60,  +50,  -55,  +40,  -40),  # grief: overwhelmed, submerged
     'drug': ( -52,  +49,  -67,  +49,  -20),  # freq=36
     'drugs': ( -77,  +74, -109,  +77,  -36),  # freq=46
     'drunk': ( -42,  +63,  -67,  +31,  -20),  # freq=144
@@ -911,7 +917,7 @@ EMOTIONAL_VOCABULARY = {
     'expired': ( -32,  +24,  -44,  +49,  -20),  # freq=27
     'explain': ( +28,  +27,  +49,  +18,  +10),  # freq=66
     'explore': ( +66,  +47,  +77,  +12,  -19),  # freq=22
-    'express': ( +58,  +22,  +54,   +4,  +25),  # freq=19
+    'express': (  +8,  +10,  +15,   +4,   +5),  # freq=19 — carrier verb, context-dependent
     'extreme': ( -42,  +67,  +82,  +39,   -1),  # freq=19
     'fabulous': ( +50,  +13,  +39,   +0,  +21),  # freq=11
     'facebook': ( +51,  +58,  +89,  +12,  +31),  # freq=95
@@ -941,7 +947,8 @@ EMOTIONAL_VOCABULARY = {
     'feed': ( +28,  +13,  +49,  +18,  +10),  # freq=59
     'feedback': ( +37,  +26,  +22,  +84,   +6),  # freq=18
     'feeding': (-127, +127, -127, +127,  +61),  # freq=13
-    'feel': ( +37,  +27,  +42,  +12,   -4),  # freq=4309
+    'feel': (  +5,  +10,   +5,   +5,   -2),  # freq=4309 — carrier verb, near-neutral
+    'feels': (  +5,  +10,   +5,   +5,   -2),  # carrier verb, near-neutral
     'feeling': ( +32,  -13,   +2,   +0,   +9),  # freq=1521
     'fell': ( -57,   -6,  -92,   +0,  -34),  # freq=310
     'fellow': ( +55,  -36,  +22,   +0,  +19),  # freq=12
@@ -987,6 +994,7 @@ EMOTIONAL_VOCABULARY = {
     'freaked': (-102, +112,  -69,  +86,  -46),  # freq=51
     'freaky': ( -86,  +29,  -49,  +23,  -39),  # freq=11
     'free': ( +28,  +18,  +42,   +0,  +23),  # freq=346
+    'frozen': ( -30,  -15,  -40,  +10,  -25),  # grief: stuck, unable to move on
     'freedom': ( +32,  +18,  +52,   +0,  +27),  # freq=30
     'fresh': ( +39,  +20,  +34,   +0,  +24),  # freq=85
     'freshman': ( +37,  +11,  -17,   +2,   +8),  # freq=24
@@ -1029,6 +1037,7 @@ EMOTIONAL_VOCABULARY = {
     'goal': ( +29,  +29,  +54,  +25,  +24),  # freq=70
     'goals': ( +48,   -2,  +87,   +0,  +28),  # freq=65
     'golden': ( +31,   +0,  +14,   +0,  +10),  # freq=33
+    'gone': ( -40,  +10,  -35,  +20,  -30),  # grief: absence, departed
     'goodness': ( +49,  -15,  +29,   +0,  +19),  # freq=211
     'google': ( +42,   +9,  +67,  +18,   -4),  # freq=31
     'gorgeous': ( +37,  +18,  +17,   +0,  +19),  # freq=28
@@ -1190,7 +1199,7 @@ EMOTIONAL_VOCABULARY = {
     'injuries': (-100,  +90, -127,  +66,  -55),  # freq=19
     'injury': ( -77,  +74, -127,  +97,  -48),  # freq=30
     'innocent': ( +39,  +29,  -34,  +25,  +16),  # freq=33
-    'inside': ( +28,  +13,  +24,  +18,  +23),  # freq=240
+    'inside': (  +5,   +5,   +5,   +5,   +0),  # freq=240 — spatial, near-neutral
     'inspiration': ( +44,   +9,  +34,   +0,  +19),  # freq=14
     'insurance': ( +48,  -33,  +94,   +0,  +28),  # freq=222
     'intelligent': ( +50,  +20,  +72,   +0,  +24),  # freq=16
@@ -1325,8 +1334,8 @@ EMOTIONAL_VOCABULARY = {
     'medication': ( -32,  +24,  -44,  +49,   -9),  # freq=29
     'medicine': ( +46,  -31,  +49,   +0,  +23),  # freq=52
     'member': ( +43,  -29,  +14,   +0,  +16),  # freq=57
-    'memories': ( +28,  +27,  +24,   +0,  +10),  # freq=593
-    'memory': ( +28,  +27,  +24,   +0,  +10),  # freq=128
+    'memories': (  -5,  +15,   -5,   +5,   -5),  # freq=593 — ambiguous, context-dependent
+    'memory': (  -5,  +15,   -5,   +5,   -5),  # freq=128 — ambiguous, context-dependent
     'mess': ( -32,  +24,  -44,  +31,  -20),  # freq=180
     'message': ( +32,  -20,  -24,   +0,   +5),  # freq=32
     'mid': ( -52,  -49,  -22,   +0,   +9),  # freq=21
@@ -1338,6 +1347,7 @@ EMOTIONAL_VOCABULARY = {
     'mine': ( +42,  -13,  +22,   +0,  +16),  # freq=623
     'minor': ( -59,   +0, -119,   +0,  -40),  # freq=27
     'miracle': ( +37,  +33,  +24,   +6,  +29),  # freq=23
+    'miss': ( -42,  +30,  -50,  +35,  -25),  # grief: longing, absence
     'missed': ( -42,  +38,  -67,  +49,  -20),  # freq=200
     'missing': ( -42,  +38,  -44,  +31,  -20),  # freq=176
     'mission': ( +58,  +24, +107,   +4,  +35),  # freq=36
@@ -1346,6 +1356,8 @@ EMOTIONAL_VOCABULARY = {
     'mom': ( +50,  +20,  +34,  +12,  +16),  # freq=800
     'mommy': ( +41,  -11,   -9,   +0,   +9),  # freq=18
     'monster': ( -52,  +74,  -67,  +49,  +20),  # freq=23
+    'mourn': ( -70,  +30,  -55,  +30,  -50),  # grief: grieving, bereavement
+    'mourning': ( -70,  +30,  -55,  +30,  -50),  # grief: grieving process
     'moral': ( +43,   -9,  +87,   +0,  +27),  # freq=15
     'mortgage': ( -52,  +49,  -92,  +65,  +81),  # freq=28
     'mortified': ( -94,  +63,  -97,  +46,  -48),  # freq=58
@@ -1392,9 +1404,11 @@ EMOTIONAL_VOCABULARY = {
     'nope': ( -24,  +13,  +24,   +0,   +0),  # freq=168
     'nostalgia': ( +28,  +27,  -24,   +0,  -10),  # freq=54
     'note': ( +28,  -83,  -34,   +0,   +2),  # freq=75
+    'nothing': ( -80,  -10,  -55,  +15,  -45),  # grief/existential: absence, void, emptiness
     'noticed': ( +29,  +20,  +34,  +12,  +16),  # freq=168
     'nowadays': ( +39,  -27,  -29,   +0,   +6),  # freq=61
     'nowhere': (-114,  -58, -127,   +0,  +48),  # freq=59
+    'numb': ( -35,  -20,  -30,   +0,  -25),  # grief: emotional shutdown, dissociation
     'nurse': ( +50,   +9,  +17,  +38,   +8),  # freq=29
     'obnoxious': (-127,  +27, -109,  +23,  -61),  # freq=10
     'occasion': ( +43,   -9,  -29,   +0,   +8),  # freq=55
@@ -1635,7 +1649,7 @@ EMOTIONAL_VOCABULARY = {
     'ridiculous': ( -52,  +63,  +44,  +31,  +29),  # freq=65
     'riding': ( +42,  +27,  +34,   +7,  +17),  # freq=92
     'rip': (-114,  +29, -127,  +19,  +48),  # freq=35
-    'ripped': ( -37,  +74,  +99,  +41,   +1),  # freq=39
+    'ripped': ( -55,  +60,  -30,  +35,  -20),  # freq=39 — torn away, violent removal
     'roach': (-127, +119, -127, +127,  +36),  # freq=14
     'robbed': (-104,  +83, -127,  +66,  -68),  # freq=59
     'robber': (-102,  +72,   -9,  +54,  -36),  # freq=11
@@ -1994,7 +2008,8 @@ EMOTIONAL_VOCABULARY = {
     'waste': ( -52,  +24,  -67,  +31,  -29),  # freq=71
     'wasted': ( -86,  +15, -104,  +11,  -48),  # freq=54
     'watermelon': ( +48,  -47,  -74,   +0,   +1),  # freq=10
-    'wave': ( +62,  +51,  +67,  +43,  +14),  # freq=23
+    'wave': (  +5,  +15,   +5,  +10,   +0),  # freq=23 — context-dependent (ocean vs grief)
+    'waves': (  +5,  +15,   +5,  +10,   +0),  # context-dependent
     'ways': ( +42,   +9,  -22,   +2,   +8),  # freq=105
     'weak': ( -42,  -13, -127,  +15,  -40),  # freq=14
     'wealthy': ( +77,  +18,  +84,   +0,  -29),  # freq=10
@@ -2021,7 +2036,7 @@ EMOTIONAL_VOCABULARY = {
     'wisely': ( +51,  -22,  +42,   +0,  +21),  # freq=11
     'wish': ( +29,  +20,  -17,  +12,  +24),  # freq=1292
     'wishing': ( +56,  +18,   -2,   +2,  +16),  # freq=43
-    'without': ( -17,  +11,  -24,   +6,   -6),  # freq=592
+    'without': ( -45,  +15,  -40,  +15,  -25),  # freq=592 — absence, deprivation
     'woke': ( +29, +127,  +89, +127,  +24),  # freq=171
     'wolf': ( +48,  +56,  +67,  +61,  +14),  # freq=10
     'women': ( +35,  +24,   +2,   +3,  +10),  # freq=86

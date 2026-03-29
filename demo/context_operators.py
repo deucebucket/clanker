@@ -140,6 +140,8 @@ CONTEXT_OPERATORS = {
     "reckon":       (0.60, "hedging", -10),
     "assume":       (0.60, "hedging", -10),
     "wonder":       (0.50, "hedging", -15),
+    "feel":         (0.90, "hedging", -5),
+    "felt":         (0.85, "hedging", -5),
 
     # --- Present tense ---
     "am":       (1.0, "present_tense"),

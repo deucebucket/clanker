@@ -1,5 +1,5 @@
 {
-  "overall_accuracy": 57.5,
+  "overall_accuracy": 64.2,
   "total_sentences": 120,
   "missing_words": {
     "just": 4,
@@ -32,18 +32,14 @@
     "phone": 1,
     "house": 1,
     "song": 1,
-    "waves": 1,
     "predict": 1,
     "vital": 1,
     "voice": 1,
-    "barely": 1,
     "get": 1,
     "world": 1,
     "kept": 1,
     "moving": 1,
-    "frozen": 1,
     "used": 1,
-    "drowning": 1,
     "happened": 1,
     "dare": 1,
     "talk": 1,
@@ -51,16 +47,20 @@
     "anyone": 1,
     "selfishness": 1,
     "break": 1,
-    "blood": 1
+    "blood": 1,
+    "working": 1,
+    "smiling": 1,
+    "overflowing": 1,
+    "soul": 1
   },
   "per_essay": {
     "sarcastic": {
       "accuracy": 33.3,
-      "coverage": 27.6
+      "coverage": 29.3
     },
     "grief": {
-      "accuracy": 40.0,
-      "coverage": 21.2
+      "accuracy": 86.7,
+      "coverage": 28.0
     },
     "rage": {
       "accuracy": 60.0,
@@ -68,14 +68,14 @@
     },
     "joy": {
       "accuracy": 86.7,
-      "coverage": 29.7
+      "coverage": 31.4
     },
     "conviction": {
       "accuracy": 66.7,
-      "coverage": 24.4
+      "coverage": 25.2
     },
     "fear": {
-      "accuracy": 60.0,
+      "accuracy": 66.7,
       "coverage": 30.5
     },
     "neutral_report": {
