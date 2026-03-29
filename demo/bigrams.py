@@ -89,12 +89,13 @@ BIGRAM_EXPRESSIONS = {
     ("give", "anything"): (-30, 20, -25, 20, -25, "grief: desperate yearning"),
     ("one", "more"): (-15, 10, -10, 10, -10, "grief: yearning for more"),
     ("cannot", "stop"): (-25, 20, -30, 20, -20, "inability: overwhelmed, cannot stop"),
+    ("can't", "stop"): (-25, 20, -30, 20, -20, "inability: overwhelmed, can't stop"),
     ("go", "on"): (-20, 10, -15, 10, -15, "grief: struggling to continue"),
     ("this", "hurts"): (-50, 25, -30, 30, -30, "grief: direct pain statement"),
     ("how", "much"): (0, 10, 0, 5, 0, "amplifier: degree emphasis"),
     ("without", "you"): (-50, 15, -40, 15, -35, "grief: absence of loved one"),
     ("can", "barely"): (-40, 15, -40, 20, -25, "grief: struggling to function"),
-    ("the", "same"): (-30, -5, -20, 0, -15, "grief: loss of normalcy, finality"),
+    ("nothing", "will"): (-40, 5, -30, 10, -25, "finality: nothing will ever"),
 
     # Euphemisms — surface is mild, actual force is strong
     ("passed", "on"): (-50, 10, -20, 10, -40, "euphemism: died"),

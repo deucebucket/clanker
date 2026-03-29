@@ -1,5 +1,5 @@
 {
-  "overall_accuracy": 64.2,
+  "overall_accuracy": 65.8,
   "total_sentences": 120,
   "missing_words": {
     "just": 4,
@@ -59,7 +59,7 @@
       "coverage": 29.3
     },
     "grief": {
-      "accuracy": 86.7,
+      "accuracy": 100.0,
       "coverage": 28.0
     },
     "rage": {
