@@ -2112,6 +2112,45 @@ SLANG_WORDS = {w for w in EMOTIONAL_VOCABULARY if w in {'screwed', 'basic', 'kil
 COGNITIVE_EVAL_WORDS = {w for w in EMOTIONAL_VOCABULARY if w in {'fighting', 'certain', 'choice', 'reason', 'responsible', 'irresponsible', 'mistake', 'achievement', 'doubt', 'difficult', 'clear', 'significant', 'villain', 'understand', 'deserved', 'agree', 'struggle', 'fought', 'believe', 'win', 'fight', 'accomplishment', 'true', 'success', 'impossible', 'choose', 'hard', 'wrong', 'defeat', 'overcome', 'blame', 'failure', 'quit', 'purpose', 'unfair', 'false', 'result', 'easy', 'survive', 'fault', 'achieve', 'decide', 'possible', 'winning', 'decision'}}
 
 # Gap analysis additions — words V2 was missing that caused SST-2 failures
+
+# ── MODERN EMOTIONAL VOCAB — Added for real-world coverage ──
+_MODERN_WORDS = {
+    'abuser': (-70, 60, 70, 40, -20),
+    'affirming': (30, 15, 25, 0, 20),
+    'binging': (-30, 40, -30, 20, -15),
+    'boundaries': (20, 10, 40, 0, 15),
+    'breadcrumbed': (-35, 30, -50, 15, -20),
+    'burnout': (-50, -20, -40, 10, -35),
+    'catfished': (-50, 40, -60, 20, -25),
+    'codependent': (-30, 20, -50, 15, -20),
+    'cutting': (-70, 30, -40, 50, -40),
+    'dissociating': (-40, -20, -60, 20, -30),
+    'enabler': (-20, 10, -30, 10, -10),
+    'flashback': (-60, 70, -50, 50, -35),
+    'floating': (40, -20, 20, 0, 50),
+    'gaslighting': (-60, 50, -70, 30, -30),
+    'gaslit': (-60, 40, -80, 30, -30),
+    'gutted': (-70, 30, -50, 20, -40),
+    'invalidating': (-50, 30, -40, 20, -25),
+    'lovebombed': (-30, 50, -40, 20, -15),
+    'manifesting': (30, 20, 30, 5, 20),
+    'mindset': (15, 10, 20, 0, 10),
+    'narcissist': (-40, 30, 60, 10, -10),
+    'overdose': (-80, 50, -60, 60, -50),
+    'purging': (-60, 30, -40, 30, -35),
+    'relapse': (-60, 40, -50, 40, -40),
+    'shook': (-30, 60, -40, 30, -20),
+    'sinking': (-50, -10, -50, 20, -60),
+    'soaring': (60, 40, 40, 0, 60),
+    'spiraling': (-60, 50, -60, 40, -40),
+    'stoked': (60, 50, 40, 10, 30),
+    'suffocating': (-70, 40, -70, 50, -50),
+    'thriving': (60, 40, 50, 0, 35),
+    'triggered': (-50, 70, -60, 40, -30),
+    'validating': (35, 15, 30, 0, 25),
+    'vibing': (40, 30, 20, 0, 25),
+}
+
 _GAP_WORDS = {
     "dull": (-21, -10, -15, 0, -12), "mundane": (-20, -10, -10, 0, -12),
     "grim": (-40, +10, -15, +5, -25), "hollow": (-30, -10, -20, 0, -20),
@@ -2256,3 +2295,5 @@ _MIRROR_CORRECTIONS = {
     "beautiful": (+77, +20, +15, 0, +25),
 }
 EMOTIONAL_VOCABULARY.update(_MIRROR_CORRECTIONS)
+
+EMOTIONAL_VOCABULARY.update(_MODERN_WORDS)
