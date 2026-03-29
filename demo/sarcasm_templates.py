@@ -94,10 +94,15 @@ class SarcasmTemplateDetector:
             return SarcasmTemplateResult(True, 1, 0.85,
                 "exclamation + positive + repetition = false enthusiasm")
 
-        # Variant: EXCL + POS without repeat but short sentence
-        if has_excl and has_pos and len(words) <= 5:
-            return SarcasmTemplateResult(True, 1, 0.6,
-                "exclamation + positive + short = likely sarcastic")
+        # Variant: EXCL + POS without repeat — ONLY if there's also
+        # a negative or mundane signal. Pure EXCL + POS = genuine enthusiasm.
+        if has_excl and has_pos and not has_repeat:
+            has_neg = any(_is_negative(w) for w in words)
+            has_mundane = any(w in ("meeting", "monday", "work", "homework",
+                                    "traffic", "bills", "chores") for w in words)
+            if has_neg or has_mundane:
+                return SarcasmTemplateResult(True, 1, 0.6,
+                    "exclamation + positive + negative/mundane = sarcastic")
 
         return SarcasmTemplateResult(False, 0, 0.0, "")
 
