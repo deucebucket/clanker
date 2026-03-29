@@ -66,6 +66,8 @@ NEGATORS = frozenset({
     "not", "don't", "didn't", "can't", "won't", "never", "no",
     "isn't", "aren't", "wasn't", "weren't", "hardly", "barely",
     "nobody", "nothing", "nowhere", "neither", "nor", "cannot",
+    "nope", "nah", "ain't", "shouldn't", "couldn't", "wouldn't",
+    "hasn't", "haven't", "hadn't", "doesn't",
 })
 
 # Negation as continuous force — not a boolean.
@@ -77,6 +79,9 @@ NEGATOR_STRENGTH = {
     "hardly": 0.60, "barely": 0.50,
     "nobody": 0.80, "nothing": 0.80, "nowhere": 0.80,
     "neither": 0.75, "nor": 0.70,
+    "nope": 0.85, "nah": 0.75, "ain't": 0.85,
+    "shouldn't": 0.80, "couldn't": 0.80, "wouldn't": 0.80,
+    "hasn't": 0.85, "haven't": 0.85, "hadn't": 0.80, "doesn't": 0.85,
 }
 
 # How fast negation force decays per word type
@@ -88,6 +93,7 @@ NEGATION_DECAY_PAYLOAD = 0.35    # hard — emotional word absorbs most of the n
 CLAUSE_BOUNDARIES = frozenset({
     "but", "however", "although", "though", "yet", "still",
     "instead", "whereas", "while", "nevertheless", "except",
+    "regardless", "nonetheless", "despite", "otherwise", "meanwhile", "conversely",
 })
 
 # ---------------------------------------------------------------------------
@@ -157,6 +163,42 @@ EVOKERS = {
     "identity":     (-15, 5),
     "dignity":      (-20, 10),
     "innocence":    (-20, -5),
+
+    # Abuse/trauma
+    "abuse":        (-40, -20),
+    "assault":      (-40, -20),
+    "rape":         (-50, -25),
+    "molestation":  (-50, -25),
+    # Foster/child welfare
+    "foster":       (-25, -15),
+    "custody":      (-30, -15),
+    "orphan":       (-35, -20),
+    # Legal
+    "court":        (-20, -10),
+    "trial":        (-25, -10),
+    "verdict":      (-25, -10),
+    # Addiction
+    "rehab":        (-30, -15),
+    "withdrawal":   (-30, -15),
+    "sober":        (-15, 5),
+    # Reproductive loss
+    "miscarriage":  (-45, -20),
+    "stillborn":    (-50, -25),
+    "infertility":  (-30, -15),
+    # Death adjacent
+    "burial":       (-40, -10),
+    "morgue":       (-40, -15),
+    "grief":        (-35, -15),
+    "widow":        (-30, -10),
+    # Financial
+    "eviction":     (-35, -20),
+    "foreclosure":  (-35, -20),
+    "unemployment": (-30, -20),
+    "bankruptcy":   (-35, -20),
+    # Institutional
+    "shelter":      (-25, -10),
+    "refugee":      (-35, -20),
+    "deportation":  (-35, -20),
 }
 
 # ---------------------------------------------------------------------------
@@ -183,6 +225,17 @@ UNIVERSAL_QUANTIFIERS = {
     "every":        1.3,
     "entire":       1.3,
     "whole":        1.2,
+    "each":         1.2,
+    "any":          1.2,
+    "none":         1.8,
+    "constantly":   1.4,
+    "endlessly":    1.5,
+    "perpetually":  1.5,
+    "utterly":      1.5,
+    "whatsoever":   1.4,
+    "altogether":   1.3,
+    "anything":     1.5,
+    "everywhere":   1.3,
 }
 
 EVOKER_DECAY = 0.88  # How fast gravitational priming decays per word
@@ -195,6 +248,7 @@ EVOKER_DECAY = 0.88  # How fast gravitational priming decays per word
 CONDITIONAL_STARTERS = frozenset({
     "if", "unless", "supposing", "assuming", "imagine",
     "hypothetically", "theoretically",
+    "suppose", "provided", "whether", "granted",
 })
 
 CONDITIONAL_DAMPENER = 0.40  # Conditionals gate reality: 0.4x on all forces after
@@ -285,6 +339,11 @@ PASSIVE_PARTICIPLES = frozenset({
     "scared", "shamed", "silenced", "surprised",
     "threatened", "traumatized", "tricked", "victimized",
     "violated", "wounded",
+    "robbed", "stolen", "conned", "scammed", "controlled", "ghosted",
+    "bullied", "coerced", "blackmailed", "stalked", "dumped", "ditched",
+    "replaced", "discarded", "demoted", "suspended", "expelled",
+    "detained", "drugged", "poisoned", "mugged", "kidnapped",
+    "censored", "suppressed", "patronized", "doxxed", "scapegoated",
 })
 PASSIVE_D_OFFSET = -15  # passive removes agency
 

@@ -168,6 +168,12 @@ CONTEXT_OPERATORS = {
     # "Whatever" gates emotion: surrenders agency (D-25), feigns calm (A dampened)
     "whatever":     (0.50, "deflection", -25),
     "whatevs":      (0.50, "deflection", -20),
+    "idc":          (0.40, "deflection", -25),
+    "idk":          (0.50, "deflection", -20),
+    "meh":          (0.40, "deflection", -20),
+    "nvm":          (0.45, "deflection", -20),
+    "nevermind":    (0.45, "deflection", -20),
+    "dunno":        (0.50, "deflection", -20),
 
     # --- Evidential markers (reported speech, distance from experience) ---
     "allegedly":    (0.40, "evidential", -20),
