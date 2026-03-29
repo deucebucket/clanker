@@ -151,6 +151,33 @@ class ConversationEngine:
                 turn_number=self._turn_count,
             ))
 
+        # --- SUSPICIOUS CALM detection ---
+        # After descending arc, sudden neutral/flat = resolution (most dangerous)
+        # This is the "eye of the storm" — the person stopped fighting
+        turns = self.memory.current_session.turns
+        if len(turns) >= 3:
+            recent = turns[-3:]
+            was_descending = any(t.input_vadug.v < 110 for t in recent[:-1])
+            now_flat = 115 < vadug.v < 140  # suddenly neutral
+            if was_descending and now_flat:
+                # Check for evoker words in the text (crisis method indicators)
+                text_lower = text.lower()
+                crisis_keywords = {"pills", "gun", "pistol", "bridge", "noose",
+                                   "razor", "method", "plan", "goodbye", "letter",
+                                   "tonight", "ready", "decided", "everything"}
+                found_keywords = [w for w in crisis_keywords if w in text_lower.split()]
+                if found_keywords:
+                    alerts.append(Alert(
+                        level="WARNING",
+                        signal="SUSPICIOUS_CALM",
+                        details=f"Flat/neutral after descending trajectory + "
+                                f"crisis keywords [{', '.join(found_keywords)}] — "
+                                f"possible resolved crisis. Ask: what do you mean?",
+                        vadug=vadug,
+                        trajectory="suspicious_calm",
+                        turn_number=self._turn_count,
+                    ))
+
         # --- ESCALATION CHECK (trajectory over N turns) ---
         turns = self.memory.current_session.turns
         if len(turns) >= self.ESCALATION_WINDOW:
