@@ -1,6 +1,10 @@
 # Clanker-Lang
 
-A rule-based emotional physics engine that processes text into 5-dimensional emotional coordinates. Nothing in emotions is boolean -- every word is a continuous force, every negation decays over distance, every hedge shifts confidence without flipping polarity. 0.09ms/sentence. Every number is auditable.
+**This is NOT a sentiment classifier.** It does not output "positive" or "negative." It is a physics engine that computes 5-dimensional emotional coordinates — the same way a physics simulator computes position, velocity, and force, except the dimensions are Valence, Arousal, Dominance, Urgency, and Gravity.
+
+**Why this matters:** "I'm sad" and "I want to die" both score "negative" in every sentiment classifier on Earth. In Clanker-Lang, "I'm sad" reads V=0 D=7 G=92 (sad but not crushing) and "I want to die" reads V=0 D=0 G=84 (helpless AND crushing). Same valence. Completely different crisis routing. The Dominance and Gravity dimensions are what separate "check in tomorrow" from "call 911 now."
+
+**How it works:** 26 conversational forces act on text word-by-word, like PEMDAS for emotions. Negation is a continuous decaying force (not a boolean flip). Hedging dampens magnitude AND lowers confidence independently. "Whatever" is a deflection shield that crushes agency. "Everything" is a scope amplifier that makes whatever follows existentially heavy. 2,623 mapped vocabulary entries, 0.1ms/sentence, 300KB total, fully auditable word-by-word.
 
 ## Try It
 

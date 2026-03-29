@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Clanker-Lang is a complete system for emotionally intelligent AI: a language, an emotional coordinate system, a physics engine, a personality framework, and a training target. It is NOT a sentiment classifier — it's the emotional layer a model thinks in.
+**NOT a sentiment classifier.** Clanker-Lang is a physics engine for emotions. It does not output "positive/negative" — it computes 5D coordinates (VADUG) using 26 mathematical forces, the way a physics simulator computes trajectories. "I'm sad" and "I want to die" have the same Valence but completely different Dominance and Gravity — that difference routes crisis response. 300KB, 0.1ms/sentence, 66% accuracy on real-world text, 72% crisis recall, fully auditable.
 
 Three components:
 - **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
