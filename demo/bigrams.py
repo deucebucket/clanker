@@ -27,7 +27,7 @@ BIGRAM_EXPRESSIONS = {
 
     # Phrasal verbs (non-overlapping with idioms)
     ("move", "on"): (10, 10, 15, 5, 10, "recovery: moving forward"),
-    ("let", "go"): (5, -5, 10, -5, 10, "release: letting go"),
+    ("let", "go"): (5, -5, 10, -5, 10, "euphemism: fired/released"),
     ("hold", "on"): (5, 15, 15, 15, 5, "persistence: holding on"),
     ("turn", "out"): (0, 10, 5, 5, 0, "result: outcome"),
     ("find", "out"): (0, 15, 5, 10, 0, "discovery: learning"),
@@ -83,6 +83,27 @@ BIGRAM_EXPRESSIONS = {
     ("never", "again"): (-20, 25, 20, 15, -10, "resolve: never again"),
     ("no", "longer"): (-15, 5, 5, 5, -10, "ending: no longer"),
     ("no", "more"): (-15, 10, 10, 10, -5, "finality: no more"),
+
+    # Euphemisms — surface is mild, actual force is strong
+    ("passed", "on"): (-50, 10, -20, 10, -40, "euphemism: died"),
+    ("taken", "from"): (-45, 20, -30, 20, -35, "euphemism: stolen/killed"),
+    ("put", "sleep"): (-40, -10, -20, 5, -35, "euphemism: euthanized"),
+    ("under", "weather"): (-15, -5, -10, 0, -10, "euphemism: sick"),
+    ("between", "jobs"): (-20, 10, -15, 15, -10, "euphemism: unemployed"),
+    ("seeing", "someone"): (15, 10, 5, 0, 10, "euphemism: in a relationship"),
+    ("in", "trouble"): (-30, 20, -15, 20, -15, "euphemism: serious problem"),
+    ("not", "with"): (-40, 15, -25, 10, -30, "euphemism: separated/dead"),
+
+    # Hyperbole — physically impossible = not literal (Force #9)
+    ("died", "laughing"): (50, 40, 10, 0, 30, "hyperbole: very amused"),
+    ("kill", "for"): (20, 20, 15, 10, 10, "hyperbole: strong desire"),
+    ("million", "times"): (0, 15, 5, 10, 0, "hyperbole: amplified repetition"),
+    ("heart", "attack"): (-10, 30, -5, 15, -5, "hyperbole: shock, not medical"),
+    ("drop", "dead"): (-15, 25, -5, 10, -5, "hyperbole: extreme surprise"),
+    ("on", "fire"): (30, 35, 20, 5, 20, "hyperbole: performing brilliantly"),
+    ("killing", "it"): (35, 30, 20, 5, 25, "hyperbole: excelling"),
+    ("blew", "mind"): (25, 35, 10, 10, 20, "hyperbole: astonished"),
+    ("end", "world"): (-20, 15, -10, 10, -15, "hyperbole: not literally apocalyptic"),
 }
 
 
