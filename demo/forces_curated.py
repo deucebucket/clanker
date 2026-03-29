@@ -1772,7 +1772,7 @@ EMOTIONAL_VOCABULARY = {
     'sore': (-102,  +29, -109,  +57,  +48),  # freq=18
     'sorry': ( -32,  +24,  -67,  +15,  -20),  # freq=2697
     'sort': ( +37,  -20,  +49,   +0,  +19),  # freq=152
-    'sound': ( +58,  +22,  -29,   +4,  +12),  # freq=399
+    # 'sound' removed — dual-use noun/adjective, "sounds good" vs "every sound makes me jump"
     'source': ( +51,  -31,  +54,   +0,  +24),  # freq=17
     'south': ( +32,  +18,  +42,   +6,   +4),  # freq=88
     'space': ( +31,  -15,   +9,   +0,  +10),  # freq=65

@@ -348,7 +348,7 @@ IDIOMS = {
     ('better', 'off', 'without', 'me'): (-55, 10, -50, 25, -40, 'crisis: better off without me'),
     # Fear / anxiety idioms
     ('eating', 'me', 'alive'): (-40, 40, -35, 25, -25, 'fear: consuming anxiety'),
-    ('closing', 'in'): (-30, 30, -35, 25, -20, 'fear: walls closing in'),
+    ('closing', 'in'): (-40, 35, -40, 30, -25, 'fear: walls closing in'),
     ('falls', 'apart'): (-40, 30, -35, 20, -25, 'fear: everything falls apart'),
     ('fall', 'apart'): (-40, 30, -35, 20, -25, 'fear: falling apart'),
     ('out', 'of', 'my', 'skin'): (-30, 50, -30, 30, -15, 'fear: startle/hypervigilance'),
@@ -361,4 +361,6 @@ IDIOMS = {
     ('we', 'did', 'it'): (60, 50, 50, 0, 40, 'joy: triumph/achievement'),
     ('back', 'down'): (-20, 20, -25, 10, -10, 'conviction: retreat/surrender'),
     ('no', 'right'): (-30, 30, -10, 15, -10, 'rage: boundary violation'),
+    ('never', 'forgive'): (-40, 30, 15, 10, -15, 'rage: unforgivable'),
+    ('blood', 'boils'): (-45, 50, 10, 20, -15, 'rage: blood boiling'),
 }

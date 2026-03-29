@@ -41,6 +41,8 @@ BIGRAM_EXPRESSIONS = {
     ("show", "up"): (10, 15, 15, 10, 10, "appearance: arriving/proving"),
     ("get", "over"): (10, 10, 15, 5, 10, "recovery: getting over it"),
     ("break", "up"): (-40, 30, -20, 20, -25, "heartbreak: ending relationship"),
+    ("break", "something"): (-50, 50, 20, 25, -15, "rage: destructive impulse"),
+    ("break", "things"): (-50, 50, 20, 25, -15, "rage: destructive impulse"),
     ("fall", "love"): (40, 30, -10, 15, 30, "romance: falling in love"),
 
     # Internet/casual
