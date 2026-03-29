@@ -50,6 +50,17 @@ PARAM_SPEC = [
     ("negation_decay_operator", 0.70, 0.99, 0.92),
     ("negation_decay_neutral",  0.60, 0.95, 0.85),
     ("negation_decay_payload",  0.10, 0.60, 0.35),
+    # --- Conversational force params (10) — ALL the new knobs ---
+    ("evoker_decay",            0.70, 0.99, 0.88),
+    ("conditional_dampener",    0.20, 0.80, 0.40),
+    ("clinical_dampener",       0.10, 0.60, 0.30),
+    ("passive_d_offset",       -30.0, 0.0, -15.0),
+    ("comparative_amplifier",   1.0,  2.0,  1.30),
+    ("superlative_amplifier",   1.0,  2.5,  1.50),
+    ("filler_d_offset",        -15.0, 0.0,  -5.0),
+    ("litotes_dampener",        0.40, 0.90, 0.70),
+    ("weaponized_d_boost",      5.0,  30.0, 15.0),
+    ("tag_d_offset",           -20.0, 0.0, -10.0),
 ]
 
 PARAM_NAMES = [p[0] for p in PARAM_SPEC]
@@ -202,13 +213,15 @@ def run_evolution(
     # Initialize population
     # Seed 1: defaults
     # Seed 2: EXP-0023 champion config (extended with new param defaults)
-    champion_023 = [
-        0.987, 1.547, 0.635, 94.68, 95.0, 72.0, 0.52,   # original 7
-        1.151, 1.561, 3.0, 0.415, 2.744,                   # scales
-        116.6, 152.8,                                        # thresholds
-        0.92, 0.85, 0.35,                                   # negation decay defaults
+    # Seed with EXP-0048 champion + defaults for new params
+    champion_048 = [
+        0.903, 2.894, 0.085, 158.7, 68.9, 95.5, 0.529,   # original 7
+        1.920, 0.789, 2.901, 0.30, 0.707,                  # scales
+        116.7, 155.2,                                        # thresholds
+        0.850, 0.60, 0.523,                                  # negation decay
+        0.88, 0.40, 0.30, -15.0, 1.30, 1.50, -5.0, 0.70, 15.0, -10.0,  # force params (defaults)
     ]
-    population = [list(PARAM_DEFAULTS), champion_023]
+    population = [list(PARAM_DEFAULTS), champion_048]
     population += [random_organism() for _ in range(n_pop - 2)]
 
     best_params = None

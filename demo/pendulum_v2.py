@@ -371,6 +371,17 @@ class PendulumV2:
         negation_decay_operator: float = NEGATION_DECAY_OPERATOR,
         negation_decay_neutral: float = NEGATION_DECAY_NEUTRAL,
         negation_decay_payload: float = NEGATION_DECAY_PAYLOAD,
+        # --- Conversational force params (10) ---
+        evoker_decay: float = EVOKER_DECAY,
+        conditional_dampener: float = CONDITIONAL_DAMPENER,
+        clinical_dampener: float = CLINICAL_DAMPENER,
+        passive_d_offset: float = PASSIVE_D_OFFSET,
+        comparative_amplifier: float = COMPARATIVE_AMPLIFIER,
+        superlative_amplifier: float = SUPERLATIVE_AMPLIFIER,
+        filler_d_offset: float = FILLER_D_OFFSET,
+        litotes_dampener: float = LITOTES_DAMPENER,
+        weaponized_d_boost: float = WEAPONIZED_D_BOOST,
+        tag_d_offset: float = TAG_D_OFFSET,
     ):
         self.momentum = momentum
         self.force_scale = force_scale
@@ -389,6 +400,16 @@ class PendulumV2:
         self.negation_decay_operator = negation_decay_operator
         self.negation_decay_neutral = negation_decay_neutral
         self.negation_decay_payload = negation_decay_payload
+        self.evoker_decay = evoker_decay
+        self.conditional_dampener_val = conditional_dampener
+        self.clinical_dampener_val = clinical_dampener
+        self.passive_d_offset = passive_d_offset
+        self.comparative_amplifier = comparative_amplifier
+        self.superlative_amplifier = superlative_amplifier
+        self.filler_d_offset = filler_d_offset
+        self.litotes_dampener = litotes_dampener
+        self.weaponized_d_boost = weaponized_d_boost
+        self.tag_d_offset = tag_d_offset
 
     def get_config(self) -> dict:
         """Return full config snapshot for experiment logging."""
@@ -410,6 +431,16 @@ class PendulumV2:
             "negation_decay_operator": self.negation_decay_operator,
             "negation_decay_neutral": self.negation_decay_neutral,
             "negation_decay_payload": self.negation_decay_payload,
+            "evoker_decay": self.evoker_decay,
+            "conditional_dampener": self.conditional_dampener_val,
+            "clinical_dampener": self.clinical_dampener_val,
+            "passive_d_offset": self.passive_d_offset,
+            "comparative_amplifier": self.comparative_amplifier,
+            "superlative_amplifier": self.superlative_amplifier,
+            "filler_d_offset": self.filler_d_offset,
+            "litotes_dampener": self.litotes_dampener,
+            "weaponized_d_boost": self.weaponized_d_boost,
+            "tag_d_offset": self.tag_d_offset,
         }
 
     def classify(self, v: float, mode: str = "three_way") -> str:
@@ -559,17 +590,17 @@ class PendulumV2:
 
             # Check clinical framing — "the subject reports" pattern
             if word_lower in CLINICAL_FRAME:
-                pending_operators["clinical"] = (CLINICAL_DAMPENER, -20)
+                pending_operators["clinical"] = (self.clinical_dampener_val, -20)
                 trace.append(self._trace_entry(
                     word, "CLINICAL", state,
-                    f"clinical={CLINICAL_DAMPENER} d_off=-20"
+                    f"clinical={self.clinical_dampener_val} d_off=-20"
                 ))
                 i += 1
                 continue
 
             # Check litotes qualifier — "not exactly X" dampens negation (Force #10)
             if word_lower in LITOTES_QUALIFIERS and negation_force > 0.3:
-                negation_force *= LITOTES_DAMPENER
+                negation_force *= self.litotes_dampener
                 trace.append(self._trace_entry(
                     word, "LITOTES", state,
                     f"dampened negation to {negation_force:.2f}"
@@ -579,24 +610,24 @@ class PendulumV2:
 
             # Check weaponized politeness — "honestly/frankly" before negative = D boost (Force #16)
             if word_lower in POLITE_WEAPONS:
-                pending_operators["politeness"] = (1.0, WEAPONIZED_D_BOOST)
+                pending_operators["politeness"] = (1.0, self.weaponized_d_boost)
                 trace.append(self._trace_entry(
                     word, "POLITENESS", state,
-                    f"D+{WEAPONIZED_D_BOOST} (potential weapon)"
+                    f"D+{self.weaponized_d_boost} (potential weapon)"
                 ))
                 i += 1
                 continue
 
             # Check comparative — amplify next payload (Force #20)
             if word_lower in COMPARATIVES:
-                pending_operators["comparative"] = (COMPARATIVE_AMPLIFIER, 0)
+                pending_operators["comparative"] = (self.comparative_amplifier, 0)
                 trace.append(self._trace_entry(word, "COMPARATIVE", state, f"amp={COMPARATIVE_AMPLIFIER}"))
                 i += 1
                 continue
 
             # Check superlative — amplify next payload harder (Force #21)
             if word_lower in SUPERLATIVES:
-                pending_operators["superlative"] = (SUPERLATIVE_AMPLIFIER, 0)
+                pending_operators["superlative"] = (self.superlative_amplifier, 0)
                 trace.append(self._trace_entry(word, "SUPERLATIVE", state, f"amp={SUPERLATIVE_AMPLIFIER}"))
                 i += 1
                 continue
@@ -627,7 +658,7 @@ class PendulumV2:
                 d_off += dominance_prime * self.force_scale
                 # Passive voice lowers D (removed agency)
                 if i in pre.passive_positions:
-                    d_off += PASSIVE_D_OFFSET
+                    d_off += self.passive_d_offset
                 neg_scale = self._negation_scale(negation_force)
                 state = self._apply_force(state, force, coeff * neg_scale, d_off)
                 # Apply gravity priming directly to G state
@@ -641,13 +672,13 @@ class PendulumV2:
                 pending_operators = {}
                 negation_force *= self.negation_decay_payload
                 # Decay evoker priming
-                gravity_prime *= EVOKER_DECAY
-                dominance_prime *= EVOKER_DECAY
+                gravity_prime *= self.evoker_decay
+                dominance_prime *= self.evoker_decay
 
             elif word_lower in FILLERS:
                 # Fillers signal processing difficulty — lower D slightly (Force #23)
-                state["d"] += FILLER_D_OFFSET * self.force_scale
-                trace.append(self._trace_entry(word, "FILLER", state, f"D{FILLER_D_OFFSET}"))
+                state["d"] += self.filler_d_offset * self.force_scale
+                trace.append(self._trace_entry(word, "FILLER", state, f"D{self.filler_d_offset}"))
 
             else:
                 # NEUTRAL — moderate negation decay
@@ -739,7 +770,7 @@ class PendulumV2:
         # Conditional detection (if/unless/assuming at sentence start)
         if words and words[0].lower() in CONDITIONAL_STARTERS:
             info.is_conditional = True
-            info.conditional_dampener = CONDITIONAL_DAMPENER
+            info.conditional_dampener = self.conditional_dampener_val
 
         # Passive voice detection (was/were/been + past participle pattern)
         lower_words = [w.lower() for w in words]
@@ -913,7 +944,7 @@ class PendulumV2:
         # Tag question D-shift (Force #18)
         # "right?", "huh?" — seeking validation lowers confidence
         if pre and pre.has_tag_question:
-            d += TAG_D_OFFSET
+            d += self.tag_d_offset
 
         # Crisis detection: if deeply negative + high urgency, lock momentum
         if v < self.crisis_v and u > self.crisis_u:
