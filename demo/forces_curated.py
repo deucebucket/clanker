@@ -1268,7 +1268,7 @@ EMOTIONAL_VOCABULARY = {
     'lead': ( +29,  +29,  +89,  +12,  +16),  # freq=54
     'leading': ( +48,   -9,  +59,   +6,  +10),  # freq=21
     'league': ( +34,  -27,   -9,   +0,   +8),  # freq=59
-    'lean': ( +51,  -24,  -17,   +0,  +12),  # freq=12
+    # 'lean' removed — directional word, context-dependent (lean in=positive, lean toward=neutral)
     'leap': ( +56,  +29,  +47,   +4,  +24),  # freq=16
     'leash': ( -42,  -36,  -27,   +0,  -17),  # freq=20
     'least': ( -52,  -24,  -92,  +31,  +20),  # freq=1087
