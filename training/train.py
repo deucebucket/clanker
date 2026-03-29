@@ -279,6 +279,27 @@ class ClankerDataset(Dataset):
                     error_count += 1
             print(f"  Error corrections (engine gaps): {error_count} examples (weight=15)")
 
+        # Load calibration data (sarcasm, negation — hand-scored truth, highest weight)
+        calibration_dir = os.path.dirname(phase1_path)
+        for cal_file in ["sarcasm_calibration.jsonl", "negation_calibration.jsonl"]:
+            cal_path = os.path.join(calibration_dir, cal_file)
+            if os.path.exists(cal_path):
+                cal_count = 0
+                with open(cal_path) as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        data = json.loads(line)
+                        self.examples.append({
+                            "text": data["english"],
+                            "vadug": data["vadug"],
+                            "weight": 20.0,  # HIGHEST weight — hand-scored truth
+                        })
+                        self.v_bucket_indices.append(value_to_bucket(data["vadug"][0]))
+                        cal_count += 1
+                print(f"  Calibration ({cal_file}): {cal_count} examples (weight=20)")
+
         # Phase 2 DISABLED — engine-labeled book sentences are 43% neutral noise
         # and teach the model to replicate engine mistakes at 71K scale.
         # The model learns better from 3K quality examples than 74K noisy ones.

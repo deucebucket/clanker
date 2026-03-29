@@ -1,0 +1,35 @@
+{"english": "Oh great another Monday", "vadug": [60, 140, 130, 20, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Wow what a wonderful surprise", "vadug": [50, 160, 120, 30, 70], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Yeah sure that went really well", "vadug": [55, 130, 140, 20, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh fantastic the printer is broken again", "vadug": [40, 150, 130, 40, 65], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "What a lovely day to be stuck in traffic", "vadug": [45, 140, 80, 30, 70], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Thanks for nothing", "vadug": [30, 160, 150, 20, 90], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh how delightful", "vadug": [50, 130, 140, 10, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Sure because that always works", "vadug": [55, 120, 140, 15, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Right because I have nothing better to do", "vadug": [50, 140, 130, 20, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh joy another meeting", "vadug": [55, 130, 100, 20, 75], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Brilliant just brilliant", "vadug": [45, 150, 140, 20, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "How wonderful for you", "vadug": [60, 120, 130, 10, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh perfect timing", "vadug": [55, 140, 120, 25, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Just what I needed", "vadug": [50, 130, 90, 20, 75], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Thanks a lot", "vadug": [55, 140, 130, 15, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh this is just great", "vadug": [50, 140, 130, 20, 75], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Wonderful just wonderful", "vadug": [45, 150, 140, 20, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh lucky me", "vadug": [55, 130, 90, 15, 75], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Yeah that makes total sense", "vadug": [55, 120, 140, 10, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh I am so thrilled", "vadug": [50, 140, 130, 15, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Well isn't that special", "vadug": [55, 130, 140, 10, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh how nice", "vadug": [60, 110, 130, 10, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Sure why not", "vadug": [70, 120, 120, 10, 80], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Yeah no that's fine", "vadug": [55, 130, 100, 15, 75], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "Oh absolutely", "vadug": [50, 130, 140, 10, 85], "source": "sarcasm_calibration", "features": "sarcasm, surface_positive_actual_negative"}
+{"english": "I love this weather", "vadug": [210, 150, 160, 5, 190], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "I am genuinely happy for you", "vadug": [220, 140, 160, 5, 195], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "This is a wonderful surprise", "vadug": [200, 160, 150, 10, 180], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "I am so excited about this", "vadug": [210, 170, 160, 15, 190], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "That is really great news", "vadug": [200, 150, 155, 10, 185], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "Thank you so much", "vadug": [190, 140, 150, 5, 180], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "I really appreciate that", "vadug": [185, 130, 150, 5, 175], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "This makes me so happy", "vadug": [220, 150, 160, 5, 195], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "You are amazing", "vadug": [210, 150, 160, 5, 190], "source": "sarcasm_calibration", "features": "genuine_positive"}
+{"english": "I am proud of you", "vadug": [200, 140, 170, 5, 185], "source": "sarcasm_calibration", "features": "genuine_positive"}

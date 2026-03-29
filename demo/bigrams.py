@@ -104,6 +104,30 @@ BIGRAM_EXPRESSIONS = {
     ("killing", "it"): (35, 30, 20, 5, 25, "hyperbole: excelling"),
     ("blew", "mind"): (25, 35, 10, 10, 20, "hyperbole: astonished"),
     ("end", "world"): (-20, 15, -10, 10, -15, "hyperbole: not literally apocalyptic"),
+
+    # Sarcasm triggers — "Oh + [positive word]" = sarcastic inversion (Force #5)
+    # These fire as NEGATIVE idioms, bypassing the positive word's natural force.
+    # The pattern is: exclamation + positive word = the speaker is mocking.
+    ("oh", "great"): (-25, 20, 15, 10, -10, "sarcasm: oh great"),
+    ("oh", "wonderful"): (-25, 20, 15, 10, -10, "sarcasm: oh wonderful"),
+    ("oh", "fantastic"): (-25, 20, 15, 10, -10, "sarcasm: oh fantastic"),
+    ("oh", "perfect"): (-25, 20, 15, 10, -10, "sarcasm: oh perfect"),
+    ("oh", "brilliant"): (-25, 20, 15, 10, -10, "sarcasm: oh brilliant"),
+    ("oh", "lovely"): (-20, 15, 10, 5, -10, "sarcasm: oh lovely"),
+    ("oh", "joy"): (-20, 15, 10, 5, -10, "sarcasm: oh joy"),
+    ("oh", "how"): (-10, 10, 10, 5, -5, "sarcasm: oh how [nice/great]"),
+    ("yeah", "sure"): (-5, 5, 5, 0, -5, "ambiguous: yeah sure — context decides"),
+    ("yeah", "right"): (-25, 20, 15, 5, -15, "sarcasm: yeah right"),
+    ("oh", "really"): (-15, 15, 15, 5, -10, "sarcasm: oh really"),
+    ("sure", "thing"): (-15, 10, 15, 5, -10, "sarcasm: sure thing"),
+    ("thanks", "lot"): (-25, 20, 15, 10, -15, "sarcasm: thanks a lot"),
+    ("thanks", "nothing"): (-35, 25, 20, 10, -20, "sarcasm: thanks for nothing"),
+    ("big", "deal"): (-15, 15, 15, 5, -10, "sarcasm: big deal / dismissive"),
+    ("how", "nice"): (-15, 10, 10, 5, -5, "sarcasm: how nice"),
+    ("just", "great"): (-20, 15, 15, 5, -10, "sarcasm: just great"),
+    ("just", "wonderful"): (-20, 15, 15, 5, -10, "sarcasm: just wonderful"),
+    ("just", "perfect"): (-20, 15, 15, 5, -10, "sarcasm: just perfect"),
+    ("as", "if"): (-15, 15, 15, 5, -10, "sarcasm: as if / dismissal"),
 }
 
 
