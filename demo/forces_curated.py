@@ -2381,4 +2381,16 @@ _POST5_WORDS = {
 }
 EMOTIONAL_VOCABULARY.update(_POST5_WORDS)
 
+
+_SARCASM_GAPS = {
+    'delightful': (50, 20, 15, 0, 25),
+    'lovely': (45, 15, 10, 0, 20),
+    'fabulous': (50, 20, 15, 0, 25),
+    'marvelous': (50, 20, 15, 0, 25),
+    'splendid': (45, 15, 15, 0, 20),
+    'policy': (-5, 5, -5, 5, -5),
+    'paperwork': (-10, 5, -5, 5, -5),
+}
+EMOTIONAL_VOCABULARY.update(_SARCASM_GAPS)
+
 EMOTIONAL_VOCABULARY.update(_RESOLVER_CRISIS_GAPS)

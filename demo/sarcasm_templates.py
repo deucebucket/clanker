@@ -115,12 +115,17 @@ class SarcasmTemplateDetector:
             return SarcasmTemplateResult(False, 0, 0.0, "")
 
         has_excl = words[0] in EXCLAMATIONS
-        has_frame = any(w in FRAMES for w in words[1:3])
-        has_pos = any(_is_positive(w) for w in words[2:])
+        has_frame = any(w in FRAMES for w in words[0:3])
+        has_pos = any(_is_positive(w) for w in words[1:])
 
         if has_excl and has_frame and has_pos:
             return SarcasmTemplateResult(True, 2, 0.8,
                 "exclamation + framing + positive = rhetorical sarcasm")
+
+        # Variant: FRAME at position 0 + POS = "How nice", "What a surprise"
+        if words[0] in FRAMES and has_pos:
+            return SarcasmTemplateResult(True, 2, 0.7,
+                "framing opener + positive = rhetorical sarcasm")
 
         return SarcasmTemplateResult(False, 0, 0.0, "")
 
