@@ -40,7 +40,10 @@ from demo.context_operators import (
     CONTEXT_OPERATORS, QUESTION_STARTERS, QUESTION_DAMPENER,
     is_question, _COEFF_CAP, _COEFF_FLOOR, _parse_operator,
 )
-from demo.pendulum import IDIOMS
+try:
+    from demo.idioms import IDIOMS
+except ImportError:
+    from demo.pendulum import IDIOMS  # fallback
 from demo.bigrams import BIGRAM_EXPRESSIONS
 from demo.sarcasm import SarcasmDetector
 from demo.tonal import TonalAnalyzer, apply_tonal_adjustment
