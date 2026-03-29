@@ -132,6 +132,19 @@ BIGRAM_EXPRESSIONS = {
     ("how", "delightful"): (-20, 15, 15, 5, -10, "sarcasm: how delightful"),
     ("how", "wonderful"): (-20, 15, 15, 5, -10, "sarcasm: how wonderful"),
     ("what", "surprise"): (-15, 15, 10, 5, -10, "sarcasm: what a surprise"),
+
+    # Deflection gates — emotional shields masking real feelings
+    # "whatever it's funny" = not actually amused, dismissing/deflecting
+    # Low D (surrendering agency), low A (feigning apathy), sinking G
+    ("whatever", "funny"): (-15, -20, -25, 5, -15, "deflection: dismissing with humor"),
+    ("whatever", "fine"): (-20, -25, -30, 5, -20, "deflection: surrender disguised as acceptance"),
+    ("whatever", "good"): (-15, -20, -25, 5, -15, "deflection: dismissing positive"),
+    ("whatever", "great"): (-20, -15, -20, 5, -15, "deflection: dismissing with fake positive"),
+    ("whatever", "cool"): (-10, -20, -25, 5, -10, "deflection: apathetic dismissal"),
+    ("sure", "fine"): (-10, -15, -20, 5, -10, "deflection: resigned compliance"),
+    ("sure", "whatever"): (-15, -20, -25, 5, -15, "deflection: double dismissal"),
+    ("fine", "whatever"): (-15, -20, -25, 5, -15, "deflection: stacked resignation"),
+    ("i", "guess"): (-5, -10, -20, 0, -10, "deflection: reluctant concession"),
 }
 
 

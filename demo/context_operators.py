@@ -162,6 +162,11 @@ CONTEXT_OPERATORS = {
     "can":      (0.80, "hypothetical", 0),
     "may":      (0.60, "hypothetical", -10),
 
+    # --- Deflection shields (masking real feelings with apathy) ---
+    # "Whatever" gates emotion: surrenders agency (D-25), feigns calm (A dampened)
+    "whatever":     (0.50, "deflection", -25),
+    "whatevs":      (0.50, "deflection", -20),
+
     # --- Evidential markers (reported speech, distance from experience) ---
     "allegedly":    (0.40, "evidential", -20),
     "reportedly":   (0.40, "evidential", -20),
