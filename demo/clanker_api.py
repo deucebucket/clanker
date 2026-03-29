@@ -33,12 +33,14 @@ import time
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
 
-from demo.shared import VADUG
+from demo.shared import VADUG, PersonalityVector
 from demo.pendulum_v2 import PendulumV2
 from demo.conversation import ConversationEngine, Alert, MessageResult
 from demo.memory import ConversationMemory
 from demo.preflight import PreflightAnalyzer
 from demo.anomaly import AnomalyDetector, Anomaly
+from demo.dark_matter import DarkMatter, new_entity
+from demo.zones import ZoneClassifier
 
 
 # Champion config (EXP-0059, 27 params, 56M evaluations)
@@ -78,6 +80,13 @@ class ProcessResult:
     gravity_well: Optional[VADUG] = None
     relationship_traits: list = field(default_factory=list)
 
+    # Zone classification
+    zone: str = ""
+    zone_confidence: float = 0.0
+
+    # Dark Matter state
+    dark_matter_state: dict = field(default_factory=dict)
+
     # Anomaly detection (black holes)
     anomalies: list = field(default_factory=list)
 
@@ -115,13 +124,18 @@ class ClankerAPI:
     Tracks their emotional trajectory across messages and sessions.
     """
 
-    def __init__(self, entity_id: str = "anonymous", config: dict = None):
+    def __init__(self, entity_id: str = "anonymous", config: dict = None,
+                 personality: PersonalityVector = None,
+                 dark_matter_profile: str = "default"):
         self.entity_id = entity_id
         engine_config = config or CHAMPION_CONFIG
-        self.engine = PendulumV2(**engine_config)
+        self.personality = personality
+        self.engine = PendulumV2(**engine_config, personality=personality)
         self.conversation = ConversationEngine(self.engine)
         self.anomaly_detector = AnomalyDetector(self.conversation)
         self.preflight = PreflightAnalyzer()
+        self.dark_matter = new_entity(dark_matter_profile)
+        self.zone_classifier = ZoneClassifier()
         self._message_count = 0
 
     def process(self, text: str) -> ProcessResult:
@@ -138,6 +152,12 @@ class ClankerAPI:
         anomaly_result = self.anomaly_detector.process_message(text)
         msg_result = anomaly_result.message_result
 
+        # Zone classification (multi-dimensional state matching)
+        zone = self.zone_classifier.classify_cascading(msg_result.vadug)
+
+        # Dark Matter: process this experience and apply drift
+        self.dark_matter.experience(msg_result.vadug.v, msg_result.vadug.g)
+
         # Layer 3: Dark Matter context
         bg_mod = self.conversation.memory.get_background_modifier()
         profile = self.conversation.memory.emotional_profile
@@ -145,6 +165,9 @@ class ClankerAPI:
 
         # Check for crisis in alerts
         is_crisis = any(a.level == "CRISIS" for a in msg_result.alerts)
+        # Also check zone-based crisis
+        if zone.zone in ("CRISIS",) and zone.confidence > 0.5:
+            is_crisis = True
 
         elapsed_ms = (time.perf_counter() - t0) * 1000
 
@@ -163,6 +186,11 @@ class ClankerAPI:
             background_modifier=bg_mod,
             gravity_well=gravity_well,
             relationship_traits=profile.get("traits", []),
+            # Zone
+            zone=zone.zone,
+            zone_confidence=zone.confidence,
+            # Dark Matter
+            dark_matter_state=self.dark_matter.state,
             # Anomalies (black holes)
             anomalies=anomaly_result.anomalies,
             # Timing

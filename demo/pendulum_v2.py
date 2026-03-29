@@ -1087,8 +1087,18 @@ class PendulumV2:
 
         # Personality modifies how hard forces land
         if self.personality:
-            fs *= self.personality.emotional_sensitivity
+            sensitivity = self.personality.emotional_sensitivity
+            fs *= sensitivity
             d_offset += self.personality.dominance_baseline
+            # D inversion for sensitivity: when words are DOMINANT (dd > 0),
+            # a sensitive entity feels LESS in control (dd dampened/inverted).
+            # A tough entity absorbs dominant words and maintains agency.
+            if dd > 0 and sensitivity > 1.2:
+                # Sensitive + dominant input = feels overwhelmed
+                dd = dd * (1.0 / sensitivity)  # dampen the D boost
+            elif dd > 0 and sensitivity < 0.8:
+                # Tough + dominant input = absorbs it, stays strong
+                dd = dd * 1.0  # normal
 
         m = self.momentum
 
