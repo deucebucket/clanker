@@ -282,7 +282,7 @@ class ClankerDataset(Dataset):
         # Load calibration data (sarcasm, negation — hand-scored truth, highest weight)
         calibration_dir = os.path.dirname(phase1_path)
         for cal_file in ["sarcasm_calibration.jsonl", "negation_calibration.jsonl",
-                         "negation_pairs.jsonl"]:
+                         "negation_pairs.jsonl", "zone_labeled.jsonl"]:
             cal_path = os.path.join(calibration_dir, cal_file)
             if os.path.exists(cal_path):
                 cal_count = 0
