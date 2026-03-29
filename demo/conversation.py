@@ -57,10 +57,18 @@ class ConversationEngine:
     when clinical thresholds are crossed.
     """
 
-    # Crisis thresholds
-    CRISIS_V = 50           # V below this = crisis territory
-    CRISIS_G = 80           # G below this = crushing weight
-    CRISIS_U = 60           # U above this = high urgency
+    # Crisis thresholds — multi-dimensional (not just V)
+    # Crisis SIGNATURE: low V + low D + low G = helpless + crushing weight
+    # Anger has low V but HIGH D (control) — not crisis
+    # Sadness has low V but moderate G — not crisis (usually)
+    # Thresholds tuned for champion config (force_scale=2.894)
+    # With high force_scale, most negatives hit V=0 and D=0
+    # Crisis differentiation uses G + U (the dimensions that vary)
+    CRISIS_V = 10           # V near absolute zero
+    CRISIS_G = 85           # G sinking (not just negative — HEAVY)
+    CRISIS_D = 5            # D near absolute zero (truly helpless)
+    CRISIS_U = 25           # U elevated (urgency/routing need)
+    CRISIS_SCORE_THRESHOLD = 3  # need 3+ signals for CRISIS
 
     # Escalation detection
     ESCALATION_WINDOW = 3   # look back N turns for escalation
@@ -109,33 +117,35 @@ class ConversationEngine:
         """Check for crisis, escalation, and trajectory alerts."""
         alerts = []
 
-        # --- CRISIS CHECK (immediate) ---
-        if vadug.v < self.CRISIS_V and vadug.g < self.CRISIS_G:
+        # --- CRISIS CHECK (multi-dimensional scoring) ---
+        # Count how many crisis signals fire — need 3+ for CRISIS
+        crisis_signals = []
+        if vadug.v < self.CRISIS_V:
+            crisis_signals.append(f"V={vadug.v}<{self.CRISIS_V}")
+        if vadug.d < self.CRISIS_D:
+            crisis_signals.append(f"D={vadug.d}<{self.CRISIS_D}(helpless)")
+        if vadug.g < self.CRISIS_G:
+            crisis_signals.append(f"G={vadug.g}<{self.CRISIS_G}(crushing)")
+        if vadug.u > self.CRISIS_U:
+            crisis_signals.append(f"U={vadug.u}>{self.CRISIS_U}(urgent)")
+
+        crisis_score = len(crisis_signals)
+
+        if crisis_score >= self.CRISIS_SCORE_THRESHOLD:
             alerts.append(Alert(
                 level="CRISIS",
                 signal="CRISIS_LOCK",
-                details=f"V={vadug.v} (<{self.CRISIS_V}) + G={vadug.g} (<{self.CRISIS_G}) — "
-                        f"crushing despair detected. Immediate intervention needed.",
+                details=f"{crisis_score} signals: {', '.join(crisis_signals)} — "
+                        f"immediate intervention needed.",
                 vadug=vadug,
                 trajectory=self.memory.current_session.emotional_arc,
                 turn_number=self._turn_count,
             ))
-
-        elif vadug.v < self.CRISIS_V:
+        elif crisis_score >= 2:
             alerts.append(Alert(
                 level="WARNING",
-                signal="LOW_VALENCE",
-                details=f"V={vadug.v} (<{self.CRISIS_V}) — very negative. Monitor closely.",
-                vadug=vadug,
-                trajectory=self.memory.current_session.emotional_arc,
-                turn_number=self._turn_count,
-            ))
-
-        if vadug.u > self.CRISIS_U:
-            alerts.append(Alert(
-                level="WARNING",
-                signal="HIGH_URGENCY",
-                details=f"U={vadug.u} (>{self.CRISIS_U}) — high urgency detected.",
+                signal="CRISIS_WATCH",
+                details=f"{crisis_score} signals: {', '.join(crisis_signals)} — monitor closely.",
                 vadug=vadug,
                 trajectory=self.memory.current_session.emotional_arc,
                 turn_number=self._turn_count,
