@@ -936,14 +936,26 @@ class PendulumV2:
             i += 1
 
         # --- Sarcasm detection (Force #5) ---
-        # Two-layer detection:
-        # 1. Trajectory analysis (existing SarcasmDetector — reversal/mismatch)
-        # 2. Surface-trajectory divergence
-        # NOTE: Template detector exists (demo/sarcasm_templates.py) but NOT wired
-        # into V inversion — it over-triggers on genuine mixed sentences.
-        # Templates are available for external callers (API, zone classifier).
+        # Three layers: templates → polarity → trajectory
+        # Templates NUDGE (subtle), don't INVERT (aggressive).
+        # "The best sarcasm is subtle, so the detector needs to be subtle too."
         sarcasm_detected = False
         sarcasm_conf = 0
+
+        # Layer 0: Template detection — subtle nudge only
+        tmpl = _SARCASM_TEMPLATES.detect(words)
+        if tmpl.detected and tmpl.confidence >= 0.7 and state["v"] > 120:
+            # Only nudge if V is positive-ish (don't push already-negative further)
+            nudge = 15 if tmpl.confidence >= 0.8 else 10
+            state["v"] -= nudge
+            state["g"] -= 5
+            trace.append({
+                "word": "[SARCASM_TMPL]", "role": "SARCASM",
+                "v": round(state["v"], 1), "a": round(state["a"], 1),
+                "d": round(state["d"], 1), "u": round(state["u"], 1),
+                "g": round(state["g"], 1),
+                "note": f"template T{tmpl.template} conf={tmpl.confidence:.2f} nudge=-{nudge}"
+            })
 
         # Layer 1: trajectory reversal/mismatch
         det1, conf1, signals1 = _SARCASM_DETECTOR.analyze_trajectory(trace)
