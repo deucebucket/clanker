@@ -80,6 +80,118 @@ CLAUSE_BOUNDARIES = frozenset({
     "instead", "whereas", "while", "nevertheless", "except",
 })
 
+# ---------------------------------------------------------------------------
+# Evokers — gravitational priming words (Force #25)
+# Words that don't express emotion but change the gravitational field.
+# "I lost my job before the wedding" — "wedding" raises the stakes.
+# ---------------------------------------------------------------------------
+
+EVOKERS = {
+    # Format: word -> (dG_prime, dD_prime)
+    # dG_prime: how much to shift gravity baseline (negative = heavier)
+    # dD_prime: how much to shift dominance baseline
+
+    # Life events — heavy gravity
+    "wedding":      (-25, 10),
+    "funeral":      (-40, -10),
+    "divorce":      (-35, -15),
+    "marriage":     (-20, 5),
+    "pregnancy":    (-20, 5),
+    "birth":        (-15, 10),
+    "graduation":   (-10, 15),
+    "retirement":   (-15, 5),
+
+    # Health — existential weight
+    "cancer":       (-45, -20),
+    "diagnosis":    (-35, -15),
+    "surgery":      (-30, -10),
+    "hospital":     (-25, -10),
+    "disease":      (-35, -15),
+    "disability":   (-25, -15),
+
+    # Death/loss
+    "death":        (-50, -20),
+    "suicide":      (-50, -25),
+    "murder":       (-45, -20),
+    "war":          (-40, -15),
+    "genocide":     (-50, -25),
+    "famine":       (-40, -15),
+
+    # Family/relationships — personal gravity
+    "mother":       (-20, 5),
+    "father":       (-20, 5),
+    "children":     (-25, 10),
+    "baby":         (-20, 10),
+    "family":       (-15, 5),
+    "home":         (-15, 5),
+    "daughter":     (-20, 5),
+    "son":          (-20, 5),
+
+    # Power/society — dominance weight
+    "god":          (-30, 20),
+    "religion":     (-20, 10),
+    "freedom":      (-15, 20),
+    "justice":      (-20, 15),
+    "government":   (-10, 15),
+    "law":          (-10, 15),
+    "prison":       (-30, -20),
+    "poverty":      (-35, -20),
+    "money":        (-15, 10),
+    "wealth":       (-10, 15),
+
+    # Abstract stakes
+    "truth":        (-15, 15),
+    "trust":        (-20, 10),
+    "betrayal":     (-35, -15),
+    "legacy":       (-20, 10),
+    "identity":     (-15, 5),
+    "dignity":      (-20, 10),
+    "innocence":    (-20, -5),
+}
+
+EVOKER_DECAY = 0.88  # How fast gravitational priming decays per word
+
+# ---------------------------------------------------------------------------
+# Conditional frames (Force #13)
+# "If that happened, I'd be furious" — hypothetical, not actual fury.
+# ---------------------------------------------------------------------------
+
+CONDITIONAL_STARTERS = frozenset({
+    "if", "unless", "supposing", "assuming", "imagine",
+    "hypothetically", "theoretically",
+})
+
+CONDITIONAL_DAMPENER = 0.40  # Conditionals gate reality: 0.4x on all forces after
+
+# ---------------------------------------------------------------------------
+# Evidential / clinical distance (Force #15)
+# "She said she's fine" — reported, not experienced.
+# "The subject reports feeling..." — clinical framing kills emotion.
+# ---------------------------------------------------------------------------
+
+EVIDENTIAL_OPERATORS = {
+    # Format: word -> (coeff, d_offset)
+    "said":         (0.50, -15),
+    "told":         (0.50, -15),
+    "claims":       (0.40, -20),
+    "reports":      (0.40, -20),
+    "states":       (0.40, -20),
+    "mentioned":    (0.50, -15),
+    "indicated":    (0.40, -20),
+    "expressed":    (0.50, -15),
+    "described":    (0.40, -20),
+    "observed":     (0.40, -20),
+    "noted":        (0.50, -15),
+}
+
+# Clinical framing words — strong dampening when combined
+CLINICAL_FRAME = frozenset({
+    "subject", "patient", "client", "individual", "respondent",
+    "participant", "informant",
+})
+
+CLINICAL_DAMPENER = 0.30  # "The subject reports" → 0.3x
+
 DEFAULT_MOMENTUM = 0.82   # How much of old state to keep per word (0=instant, 1=frozen)
 FORCE_SCALE = 0.50        # Global force scaling (how hard words push the pendulum)
 CRISIS_V_THRESHOLD = 60
@@ -99,6 +211,8 @@ class PrePassInfo:
     """Sentence-level features detected before word-by-word processing."""
     is_question: bool = False
     question_dampener: float = 1.0
+    is_conditional: bool = False
+    conditional_dampener: float = 1.0
     idiom_spans: Dict[int, Tuple] = None      # start_idx -> (length, force_tuple, label)
     idiom_consumed: set = None                  # all indices consumed by idioms
     negation_positions: set = None              # indices of negator words
@@ -229,6 +343,8 @@ class PendulumV2:
         # --- Pass 2: Word-by-word ---
         pending_operators = {}  # category -> (coefficient, d_offset)
         negation_force = 0.0    # continuous negation: 0.0 = none, ~1.0 = full inversion
+        gravity_prime = 0.0     # gravitational priming from evokers (shifts G baseline)
+        dominance_prime = 0.0   # dominance priming from evokers (shifts D baseline)
 
         i = 0
         while i < len(words):
@@ -287,6 +403,52 @@ class PendulumV2:
                 i += 1
                 continue
 
+            # Check evoker — gravitational priming (Force #25)
+            if word_lower in EVOKERS:
+                dg_prime, dd_prime = EVOKERS[word_lower]
+                gravity_prime += dg_prime
+                dominance_prime += dd_prime
+                # Evokers also pass through as payload if in vocabulary
+                if word_lower in EMOTIONAL_VOCABULARY:
+                    force = EMOTIONAL_VOCABULARY[word_lower]
+                    coeff, d_off = self._compute_coefficient(pending_operators, pre)
+                    neg_scale = self._negation_scale(negation_force)
+                    state = self._apply_force(state, force, coeff * neg_scale, d_off)
+                    trace.append(self._trace_entry(
+                        word, "EVOKER+PAY", state,
+                        f"g_prime={gravity_prime:.0f} d_prime={dominance_prime:.0f} +payload"
+                    ))
+                    pending_operators = {}
+                    negation_force *= self.negation_decay_payload
+                else:
+                    trace.append(self._trace_entry(
+                        word, "EVOKER", state,
+                        f"g_prime={gravity_prime:.0f} d_prime={dominance_prime:.0f}"
+                    ))
+                i += 1
+                continue
+
+            # Check evidential operator — reported speech distance (Force #15)
+            if word_lower in EVIDENTIAL_OPERATORS:
+                ev_coeff, ev_d = EVIDENTIAL_OPERATORS[word_lower]
+                pending_operators["evidential"] = (ev_coeff, ev_d)
+                trace.append(self._trace_entry(
+                    word, "EVIDENTIAL", state,
+                    f"evidential={ev_coeff} d_off={ev_d}"
+                ))
+                i += 1
+                continue
+
+            # Check clinical framing — "the subject reports" pattern
+            if word_lower in CLINICAL_FRAME:
+                pending_operators["clinical"] = (CLINICAL_DAMPENER, -20)
+                trace.append(self._trace_entry(
+                    word, "CLINICAL", state,
+                    f"clinical={CLINICAL_DAMPENER} d_off=-20"
+                ))
+                i += 1
+                continue
+
             # Classify: OPERATOR or PAYLOAD or NEUTRAL
             if word_lower in CONTEXT_OPERATORS:
                 # OPERATOR — accumulate coefficient, gentle negation decay
@@ -299,18 +461,26 @@ class PendulumV2:
                 ))
 
             elif word_lower in EMOTIONAL_VOCABULARY:
-                # PAYLOAD — apply force modulated by continuous negation
+                # PAYLOAD — apply force modulated by continuous negation + gravity priming
                 force = EMOTIONAL_VOCABULARY[word_lower]
                 coeff, d_off = self._compute_coefficient(pending_operators, pre)
+                # Add evoker priming to D-offset
+                d_off += dominance_prime * self.force_scale
                 neg_scale = self._negation_scale(negation_force)
                 state = self._apply_force(state, force, coeff * neg_scale, d_off)
+                # Apply gravity priming directly to G state
+                if gravity_prime != 0.0:
+                    state["g"] += gravity_prime * self.force_scale
                 trace.append(self._trace_entry(
                     word, "PAYLOAD", state,
-                    f"coeff={coeff:.2f} d_off={d_off:.0f} neg_f={negation_force:.2f} neg_s={neg_scale:.2f} force={force[:2]}..."
+                    f"coeff={coeff:.2f} d_off={d_off:.0f} g_prime={gravity_prime:.0f} neg_f={negation_force:.2f}"
                 ))
                 # Payload consumes most negation force, reset operators
                 pending_operators = {}
                 negation_force *= self.negation_decay_payload
+                # Decay evoker priming
+                gravity_prime *= EVOKER_DECAY
+                dominance_prime *= EVOKER_DECAY
 
             else:
                 # NEUTRAL — moderate negation decay
@@ -338,6 +508,11 @@ class PendulumV2:
 
         # Idiom detection (greedy longest-match, left to right)
         info.idiom_spans, info.idiom_consumed = self._detect_idioms(words)
+
+        # Conditional detection (if/unless/assuming at sentence start)
+        if words and words[0].lower() in CONDITIONAL_STARTERS:
+            info.is_conditional = True
+            info.conditional_dampener = CONDITIONAL_DAMPENER
 
         # Negation detection (mark positions of negator words)
         for i, w in enumerate(words):
@@ -424,6 +599,7 @@ class PendulumV2:
             d_offset += cat_d
 
         coeff *= pre.question_dampener
+        coeff *= pre.conditional_dampener
         return max(_COEFF_FLOOR, min(_COEFF_CAP, coeff)), d_offset
 
     def _apply_force(self, state: dict, force: tuple, scale: float, d_offset: float = 0.0) -> dict:
