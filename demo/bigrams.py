@@ -128,6 +128,10 @@ BIGRAM_EXPRESSIONS = {
     ("just", "wonderful"): (-20, 15, 15, 5, -10, "sarcasm: just wonderful"),
     ("just", "perfect"): (-20, 15, 15, 5, -10, "sarcasm: just perfect"),
     ("as", "if"): (-15, 15, 15, 5, -10, "sarcasm: as if / dismissal"),
+    ("of", "course"): (-10, 10, 10, 5, -5, "sarcasm: of course / resigned"),
+    ("how", "delightful"): (-20, 15, 15, 5, -10, "sarcasm: how delightful"),
+    ("how", "wonderful"): (-20, 15, 15, 5, -10, "sarcasm: how wonderful"),
+    ("what", "surprise"): (-15, 15, 10, 5, -10, "sarcasm: what a surprise"),
 }
 
 
