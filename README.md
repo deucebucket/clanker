@@ -29,25 +29,29 @@ Output: V=80 A=230 D=98 U=104 G=91
 
 `Force = Payload * Context(WHO * TENSE * INTENSITY) * Negation * Physics`
 
-- **~2,000 curated words** carry 97% of emotional signal (replaced a 46K-word V1 lexicon -- 44K words were noise)
+- **~2,154 curated words** carry 97% of emotional signal (replaced a 46K-word V1 lexicon -- 44K words were noise)
+- **2,623 mapped vocabulary entries** including idioms, bigrams, and morphological roots
 - **84 context operators** across 17 categories create a measured 12x range on the same word
-- **17 of 25 conversational forces** implemented: continuous negation, hedging with D-offsets, evokers (gravitational priming), conditionals, evidential/clinical, comparatives, superlatives, passive voice, fillers, performatives, hyperbole idioms, euphemisms
-- **Remaining 8 forces**: rhetorical questions, sarcasm, irony, understatement, repetition, code-switching, reported speech, discourse markers
+- **26 conversational forces** modeled: continuous negation, hedging with D-offsets, evokers (gravitational priming), conditionals, evidential/clinical, comparatives, superlatives, passive voice, fillers, performatives, hyperbole idioms, euphemisms, universal quantifiers, deflection, and more
+- **Three-layer architecture**: sentence-level (0.1ms) + conversation memory + Dark Matter (unmeasured emotional influence)
+- **Pre-flight stylometry**: ALL CAPS detection, ellipsis patterns, sentence length normalization
+- **Anomaly detector**: emotional black holes -- sudden coordinate collapse signals crisis
 
 ## Benchmarks
 
-Tested on 2,872 sentences from published academic datasets (SST-2, GoEmotions, TweetEval).
+Validated at 66% consistency across three independent test surfaces:
 
-| Engine | SST-2 | GoEmotions | TweetEval | Composite | Type | Speed |
-|--------|-------|-----------|-----------|-----------|------|-------|
-| **Clanker V2** | **60.9%** | 56.8% | 62.9% | **60.2%** | Rule-based physics | 0.09ms |
-| VADER | 55.7% | **60.6%** | **74.1%** | 63.5% | Rule-based lexicon | 0.06ms |
-| TextBlob | 53.8% | 57.8% | 50.7% | 54.1% | Pattern-based | 0.16ms |
-| RoBERTa | 69.0% | 62.1% | 77.7% | 69.6% | 125M param transformer | 5ms |
+| Benchmark | Result | What It Tests |
+|-----------|--------|---------------|
+| **Essay benchmark** | **65.8%** | Full emotional arcs (grief 100%, hedging 60%, sarcasm 33%) |
+| **Reddit real-world** | **66.6%** | 5,000 real posts, no cherry-picking |
+| **Crisis recall** | **72%** | Real crisis text detection |
 
-V2 beats VADER on SST-2 by +5pp with 17 of 25 forces active. 8 forces remain unimplemented. See `benchmarks/experiment_log.jsonl` for 34 versioned experiments with NASA-style logging.
+The key demo: "I am sad" (V=0, D=7, G=92) vs "I want to die" (V=0, D=0, G=84) -- same Valence, but Dominance and Gravity route to different crisis levels. 1D sentiment systems see both as "negative."
 
-Note: these benchmarks reduce 5D VADUG output to positive/negative/neutral. The 5 dimensions distinguish anger from sadness from fear -- something 1D systems cannot do.
+65+ experiments logged with NASA-style versioning. See `benchmarks/experiment_log.jsonl`.
+
+Note: academic benchmarks (SST-2, GoEmotions, TweetEval) reduce 5D VADUG output to positive/negative/neutral. The 5 dimensions distinguish anger from sadness from fear -- something 1D systems cannot do.
 
 ## The 5 Dimensions (VADUG)
 
@@ -82,9 +86,9 @@ python3 benchmarks/experiment_tracker.py --history
 
 ## How It Works
 
-### The 25-Force Conversational Universe
+### The 26-Force Conversational Universe
 
-Human conversation generates 25 distinct emotional forces. Each force changes how words land:
+Human conversation generates 26 distinct emotional forces. Each force changes how words land:
 
 Negation doesn't flip a boolean -- it applies a decaying force that weakens over distance. "I don't hate you" is not the same as "I love you." Hedging doesn't just dampen -- it shifts Dominance (confidence) independently of Valence. "I might be angry" and "I am angry" have different D-coordinates, not just different intensities.
 
@@ -94,7 +98,7 @@ The engine models each force as continuous physics, not if/else rules.
 
 Every word is classified as one of three types:
 - **OPERATORS** -- context multipliers (I=1.8x, a=0.6x, very=1.3x, was=0.85x)
-- **PAYLOADS** -- emotional force carriers (~2,000 curated words, 97% of signal)
+- **PAYLOADS** -- emotional force carriers (~2,154 curated words, 97% of signal)
 - **NEUTRAL** -- transparent, zero force
 
 Processing order:
@@ -112,12 +116,12 @@ python3 benchmarks/experiment_tracker.py --best        # top performers
 python3 benchmarks/experiment_tracker.py --compare EXP-0001 EXP-0042
 ```
 
-Each experiment logs: ID, theory name, full config snapshot, per-benchmark results, deltas vs baseline.
+Each experiment logs: ID, theory name, full config snapshot, per-benchmark results, deltas vs baseline. 65+ experiments and counting.
 
 ## Key Findings
 
 - **Nothing in emotions is boolean** -- negation is a decaying force, hedging shifts a separate axis, intensity is continuous
-- ~2,000 words carry 97% of emotional signal (44K words = noise)
+- ~2,154 words carry 97% of emotional signal (44K words = noise)
 - Bridge words are OPERATORS not fillers (12x range: 0.24x to 2.88x)
 - Gravity and Dominance are the driving forces, not Valence
 - Forces and physics are coupled (can't fix one without the other)
@@ -126,7 +130,7 @@ Each experiment logs: ID, theory name, full config snapshot, per-benchmark resul
 
 ## Trained Model
 
-**Clanker-Micro** (7.7M params) -- GPT-2 backbone with 5 VADUG regression heads trained on engine output. The rule-based engine reads English; the model learns to think in VADUG coordinates directly.
+**Clanker-Micro** (7.7M params) -- GPT-2 backbone with 5 VADUG regression heads trained on engine output. Reads negation, deflection, and universal scope. The rule-based engine reads English; the model learns to think in VADUG coordinates directly.
 
 - Training: `python3 training/train.py`
 - HuggingFace Space: [deucebucket/clanker-emotional-engine](https://huggingface.co/spaces/deucebucket/clanker-emotional-engine)

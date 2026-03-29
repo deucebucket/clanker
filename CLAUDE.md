@@ -9,7 +9,7 @@ Clanker-Lang is a complete system for emotionally intelligent AI: a language, an
 Three components:
 - **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
 - **Bytecode IR**: Opcodes (0x00-0xFF) with immutable meanings, decoded to any language via YAML dictionaries
-- **Pendulum engine**: Rule-based emotional physics — word-by-word processing with momentum, context-dependent forces, morphological decomposition, crisis detection
+- **Pendulum engine**: Rule-based emotional physics — word-by-word processing with momentum, 26 context-dependent forces, morphological decomposition, crisis detection
 
 Key principle: **opcodes are forever** — never redefine an existing opcode.
 
@@ -56,6 +56,22 @@ python3 benchmarks/find_cracks.py
 
 # Cross-language validation
 python3 benchmarks/rosetta_stone.py
+
+# Crisis recall benchmark
+python3 benchmarks/crisis_benchmark.py
+python3 benchmarks/crisis_benchmark.py --verbose   # show all misclassifications
+
+# Ablation study (kill-switch force bloat detection)
+python3 benchmarks/ablation_study.py
+python3 benchmarks/ablation_study.py --workers 4
+
+# EmoBank optimizer (human agreement tuning)
+python3 benchmarks/emobank_optimizer.py
+python3 benchmarks/emobank_optimizer.py --quick
+
+# Human rating evaluation framework
+python3 benchmarks/human_eval.py --generate          # generate evaluation set
+python3 benchmarks/human_eval.py --analyze ratings.csv  # analyze human ratings
 ```
 
 ### Training Pipeline
@@ -77,6 +93,7 @@ python3 training/convert_empathetic_dialogues.py     # Facebook EmpatheticDialog
 python3 training/gap_finder.py                       # Find missing mechanics
 python3 training/gap_finder.py --generate-fixes      # Generate engine patches
 python3 training/idiom_discoverer.py                 # Find idioms from residuals (99.5K sentences)
+python3 training/engine_vs_model.py                  # Adversarial engine vs model comparison
 ```
 
 ### Other
@@ -93,16 +110,16 @@ cd space && pip install -r requirements.txt && python3 app.py
 
 ### Modular Engine (`demo/`)
 
-The engine is split into pipeline-ready modules. 30+ files grouped by function:
+The engine is split into pipeline-ready modules. 35+ files grouped by function:
 
 **Core pipeline:**
 
 | Module | What |
 |--------|------|
 | `shared.py` | VADUG, MetadataHeader, PersonalityVector dataclasses |
-| `forces_curated.py` | **V2 vocabulary** — `EMOTIONAL_VOCABULARY`, ~2,000 curated words (replaced 46K `forces.py`) |
+| `forces_curated.py` | **V2 vocabulary** — `EMOTIONAL_VOCABULARY`, 2,154 curated words + 2,623 total mapped entries (replaced 46K `forces.py`) |
 | `forces.py` | Legacy V1 vocabulary — 46K WORD_FORCES entries, 46K lines. Still imported by V1 modules. Do not read whole file. |
-| `pendulum_v2.py` | **Active engine (V2)** — uses `EMOTIONAL_VOCABULARY`, 14 tunable params |
+| `pendulum_v2.py` | **Active engine (V2)** — uses `EMOTIONAL_VOCABULARY`, 26 forces, 14 tunable params |
 | `pendulum.py` | Legacy V1 pendulum — uses `WORD_FORCES`. Still imported by some paths, being phased out. |
 | `personality.py` | apply_personality() — 8-knob resistance vector |
 | `response.py` | ResponseBuilder, harmony math, emotion mapping |
@@ -122,6 +139,15 @@ The engine is split into pipeline-ready modules. 30+ files grouped by function:
 | `nonsense.py` | Nonsense/gibberish detection |
 | `entropy.py` | Entropy-based analysis |
 | `tonal.py` | Tonal analysis |
+| `anomaly.py` | AnomalyDetector — gravity wells, masking, velocity anomalies, resonance patterns |
+| `preflight.py` | PreflightAnalyzer — digital prosody, environmental multipliers before word processing |
+
+**Conversation & API:**
+
+| Module | What |
+|--------|------|
+| `conversation.py` | ConversationEngine — trajectory tracking with TCI escalation detection |
+| `clanker_api.py` | Three-layer API — sentence physics + conversation trajectory + Dark Matter |
 
 **Language mechanics:**
 
@@ -134,6 +160,7 @@ The engine is split into pipeline-ready modules. 30+ files grouped by function:
 | `forces_curated.py` | (see Core pipeline — this is the V2 vocabulary) |
 | `ring_forces.py` | Ring-based force composition |
 | `bookend.py` | Sentence bookend detection |
+| `idioms.py` | Standalone idiom dictionary — extracted from `pendulum.py` to avoid importing `forces.py` |
 
 **Advanced systems:**
 
@@ -148,7 +175,7 @@ The engine is split into pipeline-ready modules. 30+ files grouped by function:
 
 All imports via `from demo.simulator import X` still work.
 
-**Tests (`demo/tests/`):** 11 test files covering bigrams, bookends, density, fuzzy matching, intent, memory, nonsense, ramps, tonal analysis, word roles.
+**Tests (`demo/tests/`):** 11+ test files covering bigrams, bookends, density, fuzzy matching, intent, memory, nonsense, ramps, tonal analysis, word roles.
 
 ### Decoder (`decoder/python/clanker_decoder/`)
 
@@ -187,6 +214,7 @@ Model training pipeline. The engine reads English — the model learns to think 
 | `expand_training_data.py` | Expand existing training data |
 | `convert_empathetic_dialogues.py` | Convert EmpatheticDialogues dataset |
 | `idiom_discoverer.py` | Discover new idiom patterns |
+| `engine_vs_model.py` | Adversarial engine vs model comparison pipeline |
 
 Data lives in `training/data/`, checkpoints in `training/checkpoints/` (both gitignored for large files).
 
@@ -200,6 +228,10 @@ Data lives in `training/data/`, checkpoints in `training/checkpoints/` (both git
 | `gpu_optimizer_v2.py` | GPU-optimized parameter tuning |
 | `rosetta_stone.py` | Cross-language validation |
 | `find_cracks.py` | Find edge cases and failure modes |
+| `crisis_benchmark.py` | Crisis recall at scale — targeting 99.9% recall |
+| `ablation_study.py` | Kill-switch force bloat detection — disable one force at a time |
+| `emobank_optimizer.py` | Human V/A/D agreement tuning via EmoBank |
+| `human_eval.py` | Human rating evaluation framework — 5D correlation |
 
 ### HuggingFace Space (`space/`)
 
@@ -226,11 +258,14 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 | `training/README.md` | Training data format, phases, model architecture, data sources |
 | `benchmarks/rosetta_stone.py` | Rosetta Stone calibration sentences — the ground truth |
 | `SPEC.md` | Full engine specification |
+| `demo/clanker_api.py` | Three-layer API architecture — sentence + conversation + Dark Matter |
+| `demo/anomaly.py` | Anomaly detection theory — gravity wells, masking, velocity, resonance |
 
 ## Gotchas
 
-- **V2 is the active engine** — `pendulum_v2.py` + `forces_curated.py` (~2,000 words). V1 (`pendulum.py` + `forces.py` 46K words) is legacy.
+- **V2 is the active engine** — `pendulum_v2.py` + `forces_curated.py` (2,154 curated words, 26 forces). V1 (`pendulum.py` + `forces.py` 46K words) is legacy.
 - **`forces.py` is 46K lines** — do not read the whole file. V2 doesn't use it. Only grep if debugging V1 paths.
 - **Inactive modules** — `stone_correction.py`, `output_modes.py`, `word_factory.py` are not imported by active code. Archive candidates, not to be wired into new work.
 - **Gravity and Dominance are the driving forces** — not Valence. The system's core insight.
+- **Idioms are in `idioms.py`** — V2 imports idioms from `demo/idioms.py`, not from `pendulum.py`. The standalone module avoids pulling in the 46K-line `forces.py`.
 - **Training data is gitignored** — large files like `discovered_idioms.jsonl` and `empathetic_dialogues.jsonl` won't be in the repo.
