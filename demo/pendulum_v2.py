@@ -192,6 +192,66 @@ CLINICAL_FRAME = frozenset({
 
 CLINICAL_DAMPENER = 0.30  # "The subject reports" → 0.3x
 
+# ---------------------------------------------------------------------------
+# Comparatives and Superlatives (Forces #20-21)
+# "more angry" amplifies the next payload, "most angry" amplifies harder.
+# ---------------------------------------------------------------------------
+
+COMPARATIVES = frozenset({
+    "more", "less", "better", "worse", "harder", "easier",
+    "stronger", "weaker", "bigger", "smaller", "deeper",
+})
+COMPARATIVE_AMPLIFIER = 1.3  # comparatives amplify the next payload
+
+SUPERLATIVES = frozenset({
+    "most", "least", "best", "worst", "hardest", "easiest",
+    "strongest", "weakest", "biggest", "smallest", "deepest", "ever",
+})
+SUPERLATIVE_AMPLIFIER = 1.5  # superlatives amplify more
+
+# ---------------------------------------------------------------------------
+# Discourse Fillers (Force #23)
+# "um", "uh" — signal processing difficulty, lower Dominance.
+# ---------------------------------------------------------------------------
+
+FILLERS = frozenset({"um", "uh", "er", "ah", "hmm", "hm", "uhh", "umm"})
+FILLER_D_OFFSET = -5  # each filler slightly lowers dominance (uncertainty signal)
+
+# ---------------------------------------------------------------------------
+# Emotional Performatives (Force #24)
+# "I promise", "I swear" — amplify the next payload + slight D boost.
+# ---------------------------------------------------------------------------
+
+PERFORMATIVES = {
+    "promise": 1.3,
+    "swear": 1.4,
+    "vow": 1.4,
+    "guarantee": 1.3,
+    "pledge": 1.3,
+    "commit": 1.2,
+}
+
+# ---------------------------------------------------------------------------
+# Passive Voice Detection (Force #19)
+# "I was hurt" — passive removes agency → D drops
+# ---------------------------------------------------------------------------
+
+PASSIVE_MARKERS = frozenset({"was", "were", "been", "being", "got", "gotten"})
+PASSIVE_PARTICIPLES = frozenset({
+    "hurt", "broken", "abandoned", "betrayed", "rejected",
+    "ignored", "forgotten", "left", "used", "abused",
+    "manipulated", "deceived", "humiliated", "dismissed",
+    "fired", "arrested", "attacked", "blamed", "cheated",
+    "crushed", "destroyed", "devastated", "disappointed",
+    "embarrassed", "excluded", "exploited", "harassed",
+    "insulted", "isolated", "mistreated", "neglected",
+    "offended", "overwhelmed", "punished", "ridiculed",
+    "scared", "shamed", "silenced", "surprised",
+    "threatened", "traumatized", "tricked", "victimized",
+    "violated", "wounded",
+})
+PASSIVE_D_OFFSET = -15  # passive removes agency
+
 DEFAULT_MOMENTUM = 0.82   # How much of old state to keep per word (0=instant, 1=frozen)
 FORCE_SCALE = 0.50        # Global force scaling (how hard words push the pendulum)
 CRISIS_V_THRESHOLD = 60
@@ -213,6 +273,7 @@ class PrePassInfo:
     question_dampener: float = 1.0
     is_conditional: bool = False
     conditional_dampener: float = 1.0
+    passive_positions: set = None          # indices of participles in passive constructions
     idiom_spans: Dict[int, Tuple] = None      # start_idx -> (length, force_tuple, label)
     idiom_consumed: set = None                  # all indices consumed by idioms
     negation_positions: set = None              # indices of negator words
@@ -221,6 +282,7 @@ class PrePassInfo:
         self.idiom_spans = self.idiom_spans or {}
         self.idiom_consumed = self.idiom_consumed or set()
         self.negation_positions = self.negation_positions or set()
+        self.passive_positions = self.passive_positions or set()
 
 
 # ---------------------------------------------------------------------------
@@ -449,6 +511,27 @@ class PendulumV2:
                 i += 1
                 continue
 
+            # Check comparative — amplify next payload (Force #20)
+            if word_lower in COMPARATIVES:
+                pending_operators["comparative"] = (COMPARATIVE_AMPLIFIER, 0)
+                trace.append(self._trace_entry(word, "COMPARATIVE", state, f"amp={COMPARATIVE_AMPLIFIER}"))
+                i += 1
+                continue
+
+            # Check superlative — amplify next payload harder (Force #21)
+            if word_lower in SUPERLATIVES:
+                pending_operators["superlative"] = (SUPERLATIVE_AMPLIFIER, 0)
+                trace.append(self._trace_entry(word, "SUPERLATIVE", state, f"amp={SUPERLATIVE_AMPLIFIER}"))
+                i += 1
+                continue
+
+            # Check performative — amplify + slight D boost (Force #24)
+            if word_lower in PERFORMATIVES:
+                pending_operators["performative"] = (PERFORMATIVES[word_lower], 5)
+                trace.append(self._trace_entry(word, "PERFORMATIVE", state, f"amp={PERFORMATIVES[word_lower]}"))
+                i += 1
+                continue
+
             # Classify: OPERATOR or PAYLOAD or NEUTRAL
             if word_lower in CONTEXT_OPERATORS:
                 # OPERATOR — accumulate coefficient, gentle negation decay
@@ -466,6 +549,9 @@ class PendulumV2:
                 coeff, d_off = self._compute_coefficient(pending_operators, pre)
                 # Add evoker priming to D-offset
                 d_off += dominance_prime * self.force_scale
+                # Passive voice lowers D (removed agency)
+                if i in pre.passive_positions:
+                    d_off += PASSIVE_D_OFFSET
                 neg_scale = self._negation_scale(negation_force)
                 state = self._apply_force(state, force, coeff * neg_scale, d_off)
                 # Apply gravity priming directly to G state
@@ -481,6 +567,11 @@ class PendulumV2:
                 # Decay evoker priming
                 gravity_prime *= EVOKER_DECAY
                 dominance_prime *= EVOKER_DECAY
+
+            elif word_lower in FILLERS:
+                # Fillers signal processing difficulty — lower D slightly (Force #23)
+                state["d"] += FILLER_D_OFFSET * self.force_scale
+                trace.append(self._trace_entry(word, "FILLER", state, f"D{FILLER_D_OFFSET}"))
 
             else:
                 # NEUTRAL — moderate negation decay
@@ -513,6 +604,16 @@ class PendulumV2:
         if words and words[0].lower() in CONDITIONAL_STARTERS:
             info.is_conditional = True
             info.conditional_dampener = CONDITIONAL_DAMPENER
+
+        # Passive voice detection (was/were/been + past participle pattern)
+        lower_words = [w.lower() for w in words]
+        for i, w in enumerate(lower_words):
+            if w in PASSIVE_MARKERS and i + 1 < len(lower_words):
+                # Check next 1-2 words for a past participle
+                for j in range(i + 1, min(i + 3, len(lower_words))):
+                    if lower_words[j] in PASSIVE_PARTICIPLES:
+                        info.passive_positions.add(j)
+                        break
 
         # Negation detection (mark positions of negator words)
         for i, w in enumerate(words):
