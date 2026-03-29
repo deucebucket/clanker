@@ -199,6 +199,19 @@ EVOKERS = {
     "shelter":      (-25, -10),
     "refugee":      (-35, -20),
     "deportation":  (-35, -20),
+
+    # Crisis methods — not emotional words, but carry massive gravity
+    "pistol":       (-40, -20),
+    "pills":        (-35, -15),
+    "noose":        (-50, -25),
+    "razor":        (-35, -15),
+    "wrist":        (-25, -10),
+    "bleed":        (-35, -15),
+    "rooftop":      (-25, -10),
+    "attempt":      (-35, -15),
+    "goodbye":      (-30, -15),
+    "tonight":      (-15, -5),
+    "method":       (-30, -15),
 }
 
 # ---------------------------------------------------------------------------
