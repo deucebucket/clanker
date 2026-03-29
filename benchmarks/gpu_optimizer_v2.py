@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 PARAM_SPEC = [
     # (name, min, max, default)
+    # --- Original 14 params ---
     ("momentum",           0.50,  0.99,  0.82),
     ("force_scale",        0.10,  3.00,  0.50),
     ("direct_push_cap",    0.05,  0.90,  0.40),
@@ -45,6 +46,10 @@ PARAM_SPEC = [
     ("scale_g",            0.30,  3.00,  1.00),
     ("threshold_low",      95.0,  130.0, 124.0),
     ("threshold_high",     125.0, 160.0, 132.0),
+    # --- Negation decay params (3) ---
+    ("negation_decay_operator", 0.70, 0.99, 0.92),
+    ("negation_decay_neutral",  0.60, 0.95, 0.85),
+    ("negation_decay_payload",  0.10, 0.60, 0.35),
 ]
 
 PARAM_NAMES = [p[0] for p in PARAM_SPEC]
@@ -194,9 +199,17 @@ def run_evolution(
     from benchmarks.experiment_tracker import ExperimentTracker
     tracker = ExperimentTracker()
 
-    # Initialize population (include default config as one organism)
-    population = [list(PARAM_DEFAULTS)]
-    population += [random_organism() for _ in range(n_pop - 1)]
+    # Initialize population
+    # Seed 1: defaults
+    # Seed 2: EXP-0023 champion config (extended with new param defaults)
+    champion_023 = [
+        0.987, 1.547, 0.635, 94.68, 95.0, 72.0, 0.52,   # original 7
+        1.151, 1.561, 3.0, 0.415, 2.744,                   # scales
+        116.6, 152.8,                                        # thresholds
+        0.92, 0.85, 0.35,                                   # negation decay defaults
+    ]
+    population = [list(PARAM_DEFAULTS), champion_023]
+    population += [random_organism() for _ in range(n_pop - 2)]
 
     best_params = None
     best_composite = 0
