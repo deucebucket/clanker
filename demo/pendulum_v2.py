@@ -48,8 +48,10 @@ from demo.bigrams import BIGRAM_EXPRESSIONS
 from demo.sarcasm import SarcasmDetector
 from demo.tonal import TonalAnalyzer, apply_tonal_adjustment
 from demo.preflight import PreflightAnalyzer
+from demo.sarcasm_templates import SarcasmTemplateDetector
 
 _SARCASM_DETECTOR = SarcasmDetector()
+_SARCASM_TEMPLATES = SarcasmTemplateDetector()
 _TONAL_ANALYZER = TonalAnalyzer()
 _PREFLIGHT = PreflightAnalyzer()
 
@@ -936,8 +938,10 @@ class PendulumV2:
         # --- Sarcasm detection (Force #5) ---
         # Two-layer detection:
         # 1. Trajectory analysis (existing SarcasmDetector — reversal/mismatch)
-        # 2. Surface-trajectory divergence: if payload words are positive but
-        #    final state is negative/neutral, something inverted the meaning.
+        # 2. Surface-trajectory divergence
+        # NOTE: Template detector exists (demo/sarcasm_templates.py) but NOT wired
+        # into V inversion — it over-triggers on genuine mixed sentences.
+        # Templates are available for external callers (API, zone classifier).
         sarcasm_detected = False
         sarcasm_conf = 0
 
