@@ -39,8 +39,9 @@ class EnsembleResult:
 class Ensemble:
     """Engine + Model ensemble for full emotional understanding."""
 
-    ENGINE_ONLY_THRESHOLD = 70
-    MODEL_REQUIRED_THRESHOLD = 30
+    # Thresholds: original 70/30 with engine-weighted consensus
+    ENGINE_ONLY_THRESHOLD = 70    # HIGH confidence = engine only
+    MODEL_REQUIRED_THRESHOLD = 30  # below this = model takes over
 
     def __init__(self, engine=None, model_dir="training/checkpoints/best"):
         self.engine = engine or PendulumV2()
@@ -136,13 +137,14 @@ class Ensemble:
         d_agree = abs(engine_vadug.d - model_vadug.d) < 40
 
         if v_agree and d_agree:
-            # Consensus: average
+            # Consensus: weight toward engine (more granular, more precise)
+            # Engine 70%, model 30%
             final = VADUG(
-                v=(engine_vadug.v + model_vadug.v) // 2,
-                a=(engine_vadug.a + model_vadug.a) // 2,
-                d=(engine_vadug.d + model_vadug.d) // 2,
-                u=(engine_vadug.u + model_vadug.u) // 2,
-                g=(engine_vadug.g + model_vadug.g) // 2,
+                v=int(engine_vadug.v * 0.7 + model_vadug.v * 0.3),
+                a=int(engine_vadug.a * 0.7 + model_vadug.a * 0.3),
+                d=int(engine_vadug.d * 0.7 + model_vadug.d * 0.3),
+                u=int(engine_vadug.u * 0.7 + model_vadug.u * 0.3),
+                g=int(engine_vadug.g * 0.7 + model_vadug.g * 0.3),
             )
             return EnsembleResult(
                 vadug=final, source="consensus",
