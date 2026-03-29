@@ -45,8 +45,9 @@ BIGRAM_EXPRESSIONS = {
 
     # Internet/casual
     ("for", "real"): (0, 15, 10, 10, 5, "emphasis: confirming"),
-    ("kind", "of"): (-5, -5, -5, 0, 0, "hedging: softening"),
-    ("sort", "of"): (-5, -5, -5, 0, 0, "hedging: softening"),
+    # "kind of" / "sort of" removed — were firing as idiom payloads instead of
+    # dampening the next word. Use "kinda"/"sorta" (diminishers) or cognitive
+    # hedge operators ("think", "guess") instead.
     ("a", "lot"): (0, 15, 0, 5, 0, "amplifier: intensity"),
     ("at", "least"): (5, -5, 5, 0, 5, "silver lining: minimum positive"),
     ("at", "all"): (0, 10, 0, 5, 0, "emphasis: totality"),
