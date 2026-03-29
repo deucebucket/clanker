@@ -234,4 +234,12 @@ IDIOMS = {
     ('hope', 'someone', 'finds'): (-40, 15, -30, 30, -30, 'crisis: farewell note framing'),
     ('point', 'a', 'knife'): (-60, 40, -30, 50, -35, 'crisis: weapon + self-harm'),
     ('fall', 'downwards'): (-40, 30, -20, 30, -25, 'crisis: deliberate fall'),
+    ("didn't", 'believe'): (-35, 15, -30, 15, -20, 'invalidation: didnt believe'),
+    ('didnt', 'believe'): (-35, 15, -30, 15, -20, 'invalidation: didnt believe'),
+    ("didn't", 'even'): (-20, 10, -15, 10, -10, 'expectation violation: didnt even'),
+    ('didnt', 'even'): (-20, 10, -15, 10, -10, 'expectation violation: didnt even'),
+    ('not', 'even'): (-20, 10, -15, 10, -10, 'expectation violation: not even'),
+    ("can't", 'stop', 'feeling'): (-40, 20, -30, 20, -25, 'infinite emotional loop'),
+    ('cant', 'stop', 'feeling'): (-40, 20, -30, 20, -25, 'infinite emotional loop'),
+    ('feel', 'so', 'disconnected'): (-40, 10, -35, 15, -25, 'isolation: disconnected'),
 }

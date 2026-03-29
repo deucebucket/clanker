@@ -212,6 +212,12 @@ EVOKERS = {
     "goodbye":      (-30, -15),
     "tonight":      (-15, -5),
     "method":       (-30, -15),
+    # Institutional trust — failure by helpers hits harder
+    "therapist":    (-20, -10),
+    "counselor":    (-20, -10),
+    "doctor":       (-15, -5),
+    "teacher":      (-15, -5),
+
 }
 
 # ---------------------------------------------------------------------------
