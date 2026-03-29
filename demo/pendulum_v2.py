@@ -252,6 +252,55 @@ PASSIVE_PARTICIPLES = frozenset({
 })
 PASSIVE_D_OFFSET = -15  # passive removes agency
 
+# ---------------------------------------------------------------------------
+# Rhetorical Questions (Force #7)
+# "Who cares?" = dismissive. "Isn't that great?" = sarcastic negative.
+# Detected in post-pass: question + emotional content = rhetorical → invert.
+# ---------------------------------------------------------------------------
+
+RHETORICAL_DISMISSALS = frozenset({
+    "who cares", "what difference does it make", "why bother",
+    "so what", "big deal", "like i care", "as if",
+    "yeah right", "oh really", "sure thing",
+})
+
+# ---------------------------------------------------------------------------
+# Litotes / Understatement (Force #10)
+# "not exactly thrilled" — the negation force already handles simple cases.
+# These are qualifier chains that produce understatement, not inversion.
+# Handled by: negation decay + hedge stacking. Explicit patterns here.
+# ---------------------------------------------------------------------------
+
+LITOTES_QUALIFIERS = frozenset({
+    "exactly", "particularly", "especially", "entirely",
+    "altogether", "necessarily", "precisely",
+})
+LITOTES_DAMPENER = 0.7  # "not exactly X" = weaker than "not X"
+
+# ---------------------------------------------------------------------------
+# Social Politeness / Weaponized Courtesy (Force #16)
+# "With all due respect" AMPLIFIES negative content that follows.
+# Detected: polite preamble + negative payload = weaponized.
+# ---------------------------------------------------------------------------
+
+POLITE_WEAPONS = frozenset({
+    "respect", "offense", "honestly", "frankly",
+    "sorry", "forgive",
+})
+# When these words precede negative payloads, they're dominance plays
+WEAPONIZED_D_BOOST = 15  # raises D (power move) when weaponized
+
+# ---------------------------------------------------------------------------
+# Tag Questions (Force #18)
+# "isn't it?", "right?", "don't you think?" at sentence end
+# Seeking validation = D-10. In aggressive context = D+10.
+# ---------------------------------------------------------------------------
+
+TAG_PATTERNS = frozenset({
+    "right", "huh", "eh", "no", "okay", "yeah",
+})
+TAG_D_OFFSET = -10  # default: seeking validation lowers D
+
 DEFAULT_MOMENTUM = 0.82   # How much of old state to keep per word (0=instant, 1=frozen)
 FORCE_SCALE = 0.50        # Global force scaling (how hard words push the pendulum)
 CRISIS_V_THRESHOLD = 60
@@ -274,6 +323,8 @@ class PrePassInfo:
     is_conditional: bool = False
     conditional_dampener: float = 1.0
     passive_positions: set = None          # indices of participles in passive constructions
+    is_rhetorical: bool = False            # rhetorical question (invert, don't dampen)
+    has_tag_question: bool = False         # tag question at end (D-shift)
     idiom_spans: Dict[int, Tuple] = None      # start_idx -> (length, force_tuple, label)
     idiom_consumed: set = None                  # all indices consumed by idioms
     negation_positions: set = None              # indices of negator words
@@ -511,6 +562,26 @@ class PendulumV2:
                 i += 1
                 continue
 
+            # Check litotes qualifier — "not exactly X" dampens negation (Force #10)
+            if word_lower in LITOTES_QUALIFIERS and negation_force > 0.3:
+                negation_force *= LITOTES_DAMPENER
+                trace.append(self._trace_entry(
+                    word, "LITOTES", state,
+                    f"dampened negation to {negation_force:.2f}"
+                ))
+                i += 1
+                continue
+
+            # Check weaponized politeness — "honestly/frankly" before negative = D boost (Force #16)
+            if word_lower in POLITE_WEAPONS:
+                pending_operators["politeness"] = (1.0, WEAPONIZED_D_BOOST)
+                trace.append(self._trace_entry(
+                    word, "POLITENESS", state,
+                    f"D+{WEAPONIZED_D_BOOST} (potential weapon)"
+                ))
+                i += 1
+                continue
+
             # Check comparative — amplify next payload (Force #20)
             if word_lower in COMPARATIVES:
                 pending_operators["comparative"] = (COMPARATIVE_AMPLIFIER, 0)
@@ -581,7 +652,7 @@ class PendulumV2:
             i += 1
 
         # --- Pass 3: Post-pass ---
-        final = self._post_pass(state)
+        final = self._post_pass(state, pre)
 
         return final, trace
 
@@ -614,6 +685,22 @@ class PendulumV2:
                     if lower_words[j] in PASSIVE_PARTICIPLES:
                         info.passive_positions.add(j)
                         break
+
+        # Rhetorical question detection (Force #7)
+        # A question with emotional content or a known dismissal pattern
+        if info.is_question:
+            sentence_lower = " ".join(lower_words)
+            for pattern in RHETORICAL_DISMISSALS:
+                if pattern in sentence_lower:
+                    info.is_rhetorical = True
+                    break
+
+        # Tag question detection (Force #18)
+        # "right?", "huh?", "isn't it?" at end of sentence
+        if len(lower_words) >= 3:
+            last = lower_words[-1].rstrip("?")
+            if last in TAG_PATTERNS and (lower_words[-1].endswith("?") or "?" in lower_words):
+                info.has_tag_question = True
 
         # Negation detection (mark positions of negator words)
         for i, w in enumerate(words):
@@ -749,14 +836,22 @@ class PendulumV2:
     # Pass 3: Post-pass
     # -----------------------------------------------------------------------
 
-    def _post_pass(self, state: dict) -> VADUG:
-        """Crisis detection, clamping, final VADUG construction."""
+    def _post_pass(self, state: dict, pre: PrePassInfo = None) -> VADUG:
+        """Crisis detection, rhetorical/tag adjustments, clamping."""
         v, a, d, u, g = state["v"], state["a"], state["d"], state["u"], state["g"]
 
+        # Rhetorical question inversion (Force #7)
+        # "Who cares?" — invert the emotional content, not just dampen
+        if pre and pre.is_rhetorical:
+            v = 128 + (128 - v) * 0.6  # partial inversion toward opposite
+
+        # Tag question D-shift (Force #18)
+        # "right?", "huh?" — seeking validation lowers confidence
+        if pre and pre.has_tag_question:
+            d += TAG_D_OFFSET
+
         # Crisis detection: if deeply negative + high urgency, lock momentum
-        # (In v2 this manifests as a gravity pull toward the crisis state)
         if v < self.crisis_v and u > self.crisis_u:
-            # Don't let post-processing lift out of crisis
             v = min(v, self.crisis_v)
 
         # Clamp to 0-255
