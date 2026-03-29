@@ -473,6 +473,49 @@ class PendulumV2:
                 return "negative"
             return "neutral"
 
+    def classify_5d(self, vadug, mode: str = "binary") -> str:
+        """Multi-dimensional classification using ALL 5 VADUG dimensions.
+
+        Unlike classify() which only reads V, this reads the full 5D state
+        to catch cases where V alone gives the wrong answer:
+        - "I destroyed them" — low V but high A+D = triumph (positive)
+        - "I'm so sorry for your loss" — low V but high D+G = empathy (positive)
+        - Frantic urgency — neutral V but extreme U+A = negative
+
+        The translation layer: keeps VADUG pure, maps to benchmark labels.
+        """
+        v, a, d, u, g = vadug.v, vadug.a, vadug.d, vadug.u, vadug.g
+
+        # --- Override rules (catch benchmark traps) ---
+
+        # Triumph/empowerment: aggressive but positive outcome
+        if v >= 90 and a > 180 and d > 180:
+            return "positive"
+
+        # Empathy/sympathy: sad topic but supportive/grounded delivery
+        if v < 128 and d > 140 and g > 120 and u < 100:
+            return "positive"
+
+        # Panic/frantic: neutral words but extreme urgency
+        if 100 <= v <= 140 and u > 180 and a > 180:
+            return "negative"
+
+        # --- Standard mapping ---
+        if mode == "binary":
+            # Use gravity to break ties in the murky middle
+            if v > 135:
+                return "positive"
+            elif v < 120:
+                return "negative"
+            else:
+                return "positive" if g > 128 else "negative"
+        else:  # three_way
+            if v > self.threshold_high:
+                return "positive"
+            elif v < self.threshold_low:
+                return "negative"
+            return "neutral"
+
     def process_text(self, text: str) -> Tuple[VADUG, List[dict]]:
         """Process text through the 3-pass emotional pipeline.
 
