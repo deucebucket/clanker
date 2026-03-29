@@ -44,9 +44,11 @@ from demo.pendulum import IDIOMS
 from demo.bigrams import BIGRAM_EXPRESSIONS
 from demo.sarcasm import SarcasmDetector
 from demo.tonal import TonalAnalyzer, apply_tonal_adjustment
+from demo.preflight import PreflightAnalyzer
 
 _SARCASM_DETECTOR = SarcasmDetector()
 _TONAL_ANALYZER = TonalAnalyzer()
+_PREFLIGHT = PreflightAnalyzer()
 
 # Merge bigrams into idiom lookup — bigrams are just 2-word idioms.
 # IDIOMS take priority for overlapping keys (they have gravity values).
@@ -478,6 +480,9 @@ class PendulumV2:
             (final_vadug, word_trace) where word_trace is a list of dicts
             with keys: word, role, v, a, d, u, g, note
         """
+        # --- Pre-flight: structural analysis on raw text ---
+        preflight = _PREFLIGHT.analyze(text)
+
         words = self._tokenize(text)
         if not words:
             return VADUG(), []
@@ -748,7 +753,7 @@ class PendulumV2:
                     "note": f"tone={tone_result['tone']} conf={tone_result['confidence']:.2f} V:{old_v:.0f}→{state['v']:.0f}"
                 })
 
-        final = self._post_pass(state, pre)
+        final = self._post_pass(state, pre, preflight)
 
         return final, trace
 
@@ -932,8 +937,8 @@ class PendulumV2:
     # Pass 3: Post-pass
     # -----------------------------------------------------------------------
 
-    def _post_pass(self, state: dict, pre: PrePassInfo = None) -> VADUG:
-        """Crisis detection, rhetorical/tag adjustments, clamping."""
+    def _post_pass(self, state: dict, pre: PrePassInfo = None, preflight=None) -> VADUG:
+        """Crisis detection, rhetorical/tag adjustments, preflight mults, clamping."""
         v, a, d, u, g = state["v"], state["a"], state["d"], state["u"], state["g"]
 
         # Rhetorical question inversion (Force #7)
@@ -945,6 +950,14 @@ class PendulumV2:
         # "right?", "huh?" — seeking validation lowers confidence
         if pre and pre.has_tag_question:
             d += self.tag_d_offset
+
+        # Apply pre-flight environmental multipliers (digital prosody)
+        if preflight:
+            # Amplify/dampen A, U, D based on text structure (caps, length, punctuation)
+            a = 128 + (a - 128) * preflight.arousal_mult
+            u = u * preflight.urgency_mult
+            d = 128 + (d - 128) * preflight.dominance_mult
+            g = g + preflight.gravity_offset
 
         # Crisis detection: if deeply negative + high urgency, lock momentum
         if v < self.crisis_v and u > self.crisis_u:
