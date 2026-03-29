@@ -159,6 +159,32 @@ EVOKERS = {
     "innocence":    (-20, -5),
 }
 
+# ---------------------------------------------------------------------------
+# Universal Quantifiers — scope amplifiers that make EVERYTHING heavier
+# "Everything is pointless" vs "This is pointless" — same payload, different gravity
+# These prime G downward because they remove all escape routes.
+# ---------------------------------------------------------------------------
+
+UNIVERSAL_QUANTIFIERS = {
+    # word -> gravity_amplifier (how much scope expands the emotional weight)
+    # These AMPLIFY gravity in whatever direction the payload pushes.
+    # "Everything is beautiful" = lighter (G goes UP more)
+    # "Everything is pointless" = heavier (G goes DOWN more)
+    "everything":   1.8,
+    "nothing":      1.8,
+    "everyone":     1.6,
+    "nobody":       1.6,
+    "always":       1.5,
+    "never":        1.5,
+    "forever":      1.5,
+    "anywhere":     1.3,
+    "nowhere":      1.6,
+    "all":          1.3,
+    "every":        1.3,
+    "entire":       1.3,
+    "whole":        1.2,
+}
+
 EVOKER_DECAY = 0.88  # How fast gravitational priming decays per word
 
 # ---------------------------------------------------------------------------
@@ -600,6 +626,18 @@ class PendulumV2:
                         word, "NEGATOR", state,
                         f"neg_f={negation_force:.2f}"
                     ))
+                i += 1
+                continue
+
+            # Check universal quantifier — scope amplifier for gravity
+            # "everything" makes whatever follows heavier/lighter by amplifying G force
+            if word_lower in UNIVERSAL_QUANTIFIERS:
+                amp = UNIVERSAL_QUANTIFIERS[word_lower]
+                pending_operators["scope"] = (amp, 0)
+                trace.append(self._trace_entry(
+                    word, "SCOPE", state,
+                    f"universal quantifier, amp={amp}"
+                ))
                 i += 1
                 continue
 
