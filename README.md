@@ -25,7 +25,7 @@ Same Valence. Different Dominance and Gravity. No classifier can make this disti
 
 ### How it works
 
-26 conversational forces act on text word-by-word, like PEMDAS for emotions. The engine knows its own limits — when it can't resolve meaning from words alone, it returns a confidence score and hands off to a neural model. 66% accuracy on real-world text. The other 34% is pragmatic/implicit meaning that needs a trained model. The engine provides the 60% head start so the model doesn't have to learn emotional physics from scratch.
+26 conversational forces act on text word-by-word, like PEMDAS for emotions. Two layers: **primary states** (grief, rage, joy — the raw emotion) and **modifiers** (sarcasm, hedging, deflection — skills that bend the state). Modifiers nudge, never override. The engine knows its own limits — returns NULL confidence when it can't resolve meaning, hands off to a neural model. **70% on essay benchmarks, 72.6% on 174K real Reddit posts.** Sarcasm detected via 6 structural templates ("crossed wires" — positive terminal + negative port). 2,846 mapped vocabulary entries, 0.1ms/sentence, 300KB total.
 
 ## Try It
 
