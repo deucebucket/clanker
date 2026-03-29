@@ -22,6 +22,7 @@ from typing import Optional
 from demo.shared import VADUG
 from demo.pendulum_v2 import PendulumV2
 from demo.confidence import ConfidenceScorer
+from demo.zones import ZoneClassifier
 
 
 @dataclass
@@ -53,6 +54,7 @@ class Ensemble:
             os.path.join(model_dir, "model.pt"))
         self._bucket_thresholds = None
         self._vadug_dims = None
+        self.zone_classifier = ZoneClassifier()
 
     def _load_model(self):
         """Lazy-load the neural model (only when needed)."""
@@ -152,8 +154,25 @@ class Ensemble:
                 model_vadug=model_vadug, trace=trace, agreement="agree",
             )
         else:
-            # Disagree: weight by engine confidence
-            if conf.score < self.MODEL_REQUIRED_THRESHOLD:
+            # Disagree: zone-aware tiebreaking
+            # If engine zone is CRISIS/GRIEF → trust engine (safety first)
+            # If model says negative but engine says neutral → trust model (pragmatics)
+            engine_zone = self.zone_classifier.classify(engine_vadug)
+            model_zone = self.zone_classifier.classify(model_vadug)
+
+            engine_negative = self.zone_classifier.is_negative_zone(engine_zone.zone, "broad")
+            model_negative = model_vadug.v < 110
+
+            if engine_zone.zone in ("CRISIS", "GRIEF") and engine_zone.confidence > 0.4:
+                # Engine sees crisis/grief → trust engine (safety)
+                final = engine_vadug
+                source = "engine_safety"
+            elif model_negative and not engine_negative and conf.score < 40:
+                # Model says negative, engine says neutral, engine not confident
+                # → trust model (it sees pragmatics the engine can't)
+                final = model_vadug
+                source = "model_pragmatic"
+            elif conf.score < self.MODEL_REQUIRED_THRESHOLD:
                 final = model_vadug
                 source = "model"
             else:
