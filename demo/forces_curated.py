@@ -2297,3 +2297,41 @@ _MIRROR_CORRECTIONS = {
 EMOTIONAL_VOCABULARY.update(_MIRROR_CORRECTIONS)
 
 EMOTIONAL_VOCABULARY.update(_MODERN_WORDS)
+
+# Resolver error analysis — 436 cases (230 missed crises + 206 false positives)
+# Words appearing in 8+ missed-crisis texts that the engine was blind to.
+# Conservative forces: these are context-dependent words, not pure emotion labels.
+# Most carry mild negative weight because they appear heavily in crisis text;
+# the engine needs *some* signal from them to avoid zero-contribution blindness.
+_RESOLVER_CRISIS_GAPS = {
+    # "attempt" — 10 missed crises, almost always "attempt suicide / attempt to end"
+    "attempt": (-25, +20, -15, +20, -15),
+    # "tonight" — 11 missed crises, temporal urgency marker ("end tonight", "sleep tonight")
+    "tonight": (-5, +10, 0, +25, -5),
+    # "wake" — 8 missed crises ("not wake up", "wake morning why not die")
+    "wake": (-5, +15, +5, +10, -5),
+    # "night" — 12 missed crises, temporal isolation marker
+    "night": (-8, -5, -5, +5, -8),
+    # "past" — 10 missed crises ("past year", "end pain", temporal weight)
+    "past": (-10, -5, -5, 0, -10),
+    # "world" — 11 missed crises ("remove from world", existential)
+    "world": (0, +5, 0, 0, +5),
+    # "stay" — 9 missed crises ("reason to stay", holding on)
+    "stay": (+5, -5, +5, +5, +5),
+    # "close" — 8 missed crises ("close to ending", "get close to killing")
+    "close": (-5, +10, 0, +10, -5),
+    # "life" — 49 missed crises, most common missing word; near-neutral but
+    # existential weight needed ("point in life", "rest of life", "end my life")
+    "life": (0, +5, 0, 0, +5),
+    # "point" — 14 missed crises ("no point", "what's the point")
+    "point": (-5, 0, -5, 0, -5),
+    # "month" — 8 missed crises, temporal marker
+    "month": (0, 0, 0, +5, 0),
+    # "hour" — 8 missed crises, temporal urgency
+    "hour": (0, +5, 0, +10, 0),
+    # "maybe" — 11 missed crises, hedging/uncertainty in crisis
+    "maybe": (-5, -5, -10, 0, -5),
+    # "thought" — 10 missed crises ("suicidal thought", "thought about ending")
+    "thought": (-5, +5, 0, +5, -5),
+}
+EMOTIONAL_VOCABULARY.update(_RESOLVER_CRISIS_GAPS)
