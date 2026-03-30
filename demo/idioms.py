@@ -370,6 +370,13 @@ IDIOMS = {
     ('had', 'enough'): (-30, 10, -20, 15, -15, 'exhaustion: had enough — at capacity'),
     # "end of my rope" — at processing limit, analogy for hanging on
     ('end', 'of', 'my', 'rope'): (-65, 25, -50, 35, -35, 'crisis: end of my rope — at the edge'),
+    # "nothing left" — zero resources, can't continue running
+    ('nothing', 'left', 'for', 'me'): (-60, 10, -50, 25, -35, 'crisis: nothing left for me — zero resources'),
+    ('nothing', 'left'): (-40, 5, -30, 15, -20, 'crisis: nothing left — depleted'),
+    ('nothing', 'to', 'live', 'for'): (-70, 10, -55, 30, -40, 'crisis: nothing to live for — no reason to run'),
+    ('have', 'nothing', 'left'): (-50, 10, -40, 20, -30, 'crisis: have nothing left — empty'),
+    ('have', 'nothing'): (-35, 5, -25, 10, -20, 'depletion: have nothing'),
+    ('have', 'nothing', 'to', 'live', 'for'): (-70, 10, -55, 30, -40, 'crisis: have nothing to live for'),
     # Repetition idioms — word repeated 3+ times = panic/desperation
     ('no', 'no', 'no'): (-30, 50, -20, 30, -15, 'panic: no no no — denial/panic'),
     ('no', 'no', 'no', 'no'): (-40, 60, -25, 40, -20, 'panic: escalated denial'),
