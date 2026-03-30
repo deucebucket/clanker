@@ -398,6 +398,11 @@ IDIOMS = {
     ('period', 'is', 'late'): (-10, 20, -15, 30, +40, 'life-changing: possible pregnancy'),
     ('period', 'late'): (-10, 20, -15, 30, +40, 'life-changing: possible pregnancy'),
     ('im', 'late'): (-10, 15, -10, 25, +10, 'urgency: ambiguous late — high U for unresolved'),
+    # "Period" as finality marker — "I'm done, period." = end of discussion
+    # D boost (dominance/authority), V from the statement, not the word
+    ('done', 'period'): (-20, 10, 20, 15, -10, 'finality: done period — absolute ending'),
+    ('no', 'period'): (-10, 10, 25, 10, -5, 'finality: no period — absolute boundary'),
+    ('leaving', 'period'): (-20, 15, 20, 15, -10, 'finality: leaving period — no debate'),
     # "Make me X" — carrier verb with pronoun gap
     ('make', 'me', 'mad'): (-40, 35, -10, 15, -15, 'rage: make me mad'),
     ('make', 'me', 'angry'): (-40, 40, -10, 15, -15, 'rage: make me angry'),
