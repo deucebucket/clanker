@@ -1104,6 +1104,14 @@ class PendulumV2:
                         "wonder", "reckon", "assume", "possible", "tend",
                         "theoretically", "conceivably", "likely", "unlikely"}
         info.hedge_count = sum(1 for w in lower_words if w in _hedge_words)
+        # Also count hedge PHRASES (multi-word hedging structures)
+        text_lower = " ".join(lower_words)
+        _hedge_phrases = ["not sure", "in theory", "in some cases", "in practice",
+                          "lets just say", "let's just say", "without guarantees",
+                          "without making", "hard to say", "to some extent",
+                          "for the most part", "it depends", "not necessarily",
+                          "not entirely", "slight chance", "slim chance"]
+        info.hedge_count += sum(1 for p in _hedge_phrases if p in text_lower)
 
         # Double-negation detection: two negators close together cancel out
         # "nothing and nobody will stop" = positive (double neg = affirmation)
@@ -1295,8 +1303,8 @@ class PendulumV2:
 
         # Hedge stacking: 3+ hedging operators = heavy uncertainty, pull V toward neutral
         # "It's possible that some people could potentially be upset" = 4 hedges
-        if pre and pre.hedge_count >= 3:
-            pull = min(0.4, pre.hedge_count * 0.1)  # 30% at 3, 40% at 4+
+        if pre and pre.hedge_count >= 2:
+            pull = min(0.5, pre.hedge_count * 0.12)  # 24% at 2, 36% at 3, 48% at 4+
             v = v * (1 - pull) + 128 * pull
             d -= pre.hedge_count * 2  # stacked hedging = significant uncertainty
 
