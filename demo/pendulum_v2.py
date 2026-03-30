@@ -1286,6 +1286,18 @@ class PendulumV2:
                     d -= 5  # minimization = slight loss of agency
                     break
 
+        # Bravado detection (Layer 2 modifier): false confidence hides hurt
+        # "I don't even care", "doesn't bother me" = D drops, V pulled negative
+        # TCI insight: bravado is a coping mechanism — the real state is opposite
+        if pre and pre.idiom_spans:
+            for span_info in pre.idiom_spans.values():
+                _length, _force, label = span_info
+                if "bravado" in label:
+                    # Pull V 15% toward negative — bravado masks real pain
+                    v = v * 0.85 + (128 - 20) * 0.15
+                    d -= 8  # bravado = significant loss of real agency
+                    break
+
         # Crisis detection: if deeply negative + high urgency, lock momentum
         if v < self.crisis_v and u > self.crisis_u:
             v = min(v, self.crisis_v)
