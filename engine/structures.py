@@ -67,6 +67,9 @@ _BETRAYAL_VERBS = frozenset({
     "lied", "lying", "lie", "deceived", "deceiving", "deceive",
     "backstabbed", "backstabbing",
 })
+_INTERROGATION_WORDS = frozenset({
+    "why", "how", "where",
+})
 _CONDITIONAL_WORDS = frozenset({
     "without", "if", "unless", "except", "when",
 })
@@ -106,6 +109,9 @@ class StructureDetector:
             self._betrayal,
             self._bravado,
             self._victimization,
+            self._calling_out,
+            self._directed_positive,
+            self._minimizer,
         ]
         matches = []
         for detector in detectors:
@@ -328,6 +334,14 @@ class StructureDetector:
         if not peace_indices or not finally_indices:
             return None
 
+        # Exclude achievement contexts: "finally got accepted" = good news
+        has_acquire = any(r.role == "ACQUIRE" for r in roles)
+        has_positive_verb = any(r.word in ("got", "received", "earned", "won",
+                               "passed", "made", "achieved")
+                               for r in roles)
+        if has_acquire or has_positive_verb:
+            return None
+
         # Find closest pair
         best_dist = 999
         best_p, best_f = -1, -1
@@ -347,7 +361,7 @@ class StructureDetector:
             confidence=min(strength + 0.3, 1.0),
             matched_indices=sorted({best_p, best_f}),
             description="Suspiciously calm -- decision already made",
-            v_weight=-10.0,
+            v_weight=-40.0,
             d_weight=10.0,
             u_weight=40.0,
             g_weight=50.0,
@@ -811,6 +825,192 @@ class StructureDetector:
             d_weight=-40.0 * g_multiplier,
             u_weight=30.0,
             g_weight=40.0,
+        )
+
+    def _directed_positive(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Positive EMOTIONAL directed at OTHER_REF, not shared with SELF.
+
+        "good for you" -- positive attributed to other, not self = dismissive
+        "i hope youre happy" -- self hopes other is happy = PA
+        "must be nice" -- envy/dismissal of other's state
+        "glad someone is having fun" -- someone else, not me
+
+        Does NOT fire when self is also positive:
+        "im so proud of you" -- self is proud = genuine
+        "you make me happy" -- self benefits = genuine
+        """
+        # Find positive emotional words
+        pos_indices = [r.position for r in roles
+                      if r.role == "EMOTIONAL" and r.force and r.force[0] > 15]
+        other_indices = [r.position for r in roles
+                        if r.role == "OTHER_REF"]
+
+        if not pos_indices or not other_indices:
+            return None
+
+        # Check if SELF is genuinely positive (not just directing at other)
+        # "im so proud of you" = SELF feels proud (self-state word near SELF)
+        # "i hope youre happy" = SELF directs hope at OTHER (not self-state)
+        # Key: is the positive word describing SELF's state or OTHER's state?
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+
+        self_state_words = {"proud", "grateful", "thankful", "excited",
+                           "thrilled", "amazed", "impressed", "blessed",
+                           "lucky", "honored"}
+        self_has_state = any(r.word in self_state_words for r in roles)
+
+        # "you make ME happy" -- self benefits from other
+        self_benefits = any(r.word in ("me", "my", "mine") and
+                          any(abs(r.position - pi) <= 3 for pi in pos_indices)
+                          for r in roles if r.role == "SELF_REF")
+
+        if self_has_state or self_benefits:
+            return None
+
+        # Check if there's genuine action/effort acknowledgment
+        # "you did amazing" = acknowledging action (genuine)
+        # "good for you" = just state attribution (dismissive)
+        action_words = {"did", "made", "built", "created", "earned",
+                       "won", "passed", "finished", "completed", "achieved",
+                       "worked", "helped", "saved", "fixed"}
+        has_action = any(r.word in action_words for r in roles)
+        # Also genuine if self is thankful/proud/loving
+        grateful_words = {"proud", "grateful", "thankful",
+                         "appreciate", "love", "favorite", "amazing"}
+        has_grateful = any(r.word in grateful_words for r in roles)
+
+        # "thank you" is always genuine, regardless of self presence
+        has_thank = any(r.word in ("thank", "thanks", "thankyou")
+                       for r in roles)
+        if has_action or has_thank or (self_indices and has_grateful):
+            return None
+
+        # Positive + OTHER without self benefiting = directed/dismissive
+        # Short sentences are stronger signal ("good for you" = 3 words)
+        sentence_len = len(roles)
+        confidence = 0.5 if sentence_len > 5 else 0.65
+
+        indices = sorted(set(pos_indices + other_indices))
+        return StructureMatch(
+            pattern="DIRECTED_POSITIVE",
+            confidence=min(confidence, 0.85),
+            matched_indices=indices,
+            description="Positive directed at other, not shared -- dismissive/PA",
+            v_weight=-35.0,
+            d_weight=5.0,
+            u_weight=5.0,
+            g_weight=0.0,
+        )
+
+    def _minimizer(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """'just' or 'only' near negative concept = shrinking real pain.
+
+        "it was just a joke" -- minimizing harm done
+        "its just a bruise" -- minimizing injury
+        "its not a big deal" -- negation + scale word = forced minimization
+
+        Also catches "too" + trait at OTHER = invalidation:
+        "youre too sensitive" -- excess framing = criticism
+        """
+        words = [r.word for r in roles]
+
+        # "just a" or "only a" pattern = minimization
+        just_indices = [i for i, r in enumerate(roles)
+                       if r.word in ("just", "only") and r.role == "FILLER"]
+        if just_indices:
+            # Check if minimizing a negative concept
+            # "just a joke" = dismissing someone's pain
+            # "just a bruise" = dismissing injury
+            # But "just bought coffee" = genuinely casual
+            has_other = any(r.role == "OTHER_REF" for r in roles)
+            has_dismiss = any(r.word in ("joke", "kidding", "playing",
+                            "bruise", "scratch", "nothing")
+                            for r in roles)
+            if has_dismiss or has_other:
+                return StructureMatch(
+                    pattern="MINIMIZER",
+                    confidence=0.55,
+                    matched_indices=just_indices,
+                    description="Minimizing with 'just/only' -- shrinking real impact",
+                    v_weight=-15.0,
+                    d_weight=10.0,
+                    u_weight=0.0,
+                    g_weight=0.0,
+                )
+
+        # "too" + trait = invalidation ("youre too sensitive")
+        too_indices = [i for i, r in enumerate(roles)
+                      if r.word == "too" and r.role == "AMPLIFIER"]
+        if too_indices:
+            has_other = any(r.role == "OTHER_REF" for r in roles)
+            has_trait = any(r.role == "EMOTIONAL" and r.force and r.force[0] > 0
+                          for r in roles)
+            if has_other and has_trait:
+                return StructureMatch(
+                    pattern="MINIMIZER",
+                    confidence=0.65,
+                    matched_indices=too_indices,
+                    description="'Too' + trait = excess framing = invalidation",
+                    v_weight=-20.0,
+                    d_weight=15.0,
+                    u_weight=5.0,
+                    g_weight=0.0,
+                )
+
+        return None
+
+    def _calling_out(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """'why' or 'how' + OTHER_REF = calling out behavior.
+
+        "why do you do that" -- complaint disguised as question.
+        "how could you say that" -- accusation disguised as question.
+
+        The question form is the mask. Nobody asks "why do you do that"
+        when they are happy about it. Slightly negative V, elevated A.
+
+        Does NOT fire for genuine questions about non-person subjects:
+        "why do birds fly" -- OTHER_REF is for people, not birds.
+        """
+        interrog_indices = [
+            r.position for r in roles if r.word in _INTERROGATION_WORDS
+        ]
+        if not interrog_indices:
+            return None
+
+        other_indices = [r.position for r in roles if r.role == "OTHER_REF"]
+        if not other_indices:
+            return None
+
+        # Check proximity -- "why" near "you"
+        best_dist = 999
+        best_i, best_o = -1, -1
+        for ii in interrog_indices:
+            for oi in other_indices:
+                d = abs(ii - oi)
+                if d < best_dist:
+                    best_dist = d
+                    best_i, best_o = ii, oi
+
+        if best_dist > 5:
+            return None
+
+        # Boost if "always" or "never" present (pattern emphasis)
+        has_always = any(r.word in ("always", "never", "every", "constantly")
+                        for r in roles)
+        confidence = 0.55
+        if has_always:
+            confidence += 0.2
+
+        indices = sorted({best_i, best_o})
+        return StructureMatch(
+            pattern="CALLING_OUT",
+            confidence=min(confidence, 0.85),
+            matched_indices=indices,
+            description="Complaint disguised as question -- calling out behavior",
+            v_weight=-18.0,
+            d_weight=8.0,    # questioner is asserting position
+            u_weight=5.0,
+            g_weight=5.0,
         )
 
     def _d_inversion(self, roles):
