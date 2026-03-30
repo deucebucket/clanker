@@ -252,6 +252,10 @@ BIGRAM_EXPRESSIONS = {
     ("damn", "it"): (-25, 25, 10, 10, -5, "frustration: damn it"),
     ("give", "damn"): (-20, -10, -20, 0, -15, "indifference: don't give a damn"),
 
+    # Bullshit — universal nullifier, but "no bullshit" = authenticity
+    ("no", "bullshit"): (15, 10, 25, 5, 10, "authenticity: no bullshit = keeping it real"),
+    ("cut", "bullshit"): (-15, 20, 25, 15, -5, "demand: cut the bullshit = demand for truth"),
+
     # "Late" as modifier — context changes everything
     ("working", "late"): (-15, 10, -10, 15, -10, "obligation: stuck at work"),
     ("running", "late"): (-10, 15, -5, 20, -5, "urgency: behind schedule"),

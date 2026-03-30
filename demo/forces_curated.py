@@ -2176,9 +2176,9 @@ EMOTIONAL_VOCABULARY.update(_GAP_WORDS)
 _BENCHMARK_WORDS = {
     # Profanity/slang with strong emotional charge
     "fuck": (-37, +33, +18, +40, +15),
-    "fucking": (-127, +127, +127, +127, +12),
+    # "fucking" handled as amplifier (1.6x) in context_operators, not as payload
     "shit": (-52, +38, -22, +31, -9),
-    "bullshit": (-60, +50, -10, +40, -15),
+    "bullshit": (-100, +50, +20, +40, -30),  # universal nullifier — ALWAYS negative, no exceptions
     # Common emotional words missing from curated set
     "director": (+32, +56, +119, +97, +38),
     "watch": (+50, +29, +127, +63, +16),
