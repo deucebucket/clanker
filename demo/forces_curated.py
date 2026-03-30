@@ -2681,6 +2681,9 @@ _HELP_WORDS = {
     'helping':      (+15, +10, +15, +5, +10),    # active lifting — positive action in progress
     'helped':       (+25, +5, +15, +0, +15),     # lift completed — relief
     'helpful':      (+30, +5, +15, +0, +10),     # the lift worked — positive
-    'helpless':     (-50, +10, -50, +20, -30),   # no ramp available — crisis-adjacent
+    # helpless = awareness of need + inability to meet it. Not nothing —
+    # it's knowing the ramp doesn't exist and you can't build one.
+    # Worse than "help" (need) because the person sees the gap AND knows they can't close it.
+    'helpless':     (-60, +10, -60, +20, -35),   # aware of need + unable to act — D crushed
 }
 EMOTIONAL_VOCABULARY.update(_HELP_WORDS)
