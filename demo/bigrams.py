@@ -232,6 +232,11 @@ BIGRAM_EXPRESSIONS = {
     ("heart", "broken"): (-60, 20, -40, 10, -35, "grief: heart is broken"),
     ("warm", "heart"): (40, 10, 20, 0, 25, "love: warm heart"),
     ("heavy", "heart"): (-35, -5, -20, 5, -25, "sadness: heavy heart"),
+
+    # "Late" as modifier — context changes everything
+    ("working", "late"): (-15, 10, -10, 15, -10, "obligation: stuck at work"),
+    ("running", "late"): (-10, 15, -5, 20, -5, "urgency: behind schedule"),
+    ("the", "late"): (-30, -5, -15, 0, -35, "euphemism: the late = deceased"),
     ("be", "disappointing"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
     ("be", "disappointed"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
 }

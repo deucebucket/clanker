@@ -394,6 +394,10 @@ IDIOMS = {
     ("let's", 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
     ('lets', 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
     ('generally', 'speaking'): (-5, -5, -10, 0, -5, 'hedging: general qualifier'),
+    # "Late" context idioms
+    ('period', 'is', 'late'): (-10, 20, -15, 30, +40, 'life-changing: possible pregnancy'),
+    ('period', 'late'): (-10, 20, -15, 30, +40, 'life-changing: possible pregnancy'),
+    ('im', 'late'): (-10, 15, -10, 25, +10, 'urgency: ambiguous late — high U for unresolved'),
     # "Make me X" — carrier verb with pronoun gap
     ('make', 'me', 'mad'): (-40, 35, -10, 15, -15, 'rage: make me mad'),
     ('make', 'me', 'angry'): (-40, 40, -10, 15, -15, 'rage: make me angry'),
