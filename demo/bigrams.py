@@ -201,6 +201,8 @@ BIGRAM_EXPRESSIONS = {
     ("just", "say"): (-5, -5, -5, 0, -5, "hedging: diplomatic understatement"),
     ("without", "making"): (-5, 0, -5, 0, -5, "hedging: disclaimer/caveat"),
     ("without", "guarantees"): (-5, 0, -5, 0, -5, "hedging: no-guarantee caveat"),
+    ("go", "badly"): (-20, 10, -10, 5, -10, "hedging: mild negative outcome"),
+    ("go", "wrong"): (-20, 10, -10, 5, -10, "hedging: potential failure"),
 }
 
 

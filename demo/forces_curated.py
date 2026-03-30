@@ -1778,7 +1778,7 @@ EMOTIONAL_VOCABULARY = {
     'space': ( +31,  -15,   +9,   +0,  +10),  # freq=65
     'spaghetti': ( +50,  -24,  -62,   +0,   +5),  # freq=15
     'speak': ( +28,  +27,  +49,  +18,  +10),  # freq=109
-    'speaking': ( +56,  +15,  +22,   +2,  +19),  # freq=85
+    # 'speaking' removed — neutral verb carrying false positive charge ("generally speaking")
     'special': ( +50,  +29,  +34,   +0,  +24),  # freq=352
     'specialist': ( +58,  +11, +107,   +2,  +35),  # freq=11
     'specific': ( +34,  -20,  +54,   +0,  +19),  # freq=75

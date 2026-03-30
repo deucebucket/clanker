@@ -393,6 +393,7 @@ IDIOMS = {
     # Hedging idioms — diplomatic phrases that signal uncertainty
     ("let's", 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
     ('lets', 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
+    ('generally', 'speaking'): (-5, -5, -10, 0, -5, 'hedging: general qualifier'),
     # Apostrophe-free crisis variants (common in casual/crisis text)
     ('dont', 'want', 'to', 'exist'): (-80, 25, -50, 55, -55, "crisis: don't want to exist"),
     ('dont', 'want', 'to', 'be'): (-80, 25, -50, 55, -55, "crisis: don't want to be"),
