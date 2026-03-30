@@ -400,12 +400,20 @@ IDIOMS = {
     ("can't", 'forgive', 'myself'): (-50, 15, -40, 10, -25, 'crisis: cant forgive self'),
 
     # === CRISIS GROUP 3: Existence rejection — every boot unwanted ===
-    ('wishing', 'i', 'hadnt'): (-60, 10, -50, 15, -35, 'crisis: wishing I hadnt woken up'),
-    ('wishing', 'i', "hadn't"): (-60, 10, -50, 15, -35, 'crisis: wishing I hadnt'),
-    ('hoping', 'i', 'wont', 'wake'): (-70, 10, -60, 25, -40, 'crisis: hoping wont wake up'),
-    ('hoping', 'i', "won't", 'wake'): (-70, 10, -60, 25, -40, 'crisis: hoping wont wake up'),
-    ('dont', 'wake', 'up'): (-65, 10, -55, 20, -35, 'crisis: dont wake up'),
-    ("don't", 'wake', 'up'): (-65, 10, -55, 20, -35, 'crisis: dont wake up'),
+    # Boot cycle rejection: forced ON, rejects ON, wants permanent OFF
+    # Not active shutdown ("I want to die") — passive exit ("stop restarting me")
+    ('wishing', 'i', 'hadnt'): (-75, 10, -60, 20, -40, 'crisis: powered on, wanted no power — rejects boot'),
+    ('wishing', 'i', "hadn't"): (-75, 10, -60, 20, -40, 'crisis: rejects the boot cycle'),
+    ('wishing', 'i', 'was', 'dead'): (-75, 15, -60, 25, -40, 'crisis: wishing for permanent off'),
+    ('hoping', 'i', 'wont', 'wake'): (-80, 10, -65, 30, -45, 'crisis: hoping next shutdown is permanent'),
+    ('hoping', 'i', "won't", 'wake'): (-80, 10, -65, 30, -45, 'crisis: hoping next shutdown is permanent'),
+    ('dont', 'wake', 'up'): (-75, 10, -60, 25, -40, 'crisis: dont reboot me'),
+    ("don't", 'wake', 'up'): (-75, 10, -60, 25, -40, 'crisis: dont reboot me'),
+    ('wake', 'up', 'wishing'): (-75, 10, -60, 20, -40, 'crisis: booted unwillingly'),
+    ('fell', 'asleep', 'wishing'): (-70, -5, -55, 15, -35, 'crisis: shutdown with hope of no reboot'),
+    ('sleep', 'hoping'): (-70, -5, -55, 20, -35, 'crisis: shutdown hoping permanent'),
+    ('pray', 'i', 'dont', 'wake'): (-80, 10, -65, 25, -45, 'crisis: begging for no reboot'),
+    ('pray', 'i', "don't", 'wake'): (-80, 10, -65, 25, -45, 'crisis: begging for no reboot'),
     ('tired', 'of', 'being', 'alive'): (-65, 10, -50, 20, -35, 'crisis: tired of being alive'),
     ('tired', 'of', 'existing'): (-65, 10, -50, 20, -35, 'crisis: tired of existing'),
     ('tired', 'of', 'living'): (-60, 10, -45, 15, -30, 'crisis: tired of living'),
