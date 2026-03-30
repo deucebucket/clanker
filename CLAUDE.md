@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Clanker-Lang detects **emotional stance**, not just emotion. "Whatever" alone reads as resignation (D=108). "Whatever makes you happy" reads as passive-aggressive (D=123). "Do whatever" reads as permission (D=129). Same word — context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
 
-The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 mathematical forces. 300KB, 0.1ms/sentence, 66% on real-world text, knows its own limits (NULL confidence when it can't resolve meaning). The 34% it can't handle gets handed to a neural model.
+The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 mathematical forces. 300KB, 0.1ms/sentence, 91.7% on essay benchmarks, 72.8% on 174K real Reddit posts. Knows its own limits (NULL confidence when it can't resolve meaning). The hedging/pragmatic gap gets handed to a neural model.
 
 Three components:
 - **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
@@ -119,7 +119,7 @@ The engine is split into pipeline-ready modules. 35+ files grouped by function:
 | Module | What |
 |--------|------|
 | `shared.py` | VADUG, MetadataHeader, PersonalityVector dataclasses |
-| `forces_curated.py` | **V2 vocabulary** — `EMOTIONAL_VOCABULARY`, 2,154 curated words + 2,623 total mapped entries (replaced 46K `forces.py`) |
+| `forces_curated.py` | **V2 vocabulary** — `EMOTIONAL_VOCABULARY`, ~2,200 curated words + 2,900+ total mapped entries (replaced 46K `forces.py`) |
 | `forces.py` | Legacy V1 vocabulary — 46K WORD_FORCES entries, 46K lines. Still imported by V1 modules. Do not read whole file. |
 | `pendulum_v2.py` | **Active engine (V2)** — uses `EMOTIONAL_VOCABULARY`, 26 forces, 14 tunable params |
 | `pendulum.py` | Legacy V1 pendulum — uses `WORD_FORCES`. Still imported by some paths, being phased out. |
@@ -265,7 +265,7 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 
 ## Gotchas
 
-- **V2 is the active engine** — `pendulum_v2.py` + `forces_curated.py` (2,154 curated words, 26 forces). V1 (`pendulum.py` + `forces.py` 46K words) is legacy.
+- **V2 is the active engine** — `pendulum_v2.py` + `forces_curated.py` (~2,200 curated words, 26 forces). V1 (`pendulum.py` + `forces.py` 46K words) is legacy.
 - **`forces.py` is 46K lines** — do not read the whole file. V2 doesn't use it. Only grep if debugging V1 paths.
 - **Inactive modules** — `stone_correction.py`, `output_modes.py`, `word_factory.py` are not imported by active code. Archive candidates, not to be wired into new work.
 - **Gravity and Dominance are the driving forces** — not Valence. The system's core insight.
