@@ -491,6 +491,7 @@ class PrePassInfo:
     negation_positions: set = None              # indices of negator words
     double_negation: bool = False               # two negators cancel each other
     hedge_count: int = 0                        # number of hedging operators in sentence
+    words_lower: list = None                    # lowercase word list for post-pass
 
     def __post_init__(self):
         self.idiom_spans = self.idiom_spans or {}
@@ -1135,6 +1136,7 @@ class PendulumV2:
                         "wonder", "reckon", "assume", "possible", "tend",
                         "theoretically", "conceivably", "likely", "unlikely"}
         info.hedge_count = sum(1 for w in lower_words if w in _hedge_words)
+        info.words_lower = lower_words
         # Also count hedge PHRASES (multi-word hedging structures)
         text_lower = " ".join(lower_words)
         _hedge_phrases = ["not sure", "in theory", "in some cases", "in practice",
@@ -1375,6 +1377,59 @@ class PendulumV2:
                     v = v * 0.85 + (128 - 20) * 0.15
                     d -= 8  # bravado = significant loss of real agency
                     break
+
+        # Crisis co-occurrence: multiple crisis-signal words in one sentence
+        # Individual words are mild, but "pistol tonight end" = crisis
+        # This catches fragmented Reddit posts that word-by-word processing misses
+        if pre and pre.words_lower:
+            _crisis_words = {
+                # Method words (weight 2)
+                'pistol', 'gun', 'shoot', 'rope', 'noose', 'hang', 'hanging',
+                'blade', 'knife', 'slit', 'wrist', 'overdose', 'pills',
+                'painkillers', 'bridge', 'jump', 'poison',
+                # Intent words (weight 2)
+                'suicide', 'suicidal', 'kill', 'die', 'dying', 'dead', 'death',
+                'end', 'ending', 'quit', 'goodbye', 'farewell',
+                # State words (weight 1) — only clearly crisis-adjacent words
+                'tired', 'anymore', 'alone', 'worthless',
+                'burden', 'pointless', 'hopeless', 'helpless', 'done',
+                'tonight', 'tomorrow', 'ready', 'plan', 'planning', 'attempt',
+                'final', 'last', 'note', 'letter', 'body',
+            }
+            _method_words = {'pistol', 'gun', 'shoot', 'rope', 'noose', 'hang',
+                            'hanging', 'blade', 'knife', 'slit', 'wrist',
+                            'overdose', 'pills', 'painkillers', 'bridge',
+                            'jump', 'poison'}
+            _intent_words = {'suicide', 'suicidal', 'kill', 'die', 'dying',
+                            'dead', 'death', 'end', 'ending', 'goodbye',
+                            'farewell', 'quit'}
+
+            words_set = set(pre.words_lower)
+            crisis_hits = words_set & _crisis_words
+            has_method = bool(words_set & _method_words)
+            has_intent = bool(words_set & _intent_words)
+
+            _temporal_urgent = {'tonight', 'tomorrow', 'today', 'now', 'ready',
+                                'soon', 'finally', 'last', 'final'}
+            has_temporal = bool(words_set & _temporal_urgent)
+
+            # Only apply if V isn't already clearly positive (> 135 = genuine positive)
+            # and no double-negation (conviction pattern)
+            v_not_positive = v < 135
+            not_conviction = not (pre and pre.double_negation)
+            if v_not_positive and not_conviction:
+                if (len(crisis_hits) >= 3 or (has_method and has_intent)
+                        or (has_method and has_temporal)):
+                    # Strong crisis signal — pull V toward crisis zone
+                    pull_strength = min(0.7, len(crisis_hits) * 0.15)
+                    crisis_target = 50
+                    v = v * (1 - pull_strength) + crisis_target * pull_strength
+                    d = d * (1 - pull_strength * 0.5) + 60 * (pull_strength * 0.5)
+                    u = max(u, 40 + len(crisis_hits) * 5)
+                elif len(crisis_hits) >= 2 and has_intent:
+                    # Moderate: 2+ crisis words including intent word
+                    v = v * 0.8 + 90 * 0.2
+                    u = max(u, 30)
 
         # Crisis detection: if deeply negative + high urgency, lock momentum
         if v < self.crisis_v and u > self.crisis_u:

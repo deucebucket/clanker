@@ -2568,3 +2568,25 @@ _OBJECT_GRAVITY = {
     'computer':     (+5, +5, +5, +5, +5),       # tool
 }
 EMOTIONAL_VOCABULARY.update(_OBJECT_GRAVITY)
+
+# ── Crisis method/planning/farewell words ──
+# These words are neutral in isolation but become crisis signals in combination.
+# Mild negative V + elevated U + high G = "something heavy is being discussed"
+_CRISIS_METHOD_WORDS = {
+    'goodbye':      (-20, +5, -10, +15, -20),    # farewell — mild alone, heavy in context
+    'pill':         (-10, +5, -5, +10, -10),      # medication — context-dependent
+    'pills':        (-10, +5, -5, +10, -10),
+    'painkillers':  (-15, +5, -10, +10, -10),
+    'rope':         (-15, +10, -10, +15, -15),    # method word
+    'blade':        (-20, +15, -10, +15, -15),    # weapon word
+    'wrist':        (-10, +10, -10, +10, -10),    # self-harm locus
+    'slit':         (-30, +20, -15, +20, -20),    # self-harm action
+    'noose':        (-40, +15, -30, +25, -30),    # method word — high signal
+    'overdose':     (-40, +15, -25, +25, -30),
+    'tomorrow':     (+5, +5, +5, +10, +0),        # temporal — mild urgency
+    'tonight':      (+0, +10, +0, +20, +0),       # temporal — higher urgency
+    'anymore':      (-15, +5, -15, +10, -10),     # "not anymore" = giving up
+    'cut':          (-15, +10, -5, +10, -10),      # dual-use but negative lean
+    'cutting':      (-20, +15, -10, +15, -15),
+}
+EMOTIONAL_VOCABULARY.update(_CRISIS_METHOD_WORDS)
