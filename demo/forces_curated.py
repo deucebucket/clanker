@@ -62,7 +62,7 @@ EMOTIONAL_VOCABULARY = {
     'betrayed': (-106,  +72,  -82,  +54,  -51),  # freq=16
     'brave': ( +28,  +22,  +52,   +6,  +14),  # freq=52
     'broken': (-102,  +45, -127,  +57,  -61),  # freq=129
-    'calm': ( +39,  -58,  +54,  -12,   +8),  # freq=84
+    'calm': ( +20,  -40,  +30,  -10,   +5),  # liquid -- state=positive, command=negative
     'comfort': ( +28,   -9,  +24,   +0,   +8),  # freq=56
     'comfortable': ( +44,  -27,   -2,   +0,  +12),  # freq=109
     'compassion': ( +90,  +27,  +77,  +18,  -29),  # freq=21
@@ -2035,8 +2035,9 @@ EMOTIONAL_VOCABULARY = {
     'wisdom': ( +50,   +9,  +72,   +0,  +24),  # freq=13
     'wise': ( +39,  -20,  +52,   +0,  +20),  # freq=33
     'wisely': ( +51,  -22,  +42,   +0,  +21),  # freq=11
-    'wish': ( +29,  +20,  -17,  +12,  +24),  # freq=1292
-    'wishing': ( +56,  +18,   -2,   +2,  +16),  # freq=43
+    'wish': ( -10,  10,  -20,  15,  25),  # longing -- wanting what you dont have. G high (it matters), D low (powerless)
+    'wished': ( -12,  8,  -22,  12,  25),
+    'wishing': ( -10,  10,  -18,  15,  25),
     'without': ( -45,  +15,  -40,  +15,  -25),  # freq=592 — absence, deprivation
     'woke': ( +29, +127,  +89, +127,  +24),  # freq=171
     'wolf': ( +48,  +56,  +67,  +61,  +14),  # freq=10
@@ -2085,7 +2086,7 @@ EMOTIONAL_VOCABULARY = {
     'help':   ( +28,  +15,  +10,  +10,  +15),
     'lose':   ( -52,  +20,  -30,  +15,  -35),
     'try':    ( +15,  +10,  +10,   +5,   +8),
-    'give':   ( +20,   +5,  +10,   +0,  +12),
+    'give':   ( -3,   +5,   -3,   +0,   +5),    # near-neutral -- generous OR demanding depending on structure
     'take':   ( -10,   +5,   -5,   +0,   -5),
     'make':   ( +15,  +10,  +10,   +0,   +8),
     'start':  ( +20,  +10,  +10,   +5,  +12),
@@ -2273,8 +2274,8 @@ _MIRROR_CORRECTIONS = {
     "happy": (+78, +8, +10, 0, +17),
     # joy/anger: anger dV=-89, so joy=+89
     "joy": (+89, +27, +34, 0, +29),
-    # hope/despair: despair=-127, so hope=+127
-    "hope": (+127, +29, +34, +12, +32),
+    # hope/despair: NOT symmetric. Hope contains uncertainty. Despair is absolute.
+    "hope": (+45, +15, +20, +10, +25),
     # brave/afraid: afraid=-78, so brave=+78
     "brave": (+78, +22, +52, +6, +14),
     # proud/ashamed: ashamed=-102, so proud=+102
@@ -2901,4 +2902,49 @@ _ACHIEVEMENT_WORDS = {
     'fired!':       (-45, 30, -35, 25, -20),
 }
 EMOTIONAL_VOCABULARY.update(_ACHIEVEMENT_WORDS)
+
+
+# ── Violation/intrusion actions ──
+# Liquid words -- mild negative alone, VICTIMIZATION amplifies when confirmed.
+_VIOLATION_WORDS = {
+    'deleted':      (-15, 10, -10, 5, -5),
+    'changed':      (-10, 5, -5, 5, -3),
+    'ate':          (-5, 5, -5, 0, -3),
+    'took':         (-10, 5, -10, 5, -5),
+    'spent':        (-15, 5, -10, 5, -5),
+    'sold':         (-15, 10, -10, 5, -5),
+    'threw':        (-15, 15, -10, 5, -5),
+    'stole':        (-50, 30, -30, 20, -15),
+    'stealing':     (-45, 30, -25, 20, -15),
+    'broke':        (-25, 20, -15, 10, -10),
+    'smashed':      (-40, 40, -20, 15, -10),
+    'ruined':       (-50, 20, -30, 15, -20),
+    'wrecked':      (-45, 20, -25, 15, -15),
+    'destroyed':    (-60, 25, -40, 20, -25),
+}
+EMOTIONAL_VOCABULARY.update(_VIOLATION_WORDS)
+
+
+# ── Invalidation/gaslighting ──
+_INVALIDATION_WORDS = {
+    'overreacting':  (-20, 15, 20, 5, -5),     # accusation -- D goes UP for speaker
+    'dramatic':      (-15, 10, 15, 5, -5),
+    'crazy':         (-30, 15, 15, 10, -10),
+    'paranoid':      (-25, 15, 10, 5, -8),
+    'delusional':    (-30, 15, 15, 10, -10),
+    'exaggerating':  (-15, 10, 15, 5, -5),
+}
+EMOTIONAL_VOCABULARY.update(_INVALIDATION_WORDS)
+
+
+# ── Resolution/outcome words ──
+_RESOLUTION_WORDS = {
+    'made':         (15, 5, 10, 0, 5),
+    'well':         (15, -5, 10, 0, 5),
+    'anyway':       (5, 5, 10, 0, 0),       # persistence despite obstacles
+    'survived':     (10, 5, 15, 0, 10),
+    'overcame':     (20, 10, 20, 0, 10),
+    'managed':      (10, 5, 10, 0, 5),
+}
+EMOTIONAL_VOCABULARY.update(_RESOLUTION_WORDS)
 
