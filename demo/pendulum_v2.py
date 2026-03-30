@@ -488,6 +488,7 @@ class PrePassInfo:
     idiom_spans: Dict[int, Tuple] = None      # start_idx -> (length, force_tuple, label)
     idiom_consumed: set = None                  # all indices consumed by idioms
     negation_positions: set = None              # indices of negator words
+    double_negation: bool = False               # two negators cancel each other
 
     def __post_init__(self):
         self.idiom_spans = self.idiom_spans or {}
@@ -1093,6 +1094,27 @@ class PendulumV2:
         for i, w in enumerate(words):
             if w.lower() in NEGATORS and i not in info.idiom_consumed:
                 info.negation_positions.add(i)
+
+        # Double-negation detection: two negators close together cancel out
+        # "nothing and nobody will stop" = positive (double neg = affirmation)
+        # "no challenge we cannot overcome" = positive
+        # Guard: only cancel when both negators are "universal" type (nothing/nobody/no/nor)
+        # NOT when one is "can't/don't" + "nobody" (that's sarcasm reinforcement)
+        UNIVERSAL_NEGATORS = {"nothing", "nobody", "no", "none", "nor", "neither"}
+        neg_list = sorted(info.negation_positions)
+        if len(neg_list) >= 2:
+            for j in range(len(neg_list) - 1):
+                gap = neg_list[j + 1] - neg_list[j]
+                w1 = lower_words[neg_list[j]] if neg_list[j] < len(lower_words) else ""
+                w2 = lower_words[neg_list[j + 1]] if neg_list[j + 1] < len(lower_words) else ""
+                # Only cancel if both are universal negators OR one is "cannot/no" + verb
+                both_universal = w1 in UNIVERSAL_NEGATORS and w2 in UNIVERSAL_NEGATORS
+                no_cannot = (w1 == "no" and w2 == "cannot") or (w1 == "no" and w2 == "cant")
+                if gap <= 4 and (both_universal or no_cannot):
+                    info.negation_positions.discard(neg_list[j])
+                    info.negation_positions.discard(neg_list[j + 1])
+                    info.double_negation = True
+                    break
 
         return info
 
