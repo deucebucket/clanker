@@ -2615,6 +2615,24 @@ _CRISIS_METHOD_WORDS = {
 }
 EMOTIONAL_VOCABULARY.update(_CRISIS_METHOD_WORDS)
 
+# ── Permanence/infinity modifiers ──
+# "permanently" = negative infinity. Nobody wants permanence of bad things.
+# "Is this permanent?" evokes fear. Permanence on exits = crisis lock.
+_PERMANENCE_WORDS = {
+    'permanently': (-30, +10, -20, +15, -25),   # infinity lock — amplifies negative exit
+    'forever':     (-15, +5, -10, +10, -15),     # softer infinity — "forever alone" vs "love forever"
+    'eternal':     (-10, +5, -5, +5, -10),       # can be positive (eternal love) or negative
+    'endless':     (-15, +10, -10, +10, -15),    # usually negative — endless pain/suffering
+    'permanent':   (-20, +10, -15, +10, -20),    # "is this permanent?" = fear
+    'irreversible':(-30, +15, -25, +15, -25),    # can't undo — high gravity
+    'vanish':      (-40, +5, -35, +15, -30),     # disappear — removing self
+    'cease':       (-35, +5, -30, +15, -25),     # stop existing
+    'ceased':      (-30, +5, -25, +10, -20),
+    'over':        (-10, +5, -5, +5, -5),        # mild exit — context dependent
+    'belong':      (+15, +5, +10, +0, +15),      # positive — belonging
+}
+EMOTIONAL_VOCABULARY.update(_PERMANENCE_WORDS)
+
 # ── Short response words — emotional weight from brevity ──
 # "k" is not "ok". "k" is angry/dismissive acknowledgment.
 # "ok" hedges entirely on context — neutral by itself but amplifies previous.

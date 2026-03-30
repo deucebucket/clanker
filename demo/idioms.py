@@ -325,6 +325,26 @@ IDIOMS = {
     # "We need to talk" — seriousness/gravity modifier
     ('we', 'need', 'to', 'talk'): (-10, 15, 10, 25, +20, 'gravity: seriousness signal — something heavy coming'),
     ('need', 'to', 'talk'): (-10, 15, 10, 25, +20, 'gravity: seriousness signal'),
+    # want/wish + exit patterns — user wants OUT
+    ('want', 'it', 'to', 'be', 'over'): (-70, 20, -50, 40, -40, 'crisis: want it to be over'),
+    ('want', 'to', 'be', 'over'): (-65, 20, -45, 35, -35, 'crisis: want to be over'),
+    ('want', 'this', 'to', 'end'): (-65, 20, -45, 40, -35, 'crisis: want this to end'),
+    ('want', 'to', 'vanish'): (-70, 15, -50, 35, -40, 'crisis: want to vanish'),
+    ('want', 'to', 'cease'): (-75, 15, -55, 40, -45, 'crisis: want to cease existing'),
+    ('cease', 'to', 'exist'): (-80, 15, -60, 40, -50, 'crisis: cease to exist'),
+    ('just', 'want', 'it', 'over'): (-70, 20, -50, 40, -40, 'crisis: just want it over'),
+    # "don't belong/no place" — user removing self from world
+    ('dont', 'belong'): (-40, 10, -35, 15, -25, 'crisis: dont belong'),
+    ("don't", 'belong'): (-40, 10, -35, 15, -25, 'crisis: dont belong'),
+    ('no', 'place', 'for', 'me'): (-45, 10, -40, 15, -30, 'crisis: no place for me'),
+    # "shouldn't be alive" / "don't deserve to be alive"
+    ('shouldnt', 'be', 'alive'): (-75, 15, -55, 35, -45, 'crisis: shouldnt be alive'),
+    ("shouldn't", 'be', 'alive'): (-75, 15, -55, 35, -45, 'crisis: shouldnt be alive'),
+    ('dont', 'deserve', 'to', 'be', 'alive'): (-75, 15, -55, 35, -45, 'crisis: dont deserve to be alive'),
+    # Permanence modifiers on exits — infinity lock
+    ('end', 'permanently'): (-80, 20, -60, 45, -50, 'crisis: end permanently — infinity exit'),
+    ('over', 'permanently'): (-80, 20, -60, 45, -50, 'crisis: over permanently'),
+    ('gone', 'forever'): (-70, 15, -50, 30, -40, 'crisis: gone forever'),
     # Repetition idioms — word repeated 3+ times = panic/desperation
     ('no', 'no', 'no'): (-30, 50, -20, 30, -15, 'panic: no no no — denial/panic'),
     ('no', 'no', 'no', 'no'): (-40, 60, -25, 40, -20, 'panic: escalated denial'),
