@@ -192,6 +192,13 @@ BIGRAM_EXPRESSIONS = {
     ("sure", "whatever"): (-15, -20, -25, 5, -15, "deflection: double dismissal"),
     ("fine", "whatever"): (-15, -20, -25, 5, -15, "deflection: stacked resignation"),
     ("i", "guess"): (-5, -10, -20, 0, -10, "deflection: reluctant concession"),
+
+    # Academic hedging — "could argue" means "one might say", not confrontation
+    ("could", "argue"): (-5, 5, -5, 0, -5, "hedging: academic argumentation"),
+    ("would", "argue"): (-5, 5, -5, 0, -5, "hedging: academic argumentation"),
+    ("might", "argue"): (-5, 5, -5, 0, -5, "hedging: academic argumentation"),
+    ("lean", "toward"): (-5, -5, -5, 0, -5, "hedging: tentative direction"),
+    ("just", "say"): (-5, -5, -5, 0, -5, "hedging: diplomatic understatement"),
 }
 
 
