@@ -1,0 +1,83 @@
+{
+  "total_sentences": 31575,
+  "per_lens": {
+    "rage": {
+      "accuracy": 100.0,
+      "correct": 2105,
+      "total": 2105
+    },
+    "grief": {
+      "accuracy": 92.0,
+      "correct": 1937,
+      "total": 2105
+    },
+    "fear": {
+      "accuracy": 99.0,
+      "correct": 2084,
+      "total": 2105
+    },
+    "disgust": {
+      "accuracy": 80.7,
+      "correct": 1698,
+      "total": 2105
+    },
+    "joy": {
+      "accuracy": 92.9,
+      "correct": 1956,
+      "total": 2105
+    },
+    "conviction": {
+      "accuracy": 79.0,
+      "correct": 1664,
+      "total": 2105
+    },
+    "love": {
+      "accuracy": 93.5,
+      "correct": 1969,
+      "total": 2105
+    },
+    "gratitude": {
+      "accuracy": 90.7,
+      "correct": 1909,
+      "total": 2105
+    },
+    "humor": {
+      "accuracy": 18.5,
+      "correct": 389,
+      "total": 2105
+    },
+    "neutral_clinical": {
+      "accuracy": 17.2,
+      "correct": 363,
+      "total": 2105
+    },
+    "hedged": {
+      "accuracy": 46.2,
+      "correct": 973,
+      "total": 2105
+    },
+    "negated": {
+      "accuracy": 18.1,
+      "correct": 380,
+      "total": 2105
+    },
+    "imperative": {
+      "accuracy": 48.4,
+      "correct": 1019,
+      "total": 2105
+    },
+    "reported": {
+      "accuracy": 52.3,
+      "correct": 1100,
+      "total": 2105
+    },
+    "exclamatory": {
+      "accuracy": 96.9,
+      "correct": 2040,
+      "total": 2105
+    }
+  },
+  "overall_accuracy": 68.4,
+  "flat_word_count": 0,
+  "flip_failure_count": 0
+}

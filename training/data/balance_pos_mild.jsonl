@@ -1,0 +1,250 @@
+{"english": "That coffee was actually really good this morning", "vadug": [158, 125, 140, 3, 155], "source": "balance_pos_mild", "features": "daily_pleasure,coffee,short"}
+{"english": "Nice weather out today", "vadug": [152, 110, 135, 2, 150], "source": "balance_pos_mild", "features": "weather,observation,short"}
+{"english": "Someone held the door for me and it made my whole walk better", "vadug": [160, 120, 138, 4, 155], "source": "balance_pos_mild", "features": "social_warmth,kindness,medium"}
+{"english": "Finally finished cleaning the kitchen", "vadug": [155, 130, 150, 5, 160], "source": "balance_pos_mild", "features": "task_completion,satisfaction,short"}
+{"english": "My coworker said I did a good job on that report", "vadug": [165, 128, 145, 3, 155], "source": "balance_pos_mild", "features": "compliment,workplace,medium"}
+{"english": "Just had a really solid sandwich for lunch", "vadug": [153, 115, 140, 2, 150], "source": "balance_pos_mild", "features": "food,daily_pleasure,short"}
+{"english": "The sunset looks pretty nice tonight", "vadug": [160, 105, 135, 1, 148], "source": "balance_pos_mild", "features": "nature,beauty,short"}
+{"english": "Had a chill evening just watching stuff", "vadug": [155, 100, 140, 2, 150], "source": "balance_pos_mild", "features": "comfort,relaxation,short"}
+{"english": "That wasn't as bad as I thought it would be", "vadug": [150, 115, 145, 5, 155], "source": "balance_pos_mild", "features": "relief,mild,medium"}
+{"english": "The bus was actually on time today", "vadug": [148, 110, 135, 3, 150], "source": "balance_pos_mild", "features": "daily_pleasure,surprise,short"}
+{"english": "Got all my laundry done and put away", "vadug": [153, 125, 155, 4, 160], "source": "balance_pos_mild", "features": "task_completion,satisfaction,short"}
+{"english": "My neighbor waved at me this morning which was nice", "vadug": [155, 108, 135, 2, 150], "source": "balance_pos_mild", "features": "social_warmth,community,medium"}
+{"english": "Found a good parking spot right away", "vadug": [152, 120, 140, 3, 148], "source": "balance_pos_mild", "features": "daily_pleasure,convenience,short"}
+{"english": "This tea is hitting different today", "vadug": [157, 112, 138, 2, 150], "source": "balance_pos_mild", "features": "daily_pleasure,comfort,short"}
+{"english": "The house smells good cause I lit that candle", "vadug": [158, 105, 140, 1, 148], "source": "balance_pos_mild", "features": "comfort,home,medium"}
+{"english": "Took a nice walk around the block after dinner", "vadug": [155, 110, 140, 2, 150], "source": "balance_pos_mild", "features": "exercise,mild_pleasure,medium"}
+{"english": "My bed feels extra comfortable tonight", "vadug": [160, 100, 142, 1, 148], "source": "balance_pos_mild", "features": "comfort,physical,short"}
+{"english": "The kids were pretty well behaved at the store", "vadug": [157, 115, 148, 4, 155], "source": "balance_pos_mild", "features": "relief,parenting,medium"}
+{"english": "Got a text from an old friend out of nowhere", "vadug": [165, 135, 138, 5, 155], "source": "balance_pos_mild", "features": "social_warmth,surprise,medium"}
+{"english": "The grocery store had everything I needed", "vadug": [150, 110, 145, 3, 152], "source": "balance_pos_mild", "features": "convenience,satisfaction,medium"}
+{"english": "Dinner turned out pretty decent actually", "vadug": [155, 118, 148, 3, 155], "source": "balance_pos_mild", "features": "food,cooking,short"}
+{"english": "My plant is finally growing new leaves", "vadug": [162, 120, 140, 2, 155], "source": "balance_pos_mild", "features": "nature,nurturing,short"}
+{"english": "The shower felt amazing after that long day", "vadug": [163, 108, 142, 2, 148], "source": "balance_pos_mild", "features": "physical_comfort,relief,medium"}
+{"english": "Traffic wasn't bad at all coming home", "vadug": [150, 108, 140, 3, 150], "source": "balance_pos_mild", "features": "relief,commute,short"}
+{"english": "Someone left donuts in the breakroom", "vadug": [160, 130, 135, 3, 148], "source": "balance_pos_mild", "features": "workplace,food,surprise,short"}
+{"english": "The new sheets feel so nice", "vadug": [158, 105, 140, 1, 148], "source": "balance_pos_mild", "features": "comfort,physical,short"}
+{"english": "My show dropped a new episode and I'm looking forward to it", "vadug": [162, 132, 138, 5, 150], "source": "balance_pos_mild", "features": "entertainment,anticipation,medium"}
+{"english": "Got through the whole shift without any drama", "vadug": [152, 112, 150, 3, 158], "source": "balance_pos_mild", "features": "workplace,relief,medium"}
+{"english": "The dog was so happy to see me when I got home", "vadug": [168, 130, 140, 2, 150], "source": "balance_pos_mild", "features": "pet,warmth,medium"}
+{"english": "Made it through Monday", "vadug": [148, 108, 140, 3, 155], "source": "balance_pos_mild", "features": "relief,survival,short"}
+{"english": "My room looks really clean right now", "vadug": [155, 112, 152, 2, 158], "source": "balance_pos_mild", "features": "satisfaction,order,short"}
+{"english": "That nap was exactly what I needed", "vadug": [160, 100, 145, 1, 148], "source": "balance_pos_mild", "features": "physical_comfort,rest,short"}
+{"english": "Found a really good song I haven't heard before", "vadug": [163, 135, 138, 3, 148], "source": "balance_pos_mild", "features": "music,discovery,medium"}
+{"english": "The leftovers were actually better than the first time", "vadug": [155, 115, 140, 2, 150], "source": "balance_pos_mild", "features": "food,surprise,medium"}
+{"english": "My phone is fully charged and I'm ready to chill", "vadug": [150, 105, 142, 1, 148], "source": "balance_pos_mild", "features": "comfort,readiness,medium"}
+{"english": "The ac feels so good right now", "vadug": [157, 105, 140, 1, 145], "source": "balance_pos_mild", "features": "physical_comfort,relief,short"}
+{"english": "Someone complimented my shoes today", "vadug": [162, 125, 142, 2, 150], "source": "balance_pos_mild", "features": "compliment,social,short"}
+{"english": "Just sitting on the porch enjoying the quiet", "vadug": [158, 100, 145, 1, 150], "source": "balance_pos_mild", "features": "peace,comfort,medium"}
+{"english": "The meeting got cancelled so I have free time", "vadug": [160, 120, 150, 3, 148], "source": "balance_pos_mild", "features": "workplace,relief,freedom,medium"}
+{"english": "My socks match today and that's a win", "vadug": [150, 115, 138, 2, 145], "source": "balance_pos_mild", "features": "humor,small_win,short"}
+{"english": "The baby slept through the whole night", "vadug": [168, 108, 150, 3, 160], "source": "balance_pos_mild", "features": "parenting,relief,short"}
+{"english": "Got my favorite seat at the coffee shop", "vadug": [155, 118, 142, 2, 148], "source": "balance_pos_mild", "features": "daily_pleasure,comfort,medium"}
+{"english": "The movie was actually pretty entertaining", "vadug": [158, 125, 138, 2, 148], "source": "balance_pos_mild", "features": "entertainment,mild_positive,medium"}
+{"english": "Woke up before my alarm and felt rested", "vadug": [160, 110, 150, 2, 152], "source": "balance_pos_mild", "features": "rest,refreshed,medium"}
+{"english": "My hair looks decent today not gonna lie", "vadug": [155, 118, 142, 3, 150], "source": "balance_pos_mild", "features": "appearance,confidence,medium"}
+{"english": "The vending machine gave me an extra snack", "vadug": [162, 130, 135, 2, 145], "source": "balance_pos_mild", "features": "surprise,food,small_win,medium"}
+{"english": "Finally remembered to water the plants", "vadug": [150, 112, 145, 3, 155], "source": "balance_pos_mild", "features": "task_completion,responsibility,short"}
+{"english": "The store had my size in those shoes I wanted", "vadug": [160, 128, 142, 5, 150], "source": "balance_pos_mild", "features": "shopping,satisfaction,medium"}
+{"english": "That stretch felt incredible", "vadug": [158, 108, 140, 1, 148], "source": "balance_pos_mild", "features": "physical_comfort,body,short"}
+{"english": "The hot chocolate is perfect for this weather", "vadug": [160, 108, 140, 1, 150], "source": "balance_pos_mild", "features": "comfort,food,weather,medium"}
+{"english": "Saw a cute dog on my walk", "vadug": [162, 122, 135, 1, 145], "source": "balance_pos_mild", "features": "animal,daily_pleasure,short"}
+{"english": "The wi-fi is working great for once", "vadug": [152, 112, 140, 3, 148], "source": "balance_pos_mild", "features": "technology,relief,short"}
+{"english": "My coworker brought me coffee without me asking", "vadug": [168, 125, 140, 2, 155], "source": "balance_pos_mild", "features": "social_warmth,workplace,medium"}
+{"english": "The blanket is warm and I don't want to move", "vadug": [160, 100, 140, 1, 148], "source": "balance_pos_mild", "features": "comfort,cozy,medium"}
+{"english": "Got a parking spot close to the entrance", "vadug": [152, 115, 142, 3, 148], "source": "balance_pos_mild", "features": "convenience,small_win,medium"}
+{"english": "My lunch break was actually relaxing today", "vadug": [157, 105, 145, 2, 150], "source": "balance_pos_mild", "features": "workplace,rest,medium"}
+{"english": "The rain sounds nice on the roof", "vadug": [158, 100, 140, 1, 150], "source": "balance_pos_mild", "features": "nature,comfort,ambiance,short"}
+{"english": "I made my bed and now the room looks put together", "vadug": [153, 112, 150, 2, 158], "source": "balance_pos_mild", "features": "task_completion,order,medium"}
+{"english": "That yogurt was surprisingly good", "vadug": [152, 112, 138, 2, 148], "source": "balance_pos_mild", "features": "food,surprise,short"}
+{"english": "The cat curled up in my lap", "vadug": [165, 100, 140, 1, 148], "source": "balance_pos_mild", "features": "pet,comfort,warmth,short"}
+{"english": "No line at the store today", "vadug": [150, 108, 142, 2, 148], "source": "balance_pos_mild", "features": "convenience,relief,short"}
+{"english": "My shoes are broken in and finally comfortable", "vadug": [155, 105, 142, 1, 150], "source": "balance_pos_mild", "features": "physical_comfort,satisfaction,medium"}
+{"english": "Someone let me merge in traffic and I appreciate that", "vadug": [157, 112, 138, 3, 152], "source": "balance_pos_mild", "features": "social_warmth,driving,medium"}
+{"english": "The wind feels real nice today", "vadug": [155, 105, 138, 1, 148], "source": "balance_pos_mild", "features": "weather,physical_comfort,short"}
+{"english": "My charger was right where I left it for once", "vadug": [150, 112, 142, 2, 148], "source": "balance_pos_mild", "features": "small_win,relief,medium"}
+{"english": "That episode ended on a good note", "vadug": [158, 118, 138, 2, 148], "source": "balance_pos_mild", "features": "entertainment,satisfaction,short"}
+{"english": "The line at the pharmacy moved fast", "vadug": [150, 112, 140, 3, 150], "source": "balance_pos_mild", "features": "convenience,relief,short"}
+{"english": "I actually enjoyed cooking tonight", "vadug": [160, 120, 148, 2, 152], "source": "balance_pos_mild", "features": "cooking,pleasure,short"}
+{"english": "The sun on my face feels real good right now", "vadug": [162, 105, 140, 1, 148], "source": "balance_pos_mild", "features": "nature,physical_comfort,medium"}
+{"english": "My kid drew me a picture and it's on the fridge now", "vadug": [172, 125, 142, 2, 158], "source": "balance_pos_mild", "features": "parenting,warmth,medium"}
+{"english": "The new flavor of chips is actually fire", "vadug": [160, 130, 138, 3, 145], "source": "balance_pos_mild", "features": "food,discovery,short"}
+{"english": "Payday hit and all the bills are covered", "vadug": [165, 120, 155, 5, 162], "source": "balance_pos_mild", "features": "financial,relief,medium"}
+{"english": "My playlist is hitting all the right songs today", "vadug": [162, 128, 140, 2, 148], "source": "balance_pos_mild", "features": "music,pleasure,medium"}
+{"english": "Took the stairs and didn't even get winded", "vadug": [155, 128, 152, 3, 155], "source": "balance_pos_mild", "features": "fitness,small_win,medium"}
+{"english": "The toast came out perfect", "vadug": [150, 110, 142, 1, 148], "source": "balance_pos_mild", "features": "food,cooking,short"}
+{"english": "I remembered everyone's name at the meeting", "vadug": [158, 122, 150, 4, 155], "source": "balance_pos_mild", "features": "workplace,confidence,medium"}
+{"english": "My allergies aren't as bad today", "vadug": [150, 105, 140, 3, 150], "source": "balance_pos_mild", "features": "health,relief,short"}
+{"english": "The fridge is stocked and I feel ready for the week", "vadug": [157, 115, 155, 5, 160], "source": "balance_pos_mild", "features": "preparation,satisfaction,medium"}
+{"english": "Found five bucks in my jacket pocket", "vadug": [160, 128, 138, 2, 145], "source": "balance_pos_mild", "features": "surprise,small_win,short"}
+{"english": "The little kid at the store waved at me", "vadug": [162, 118, 135, 1, 148], "source": "balance_pos_mild", "features": "social_warmth,wholesome,medium"}
+{"english": "My pillow is at that perfect temperature", "vadug": [158, 100, 140, 1, 145], "source": "balance_pos_mild", "features": "comfort,physical,short"}
+{"english": "Got all green lights on the way home", "vadug": [155, 118, 142, 3, 148], "source": "balance_pos_mild", "features": "driving,convenience,short"}
+{"english": "The new soap smells really nice", "vadug": [153, 108, 138, 1, 148], "source": "balance_pos_mild", "features": "daily_pleasure,senses,short"}
+{"english": "My desk is organized and I can actually think straight", "vadug": [155, 112, 155, 3, 158], "source": "balance_pos_mild", "features": "order,clarity,workplace,medium"}
+{"english": "Someone said good morning and actually meant it", "vadug": [158, 112, 138, 2, 152], "source": "balance_pos_mild", "features": "social_warmth,genuine,medium"}
+{"english": "The bread is still fresh from yesterday", "vadug": [148, 105, 138, 1, 148], "source": "balance_pos_mild", "features": "food,small_win,short"}
+{"english": "My pen writes real smooth", "vadug": [150, 105, 140, 1, 145], "source": "balance_pos_mild", "features": "daily_pleasure,tactile,short"}
+{"english": "The neighbors were quiet tonight", "vadug": [152, 100, 142, 2, 152], "source": "balance_pos_mild", "features": "peace,relief,short"}
+{"english": "I packed a good lunch and I'm glad I did", "vadug": [155, 112, 148, 3, 155], "source": "balance_pos_mild", "features": "preparation,satisfaction,medium"}
+{"english": "That was a really smooth commute", "vadug": [153, 108, 142, 2, 148], "source": "balance_pos_mild", "features": "commute,satisfaction,short"}
+{"english": "My jacket is just the right weight for this weather", "vadug": [152, 105, 140, 1, 150], "source": "balance_pos_mild", "features": "comfort,weather,medium"}
+{"english": "The kid shared his snack with the other kids without being asked", "vadug": [172, 118, 145, 2, 158], "source": "balance_pos_mild", "features": "parenting,pride,prosocial,long"}
+{"english": "This spot on the couch is perfect", "vadug": [158, 100, 142, 1, 148], "source": "balance_pos_mild", "features": "comfort,home,short"}
+{"english": "I actually woke up in a good mood", "vadug": [160, 115, 145, 2, 150], "source": "balance_pos_mild", "features": "mood,morning,short"}
+{"english": "The gas prices went down a little", "vadug": [150, 108, 140, 3, 152], "source": "balance_pos_mild", "features": "financial,relief,short"}
+{"english": "My seatbelt clicked on the first try", "vadug": [148, 105, 140, 1, 145], "source": "balance_pos_mild", "features": "small_win,daily,short"}
+{"english": "The carpet is freshly vacuumed and it looks great", "vadug": [155, 112, 152, 2, 158], "source": "balance_pos_mild", "features": "cleaning,satisfaction,medium"}
+{"english": "Got through my whole to-do list before noon", "vadug": [165, 130, 158, 5, 160], "source": "balance_pos_mild", "features": "productivity,satisfaction,medium"}
+{"english": "The water fountain was ice cold and I was so thirsty", "vadug": [160, 118, 138, 3, 148], "source": "balance_pos_mild", "features": "physical_relief,satisfaction,medium"}
+{"english": "My hoodie still smells like the dryer sheets", "vadug": [155, 102, 140, 1, 148], "source": "balance_pos_mild", "features": "comfort,senses,short"}
+{"english": "The crossword puzzle came together at the end", "vadug": [158, 122, 150, 3, 155], "source": "balance_pos_mild", "features": "puzzle,satisfaction,medium"}
+{"english": "I caught the bus with like thirty seconds to spare", "vadug": [155, 135, 142, 5, 150], "source": "balance_pos_mild", "features": "timing,relief,medium"}
+{"english": "The garden is looking healthy", "vadug": [157, 108, 145, 2, 155], "source": "balance_pos_mild", "features": "nature,nurturing,short"}
+{"english": "My old jeans still fit", "vadug": [158, 120, 148, 3, 150], "source": "balance_pos_mild", "features": "body_positive,surprise,short"}
+{"english": "Somebody left a nice note on my desk", "vadug": [165, 118, 140, 2, 152], "source": "balance_pos_mild", "features": "social_warmth,workplace,medium"}
+{"english": "The mac and cheese came out perfect", "vadug": [160, 120, 148, 2, 150], "source": "balance_pos_mild", "features": "food,cooking,short"}
+{"english": "I found a comfy spot under the tree to read", "vadug": [160, 100, 142, 1, 150], "source": "balance_pos_mild", "features": "comfort,nature,reading,medium"}
+{"english": "The printer worked on the first try for once", "vadug": [152, 115, 142, 3, 148], "source": "balance_pos_mild", "features": "technology,relief,medium"}
+{"english": "My back doesn't hurt as much today", "vadug": [150, 105, 140, 3, 152], "source": "balance_pos_mild", "features": "health,relief,short"}
+{"english": "The birds are singing outside my window", "vadug": [158, 105, 138, 1, 148], "source": "balance_pos_mild", "features": "nature,peace,short"}
+{"english": "I fixed that squeaky door handle and it's so satisfying", "vadug": [160, 122, 155, 3, 158], "source": "balance_pos_mild", "features": "diy,satisfaction,medium"}
+{"english": "The pizza delivery came early", "vadug": [158, 125, 138, 3, 148], "source": "balance_pos_mild", "features": "food,convenience,short"}
+{"english": "My lotion smells amazing", "vadug": [153, 105, 138, 1, 145], "source": "balance_pos_mild", "features": "daily_pleasure,senses,short"}
+{"english": "Saw a rainbow on the drive home", "vadug": [162, 115, 135, 1, 148], "source": "balance_pos_mild", "features": "nature,beauty,short"}
+{"english": "My kid ate all their vegetables without complaining", "vadug": [163, 118, 150, 3, 158], "source": "balance_pos_mild", "features": "parenting,relief,medium"}
+{"english": "The iced coffee is perfect today", "vadug": [157, 112, 140, 1, 148], "source": "balance_pos_mild", "features": "food,daily_pleasure,short"}
+{"english": "I made it to the gym even though I didn't want to", "vadug": [158, 128, 155, 5, 158], "source": "balance_pos_mild", "features": "discipline,pride,medium"}
+{"english": "The bench outside work has shade in the afternoon", "vadug": [152, 100, 140, 1, 150], "source": "balance_pos_mild", "features": "comfort,workplace,medium"}
+{"english": "I can hear the kids laughing in the other room", "vadug": [168, 108, 142, 1, 155], "source": "balance_pos_mild", "features": "parenting,warmth,medium"}
+{"english": "The laundromat was empty so I got everything done fast", "vadug": [155, 118, 148, 4, 152], "source": "balance_pos_mild", "features": "convenience,efficiency,medium"}
+{"english": "My glasses are clean and I can see everything crisp", "vadug": [152, 108, 142, 1, 148], "source": "balance_pos_mild", "features": "clarity,daily_pleasure,medium"}
+{"english": "Someone brought homemade cookies to the group", "vadug": [165, 125, 138, 2, 150], "source": "balance_pos_mild", "features": "food,social_warmth,group_home,medium"}
+{"english": "The dryer was open when I got there", "vadug": [150, 108, 140, 2, 148], "source": "balance_pos_mild", "features": "convenience,small_win,short"}
+{"english": "I untangled my headphones on the first try", "vadug": [152, 118, 145, 2, 148], "source": "balance_pos_mild", "features": "small_win,patience,medium"}
+{"english": "The bath water was the perfect temperature", "vadug": [162, 100, 142, 1, 148], "source": "balance_pos_mild", "features": "comfort,physical,medium"}
+{"english": "My shoes are dry from yesterday", "vadug": [148, 105, 140, 2, 150], "source": "balance_pos_mild", "features": "small_win,daily,short"}
+{"english": "I had exact change for the vending machine", "vadug": [150, 112, 142, 2, 148], "source": "balance_pos_mild", "features": "convenience,small_win,medium"}
+{"english": "The stars are real clear tonight", "vadug": [160, 105, 135, 1, 148], "source": "balance_pos_mild", "features": "nature,beauty,peace,short"}
+{"english": "My soup turned out better than I expected", "vadug": [157, 118, 148, 2, 152], "source": "balance_pos_mild", "features": "cooking,surprise,medium"}
+{"english": "The checkout lady was real friendly", "vadug": [155, 112, 138, 2, 150], "source": "balance_pos_mild", "features": "social_warmth,daily_interaction,short"}
+{"english": "I got the window seat on the bus", "vadug": [153, 108, 140, 2, 148], "source": "balance_pos_mild", "features": "comfort,small_win,short"}
+{"english": "Everything in the fridge is still good, nothing expired", "vadug": [150, 108, 145, 2, 152], "source": "balance_pos_mild", "features": "food,relief,medium"}
+{"english": "My phone case protects this thing real well", "vadug": [150, 105, 142, 1, 150], "source": "balance_pos_mild", "features": "satisfaction,practical,medium"}
+{"english": "The microwave heated it evenly for once", "vadug": [148, 108, 140, 2, 148], "source": "balance_pos_mild", "features": "food,technology,short"}
+{"english": "I slept the whole night without waking up", "vadug": [162, 100, 148, 1, 152], "source": "balance_pos_mild", "features": "rest,health,medium"}
+{"english": "The porch light makes the front of the house look nice", "vadug": [155, 105, 140, 1, 152], "source": "balance_pos_mild", "features": "home,ambiance,medium"}
+{"english": "My headphones still had battery left", "vadug": [150, 108, 140, 2, 148], "source": "balance_pos_mild", "features": "technology,relief,short"}
+{"english": "The ice cream truck came down our street", "vadug": [165, 132, 135, 3, 145], "source": "balance_pos_mild", "features": "nostalgia,food,joy,short"}
+{"english": "I figured out that recipe without looking it up", "vadug": [160, 122, 155, 3, 155], "source": "balance_pos_mild", "features": "cooking,competence,medium"}
+{"english": "Somebody cleaned the break room and it looks great", "vadug": [155, 108, 140, 2, 152], "source": "balance_pos_mild", "features": "workplace,appreciation,medium"}
+{"english": "The towels are warm from the dryer", "vadug": [160, 100, 140, 1, 148], "source": "balance_pos_mild", "features": "comfort,physical,short"}
+{"english": "My schedule is clear tomorrow and I can't wait", "vadug": [165, 122, 148, 5, 150], "source": "balance_pos_mild", "features": "freedom,anticipation,medium"}
+{"english": "The flowers at the park are blooming", "vadug": [158, 108, 135, 1, 148], "source": "balance_pos_mild", "features": "nature,beauty,short"}
+{"english": "I finally understand how this app works", "vadug": [155, 120, 152, 3, 155], "source": "balance_pos_mild", "features": "learning,competence,medium"}
+{"english": "The fan is making just the right amount of noise", "vadug": [152, 100, 140, 1, 148], "source": "balance_pos_mild", "features": "comfort,ambiance,medium"}
+{"english": "My coworker covered my shift without me having to beg", "vadug": [165, 115, 142, 4, 155], "source": "balance_pos_mild", "features": "workplace,social_warmth,relief,medium"}
+{"english": "Got a good deal on gas today", "vadug": [152, 112, 142, 3, 150], "source": "balance_pos_mild", "features": "financial,small_win,short"}
+{"english": "The grass just got mowed and it smells good", "vadug": [155, 105, 138, 1, 148], "source": "balance_pos_mild", "features": "nature,senses,medium"}
+{"english": "My favorite snack was on sale", "vadug": [160, 122, 140, 3, 148], "source": "balance_pos_mild", "features": "food,financial,short"}
+{"english": "I took a really good selfie on the first try", "vadug": [162, 128, 148, 3, 148], "source": "balance_pos_mild", "features": "appearance,confidence,medium"}
+{"english": "The kid said please and thank you without being reminded", "vadug": [170, 118, 150, 2, 160], "source": "balance_pos_mild", "features": "parenting,pride,medium"}
+{"english": "I'm comfortable on this couch and my show is on", "vadug": [162, 100, 142, 1, 148], "source": "balance_pos_mild", "features": "comfort,entertainment,medium"}
+{"english": "The elevator was right there when I needed it", "vadug": [150, 108, 140, 2, 148], "source": "balance_pos_mild", "features": "convenience,timing,medium"}
+{"english": "I actually finished the book I was reading", "vadug": [160, 118, 152, 3, 158], "source": "balance_pos_mild", "features": "reading,accomplishment,medium"}
+{"english": "My old recipe still tastes exactly the same", "vadug": [162, 112, 145, 1, 155], "source": "balance_pos_mild", "features": "cooking,nostalgia,medium"}
+{"english": "I got the last one on the shelf", "vadug": [158, 125, 142, 3, 148], "source": "balance_pos_mild", "features": "shopping,luck,short"}
+{"english": "The morning air feels crisp and clean", "vadug": [157, 108, 140, 1, 150], "source": "balance_pos_mild", "features": "nature,morning,senses,short"}
+{"english": "I'm proud of myself for not snoozing the alarm", "vadug": [155, 118, 155, 3, 158], "source": "balance_pos_mild", "features": "discipline,self_pride,medium"}
+{"english": "I genuinely had a great time today and I'm really grateful for the people in my life who showed up and made it happen", "vadug": [210, 145, 150, 5, 170], "source": "balance_pos_mild", "features": "gratitude,connection,genuine_happiness,long"}
+{"english": "I got the promotion and I honestly can't believe it", "vadug": [215, 165, 162, 8, 175], "source": "balance_pos_mild", "features": "career,pride,achievement,medium"}
+{"english": "My kid made honor roll and I'm so proud I could cry", "vadug": [218, 160, 158, 6, 180], "source": "balance_pos_mild", "features": "parenting,pride,achievement,medium"}
+{"english": "The doctor said the test results came back clear", "vadug": [205, 140, 155, 10, 185], "source": "balance_pos_mild", "features": "health,relief,good_news,medium"}
+{"english": "I'm genuinely happy today and I don't even know why", "vadug": [195, 135, 148, 3, 168], "source": "balance_pos_mild", "features": "happiness,spontaneous,medium"}
+{"english": "She said yes when I asked her out", "vadug": [215, 168, 155, 8, 170], "source": "balance_pos_mild", "features": "romance,excitement,connection,short"}
+{"english": "I passed the certification exam on the first try", "vadug": [210, 158, 165, 5, 178], "source": "balance_pos_mild", "features": "achievement,pride,competence,medium"}
+{"english": "We had the best conversation tonight and I feel so understood", "vadug": [208, 142, 155, 4, 175], "source": "balance_pos_mild", "features": "connection,depth,understood,medium"}
+{"english": "I'm thankful for you being in my life honestly", "vadug": [200, 130, 145, 3, 172], "source": "balance_pos_mild", "features": "gratitude,relationship,genuine,medium"}
+{"english": "My therapist said I've made real progress and it felt good to hear", "vadug": [205, 138, 158, 5, 178], "source": "balance_pos_mild", "features": "therapy,progress,validation,long"}
+{"english": "I finished the whole program and I'm certified now", "vadug": [212, 150, 168, 5, 180], "source": "balance_pos_mild", "features": "achievement,completion,pride,medium"}
+{"english": "Today was genuinely one of the best days I've had in a long time", "vadug": [215, 148, 155, 3, 172], "source": "balance_pos_mild", "features": "happiness,reflection,genuine,long"}
+{"english": "I ran my first full mile without stopping", "vadug": [205, 158, 165, 5, 175], "source": "balance_pos_mild", "features": "fitness,achievement,personal_best,medium"}
+{"english": "My daughter told me she's proud of me and I almost lost it", "vadug": [218, 155, 148, 5, 185], "source": "balance_pos_mild", "features": "family,pride,emotional,medium"}
+{"english": "I got the apartment and I move in next month", "vadug": [210, 160, 162, 10, 178], "source": "balance_pos_mild", "features": "housing,achievement,independence,medium"}
+{"english": "We're expecting a baby and everything looks healthy", "vadug": [218, 165, 155, 12, 190], "source": "balance_pos_mild", "features": "family,joy,health,medium"}
+{"english": "I finally learned how to drive and got my license", "vadug": [212, 155, 168, 5, 178], "source": "balance_pos_mild", "features": "achievement,independence,milestone,medium"}
+{"english": "The whole family got together and nobody argued", "vadug": [200, 135, 150, 4, 175], "source": "balance_pos_mild", "features": "family,harmony,relief,medium"}
+{"english": "I just paid off my credit card completely", "vadug": [210, 148, 170, 5, 182], "source": "balance_pos_mild", "features": "financial,achievement,freedom,medium"}
+{"english": "Someone I haven't seen in years remembered my birthday", "vadug": [198, 140, 145, 3, 168], "source": "balance_pos_mild", "features": "connection,surprise,valued,medium"}
+{"english": "I cooked a full Thanksgiving dinner by myself and it turned out amazing", "vadug": [208, 150, 165, 5, 178], "source": "balance_pos_mild", "features": "cooking,achievement,pride,long"}
+{"english": "My best friend flew in to surprise me", "vadug": [215, 165, 148, 5, 170], "source": "balance_pos_mild", "features": "friendship,surprise,joy,short"}
+{"english": "I got accepted into the program I applied for", "vadug": [212, 158, 160, 8, 178], "source": "balance_pos_mild", "features": "achievement,education,validation,medium"}
+{"english": "My son read his first book all by himself", "vadug": [210, 148, 155, 3, 178], "source": "balance_pos_mild", "features": "parenting,pride,milestone,medium"}
+{"english": "I'm grateful for how far I've come from where I started", "vadug": [200, 132, 158, 3, 178], "source": "balance_pos_mild", "features": "gratitude,growth,reflection,medium"}
+{"english": "We went on the best date I've had in years", "vadug": [212, 152, 150, 4, 170], "source": "balance_pos_mild", "features": "romance,happiness,connection,medium"}
+{"english": "I hit six months clean today", "vadug": [208, 142, 168, 5, 185], "source": "balance_pos_mild", "features": "recovery,milestone,pride,short"}
+{"english": "My mentor wrote me the most thoughtful recommendation letter", "vadug": [205, 138, 152, 4, 175], "source": "balance_pos_mild", "features": "mentorship,gratitude,valued,medium"}
+{"english": "The team won and we all went out to celebrate", "vadug": [210, 160, 155, 5, 168], "source": "balance_pos_mild", "features": "sports,celebration,social,medium"}
+{"english": "I'm really proud of how I handled that situation", "vadug": [195, 132, 165, 3, 175], "source": "balance_pos_mild", "features": "self_pride,maturity,reflection,medium"}
+{"english": "My grandma said I look healthy and happy and it meant the world", "vadug": [208, 135, 148, 3, 180], "source": "balance_pos_mild", "features": "family,validation,warmth,long"}
+{"english": "I learned how to change my own tire and I feel like a boss", "vadug": [198, 145, 168, 4, 172], "source": "balance_pos_mild", "features": "competence,independence,learning,medium"}
+{"english": "The surprise party actually worked and she was so happy", "vadug": [212, 158, 155, 5, 170], "source": "balance_pos_mild", "features": "celebration,joy,social,medium"}
+{"english": "I forgave them and it feels like a weight lifted", "vadug": [195, 128, 155, 5, 180], "source": "balance_pos_mild", "features": "forgiveness,relief,growth,medium"}
+{"english": "Somebody donated all the stuff we needed for the kids", "vadug": [205, 140, 148, 4, 175], "source": "balance_pos_mild", "features": "generosity,gratitude,community,medium"}
+{"english": "I finished writing the whole paper and it's actually good", "vadug": [200, 145, 165, 5, 178], "source": "balance_pos_mild", "features": "achievement,academic,confidence,medium"}
+{"english": "My blood pressure is back to normal and the doctor is happy", "vadug": [203, 135, 155, 8, 182], "source": "balance_pos_mild", "features": "health,relief,progress,medium"}
+{"english": "The whole group showed up for my birthday and it was exactly what I needed", "vadug": [215, 152, 150, 4, 172], "source": "balance_pos_mild", "features": "birthday,connection,valued,long"}
+{"english": "I can finally do a pull-up and it took months of work", "vadug": [205, 155, 168, 4, 175], "source": "balance_pos_mild", "features": "fitness,achievement,perseverance,medium"}
+{"english": "My kid told his teacher he wants to be like me when he grows up", "vadug": [218, 148, 152, 3, 180], "source": "balance_pos_mild", "features": "parenting,pride,emotional,long"}
+{"english": "I saved enough for the deposit and signed the lease today", "vadug": [210, 152, 165, 8, 180], "source": "balance_pos_mild", "features": "financial,achievement,housing,medium"}
+{"english": "I'm getting better at this and I can actually see it now", "vadug": [195, 138, 158, 4, 172], "source": "balance_pos_mild", "features": "progress,self_awareness,growth,medium"}
+{"english": "The interview went really well and they want me back for a second round", "vadug": [205, 155, 158, 10, 175], "source": "balance_pos_mild", "features": "career,hope,validation,long"}
+{"english": "I taught myself how to sew and made my first thing", "vadug": [198, 142, 162, 3, 172], "source": "balance_pos_mild", "features": "learning,creativity,achievement,medium"}
+{"english": "My sister called just to say she loves me", "vadug": [210, 135, 148, 2, 175], "source": "balance_pos_mild", "features": "family,love,connection,short"}
+{"english": "I'm one year sober today and I never thought I'd get here", "vadug": [215, 148, 170, 5, 192], "source": "balance_pos_mild", "features": "recovery,milestone,pride,gratitude,medium"}
+{"english": "Got the callback and they're offering me the job", "vadug": [215, 165, 162, 10, 178], "source": "balance_pos_mild", "features": "career,achievement,excitement,medium"}
+{"english": "My foster kid called me mom for the first time", "vadug": [218, 155, 148, 3, 190], "source": "balance_pos_mild", "features": "family,foster_care,emotional,milestone,medium"}
+{"english": "I feel seen and appreciated and it's a good feeling", "vadug": [200, 130, 150, 3, 172], "source": "balance_pos_mild", "features": "validation,connection,emotional,medium"}
+{"english": "The whole project came together and the client loved it", "vadug": [210, 152, 165, 5, 175], "source": "balance_pos_mild", "features": "career,achievement,validation,medium"}
+{"english": "I'm actually looking forward to tomorrow for the first time in a while", "vadug": [195, 132, 150, 5, 170], "source": "balance_pos_mild", "features": "hope,anticipation,progress,long"}
+{"english": "My mom said she's proud of me and she doesn't say that often", "vadug": [215, 145, 150, 3, 185], "source": "balance_pos_mild", "features": "family,validation,emotional,medium"}
+{"english": "I helped someone today and it made me feel really good about myself", "vadug": [200, 138, 158, 3, 175], "source": "balance_pos_mild", "features": "altruism,self_worth,connection,long"}
+{"english": "We got the grant funding and the program can continue", "vadug": [208, 152, 160, 8, 180], "source": "balance_pos_mild", "features": "career,achievement,relief,medium"}
+{"english": "I stood up for myself and it worked out", "vadug": [198, 142, 168, 5, 175], "source": "balance_pos_mild", "features": "assertiveness,pride,growth,medium"}
+{"english": "My kid got into the school we wanted", "vadug": [212, 155, 158, 8, 178], "source": "balance_pos_mild", "features": "parenting,achievement,relief,short"}
+{"english": "I can see my abs for the first time ever", "vadug": [205, 155, 165, 3, 170], "source": "balance_pos_mild", "features": "fitness,body_positive,achievement,medium"}
+{"english": "They threw me a going away party and I didn't expect it at all", "vadug": [210, 155, 145, 4, 172], "source": "balance_pos_mild", "features": "surprise,social,valued,medium"}
+{"english": "I'm grateful for second chances because this one changed my life", "vadug": [205, 138, 155, 4, 185], "source": "balance_pos_mild", "features": "gratitude,growth,reflection,medium"}
+{"english": "My portfolio looks really strong and I'm confident about it", "vadug": [198, 142, 165, 5, 175], "source": "balance_pos_mild", "features": "career,confidence,pride,medium"}
+{"english": "The kids all passed their tests and I'm so proud of every one of them", "vadug": [215, 150, 155, 4, 178], "source": "balance_pos_mild", "features": "teaching,pride,group_home,long"}
+{"english": "I made a friend at work and it makes the shifts way better", "vadug": [195, 135, 148, 3, 168], "source": "balance_pos_mild", "features": "friendship,workplace,connection,medium"}
+{"english": "Everything I planted in the garden actually grew", "vadug": [200, 138, 155, 2, 172], "source": "balance_pos_mild", "features": "gardening,achievement,nurturing,medium"}
+{"english": "I got a perfect score on the practice test", "vadug": [210, 158, 168, 5, 175], "source": "balance_pos_mild", "features": "academic,achievement,confidence,medium"}
+{"english": "My partner planned the whole thing and it was perfect", "vadug": [215, 148, 148, 3, 172], "source": "balance_pos_mild", "features": "romance,gratitude,loved,medium"}
+{"english": "I finally beat my personal record at the gym", "vadug": [205, 160, 168, 5, 172], "source": "balance_pos_mild", "features": "fitness,personal_best,pride,medium"}
+{"english": "Therapy is actually working and I can feel the difference", "vadug": [198, 135, 155, 4, 178], "source": "balance_pos_mild", "features": "therapy,progress,hope,medium"}
+{"english": "I built that shelf from scratch and it looks professional", "vadug": [200, 145, 168, 3, 175], "source": "balance_pos_mild", "features": "diy,pride,competence,medium"}
+{"english": "My whole family is healthy and together and that's all I need", "vadug": [210, 128, 152, 2, 185], "source": "balance_pos_mild", "features": "family,gratitude,contentment,medium"}
+{"english": "I got the highest feedback score on the team this month", "vadug": [208, 152, 165, 5, 175], "source": "balance_pos_mild", "features": "career,achievement,recognition,medium"}
+{"english": "Someone I helped years ago reached out to thank me", "vadug": [205, 135, 150, 2, 178], "source": "balance_pos_mild", "features": "gratitude,legacy,connection,medium"}
+{"english": "I walked across that stage and got my diploma", "vadug": [218, 160, 165, 5, 185], "source": "balance_pos_mild", "features": "graduation,achievement,milestone,medium"}
+{"english": "My anxiety has been way lower and I'm actually enjoying things again", "vadug": [195, 128, 155, 4, 175], "source": "balance_pos_mild", "features": "mental_health,progress,recovery,long"}
+{"english": "I taught my little brother to ride a bike and his face was priceless", "vadug": [212, 150, 155, 3, 172], "source": "balance_pos_mild", "features": "family,teaching,joy,long"}
+{"english": "Got my first paycheck from the new job and it's more than I expected", "vadug": [210, 155, 162, 5, 178], "source": "balance_pos_mild", "features": "financial,career,surprise,long"}
+{"english": "I looked in the mirror and actually liked what I saw today", "vadug": [195, 130, 155, 3, 172], "source": "balance_pos_mild", "features": "self_acceptance,body_positive,growth,medium"}
+{"english": "The community came together and raised everything we needed", "vadug": [208, 145, 152, 5, 180], "source": "balance_pos_mild", "features": "community,generosity,gratitude,medium"}
+{"english": "I can finally play that song all the way through on guitar", "vadug": [205, 148, 165, 3, 172], "source": "balance_pos_mild", "features": "music,achievement,learning,medium"}
+{"english": "My kid stood up for another kid at school and I'm so proud", "vadug": [215, 148, 158, 3, 180], "source": "balance_pos_mild", "features": "parenting,pride,moral_development,medium"}
+{"english": "The adoption went through and it's official", "vadug": [219, 165, 160, 5, 192], "source": "balance_pos_mild", "features": "family,milestone,joy,deep_meaning,short"}
+{"english": "I just realized I haven't had a panic attack in three months", "vadug": [198, 128, 158, 4, 178], "source": "balance_pos_mild", "features": "mental_health,progress,realization,medium"}
+{"english": "My coworkers got me a card signed by everyone when I hit my anniversary", "vadug": [205, 140, 148, 3, 175], "source": "balance_pos_mild", "features": "workplace,valued,connection,long"}
+{"english": "I made a decision I was scared to make and it was the right one", "vadug": [200, 142, 168, 5, 178], "source": "balance_pos_mild", "features": "courage,growth,validation,long"}
+{"english": "I finally asked for help and people actually showed up for me", "vadug": [205, 140, 152, 5, 178], "source": "balance_pos_mild", "features": "vulnerability,connection,growth,medium"}
+{"english": "My savings account hit a number I never thought I'd see", "vadug": [210, 148, 168, 4, 182], "source": "balance_pos_mild", "features": "financial,achievement,pride,medium"}
+{"english": "The kids made me breakfast in bed for Mother's Day", "vadug": [215, 145, 148, 2, 175], "source": "balance_pos_mild", "features": "parenting,love,surprise,medium"}
+{"english": "I passed the background check and I start Monday", "vadug": [208, 155, 162, 10, 180], "source": "balance_pos_mild", "features": "career,relief,fresh_start,medium"}
+{"english": "My counselor said I'm ready to transition to independent living", "vadug": [205, 145, 165, 8, 182], "source": "balance_pos_mild", "features": "independence,milestone,growth,medium"}
+{"english": "I held a boundary and felt good about it instead of guilty", "vadug": [195, 132, 168, 4, 178], "source": "balance_pos_mild", "features": "boundaries,growth,self_respect,medium"}
+{"english": "We won the league championship and the whole team went crazy", "vadug": [218, 168, 160, 5, 168], "source": "balance_pos_mild", "features": "sports,celebration,team,medium"}
+{"english": "I wrote a letter to my younger self and cried happy tears", "vadug": [198, 138, 155, 3, 185], "source": "balance_pos_mild", "features": "reflection,healing,emotional,medium"}
+{"english": "My credit score went up forty points this quarter", "vadug": [203, 142, 165, 5, 178], "source": "balance_pos_mild", "features": "financial,progress,pride,medium"}

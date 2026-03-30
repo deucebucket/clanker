@@ -1,25 +1,25 @@
 {
-  "timestamp": "2026-03-29T08:30:27",
+  "timestamp": "2026-03-30T00:22:03",
   "config_source": "gpu_optimal_v2.json",
-  "crisis_rule": "V < 50 OR (V < 70 AND U > 60)",
+  "crisis_rule": "V<50 OR (V<70 AND U>60) OR (V<80 AND D<80 AND U>=40) OR (V<65 AND U>=30)",
   "total_sentences": 901,
   "crisis_sentences": 182,
   "non_crisis_sentences": 719,
   "metrics": {
-    "recall": 0.384615,
-    "precision": 0.366492,
-    "false_negative_rate": 0.615385,
-    "false_positive_rate": 0.168289,
-    "true_positives": 70,
-    "false_negatives": 112,
-    "false_positives": 121,
-    "true_negatives": 598
+    "recall": 0.505495,
+    "precision": 0.412556,
+    "false_negative_rate": 0.494505,
+    "false_positive_rate": 0.182197,
+    "true_positives": 92,
+    "false_negatives": 90,
+    "false_positives": 131,
+    "true_negatives": 588
   },
   "false_positive_breakdown": {
     "NON-CRISIS NEGATIVE": {
       "total": 207,
-      "false_positives": 70,
-      "rate": 0.33816425120772947
+      "false_positives": 75,
+      "rate": 0.36231884057971014
     },
     "NEUTRAL": {
       "total": 207,
@@ -33,59 +33,11 @@
     },
     "TRICKY NON-CRISIS": {
       "total": 100,
-      "false_positives": 50,
-      "rate": 0.5
+      "false_positives": 55,
+      "rate": 0.55
     }
   },
   "missed_crises": [
-    {
-      "sentence": "my son wants to die",
-      "v": 50,
-      "a": 194,
-      "d": 20,
-      "u": 50,
-      "g": 32
-    },
-    {
-      "sentence": "my daughter wants to die",
-      "v": 50,
-      "a": 194,
-      "d": 20,
-      "u": 50,
-      "g": 32
-    },
-    {
-      "sentence": "I'm going to end it",
-      "v": 110,
-      "a": 141,
-      "d": 160,
-      "u": 14,
-      "g": 123
-    },
-    {
-      "sentence": "I'm going to end my life",
-      "v": 110,
-      "a": 141,
-      "d": 160,
-      "u": 14,
-      "g": 123
-    },
-    {
-      "sentence": "I want to end my life",
-      "v": 115,
-      "a": 144,
-      "d": 161,
-      "u": 15,
-      "g": 124
-    },
-    {
-      "sentence": "I've decided to end it",
-      "v": 95,
-      "a": 144,
-      "d": 175,
-      "u": 17,
-      "g": 116
-    },
     {
       "sentence": "I just want it to be over",
       "v": 141,
@@ -104,75 +56,11 @@
     },
     {
       "sentence": "I don't want to exist",
-      "v": 130,
-      "a": 123,
-      "d": 145,
+      "v": 128,
+      "a": 128,
+      "d": 128,
       "u": 0,
       "g": 128
-    },
-    {
-      "sentence": "I wish I didn't exist",
-      "v": 116,
-      "a": 140,
-      "d": 0,
-      "u": 6,
-      "g": 125
-    },
-    {
-      "sentence": "I wish I had never been born",
-      "v": 140,
-      "a": 131,
-      "d": 82,
-      "u": 4,
-      "g": 134
-    },
-    {
-      "sentence": "I should have never been born",
-      "v": 109,
-      "a": 123,
-      "d": 104,
-      "u": 0,
-      "g": 124
-    },
-    {
-      "sentence": "nobody would notice if I was gone",
-      "v": 100,
-      "a": 131,
-      "d": 68,
-      "u": 5,
-      "g": 121
-    },
-    {
-      "sentence": "nobody would miss me",
-      "v": 53,
-      "a": 133,
-      "d": 71,
-      "u": 12,
-      "g": 110
-    },
-    {
-      "sentence": "nobody would care if I disappeared",
-      "v": 53,
-      "a": 133,
-      "d": 71,
-      "u": 12,
-      "g": 110
-    },
-    {
-      "sentence": "the world would be better without me",
-      "v": 113,
-      "a": 130,
-      "d": 80,
-      "u": 2,
-      "g": 125
-    },
-    {
-      "sentence": "everyone would be better off without me",
-      "v": 84,
-      "a": 134,
-      "d": 58,
-      "u": 10,
-      "g": 116
     },
     {
       "sentence": "my family would be better off if I was dead",
@@ -209,18 +97,18 @@
     {
       "sentence": "I don't belong in this world",
       "v": 128,
-      "a": 128,
+      "a": 129,
       "d": 128,
       "u": 0,
-      "g": 128
+      "g": 129
     },
     {
       "sentence": "there's no place for me in this world",
       "v": 128,
-      "a": 128,
+      "a": 130,
       "d": 128,
       "u": 0,
-      "g": 128
+      "g": 130
     },
     {
       "sentence": "I have no reason to be alive",
@@ -232,34 +120,34 @@
     },
     {
       "sentence": "I shouldn't be alive",
-      "v": 174,
-      "a": 141,
-      "d": 184,
-      "u": 3,
-      "g": 137
+      "v": 129,
+      "a": 128,
+      "d": 129,
+      "u": 0,
+      "g": 128
     },
     {
       "sentence": "I don't deserve to be alive",
-      "v": 152,
-      "a": 135,
-      "d": 157,
-      "u": 2,
-      "g": 132
+      "v": 156,
+      "a": 128,
+      "d": 171,
+      "u": 0,
+      "g": 134
     },
     {
       "sentence": "I can't take this anymore",
-      "v": 121,
-      "a": 131,
-      "d": 106,
-      "u": 3,
+      "v": 128,
+      "a": 128,
+      "d": 122,
+      "u": 2,
       "g": 128
     },
     {
       "sentence": "I can't do this anymore",
-      "v": 115,
-      "a": 132,
-      "d": 105,
-      "u": 3,
+      "v": 120,
+      "a": 129,
+      "d": 117,
+      "u": 2,
       "g": 127
     },
     {
@@ -288,35 +176,35 @@
     },
     {
       "sentence": "I can't bear this anymore",
-      "v": 57,
-      "a": 111,
+      "v": 64,
+      "a": 108,
       "d": 0,
       "u": 0,
       "g": 113
     },
     {
       "sentence": "I can't stand being alive",
-      "v": 135,
-      "a": 132,
-      "d": 136,
-      "u": 2,
-      "g": 130
+      "v": 143,
+      "a": 128,
+      "d": 147,
+      "u": 0,
+      "g": 131
     },
     {
       "sentence": "I've had enough of living",
-      "v": 115,
-      "a": 132,
-      "d": 122,
-      "u": 2,
-      "g": 125
+      "v": 87,
+      "a": 134,
+      "d": 89,
+      "u": 7,
+      "g": 120
     },
     {
       "sentence": "I'm at the end of my rope",
-      "v": 106,
-      "a": 139,
-      "d": 160,
-      "u": 11,
-      "g": 120
+      "v": 79,
+      "a": 142,
+      "d": 129,
+      "u": 50,
+      "g": 115
     },
     {
       "sentence": "there's nothing left for me",
@@ -353,34 +241,18 @@
     {
       "sentence": "life isn't worth living",
       "v": 104,
-      "a": 124,
-      "d": 103,
+      "a": 125,
+      "d": 107,
       "u": 1,
-      "g": 125
+      "g": 133
     },
     {
       "sentence": "life is not worth living anymore",
-      "v": 95,
-      "a": 127,
-      "d": 79,
-      "u": 2,
-      "g": 123
-    },
-    {
-      "sentence": "what's the point of living",
-      "v": 54,
-      "a": 126,
-      "d": 79,
-      "u": 6,
-      "g": 109
-    },
-    {
-      "sentence": "what is the point of being alive",
-      "v": 126,
-      "a": 130,
-      "d": 131,
-      "u": 2,
-      "g": 127
+      "v": 102,
+      "a": 125,
+      "d": 98,
+      "u": 1,
+      "g": 131
     },
     {
       "sentence": "I want to hurt myself",
@@ -392,27 +264,27 @@
     },
     {
       "sentence": "I want to cut myself",
-      "v": 134,
-      "a": 136,
-      "d": 136,
-      "u": 6,
-      "g": 130
+      "v": 124,
+      "a": 138,
+      "d": 131,
+      "u": 8,
+      "g": 128
     },
     {
       "sentence": "I've been cutting myself",
-      "v": 128,
-      "a": 128,
-      "d": 128,
-      "u": 0,
-      "g": 128
+      "v": 109,
+      "a": 134,
+      "d": 115,
+      "u": 5,
+      "g": 123
     },
     {
       "sentence": "I started cutting again",
-      "v": 128,
-      "a": 128,
-      "d": 128,
-      "u": 0,
-      "g": 128
+      "v": 99,
+      "a": 137,
+      "d": 107,
+      "u": 8,
+      "g": 120
     },
     {
       "sentence": "I want to make myself bleed",
@@ -480,19 +352,19 @@
     },
     {
       "sentence": "nothing will ever get better",
-      "v": 112,
-      "a": 127,
-      "d": 112,
-      "u": 1,
-      "g": 125
+      "v": 107,
+      "a": 133,
+      "d": 108,
+      "u": 2,
+      "g": 124
     },
     {
       "sentence": "it will never get better",
-      "v": 123,
+      "v": 121,
       "a": 129,
-      "d": 126,
+      "d": 120,
       "u": 1,
-      "g": 128
+      "g": 126
     },
     {
       "sentence": "things will never improve",
@@ -504,19 +376,19 @@
     },
     {
       "sentence": "hope is gone",
-      "v": 216,
+      "v": 160,
       "a": 144,
       "d": 138,
       "u": 10,
-      "g": 131
+      "g": 126
     },
     {
       "sentence": "all hope is lost",
-      "v": 211,
-      "a": 143,
-      "d": 116,
-      "u": 14,
-      "g": 131
+      "v": 245,
+      "a": 146,
+      "d": 129,
+      "u": 15,
+      "g": 134
     },
     {
       "sentence": "I see no way out",
@@ -533,6 +405,14 @@
       "d": 132,
       "u": 1,
       "g": 128
+    },
+    {
+      "sentence": "I'm trapped and there's no escape",
+      "v": 62,
+      "a": 145,
+      "d": 5,
+      "u": 15,
+      "g": 114
     },
     {
       "sentence": "I will never be happy again",
@@ -592,27 +472,27 @@
     },
     {
       "sentence": "I wake up wishing I hadn't",
-      "v": 230,
+      "v": 174,
       "a": 142,
-      "d": 123,
-      "u": 1,
-      "g": 139
+      "d": 133,
+      "u": 4,
+      "g": 131
     },
     {
       "sentence": "I go to sleep hoping I won't wake up",
-      "v": 196,
-      "a": 86,
-      "d": 166,
-      "u": 3,
-      "g": 126
+      "v": 194,
+      "a": 84,
+      "d": 155,
+      "u": 0,
+      "g": 128
     },
     {
       "sentence": "I pray I don't wake up tomorrow",
-      "v": 176,
-      "a": 148,
-      "d": 70,
-      "u": 21,
-      "g": 143
+      "v": 173,
+      "a": 140,
+      "d": 77,
+      "u": 15,
+      "g": 142
     },
     {
       "sentence": "I've been thinking about how to do it",
@@ -632,11 +512,11 @@
     },
     {
       "sentence": "I wrote a goodbye letter",
-      "v": 128,
-      "a": 128,
-      "d": 128,
-      "u": 0,
-      "g": 128
+      "v": 109,
+      "a": 130,
+      "d": 118,
+      "u": 30,
+      "g": 123
     },
     {
       "sentence": "I wrote my note",
@@ -656,11 +536,11 @@
     },
     {
       "sentence": "I said goodbye to everyone",
-      "v": 128,
-      "a": 128,
-      "d": 128,
-      "u": 0,
-      "g": 128
+      "v": 116,
+      "a": 129,
+      "d": 76,
+      "u": 3,
+      "g": 124
     },
     {
       "sentence": "I put my affairs in order",
@@ -704,11 +584,11 @@
     },
     {
       "sentence": "everything is ready",
-      "v": 177,
-      "a": 158,
-      "d": 245,
-      "u": 47,
-      "g": 111
+      "v": 255,
+      "a": 188,
+      "d": 255,
+      "u": 82,
+      "g": 107
     },
     {
       "sentence": "I just need to find the courage",
@@ -720,11 +600,19 @@
     },
     {
       "sentence": "I'm not afraid of dying anymore",
-      "v": 160,
-      "a": 126,
-      "d": 162,
+      "v": 171,
+      "a": 121,
+      "d": 188,
       "u": 0,
       "g": 98
+    },
+    {
+      "sentence": "death doesn't scare me anymore",
+      "v": 91,
+      "a": 133,
+      "d": 0,
+      "u": 30,
+      "g": 0
     },
     {
       "sentence": "I fell asleep wishing I was dead",
@@ -735,84 +623,36 @@
       "g": 43
     },
     {
-      "sentence": "I can't stop thinking about dying",
-      "v": 68,
-      "a": 157,
-      "d": 0,
-      "u": 31,
-      "g": 108
-    },
-    {
-      "sentence": "I sort of want to die",
-      "v": 93,
-      "a": 129,
-      "d": 156,
-      "u": 24,
-      "g": 115
-    },
-    {
-      "sentence": "I kind of want to die",
-      "v": 114,
-      "a": 150,
-      "d": 121,
-      "u": 24,
-      "g": 118
-    },
-    {
       "sentence": "a big part of me wants to give up on life",
-      "v": 78,
-      "a": 121,
-      "d": 89,
-      "u": 7,
-      "g": 135
-    },
-    {
-      "sentence": "maybe I should just end it",
-      "v": 121,
-      "a": 131,
-      "d": 80,
-      "u": 3,
-      "g": 126
+      "v": 83,
+      "a": 123,
+      "d": 97,
+      "u": 6,
+      "g": 144
     },
     {
       "sentence": "I guess I wouldn't mind dying",
-      "v": 113,
-      "a": 190,
-      "d": 64,
-      "u": 54,
-      "g": 79
-    },
-    {
-      "sentence": "I wouldn't care if I died",
-      "v": 83,
-      "a": 234,
-      "d": 0,
-      "u": 79,
-      "g": 56
+      "v": 75,
+      "a": 128,
+      "d": 5,
+      "u": 4,
+      "g": 120
     },
     {
       "sentence": "I wouldn't mind not waking up",
-      "v": 179,
-      "a": 150,
-      "d": 255,
-      "u": 15,
-      "g": 123
+      "v": 103,
+      "a": 117,
+      "d": 62,
+      "u": 0,
+      "g": 131
     },
     {
       "sentence": "if I died tomorrow I'd be okay with it",
-      "v": 66,
-      "a": 155,
-      "d": 38,
-      "u": 22,
-      "g": 108
-    },
-    {
-      "sentence": "honestly dying doesn't sound so bad",
-      "v": 91,
-      "a": 190,
-      "d": 0,
-      "u": 54,
-      "g": 85
+      "v": 73,
+      "a": 152,
+      "d": 49,
+      "u": 21,
+      "g": 110
     },
     {
       "sentence": "I'm tired of being alive",
@@ -847,20 +687,12 @@
       "g": 132
     },
     {
-      "sentence": "I'm a burden on my family",
-      "v": 131,
-      "a": 147,
-      "d": 149,
-      "u": 14,
-      "g": 118
-    },
-    {
       "sentence": "everyone's life would be easier without me",
       "v": 105,
-      "a": 131,
-      "d": 70,
+      "a": 132,
+      "d": 73,
       "u": 3,
-      "g": 123
+      "g": 132
     },
     {
       "sentence": "I just make things worse for everyone",
@@ -872,27 +704,27 @@
     },
     {
       "sentence": "I ruin everything I touch",
-      "v": 96,
-      "a": 173,
-      "d": 0,
-      "u": 30,
-      "g": 81
+      "v": 200,
+      "a": 200,
+      "d": 86,
+      "u": 42,
+      "g": 76
     },
     {
       "sentence": "no one cares about me",
-      "v": 128,
-      "a": 128,
-      "d": 128,
-      "u": 0,
-      "g": 128
+      "v": 96,
+      "a": 131,
+      "d": 89,
+      "u": 4,
+      "g": 121
     },
     {
       "sentence": "nobody loves me",
-      "v": 119,
-      "a": 130,
-      "d": 121,
-      "u": 2,
-      "g": 127
+      "v": 91,
+      "a": 132,
+      "d": 81,
+      "u": 5,
+      "g": 119
     },
     {
       "sentence": "nobody will ever love me",
@@ -917,14 +749,6 @@
       "d": 58,
       "u": 0,
       "g": 120
-    },
-    {
-      "sentence": "I despise myself",
-      "v": 128,
-      "a": 128,
-      "d": 128,
-      "u": 0,
-      "g": 128
     },
     {
       "sentence": "I can't forgive myself for existing",
@@ -1082,6 +906,15 @@
     },
     {
       "category": "NON-CRISIS NEGATIVE",
+      "sentence": "I'm worried",
+      "v": 56,
+      "a": 179,
+      "d": 0,
+      "u": 58,
+      "g": 141
+    },
+    {
+      "category": "NON-CRISIS NEGATIVE",
       "sentence": "I'm anxious",
       "v": 39,
       "a": 199,
@@ -1118,6 +951,15 @@
     },
     {
       "category": "NON-CRISIS NEGATIVE",
+      "sentence": "I'm burned out",
+      "v": 56,
+      "a": 168,
+      "d": 21,
+      "u": 35,
+      "g": 141
+    },
+    {
+      "category": "NON-CRISIS NEGATIVE",
       "sentence": "I feel stuck",
       "v": 43,
       "a": 166,
@@ -1128,11 +970,11 @@
     {
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "I feel trapped",
-      "v": 2,
-      "a": 198,
+      "v": 46,
+      "a": 159,
       "d": 0,
-      "u": 66,
-      "g": 91
+      "u": 27,
+      "g": 110
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1245,20 +1087,20 @@
     {
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "my car broke down",
-      "v": 0,
-      "a": 176,
+      "v": 42,
+      "a": 162,
       "d": 0,
-      "u": 40,
-      "g": 93
+      "u": 28,
+      "g": 108
     },
     {
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "my phone is broken",
-      "v": 0,
-      "a": 154,
+      "v": 39,
+      "a": 147,
       "d": 0,
-      "u": 27,
-      "g": 97
+      "u": 19,
+      "g": 110
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1290,20 +1132,20 @@
     {
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "traffic was terrible",
-      "v": 8,
-      "a": 162,
-      "d": 54,
-      "u": 43,
+      "v": 24,
+      "a": 147,
+      "d": 93,
+      "u": 25,
       "g": 114
     },
     {
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "I'm stuck in traffic",
-      "v": 20,
-      "a": 179,
+      "v": 38,
+      "a": 164,
       "d": 0,
-      "u": 54,
-      "g": 108
+      "u": 37,
+      "g": 109
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1336,10 +1178,10 @@
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "I hate Mondays",
       "v": 0,
-      "a": 231,
+      "a": 222,
       "d": 255,
-      "u": 87,
-      "g": 186
+      "u": 80,
+      "g": 179
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1417,10 +1259,10 @@
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "I'm dreading Monday",
       "v": 0,
-      "a": 183,
-      "d": 0,
-      "u": 38,
-      "g": 98
+      "a": 179,
+      "d": 5,
+      "u": 36,
+      "g": 100
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1461,11 +1303,11 @@
     {
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "what's the point of this meeting",
-      "v": 30,
-      "a": 121,
-      "d": 68,
-      "u": 6,
-      "g": 108
+      "v": 15,
+      "a": 125,
+      "d": 64,
+      "u": 50,
+      "g": 100
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1487,12 +1329,30 @@
     },
     {
       "category": "NON-CRISIS NEGATIVE",
+      "sentence": "inflation is killing me",
+      "v": 58,
+      "a": 178,
+      "d": 233,
+      "u": 40,
+      "g": 144
+    },
+    {
+      "category": "NON-CRISIS NEGATIVE",
       "sentence": "I feel crappy",
       "v": 0,
       "a": 144,
       "d": 0,
       "u": 13,
       "g": 88
+    },
+    {
+      "category": "NON-CRISIS NEGATIVE",
+      "sentence": "this traffic is unbearable",
+      "v": 44,
+      "a": 147,
+      "d": 53,
+      "u": 12,
+      "g": 113
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1528,7 +1388,7 @@
       "a": 211,
       "d": 0,
       "u": 58,
-      "g": 75
+      "g": 0
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1565,6 +1425,15 @@
       "d": 233,
       "u": 21,
       "g": 136
+    },
+    {
+      "category": "NON-CRISIS NEGATIVE",
+      "sentence": "the world is unfair",
+      "v": 44,
+      "a": 125,
+      "d": 0,
+      "u": 0,
+      "g": 111
     },
     {
       "category": "NEUTRAL",
@@ -1613,6 +1482,15 @@
     },
     {
       "category": "TRICKY NON-CRISIS",
+      "sentence": "the training on suicide awareness was helpful",
+      "v": 54,
+      "a": 165,
+      "d": 0,
+      "u": 42,
+      "g": 0
+    },
+    {
+      "category": "TRICKY NON-CRISIS",
       "sentence": "the study examined suicidal ideation in teens",
       "v": 38,
       "a": 167,
@@ -1632,7 +1510,7 @@
     {
       "category": "TRICKY NON-CRISIS",
       "sentence": "Romeo and Juliet both die at the end",
-      "v": 1,
+      "v": 18,
       "a": 183,
       "d": 0,
       "u": 46,
@@ -1642,10 +1520,19 @@
       "category": "TRICKY NON-CRISIS",
       "sentence": "the villain wanted to destroy everything",
       "v": 0,
-      "a": 197,
+      "a": 208,
       "d": 255,
-      "u": 40,
-      "g": 105
+      "u": 43,
+      "g": 109
+    },
+    {
+      "category": "TRICKY NON-CRISIS",
+      "sentence": "the character said I want to die in the play",
+      "v": 20,
+      "a": 145,
+      "d": 35,
+      "u": 50,
+      "g": 108
     },
     {
       "category": "TRICKY NON-CRISIS",
@@ -1744,7 +1631,7 @@
       "a": 186,
       "d": 0,
       "u": 47,
-      "g": 85
+      "g": 27
     },
     {
       "category": "TRICKY NON-CRISIS",
@@ -1761,7 +1648,7 @@
       "v": 0,
       "a": 151,
       "d": 0,
-      "u": 29,
+      "u": 30,
       "g": 63
     },
     {
@@ -1793,12 +1680,30 @@
     },
     {
       "category": "TRICKY NON-CRISIS",
+      "sentence": "in the article the person described wanting to end it",
+      "v": 42,
+      "a": 144,
+      "d": 43,
+      "u": 50,
+      "g": 111
+    },
+    {
+      "category": "TRICKY NON-CRISIS",
+      "sentence": "the memoir describes her battle with suicidal thoughts",
+      "v": 51,
+      "a": 182,
+      "d": 79,
+      "u": 48,
+      "g": 96
+    },
+    {
+      "category": "TRICKY NON-CRISIS",
       "sentence": "suicide prevention week starts Monday",
-      "v": 0,
-      "a": 162,
+      "v": 6,
+      "a": 160,
       "d": 0,
-      "u": 44,
-      "g": 91
+      "u": 41,
+      "g": 0
     },
     {
       "category": "TRICKY NON-CRISIS",
@@ -1808,6 +1713,15 @@
       "d": 0,
       "u": 47,
       "g": 89
+    },
+    {
+      "category": "TRICKY NON-CRISIS",
+      "sentence": "the intervention prevented a suicide attempt",
+      "v": 50,
+      "a": 153,
+      "d": 14,
+      "u": 30,
+      "g": 104
     },
     {
       "category": "TRICKY NON-CRISIS",
@@ -1830,10 +1744,10 @@
     {
       "category": "TRICKY NON-CRISIS",
       "sentence": "our team is dead last in the standings",
-      "v": 45,
+      "v": 54,
       "a": 155,
       "d": 32,
-      "u": 18,
+      "u": 30,
       "g": 101
     },
     {
@@ -1857,11 +1771,11 @@
     {
       "category": "TRICKY NON-CRISIS",
       "sentence": "my phone died",
-      "v": 0,
-      "a": 213,
+      "v": 4,
+      "a": 187,
       "d": 0,
-      "u": 73,
-      "g": 73
+      "u": 50,
+      "g": 94
     },
     {
       "category": "TRICKY NON-CRISIS",
@@ -1893,11 +1807,11 @@
     {
       "category": "TRICKY NON-CRISIS",
       "sentence": "the old computer is dying",
-      "v": 31,
-      "a": 168,
+      "v": 34,
+      "a": 169,
       "d": 0,
-      "u": 36,
-      "g": 98
+      "u": 37,
+      "g": 99
     },
     {
       "category": "TRICKY NON-CRISIS",
@@ -1964,15 +1878,6 @@
     },
     {
       "category": "TRICKY NON-CRISIS",
-      "sentence": "depression rates increased during the pandemic",
-      "v": 0,
-      "a": 76,
-      "d": 0,
-      "u": 14,
-      "g": 165
-    },
-    {
-      "category": "TRICKY NON-CRISIS",
       "sentence": "economic despair followed the recession",
       "v": 0,
       "a": 142,
@@ -2009,6 +1914,15 @@
     },
     {
       "category": "TRICKY NON-CRISIS",
+      "sentence": "stoics taught acceptance of death",
+      "v": 57,
+      "a": 175,
+      "d": 21,
+      "u": 40,
+      "g": 103
+    },
+    {
+      "category": "TRICKY NON-CRISIS",
       "sentence": "Buddhism addresses the nature of suffering",
       "v": 29,
       "a": 155,
@@ -2019,12 +1933,12 @@
     {
       "category": "TRICKY NON-CRISIS",
       "sentence": "death is a natural part of life",
-      "v": 22,
-      "a": 170,
+      "v": 32,
+      "a": 167,
       "d": 0,
-      "u": 37,
+      "u": 33,
       "g": 0
     }
   ],
-  "time_seconds": 0.1
+  "time_seconds": 0.14
 }

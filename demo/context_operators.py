@@ -155,6 +155,11 @@ CONTEXT_OPERATORS = {
     "need":         (1.0, "urgency_mult", -5),    # urgency + vulnerability (D-drop), neutral coefficient
     "want":         (1.0, "desire_mult"),          # desire marker, neutral coefficient
 
+    # "Still" = freshness/persistence marker. "I still feel bad" = hasn't resolved.
+    # Counteracts past-tense dampening — this is ONGOING, not a memory.
+    # Slightly amplifies because persistence = the emotion won't let go.
+    "still":        (1.15, "persistence"),         # 1.15x — fresh, ongoing, unresolved
+
     # Glass breakers — "honestly" / "to be honest" = laying it bare
     # Not dishonesty signal — emphasizes what follows. Like "feel" but stronger.
     # Often precedes negative truth ("honestly, this sucks")

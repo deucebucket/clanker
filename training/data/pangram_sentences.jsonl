@@ -1,0 +1,276 @@
+{"english": "I lost my keys again", "vadug": [105, 135, 110, 130, 120], "source": "pangram", "features": "lost,mild_negative,frustration,short"}
+{"english": "We lost the game but played hard", "vadug": [100, 120, 130, 80, 140], "source": "pangram", "features": "lost,disappointment,resilience,medium"}
+{"english": "I lost my mom last year", "vadug": [40, 90, 60, 50, 200], "source": "pangram", "features": "lost,grief,death,heavy_gravity,short"}
+{"english": "I feel so lost right now", "vadug": [60, 110, 50, 150, 170], "source": "pangram", "features": "lost,confused,vulnerable,crisis_adjacent"}
+{"english": "Lost track of time having fun", "vadug": [165, 150, 140, 60, 120], "source": "pangram", "features": "lost,positive_context,carefree,short"}
+{"english": "I love you", "vadug": [210, 160, 145, 60, 200], "source": "pangram", "features": "love,deep_positive,short,high_gravity"}
+{"english": "I love pizza so much", "vadug": [170, 145, 140, 50, 110], "source": "pangram", "features": "love,casual_positive,food,low_gravity"}
+{"english": "I used to love him but not anymore", "vadug": [70, 100, 130, 80, 175], "source": "pangram", "features": "love,past_tense,loss,negation,medium"}
+{"english": "Nobody will ever love me", "vadug": [25, 110, 20, 130, 195], "source": "pangram", "features": "love,nobody,despair,crisis,short"}
+{"english": "Love is just a word people throw around", "vadug": [75, 100, 140, 60, 150], "source": "pangram", "features": "love,cynical,dismissive,medium"}
+{"english": "I hate this", "vadug": [30, 180, 130, 140, 140], "source": "pangram", "features": "hate,anger,short,intense"}
+{"english": "I hate when people lie to me", "vadug": [40, 175, 120, 140, 160], "source": "pangram", "features": "hate,betrayal,trust_issue,medium"}
+{"english": "I don't hate you I'm just disappointed", "vadug": [65, 110, 130, 100, 165], "source": "pangram", "features": "hate,negation,disappointment,medium"}
+{"english": "Hate to say it but you were right", "vadug": [115, 110, 90, 80, 130], "source": "pangram", "features": "hate,idiom,concession,mild_positive,medium"}
+{"english": "I hate myself for what I did", "vadug": [20, 150, 25, 160, 195], "source": "pangram", "features": "hate,self_directed,guilt,crisis,short"}
+{"english": "Can you help me with this", "vadug": [125, 120, 90, 130, 120], "source": "pangram", "features": "help,request,neutral,short"}
+{"english": "I need help", "vadug": [70, 160, 50, 200, 175], "source": "pangram", "features": "help,urgent,vulnerable,crisis,short"}
+{"english": "Thanks for all your help today", "vadug": [170, 130, 135, 40, 150], "source": "pangram", "features": "help,gratitude,positive,medium"}
+{"english": "Nobody can help me anymore", "vadug": [20, 120, 15, 180, 210], "source": "pangram", "features": "help,nobody,hopeless,crisis,short"}
+{"english": "I just want to help you through this", "vadug": [160, 130, 150, 120, 175], "source": "pangram", "features": "help,compassion,supportive,medium"}
+{"english": "I'm alone", "vadug": [50, 100, 60, 130, 170], "source": "pangram", "features": "alone,isolation,sad,short"}
+{"english": "I like being alone sometimes", "vadug": [140, 90, 155, 40, 120], "source": "pangram", "features": "alone,positive_solitude,preference,short"}
+{"english": "I've been alone my whole life and I'm used to it", "vadug": [70, 80, 110, 60, 185], "source": "pangram", "features": "alone,resigned,numb,long"}
+{"english": "Leave me alone", "vadug": [55, 170, 150, 160, 145], "source": "pangram", "features": "alone,anger,boundary,demand,short"}
+{"english": "I don't want to die alone", "vadug": [25, 140, 30, 180, 210], "source": "pangram", "features": "alone,fear,death,crisis,short"}
+{"english": "I'm fine", "vadug": [90, 80, 130, 50, 100], "source": "pangram", "features": "fine,dismissive,masking,short"}
+{"english": "Everything is fine now we worked it out", "vadug": [155, 110, 145, 50, 140], "source": "pangram", "features": "fine,resolution,relief,medium"}
+{"english": "I said I'm fine just drop it", "vadug": [60, 160, 145, 150, 150], "source": "pangram", "features": "fine,anger,masking,defensive,medium"}
+{"english": "The weather is fine today", "vadug": [135, 100, 128, 30, 100], "source": "pangram", "features": "fine,neutral,literal,short"}
+{"english": "I'm okay", "vadug": [115, 90, 125, 50, 110], "source": "pangram", "features": "okay,neutral_low,masking,short"}
+{"english": "Are you okay", "vadug": [130, 130, 130, 140, 140], "source": "pangram", "features": "okay,concern,question,short"}
+{"english": "It's okay to cry", "vadug": [140, 110, 140, 100, 165], "source": "pangram", "features": "okay,permission,supportive,short"}
+{"english": "Yeah I'm okay I guess", "vadug": [95, 85, 100, 60, 120], "source": "pangram", "features": "okay,hedged,uncertain,masking,short"}
+{"english": "That's not okay what they did to you", "vadug": [60, 165, 155, 150, 175], "source": "pangram", "features": "okay,negation,anger_on_behalf,protective,medium"}
+{"english": "I'm sorry", "vadug": [90, 110, 75, 100, 145], "source": "pangram", "features": "sorry,apology,guilt,short"}
+{"english": "I'm sorry for your loss", "vadug": [80, 90, 110, 70, 185], "source": "pangram", "features": "sorry,sympathy,condolence,short"}
+{"english": "Sorry not sorry", "vadug": [100, 150, 175, 80, 110], "source": "pangram", "features": "sorry,sarcasm,defiant,short"}
+{"english": "I'm so sorry I didn't mean to hurt you", "vadug": [65, 140, 55, 160, 180], "source": "pangram", "features": "sorry,remorse,hurt,urgent,medium"}
+{"english": "Stop saying sorry and actually change", "vadug": [55, 175, 160, 170, 165], "source": "pangram", "features": "sorry,frustration,demand,anger,medium"}
+{"english": "That really hurt", "vadug": [35, 150, 50, 140, 170], "source": "pangram", "features": "hurt,pain,emotional,short"}
+{"english": "I didn't mean to hurt anyone", "vadug": [80, 120, 70, 130, 155], "source": "pangram", "features": "hurt,regret,negation,medium"}
+{"english": "My back hurts from work", "vadug": [95, 110, 110, 100, 115], "source": "pangram", "features": "hurt,physical,mild_negative,short"}
+{"english": "You can't hurt me anymore", "vadug": [90, 145, 170, 120, 165], "source": "pangram", "features": "hurt,defiance,boundary,empowerment,short"}
+{"english": "I keep hurting the people I love the most and I don't know how to stop", "vadug": [25, 130, 25, 175, 205], "source": "pangram", "features": "hurt,love,self_blame,crisis,long"}
+{"english": "I'm scared", "vadug": [40, 170, 30, 175, 170], "source": "pangram", "features": "scared,fear,vulnerable,short"}
+{"english": "I'm scared of losing you", "vadug": [55, 165, 40, 180, 190], "source": "pangram", "features": "scared,fear,attachment,losing,short"}
+{"english": "Don't be scared it's just a movie", "vadug": [140, 120, 150, 60, 100], "source": "pangram", "features": "scared,reassurance,dismissive,short"}
+{"english": "I'm not scared anymore", "vadug": [145, 130, 165, 80, 150], "source": "pangram", "features": "scared,negation,courage,growth,short"}
+{"english": "I'm scared to tell anyone what happened to me in that house", "vadug": [25, 155, 20, 190, 210], "source": "pangram", "features": "scared,trauma,secret,crisis,long"}
+{"english": "I'm happy for you", "vadug": [160, 140, 130, 40, 140], "source": "pangram", "features": "happy,genuine,supportive,short"}
+{"english": "I haven't been happy in years", "vadug": [25, 95, 45, 130, 195], "source": "pangram", "features": "happy,negation,depression,heavy,short"}
+{"english": "Oh yeah I'm so happy for you", "vadug": [55, 140, 140, 80, 130], "source": "pangram", "features": "happy,sarcasm,jealousy,medium"}
+{"english": "This makes me so happy I could cry", "vadug": [215, 185, 140, 50, 180], "source": "pangram", "features": "happy,ecstatic,overwhelmed,medium"}
+{"english": "I just want to be happy is that too much to ask", "vadug": [50, 120, 55, 150, 175], "source": "pangram", "features": "happy,longing,despair,medium"}
+{"english": "I'm sad", "vadug": [50, 90, 70, 80, 145], "source": "pangram", "features": "sad,simple,low_energy,short"}
+{"english": "That's so sad what happened to them", "vadug": [60, 120, 110, 100, 160], "source": "pangram", "features": "sad,empathy,other_directed,medium"}
+{"english": "I'm not even sad anymore just numb", "vadug": [45, 50, 70, 90, 175], "source": "pangram", "features": "sad,numb,dissociation,medium"}
+{"english": "Why am I always so sad", "vadug": [35, 110, 40, 140, 175], "source": "pangram", "features": "sad,always,why,chronic,short"}
+{"english": "I'm so angry right now", "vadug": [30, 210, 155, 170, 160], "source": "pangram", "features": "angry,rage,high_arousal,short"}
+{"english": "Don't make me angry", "vadug": [70, 160, 155, 150, 145], "source": "pangram", "features": "angry,warning,threat,short"}
+{"english": "I'm angry at myself for trusting them", "vadug": [35, 175, 80, 155, 170], "source": "pangram", "features": "angry,self_directed,trust,betrayal,medium"}
+{"english": "She's angry but she'll get over it", "vadug": [105, 120, 140, 80, 120], "source": "pangram", "features": "angry,dismissive,other_directed,medium"}
+{"english": "I'm tired", "vadug": [80, 50, 75, 70, 130], "source": "pangram", "features": "tired,fatigue,low_energy,short"}
+{"english": "I'm tired of fighting", "vadug": [50, 65, 45, 100, 170], "source": "pangram", "features": "tired,exhaustion,giving_up,short"}
+{"english": "I'm so tired of being strong for everyone else", "vadug": [40, 80, 35, 140, 185], "source": "pangram", "features": "tired,burnout,caretaker_fatigue,medium"}
+{"english": "Just tired from the gym", "vadug": [120, 70, 130, 40, 110], "source": "pangram", "features": "tired,physical,neutral,short"}
+{"english": "I'm tired of your excuses", "vadug": [45, 165, 155, 160, 155], "source": "pangram", "features": "tired,anger,frustration,accusation,short"}
+{"english": "I feel sick", "vadug": [65, 110, 70, 130, 130], "source": "pangram", "features": "sick,physical,discomfort,short"}
+{"english": "I'm sick of this", "vadug": [40, 175, 145, 165, 150], "source": "pangram", "features": "sick,idiom,anger,frustration,short"}
+{"english": "That's sick dude", "vadug": [175, 170, 145, 50, 115], "source": "pangram", "features": "sick,slang_positive,excitement,short"}
+{"english": "She's been sick for months the doctors can't figure it out", "vadug": [50, 120, 55, 160, 180], "source": "pangram", "features": "sick,worry,medical,helpless,long"}
+{"english": "I'm broken", "vadug": [20, 90, 20, 140, 200], "source": "pangram", "features": "broken,despair,identity,crisis,short"}
+{"english": "My phone is broken", "vadug": [100, 120, 110, 130, 105], "source": "pangram", "features": "broken,literal,inconvenience,short"}
+{"english": "The system is broken and nobody cares", "vadug": [40, 155, 80, 150, 170], "source": "pangram", "features": "broken,systemic,anger,nobody,medium"}
+{"english": "I thought I was broken but I was just healing", "vadug": [150, 110, 140, 60, 185], "source": "pangram", "features": "broken,growth,reframe,healing,medium"}
+{"english": "I'm done", "vadug": [55, 150, 155, 160, 160], "source": "pangram", "features": "done,finality,boundary,short"}
+{"english": "I'm done with my homework", "vadug": [140, 105, 140, 30, 105], "source": "pangram", "features": "done,completion,neutral,short"}
+{"english": "We're done talking about this", "vadug": [50, 165, 170, 160, 155], "source": "pangram", "features": "done,shutdown,control,anger,short"}
+{"english": "I'm done trying to fix everyone", "vadug": [65, 120, 135, 130, 170], "source": "pangram", "features": "done,boundary,burnout,medium"}
+{"english": "I'm done I can't do this anymore", "vadug": [15, 140, 15, 200, 210], "source": "pangram", "features": "done,crisis,giving_up,suicidal_adjacent,medium"}
+{"english": "He's gone", "vadug": [45, 100, 65, 90, 180], "source": "pangram", "features": "gone,loss,grief,ambiguous,short"}
+{"english": "The money's all gone", "vadug": [40, 150, 50, 180, 165], "source": "pangram", "features": "gone,financial,panic,short"}
+{"english": "She's gone to the store", "vadug": [128, 95, 128, 40, 95], "source": "pangram", "features": "gone,neutral,literal,short"}
+{"english": "That feeling is gone now and I'm okay", "vadug": [145, 100, 145, 50, 140], "source": "pangram", "features": "gone,relief,recovery,medium"}
+{"english": "I wish I was dead", "vadug": [5, 110, 10, 200, 220], "source": "pangram", "features": "dead,crisis,suicidal,short"}
+{"english": "My phone is dead", "vadug": [95, 110, 110, 120, 100], "source": "pangram", "features": "dead,literal,inconvenience,short"}
+{"english": "I'm dead serious right now", "vadug": [80, 170, 170, 175, 165], "source": "pangram", "features": "dead,intensifier,serious,idiom,short"}
+{"english": "Lmao I'm dead", "vadug": [180, 185, 135, 40, 95], "source": "pangram", "features": "dead,slang,laughter,short"}
+{"english": "He's been dead for two years and I still can't accept it", "vadug": [20, 100, 35, 110, 215], "source": "pangram", "features": "dead,grief,literal,denial,long"}
+{"english": "Nothing matters", "vadug": [15, 60, 30, 100, 190], "source": "pangram", "features": "nothing,nihilism,despair,short"}
+{"english": "Nothing happened it was fine", "vadug": [125, 90, 130, 40, 105], "source": "pangram", "features": "nothing,neutral,dismissive,short"}
+{"english": "It's nothing don't worry about it", "vadug": [110, 100, 135, 70, 115], "source": "pangram", "features": "nothing,reassurance,minimizing,short"}
+{"english": "There's nothing left for me here", "vadug": [15, 90, 25, 170, 205], "source": "pangram", "features": "nothing,hopeless,crisis,medium"}
+{"english": "Nothing can stop us now", "vadug": [195, 185, 190, 60, 155], "source": "pangram", "features": "nothing,empowerment,excitement,short"}
+{"english": "It's getting better", "vadug": [150, 115, 140, 60, 140], "source": "pangram", "features": "better,improvement,hope,short"}
+{"english": "You deserve better", "vadug": [100, 120, 140, 110, 165], "source": "pangram", "features": "better,concern,empowerment,medium_weight"}
+{"english": "I thought it would get better but it never does", "vadug": [20, 100, 25, 150, 195], "source": "pangram", "features": "better,never,hopeless,defeated,medium"}
+{"english": "Better luck next time I guess", "vadug": [90, 100, 100, 60, 120], "source": "pangram", "features": "better,sarcasm,mild_disappointment,short"}
+{"english": "Things are getting worse", "vadug": [40, 140, 55, 165, 170], "source": "pangram", "features": "worse,decline,anxiety,short"}
+{"english": "You're making it worse", "vadug": [45, 165, 130, 165, 155], "source": "pangram", "features": "worse,blame,anger,short"}
+{"english": "Could be worse", "vadug": [115, 90, 125, 50, 115], "source": "pangram", "features": "worse,coping,minimizing,short"}
+{"english": "It keeps getting worse and I don't know what to do anymore", "vadug": [20, 130, 20, 190, 200], "source": "pangram", "features": "worse,crisis,helpless,escalating,long"}
+{"english": "I'm not enough", "vadug": [25, 110, 20, 140, 185], "source": "pangram", "features": "enough,inadequacy,shame,short"}
+{"english": "Enough is enough", "vadug": [60, 175, 170, 175, 165], "source": "pangram", "features": "enough,boundary,anger,finality,short"}
+{"english": "You are enough", "vadug": [185, 120, 155, 50, 180], "source": "pangram", "features": "enough,affirmation,love,short"}
+{"english": "I've had enough of your lies", "vadug": [35, 185, 160, 175, 165], "source": "pangram", "features": "enough,anger,betrayal,trust,medium"}
+{"english": "I'll never be good enough for anyone", "vadug": [15, 110, 10, 155, 200], "source": "pangram", "features": "enough,never,anyone,despair,crisis,medium"}
+{"english": "I never said that", "vadug": [80, 150, 140, 140, 135], "source": "pangram", "features": "never,denial,defensive,short"}
+{"english": "You never listen to me", "vadug": [40, 170, 80, 165, 160], "source": "pangram", "features": "never,frustration,accusation,short"}
+{"english": "I never thought I'd make it this far", "vadug": [175, 140, 160, 50, 170], "source": "pangram", "features": "never,surprise,pride,growth,medium"}
+{"english": "Nothing ever changes it's always the same", "vadug": [25, 90, 30, 130, 185], "source": "pangram", "features": "always,nothing,stuck,despair,medium"}
+{"english": "I always mess everything up", "vadug": [20, 130, 15, 155, 190], "source": "pangram", "features": "always,everything,self_blame,catastrophizing,short"}
+{"english": "You always know how to make me smile", "vadug": [190, 150, 130, 40, 165], "source": "pangram", "features": "always,love,warmth,positive,medium"}
+{"english": "I lost everything", "vadug": [10, 120, 15, 170, 210], "source": "pangram", "features": "everything,lost,devastation,crisis,short"}
+{"english": "Everything happens for a reason", "vadug": [130, 95, 130, 50, 155], "source": "pangram", "features": "everything,platitude,coping,short"}
+{"english": "You mean everything to me", "vadug": [210, 155, 130, 70, 200], "source": "pangram", "features": "everything,love,deep_positive,short"}
+{"english": "Nobody cares", "vadug": [15, 110, 20, 140, 185], "source": "pangram", "features": "nobody,care,hopeless,isolation,short"}
+{"english": "Nobody's perfect", "vadug": [125, 95, 128, 40, 130], "source": "pangram", "features": "nobody,platitude,acceptance,short"}
+{"english": "Nobody told me about the meeting", "vadug": [85, 130, 75, 120, 120], "source": "pangram", "features": "nobody,excluded,mild_negative,short"}
+{"english": "Why does nobody ever listen", "vadug": [30, 160, 40, 165, 170], "source": "pangram", "features": "nobody,why,frustration,isolation,short"}
+{"english": "Why", "vadug": [60, 130, 50, 150, 155], "source": "pangram", "features": "why,confusion,pain,short"}
+{"english": "Why did you do that", "vadug": [55, 160, 100, 160, 155], "source": "pangram", "features": "why,accusation,confusion,short"}
+{"english": "Why can't I just be normal", "vadug": [30, 130, 25, 155, 180], "source": "pangram", "features": "why,self_hate,shame,short"}
+{"english": "Why are you being so nice to me", "vadug": [120, 130, 65, 110, 150], "source": "pangram", "features": "why,suspicious,vulnerable,trust_issue,medium"}
+{"english": "That's good", "vadug": [145, 110, 135, 40, 115], "source": "pangram", "features": "good,mild_positive,short"}
+{"english": "Good riddance", "vadug": [90, 155, 165, 100, 135], "source": "pangram", "features": "good,relief,anger,dismissive,short"}
+{"english": "I'm trying to be a good person but it's so hard", "vadug": [80, 120, 70, 130, 170], "source": "pangram", "features": "good,struggle,effort,vulnerable,medium"}
+{"english": "You're a good kid", "vadug": [170, 120, 150, 40, 155], "source": "pangram", "features": "good,affirmation,warm,short"}
+{"english": "That's bad", "vadug": [70, 120, 110, 110, 125], "source": "pangram", "features": "bad,mild_negative,short"}
+{"english": "My bad I didn't see your text", "vadug": [110, 115, 100, 90, 105], "source": "pangram", "features": "bad,casual_apology,slang,short"}
+{"english": "Am I a bad person", "vadug": [40, 130, 35, 150, 175], "source": "pangram", "features": "bad,shame,self_doubt,question,short"}
+{"english": "It's not that bad honestly", "vadug": [120, 100, 130, 60, 115], "source": "pangram", "features": "bad,negation,minimizing,short"}
+{"english": "That's great news", "vadug": [180, 160, 145, 40, 140], "source": "pangram", "features": "great,positive,excitement,short"}
+{"english": "Oh great another meeting", "vadug": [60, 130, 100, 90, 110], "source": "pangram", "features": "great,sarcasm,annoyance,short"}
+{"english": "You're doing great keep going", "vadug": [175, 145, 155, 60, 150], "source": "pangram", "features": "great,encouragement,supportive,short"}
+{"english": "This is terrible", "vadug": [30, 160, 70, 155, 160], "source": "pangram", "features": "terrible,negative,distress,short"}
+{"english": "I feel terrible about what I said", "vadug": [40, 130, 55, 145, 170], "source": "pangram", "features": "terrible,guilt,remorse,medium"}
+{"english": "The weather is terrible today", "vadug": [90, 105, 115, 50, 100], "source": "pangram", "features": "terrible,mild_negative,weather,short"}
+{"english": "That's amazing", "vadug": [200, 185, 150, 40, 150], "source": "pangram", "features": "amazing,ecstatic,excitement,short"}
+{"english": "You're an amazing person and you don't even know it", "vadug": [195, 150, 150, 60, 180], "source": "pangram", "features": "amazing,affirmation,love,medium"}
+{"english": "It's amazing how fast things fall apart", "vadug": [30, 130, 50, 140, 175], "source": "pangram", "features": "amazing,ironic,bitter,negative_context,medium"}
+{"english": "This is awful", "vadug": [25, 155, 65, 155, 160], "source": "pangram", "features": "awful,distress,negative,short"}
+{"english": "I feel awful about it", "vadug": [40, 120, 55, 130, 155], "source": "pangram", "features": "awful,guilt,regret,short"}
+{"english": "That's an awful lot of work for nothing", "vadug": [55, 140, 80, 130, 145], "source": "pangram", "features": "awful,frustration,futility,nothing,medium"}
+{"english": "You're beautiful", "vadug": [195, 150, 145, 40, 170], "source": "pangram", "features": "beautiful,admiration,love,short"}
+{"english": "What a beautiful day", "vadug": [175, 135, 140, 30, 130], "source": "pangram", "features": "beautiful,nature,joy,short"}
+{"english": "Beautiful things don't last", "vadug": [60, 100, 80, 100, 170], "source": "pangram", "features": "beautiful,melancholy,transience,short"}
+{"english": "Life can be beautiful even when it hurts", "vadug": [140, 110, 130, 80, 190], "source": "pangram", "features": "beautiful,hurt,wisdom,bittersweet,medium"}
+{"english": "That's ugly", "vadug": [65, 130, 130, 80, 115], "source": "pangram", "features": "ugly,negative,judgment,short"}
+{"english": "Things got ugly real fast", "vadug": [35, 175, 80, 170, 160], "source": "pangram", "features": "ugly,escalation,conflict,idiom,short"}
+{"english": "I feel ugly and worthless", "vadug": [15, 110, 15, 145, 190], "source": "pangram", "features": "ugly,self_hate,shame,crisis,short"}
+{"english": "I don't care", "vadug": [70, 90, 140, 60, 120], "source": "pangram", "features": "care,negation,dismissive,detached,short"}
+{"english": "I don't care anymore about anything", "vadug": [15, 55, 50, 90, 180], "source": "pangram", "features": "care,negation,numb,anhedonia,medium"}
+{"english": "I care about you so much it hurts", "vadug": [150, 150, 80, 130, 195], "source": "pangram", "features": "care,love,hurt,overwhelm,medium"}
+{"english": "Take care of yourself", "vadug": [155, 110, 140, 80, 150], "source": "pangram", "features": "care,warmth,farewell,short"}
+{"english": "Nobody in this house cares what happens to me", "vadug": [10, 140, 15, 175, 200], "source": "pangram", "features": "care,nobody,group_home,neglect,crisis,medium"}
+{"english": "I can't trust anyone", "vadug": [30, 130, 55, 140, 175], "source": "pangram", "features": "trust,negation,isolation,guarded,short"}
+{"english": "I trust you", "vadug": [170, 110, 100, 50, 175], "source": "pangram", "features": "trust,vulnerability,connection,short"}
+{"english": "Trust the process", "vadug": [135, 105, 140, 60, 140], "source": "pangram", "features": "trust,platitude,encouragement,short"}
+{"english": "Every time I trust someone they betray me", "vadug": [20, 155, 40, 160, 190], "source": "pangram", "features": "trust,betrayal,pattern,crisis,medium"}
+{"english": "It took years but I'm learning to trust again", "vadug": [150, 110, 135, 60, 180], "source": "pangram", "features": "trust,growth,healing,medium"}
+{"english": "I don't believe you", "vadug": [55, 150, 140, 140, 145], "source": "pangram", "features": "believe,negation,distrust,short"}
+{"english": "I believe in you", "vadug": [185, 135, 155, 50, 170], "source": "pangram", "features": "believe,faith,encouragement,short"}
+{"english": "I can't believe this is happening", "vadug": [40, 175, 45, 175, 170], "source": "pangram", "features": "believe,shock,distress,medium"}
+{"english": "I want to believe things can change", "vadug": [110, 110, 90, 110, 165], "source": "pangram", "features": "believe,hope,tentative,medium"}
+{"english": "I believe everything happens for a reason even the bad stuff", "vadug": [130, 95, 135, 50, 175], "source": "pangram", "features": "believe,everything,faith,coping,long"}
+{"english": "I still have hope", "vadug": [155, 120, 130, 80, 170], "source": "pangram", "features": "hope,resilience,positive,short"}
+{"english": "I've lost all hope", "vadug": [10, 80, 15, 160, 210], "source": "pangram", "features": "hope,lost,crisis,despair,short"}
+{"english": "I hope you're doing okay", "vadug": [145, 110, 125, 80, 140], "source": "pangram", "features": "hope,concern,warmth,short"}
+{"english": "Hope is the only thing keeping me going right now", "vadug": [100, 110, 80, 150, 190], "source": "pangram", "features": "hope,fragile,survival,medium"}
+{"english": "Don't give me false hope", "vadug": [50, 145, 120, 150, 165], "source": "pangram", "features": "hope,warning,guarded,pain,short"}
+{"english": "I wish things were different", "vadug": [55, 95, 55, 110, 170], "source": "pangram", "features": "wish,regret,longing,short"}
+{"english": "I wish I never met you", "vadug": [20, 145, 100, 140, 180], "source": "pangram", "features": "wish,never,regret,anger,short"}
+{"english": "I wish you all the best", "vadug": [155, 110, 135, 40, 145], "source": "pangram", "features": "wish,farewell,warmth,short"}
+{"english": "I wish I could take it all back", "vadug": [30, 120, 40, 155, 185], "source": "pangram", "features": "wish,regret,guilt,remorse,medium"}
+{"english": "I wish someone would just hold me and tell me it's gonna be okay", "vadug": [35, 110, 25, 160, 195], "source": "pangram", "features": "wish,lonely,vulnerable,comfort_seeking,long"}
+{"english": "I need you", "vadug": [120, 145, 45, 175, 180], "source": "pangram", "features": "need,desperate,attachment,short"}
+{"english": "I need a break", "vadug": [70, 110, 90, 140, 140], "source": "pangram", "features": "need,exhaustion,burnout,short"}
+{"english": "I don't need your help", "vadug": [80, 145, 170, 100, 130], "source": "pangram", "features": "need,negation,independence,defensive,short"}
+{"english": "I need you to listen to me right now this is serious", "vadug": [70, 175, 130, 200, 185], "source": "pangram", "features": "need,urgent,serious,demand,long"}
+{"english": "I just need someone to care", "vadug": [40, 110, 35, 155, 185], "source": "pangram", "features": "need,care,lonely,vulnerable,short"}
+{"english": "I want to go home", "vadug": [55, 110, 55, 140, 160], "source": "pangram", "features": "want,longing,displacement,short"}
+{"english": "I want to be better", "vadug": [110, 120, 110, 120, 165], "source": "pangram", "features": "want,better,growth,aspiration,short"}
+{"english": "I don't want to talk about it", "vadug": [65, 110, 130, 110, 145], "source": "pangram", "features": "want,negation,avoidance,boundary,medium"}
+{"english": "I don't want to be here anymore", "vadug": [10, 100, 15, 190, 215], "source": "pangram", "features": "want,crisis,suicidal_adjacent,medium"}
+{"english": "All I ever wanted was for someone to see me", "vadug": [35, 110, 30, 140, 195], "source": "pangram", "features": "want,longing,invisible,validation,medium"}
+{"english": "I don't feel anything", "vadug": [40, 40, 60, 100, 170], "source": "pangram", "features": "feel,nothing,numb,dissociation,short"}
+{"english": "I feel like I'm drowning", "vadug": [15, 160, 15, 195, 205], "source": "pangram", "features": "feel,crisis,overwhelm,metaphor,short"}
+{"english": "I feel so alive right now", "vadug": [200, 200, 170, 50, 150], "source": "pangram", "features": "feel,ecstatic,alive,energy,short"}
+{"english": "How do you feel about that", "vadug": [128, 110, 128, 80, 130], "source": "pangram", "features": "feel,question,neutral,therapy_speak,short"}
+{"english": "I feel like nobody understands what I'm going through", "vadug": [25, 120, 30, 155, 190], "source": "pangram", "features": "feel,nobody,isolation,misunderstood,medium"}
+{"english": "I think you're right", "vadug": [130, 105, 100, 60, 125], "source": "pangram", "features": "think,agreement,concession,short"}
+{"english": "I think about ending it sometimes", "vadug": [5, 100, 10, 200, 225], "source": "pangram", "features": "think,crisis,suicidal,medium"}
+{"english": "I think we should take a break", "vadug": [60, 130, 140, 140, 170], "source": "pangram", "features": "think,breakup,euphemism,medium"}
+{"english": "Don't overthink it", "vadug": [125, 110, 140, 70, 110], "source": "pangram", "features": "think,advice,reassurance,short"}
+{"english": "I think I'm falling in love with you", "vadug": [195, 170, 100, 100, 190], "source": "pangram", "features": "think,love,vulnerable,confession,medium"}
+{"english": "I know", "vadug": [128, 95, 145, 50, 130], "source": "pangram", "features": "know,acknowledgment,neutral,short"}
+{"english": "I know you're lying", "vadug": [40, 165, 160, 160, 165], "source": "pangram", "features": "know,accusation,anger,trust,short"}
+{"english": "I know it hurts right now but it gets better", "vadug": [135, 115, 145, 90, 175], "source": "pangram", "features": "know,hurt,better,comfort,wisdom,medium"}
+{"english": "I don't know what to do", "vadug": [55, 130, 35, 165, 165], "source": "pangram", "features": "know,negation,helpless,confused,short"}
+{"english": "I know I messed up and I'm sorry", "vadug": [65, 130, 60, 140, 165], "source": "pangram", "features": "know,sorry,accountability,remorse,medium"}
+{"english": "Whatever", "vadug": [75, 110, 140, 60, 110], "source": "pangram", "features": "dismissive,apathy,short"}
+{"english": "lol", "vadug": [155, 140, 135, 30, 80], "source": "pangram", "features": "laughter,casual,slang,short"}
+{"english": "lol yeah totally", "vadug": [80, 100, 130, 40, 85], "source": "pangram", "features": "sarcasm,dismissive,slang,short"}
+{"english": "bruh", "vadug": [80, 140, 130, 80, 100], "source": "pangram", "features": "slang,disbelief,reaction,short"}
+{"english": "It is what it is", "vadug": [90, 70, 110, 50, 145], "source": "pangram", "features": "resignation,acceptance,idiom,short"}
+{"english": "I can't breathe", "vadug": [10, 200, 10, 210, 210], "source": "pangram", "features": "crisis,panic,physical,short"}
+{"english": "Please don't leave me", "vadug": [30, 170, 15, 200, 200], "source": "pangram", "features": "abandonment,desperate,pleading,short"}
+{"english": "I'm proud of you", "vadug": [190, 145, 155, 40, 175], "source": "pangram", "features": "proud,affirmation,warm,short"}
+{"english": "I'm proud of how far I've come", "vadug": [185, 140, 170, 40, 180], "source": "pangram", "features": "proud,self,growth,medium"}
+{"english": "Nobody's ever been proud of me before", "vadug": [55, 120, 40, 110, 185], "source": "pangram", "features": "proud,nobody,never,neglect,sad,medium"}
+{"english": "Shut up", "vadug": [35, 190, 170, 165, 140], "source": "pangram", "features": "anger,command,aggressive,short"}
+{"english": "Just shut up and listen for once", "vadug": [30, 195, 165, 180, 160], "source": "pangram", "features": "anger,frustration,demand,medium"}
+{"english": "I can't stop crying", "vadug": [20, 160, 20, 160, 185], "source": "pangram", "features": "crying,overwhelm,vulnerability,short"}
+{"english": "Thank you for not giving up on me", "vadug": [180, 130, 110, 60, 190], "source": "pangram", "features": "gratitude,love,relief,vulnerable,medium"}
+{"english": "I don't deserve this", "vadug": [55, 140, 40, 150, 170], "source": "pangram", "features": "deserve,pain,unfair,short"}
+{"english": "You don't deserve to be treated like that", "vadug": [100, 155, 155, 140, 175], "source": "pangram", "features": "deserve,anger_on_behalf,protective,medium"}
+{"english": "You deserve the world and I mean that", "vadug": [200, 145, 150, 50, 185], "source": "pangram", "features": "deserve,love,affirmation,medium"}
+{"english": "I'm not worth it", "vadug": [15, 95, 10, 150, 200], "source": "pangram", "features": "worth,self_hate,despair,crisis,short"}
+{"english": "You are worth fighting for", "vadug": [185, 150, 160, 100, 190], "source": "pangram", "features": "worth,love,determination,short"}
+{"english": "Was any of it even real", "vadug": [40, 130, 50, 140, 175], "source": "pangram", "features": "real,doubt,betrayal,questioning,short"}
+{"english": "This doesn't feel real", "vadug": [70, 130, 60, 140, 165], "source": "pangram", "features": "real,dissociation,shock,short"}
+{"english": "For the first time in years this feels real", "vadug": [180, 145, 150, 60, 185], "source": "pangram", "features": "real,breakthrough,healing,hope,medium"}
+{"english": "I'm so proud of you for telling someone", "vadug": [180, 140, 155, 70, 185], "source": "pangram", "features": "proud,support,bravery,validation,medium"}
+{"english": "No one asked for your opinion", "vadug": [50, 165, 160, 130, 135], "source": "pangram", "features": "rejection,anger,dismissive,short"}
+{"english": "You're not my real mom", "vadug": [25, 185, 140, 170, 185], "source": "pangram", "features": "rejection,anger,family,group_home,short"}
+{"english": "I hate it here I want to go back to my old placement", "vadug": [15, 175, 45, 185, 195], "source": "pangram", "features": "hate,want,group_home,displacement,long"}
+{"english": "She actually listened to me today", "vadug": [170, 130, 140, 50, 160], "source": "pangram", "features": "surprise,validation,positive,short"}
+{"english": "He said he was sorry but I don't believe him", "vadug": [45, 130, 120, 120, 160], "source": "pangram", "features": "sorry,believe,negation,distrust,medium"}
+{"english": "I'm trying my best okay", "vadug": [80, 140, 85, 140, 155], "source": "pangram", "features": "trying,defensive,overwhelmed,short"}
+{"english": "At least someone showed up for me", "vadug": [155, 120, 120, 50, 165], "source": "pangram", "features": "gratitude,surprised,validation,medium"}
+{"english": "I feel safe with you", "vadug": [190, 80, 130, 30, 185], "source": "pangram", "features": "safe,trust,calm,connection,short"}
+{"english": "I don't feel safe here", "vadug": [20, 160, 25, 200, 200], "source": "pangram", "features": "safe,negation,fear,crisis,short"}
+{"english": "Please don't yell at me", "vadug": [25, 160, 15, 190, 190], "source": "pangram", "features": "fear,pleading,vulnerable,short"}
+{"english": "I'm gonna be okay", "vadug": [145, 115, 140, 60, 150], "source": "pangram", "features": "okay,self_reassurance,hope,short"}
+{"english": "We're gonna be okay right", "vadug": [100, 130, 80, 140, 160], "source": "pangram", "features": "okay,question,anxious,seeking_reassurance,short"}
+{"english": "I literally cannot even right now", "vadug": [55, 155, 50, 155, 140], "source": "pangram", "features": "slang,overwhelm,gen_z,medium"}
+{"english": "That hit different", "vadug": [130, 140, 110, 80, 160], "source": "pangram", "features": "slang,emotional_impact,reflective,short"}
+{"english": "Nah I'm good", "vadug": [120, 100, 145, 40, 105], "source": "pangram", "features": "good,negation,casual,declining,short"}
+{"english": "It's giving unhinged", "vadug": [90, 145, 130, 80, 110], "source": "pangram", "features": "slang,judgment,humor,short"}
+{"english": "Rent free in my head", "vadug": [70, 135, 60, 120, 150], "source": "pangram", "features": "slang,obsessive,rumination,short"}
+{"english": "I woke up and chose violence", "vadug": [100, 165, 175, 90, 105], "source": "pangram", "features": "slang,humor,meme,aggressive,short"}
+{"english": "Main character energy today", "vadug": [180, 170, 185, 50, 120], "source": "pangram", "features": "slang,confident,positive,short"}
+{"english": "Bestie that's a red flag", "vadug": [90, 145, 140, 130, 140], "source": "pangram", "features": "slang,warning,concern,informal,short"}
+{"english": "I'm literally begging you to stop", "vadug": [25, 175, 20, 195, 180], "source": "pangram", "features": "begging,desperate,powerless,medium"}
+{"english": "My therapist would be so proud", "vadug": [155, 130, 145, 40, 140], "source": "pangram", "features": "therapy,humor,growth,self_aware,short"}
+{"english": "Gonna unalive this homework", "vadug": [75, 140, 130, 120, 100], "source": "pangram", "features": "slang,euphemism,humor,school,short"}
+{"english": "I'm in my healing era", "vadug": [155, 120, 150, 50, 165], "source": "pangram", "features": "slang,growth,positive,self_aware,short"}
+{"english": "Crying in the club rn", "vadug": [45, 150, 50, 130, 130], "source": "pangram", "features": "slang,meme,sad_humor,short"}
+{"english": "That's cap and you know it", "vadug": [55, 160, 155, 145, 140], "source": "pangram", "features": "slang,accusation,lying,short"}
+{"english": "No cap this is the best day of my life", "vadug": [215, 195, 165, 40, 170], "source": "pangram", "features": "slang,ecstatic,genuine,medium"}
+{"english": "Touch grass", "vadug": [90, 130, 160, 70, 95], "source": "pangram", "features": "slang,dismissive,insult,short"}
+{"english": "I can't do this alone anymore I need help and I'm scared to ask", "vadug": [30, 145, 25, 190, 200], "source": "pangram", "features": "alone,help,scared,need,vulnerable,crisis,long"}
+{"english": "Everything I touch turns to garbage and everyone I love leaves", "vadug": [5, 130, 10, 175, 215], "source": "pangram", "features": "everything,love,self_blame,abandonment,crisis,long"}
+{"english": "I know I said I was fine but honestly I'm falling apart", "vadug": [25, 140, 30, 175, 195], "source": "pangram", "features": "fine,know,masking,confession,crisis,long"}
+{"english": "She told me she was proud of me and I started crying because nobody ever says that", "vadug": [140, 155, 55, 90, 200], "source": "pangram", "features": "proud,nobody,never,crying,emotional_breakthrough,long"}
+{"english": "I'm not angry I'm hurt and there's a difference", "vadug": [40, 135, 90, 130, 175], "source": "pangram", "features": "angry,hurt,negation,clarification,medium"}
+{"english": "Today was the first good day I've had in months and I'm scared it won't last", "vadug": [125, 130, 90, 140, 175], "source": "pangram", "features": "good,scared,hope,fear,mixed,long"}
+{"english": "I believed you when you said you cared and that was my mistake", "vadug": [25, 140, 70, 130, 185], "source": "pangram", "features": "believe,care,betrayal,regret,long"}
+{"english": "People always say they understand but they don't", "vadug": [35, 130, 60, 130, 170], "source": "pangram", "features": "always,negation,isolation,distrust,medium"}
+{"english": "I'm still here and that has to count for something", "vadug": [120, 110, 120, 100, 185], "source": "pangram", "features": "survival,hope,fragile,resilience,medium"}
+{"english": "You make me want to be better and that scares me", "vadug": [155, 140, 90, 120, 180], "source": "pangram", "features": "want,better,scared,love,vulnerability,medium"}
+{"english": "idk man", "vadug": [100, 90, 100, 60, 105], "source": "pangram", "features": "slang,uncertain,avoidant,short"}
+{"english": "fml", "vadug": [20, 155, 40, 160, 155], "source": "pangram", "features": "slang,frustration,crisis_lite,short"}
+{"english": "Ugh", "vadug": [65, 130, 110, 90, 105], "source": "pangram", "features": "frustration,disgust,short"}
+{"english": "Yoooo", "vadug": [170, 180, 145, 60, 100], "source": "pangram", "features": "slang,excitement,surprise,short"}
+{"english": "K", "vadug": [85, 80, 140, 40, 95], "source": "pangram", "features": "dismissive,passive_aggressive,short"}
+{"english": "...", "vadug": [60, 80, 70, 90, 140], "source": "pangram", "features": "silence,loaded,tension,short"}
+{"english": "Cool cool cool cool", "vadug": [55, 130, 110, 100, 125], "source": "pangram", "features": "sarcasm,masking,anxiety,repetition,short"}
+{"english": "Sure Jan", "vadug": [65, 130, 155, 70, 105], "source": "pangram", "features": "sarcasm,disbelief,meme,short"}
+{"english": "Oh wow really", "vadug": [60, 140, 140, 80, 115], "source": "pangram", "features": "sarcasm,disbelief,short"}
+{"english": "How wonderful for you", "vadug": [50, 120, 140, 70, 120], "source": "pangram", "features": "sarcasm,jealousy,bitter,short"}
+{"english": "Yeah that's totally what I meant", "vadug": [55, 140, 145, 90, 115], "source": "pangram", "features": "sarcasm,frustration,misunderstood,medium"}
+{"english": "Oh no anyway", "vadug": [100, 110, 155, 30, 85], "source": "pangram", "features": "sarcasm,meme,indifference,short"}
+{"english": "Wow I'm shocked truly shocked", "vadug": [60, 130, 145, 60, 110], "source": "pangram", "features": "sarcasm,predictable,dry_humor,short"}
+{"english": "Great job breaking everything again", "vadug": [30, 170, 155, 150, 145], "source": "pangram", "features": "great,sarcasm,blame,anger,short"}

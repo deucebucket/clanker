@@ -1,0 +1,20 @@
+ESSAY: DARK HUMOR — Death and Life Through Every Lens
+EXPECTED_TONE: humor_with_dark_undertone
+SCORING_NOTE: Surface words are negative but intent is comedic. Tests sarcasm, irony, context-dependent meaning.
+
+---
+
+I'm dying to tell you about my day. Not literally dying, although after that meeting, death would have been a relief. My boss delivered the news with the enthusiasm of a funeral director who just discovered overtime pay. Devastating, really, but in the way a bad pun devastates a room — everyone groans, nobody actually suffers.
+
+The thing about dark humor is that it takes the most terrifying, horrible, gut-wrenching things in life and makes them absurd. Death? Hilarious when it's a metaphor. Absolutely horrifying when it isn't. My grandmother used to say she was dying of boredom, and then one day she actually died, which was considerably less funny but she would have appreciated the irony.
+
+I'm not depressed about any of this. I'm amused. There's a fine line between laughing and crying, and I've been tap-dancing on it all week. My therapist says that's concerning. I told her that's comedy. She was not entertained. I was crushed, but only emotionally, which is the preferred kind of crushed.
+
+Life is beautiful and tragic and ridiculous all at once. You can be grateful for the sunrise while dreading the alarm clock. You can love someone deeply and still want to murder them when they chew with their mouth open. Fury and affection coexist like roommates who hate each other but can't afford to move out.
+
+The worst part about existence is knowing it ends. The best part about existence is knowing it ends. See? Same sentence, completely different emotion depending on whether you just got promoted or just got dumped. Context is everything. Words are just sounds until someone puts them in a situation that makes them matter.
+
+I'm terrified and thrilled and exhausted and grateful and honestly a little hungry. Life is all of it at once, and if you can't laugh at the chaos, the chaos wins. So here I am, alive and laughing, which is the most rebellious thing a person can do in a universe that's eventually going to kill us all.
+
+---
+END ESSAY

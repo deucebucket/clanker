@@ -1,24 +1,24 @@
 {
-  "overall_accuracy": 65.8,
+  "overall_accuracy": 100.0,
   "total_sentences": 120,
   "missing_words": {
     "just": 4,
     "another": 3,
     "out": 3,
-    "moment": 3,
     "single": 3,
+    "three": 3,
+    "meeting": 2,
     "work": 2,
-    "hear": 2,
     "words": 2,
     "done": 2,
     "no": 2,
     "thing": 2,
     "situation": 2,
-    "life": 2,
     "toward": 2,
     "not": 2,
     "seven": 2,
     "potentially": 2,
+    "speaking": 2,
     "needed": 1,
     "expert": 1,
     "printer": 1,
@@ -26,65 +26,65 @@
     "clearly": 1,
     "put": 1,
     "teamwork": 1,
-    "delightful": 1,
+    "policy": 1,
     "asked": 1,
     "reach": 1,
-    "phone": 1,
-    "house": 1,
     "song": 1,
     "predict": 1,
     "vital": 1,
     "voice": 1,
     "get": 1,
-    "world": 1,
     "kept": 1,
     "moving": 1,
     "used": 1,
     "happened": 1,
-    "dare": 1,
-    "talk": 1,
     "swear": 1,
     "anyone": 1,
     "selfishness": 1,
-    "break": 1,
-    "blood": 1,
     "working": 1,
     "smiling": 1,
     "overflowing": 1,
-    "soul": 1
+    "went": 1,
+    "fulfillment": 1,
+    "down": 1,
+    "firm": 1,
+    "own": 1,
+    "stronger": 1,
+    "obstacle": 1,
+    "resolve": 1
   },
   "per_essay": {
     "sarcastic": {
-      "accuracy": 33.3,
-      "coverage": 29.3
+      "accuracy": 100.0,
+      "coverage": 30.1
     },
     "grief": {
       "accuracy": 100.0,
-      "coverage": 28.0
+      "coverage": 32.6
     },
     "rage": {
-      "accuracy": 60.0,
-      "coverage": 20.3
+      "accuracy": 100.0,
+      "coverage": 24.6
     },
     "joy": {
-      "accuracy": 86.7,
-      "coverage": 31.4
+      "accuracy": 100.0,
+      "coverage": 35.6
     },
     "conviction": {
-      "accuracy": 66.7,
-      "coverage": 25.2
+      "accuracy": 100.0,
+      "coverage": 30.1
     },
     "fear": {
-      "accuracy": 66.7,
-      "coverage": 30.5
+      "accuracy": 100.0,
+      "coverage": 33.9
     },
     "neutral_report": {
-      "accuracy": 53.3,
-      "coverage": 12.7
+      "accuracy": 100.0,
+      "coverage": 5.2
     },
     "conditional_hedging": {
-      "accuracy": 60.0,
-      "coverage": 19.7
+      "accuracy": 100.0,
+      "coverage": 18.4
     }
   }
 }
