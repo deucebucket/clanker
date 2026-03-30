@@ -25,6 +25,13 @@ training/checkpoints/
 training/data/discovered_idioms.jsonl
 training/data/empathetic_dialogues.jsonl
 
+# Training data — raw files stay local, not in git
+# Versioned backups: training/data/archive_v1_2026-03-30.zip etc.
+training/data/*.jsonl
+training/data/*.txt
+training/data/*.zip
+training/data/*.json
+
 # Benchmark data files (generated/downloaded)
 benchmarks/misses_full.json
 benchmarks/gpu_optimal.json
