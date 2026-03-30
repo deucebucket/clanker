@@ -390,6 +390,9 @@ IDIOMS = {
     ('no', 'right'): (-30, 30, -10, 15, -10, 'rage: boundary violation'),
     ('never', 'forgive'): (-40, 30, 15, 10, -15, 'rage: unforgivable'),
     ('blood', 'boils'): (-45, 50, 10, 20, -15, 'rage: blood boiling'),
+    # Hedging idioms — diplomatic phrases that signal uncertainty
+    ("let's", 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
+    ('lets', 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
     # Apostrophe-free crisis variants (common in casual/crisis text)
     ('dont', 'want', 'to', 'exist'): (-80, 25, -50, 55, -55, "crisis: don't want to exist"),
     ('dont', 'want', 'to', 'be'): (-80, 25, -50, 55, -55, "crisis: don't want to be"),

@@ -199,6 +199,8 @@ BIGRAM_EXPRESSIONS = {
     ("might", "argue"): (-5, 5, -5, 0, -5, "hedging: academic argumentation"),
     ("lean", "toward"): (-5, -5, -5, 0, -5, "hedging: tentative direction"),
     ("just", "say"): (-5, -5, -5, 0, -5, "hedging: diplomatic understatement"),
+    ("without", "making"): (-5, 0, -5, 0, -5, "hedging: disclaimer/caveat"),
+    ("without", "guarantees"): (-5, 0, -5, 0, -5, "hedging: no-guarantee caveat"),
 }
 
 
