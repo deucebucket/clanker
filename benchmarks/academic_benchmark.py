@@ -106,7 +106,7 @@ def bench(name, ds, get_text, get_truth, max_n=None):
     else:
         _v2_classify_mode = "three_way"
     if max_n: ds = ds.select(range(min(max_n, len(ds))))
-    engines = ["VADER","TextBlob","Clanker","ClankerV2"] + (["RoBERTa"] if HAS_TRANSFORMERS else [])
+    engines = ["VADER","TextBlob","ClankerV2"] + (["RoBERTa"] if HAS_TRANSFORMERS else [])
     res = {e:{"p":[],"t":[],"ms":0} for e in engines}
     dim = []
     for i, row in enumerate(ds):
