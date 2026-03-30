@@ -297,10 +297,22 @@ IDIOMS = {
     ('only', 'a', 'little'): (-5, -5, -5, 0, -5, 'minimization: degree shrinking'),
     ('its', 'nothing'): (-15, -5, -15, 0, -10, 'minimization: denial of significance'),
     ("it's", 'nothing'): (-15, -5, -15, 0, -10, 'minimization: denial of significance'),
-    ('im', 'fine'): (-10, -10, -10, 0, -5, 'minimization: self-dismissal'),
-    ("i'm", 'fine'): (-10, -10, -10, 0, -5, 'minimization: self-dismissal'),
+    # "I'm fine" — almost never genuinely fine. If you're actually fine you say
+    # "I'm good!", "I'm great!", something specific and positive. "I'm fine" is
+    # a door-closer: "stop asking." Hedges negative. Each repetition = less believable.
+    ('im', 'fine'): (-15, -10, -15, 0, -10, 'minimization: im fine = probably not fine'),
+    ("i'm", 'fine'): (-15, -10, -15, 0, -10, 'minimization: im fine = probably not fine'),
     ('its', 'fine'): (-10, -10, -10, 0, -5, 'minimization: situation dismissal'),
     ("it's", 'fine'): (-10, -10, -10, 0, -5, 'minimization: situation dismissal'),
+    # Double-down = MORE suspicious, not less. "No really I'm fine" = definitely not fine.
+    ('no', 'im', 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
+    ('no', "i'm", 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
+    ('really', 'im', 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
+    ('really', "i'm", 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
+    ('but', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: but im fine = dismissing what came before'),
+    ('but', "i'm", 'fine'): (-20, -5, -20, 5, -10, 'minimization: but im fine = dismissing what came before'),
+    ('ok', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: ok im fine = shutting down'),
+    ('okay', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: okay im fine = shutting down'),
     ('not', 'the', 'end', 'of', 'the', 'world'): (-5, -5, 5, 0, -5, 'minimization: scale reduction'),
     ('barely', 'anything'): (-10, -5, -10, 0, -5, 'minimization: quantity downplay'),
     ('hardly', 'matters'): (-15, -5, -15, 0, -10, 'minimization: significance denial'),
