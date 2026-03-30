@@ -489,6 +489,7 @@ class PrePassInfo:
     idiom_consumed: set = None                  # all indices consumed by idioms
     negation_positions: set = None              # indices of negator words
     double_negation: bool = False               # two negators cancel each other
+    hedge_count: int = 0                        # number of hedging operators in sentence
 
     def __post_init__(self):
         self.idiom_spans = self.idiom_spans or {}
@@ -1095,6 +1096,15 @@ class PendulumV2:
             if w.lower() in NEGATORS and i not in info.idiom_consumed:
                 info.negation_positions.add(i)
 
+        # Hedge count: how many hedging/uncertainty operators in the sentence
+        _hedge_words = {"maybe", "perhaps", "probably", "possibly", "potentially",
+                        "generally", "sometimes", "occasionally", "arguably",
+                        "seemingly", "apparently", "supposedly", "might", "could",
+                        "somewhat", "slightly", "think", "guess", "suppose",
+                        "wonder", "reckon", "assume", "possible", "tend",
+                        "theoretically", "conceivably", "likely", "unlikely"}
+        info.hedge_count = sum(1 for w in lower_words if w in _hedge_words)
+
         # Double-negation detection: two negators close together cancel out
         # "nothing and nobody will stop" = positive (double neg = affirmation)
         # "no challenge we cannot overcome" = positive
@@ -1282,6 +1292,13 @@ class PendulumV2:
             u = u * preflight.urgency_mult
             d = 128 + (d - 128) * preflight.dominance_mult
             g = g + preflight.gravity_offset
+
+        # Hedge stacking: 3+ hedging operators = heavy uncertainty, pull V toward neutral
+        # "It's possible that some people could potentially be upset" = 4 hedges
+        if pre and pre.hedge_count >= 3:
+            pull = min(0.4, pre.hedge_count * 0.1)  # 30% at 3, 40% at 4+
+            v = v * (1 - pull) + 128 * pull
+            d -= pre.hedge_count * 2  # stacked hedging = significant uncertainty
 
         # Crisis idiom amplification: if any crisis idiom was detected,
         # push V harder toward crisis zone regardless of momentum blending.
