@@ -173,3 +173,27 @@ vs "my terrible carpenter." The frame creates the field, not the noun.
 Tuning to essays just put essay answers in the engine. The real system
 pulls individual word weights and compares changes in-place near other words.
 Juxtaposition factoring — not pre-planned sentence matching.
+
+## 28. Need/Want Are Force Vectors Toward User
+
+"Need" and "want" are PULL forces — they attract objects into the user's orbit.
+The object's mass determines the alarm level.
+
+```
+need = pull_toward_user(force=high)
+needed = pull_toward_user(force=high, tense=past, IT HAPPENED)
+want = pull_toward_user(force=medium)  
+wanted = pull_toward_user(force=medium, tense=past)
+```
+
+What got pulled:
+- user.pull(positive_star) = reaching for good (hopeful)
+- user.pull(neutral_object) = acquiring (normal)
+- user.pull(negative_star) = warning
+- user.pull(method_word) = ALARM — weapon in orbit
+- user.pull(anchor_word) = CRISIS — death pulled toward self
+
+Past tense = the pull COMPLETED. "I needed a rope" = acquisition done.
+Not hypothetical. The object is already in orbit.
+
+Need moves G and U, NOT V. V comes from the payload.
