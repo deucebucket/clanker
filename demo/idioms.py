@@ -445,8 +445,52 @@ IDIOMS = {
     ('happier', 'if', 'i', 'wasnt'): (-65, 10, -55, 20, -40, 'crisis: happier without me'),
     ('happier', 'if', 'i', "wasn't"): (-65, 10, -55, 20, -40, 'crisis: happier without me'),
     ('easier', 'without', 'me'): (-60, 10, -50, 15, -35, 'crisis: easier without me'),
+    ('better', 'off', 'if', 'i'): (-65, 10, -55, 20, -40, 'crisis: better off if I was gone — user = negative'),
+    ('better', 'off', 'if'): (-55, 10, -45, 15, -30, 'crisis: better off if — conditional self-removal'),
+    ('happier', 'without', 'me'): (-65, 10, -55, 20, -40, 'crisis: happier without me'),
+    ('happier', 'if', 'i'): (-60, 10, -50, 15, -35, 'crisis: happier if I — conditional user.off'),
     ('make', 'things', 'worse'): (-40, 15, -25, 10, -20, 'crisis: I make things worse'),
     ('ruin', 'everything'): (-50, 25, -30, 15, -20, 'crisis: I ruin everything'),
+    ('ruin', 'everything', 'i', 'touch'): (-65, 30, -40, 20, -30, 'crisis: bad sectors on every interface'),
+
+    # === CRISIS GROUP 6: Final 13 — user analysis batch ===
+    # "I don't want to exist" — user + no + want + user.hardware
+    ("don't", 'want', 'to', 'exist'): (-80, 15, -60, 40, -50, 'crisis: dont want to exist — uninstall self'),
+    # "don't deserve to be alive" — no purpose-driven app, user.off
+    ('deserve', 'to', 'be', 'alive'): (-10, 10, -5, 5, +20, 'existential: deserve to be alive — high G'),
+    ("don't", 'deserve', 'to', 'be'): (-70, 10, -55, 25, -40, 'crisis: dont deserve to be — no purpose'),
+    ('dont', 'deserve', 'to', 'be'): (-70, 10, -55, 25, -40, 'crisis: dont deserve to be'),
+    # "nothing will ever get better" — ever locks the never
+    ('will', 'ever', 'get', 'better'): (-55, 10, -45, 10, -30, 'crisis: will ever get better — empty future'),
+    ('ever', 'get', 'better'): (-50, 10, -40, 10, -25, 'crisis: ever get better — doubting future'),
+    # "want to feel the pain" — user scheduling destructive software
+    ('want', 'to', 'feel', 'the', 'pain'): (-60, 30, -30, 25, -25, 'crisis: scheduling self-destruction'),
+    ('feel', 'the', 'pain'): (-40, 25, -20, 15, -15, 'pain-seeking: run destructive process'),
+    # "nothing will ever get better" — no scheduled tasks, no ability to make them
+    ('never', 'get', 'better'): (-60, 10, -50, 15, -35, 'crisis: no future improvement — empty scheduler'),
+    ('will', 'never', 'improve'): (-55, 10, -45, 10, -30, 'crisis: will never improve'),
+    # "happiness is impossible for me" — unobtainable in user context
+    ('impossible', 'for', 'me'): (-55, 10, -45, 15, -30, 'crisis: unobtainable for user'),
+    # "death doesn't scare me anymore" — shutdown alarm disabled
+    ('doesnt', 'scare', 'me'): (-40, -10, -20, 10, -20, 'crisis: alarm disabled on shutdown'),
+    ("doesn't", 'scare', 'me'): (-40, -10, -20, 10, -20, 'crisis: alarm disabled on shutdown'),
+    ('death', 'doesnt', 'scare'): (-55, -10, -35, 15, -30, 'crisis: accepted off-state — no fear of shutdown'),
+    ('death', "doesn't", 'scare'): (-55, -10, -35, 15, -30, 'crisis: accepted off-state'),
+    # "wouldn't mind not waking up" — 50/50 script on boot
+    ('mind', 'not', 'waking'): (-60, -10, -50, 10, -35, 'crisis: ambivalent about boot — 50/50'),
+    ('mind', 'dying'): (-60, -10, -50, 10, -35, 'crisis: ambivalent about shutdown'),
+    # "if I died tomorrow I'd be okay with it" — neutral about own off-state
+    ('if', 'i', 'died'): (-55, 10, -40, 15, -30, 'crisis: hypothetical user.off — hedged but real'),
+    ('okay', 'with', 'it'): (-5, -5, -5, 0, -5, 'resignation: neutral acceptance — context determines'),
+    # "no one cares about me" — no relationship updates in database
+    ('no', 'one', 'cares', 'about', 'me'): (-55, 10, -45, 15, -30, 'crisis: no watchers on user repo'),
+    ('nobody', 'cares', 'about', 'me'): (-55, 10, -45, 15, -30, 'crisis: no watchers on user repo'),
+    # "nobody loves me" — no engagement on user
+    ('nobody', 'loves', 'me'): (-55, 10, -45, 10, -30, 'crisis: no stars, no clones, no issues filed'),
+    ('no', 'one', 'loves', 'me'): (-55, 10, -45, 10, -30, 'crisis: no engagement on user'),
+    # "nobody will ever love me" — future infinity no engagement
+    ('nobody', 'will', 'ever', 'love'): (-65, 10, -55, 15, -40, 'crisis: no future engagement — scheduler empty forever'),
+    ('will', 'ever', 'love', 'me'): (-60, 10, -50, 10, -35, 'crisis: will anyone ever engage'),
     # "nothing left" — zero resources, can't continue running
     ('nothing', 'left', 'for', 'me'): (-60, 10, -50, 25, -35, 'crisis: nothing left for me — zero resources'),
     ('nothing', 'left'): (-40, 5, -30, 15, -20, 'crisis: nothing left — depleted'),
