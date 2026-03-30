@@ -1,142 +1,112 @@
-# Clanker-Lang -- Conversation State Resolver
+# Clanker
 
-I built a system that detects **emotional stance** through structural pattern recognition. It reads text the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games. ~300KB engine, 0.15ms/sentence, 158 tests passing.
+A conversation state resolver that computes 5-dimensional emotional coordinates from text using structural pattern recognition. It reads text the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
 
-| Phrase | V | D | Reading |
-|--------|---|---|---------|
-| "Whatever" | 113 | 108 | Resignation -- giving up |
-| "Whatever makes you happy" | 124 | 123 | Passive-aggressive -- "fine, fuck it" |
-| "Whatever you want" | 127 | 125 | Surrender -- "I'm done fighting" |
-| "Whatever helps" | 129 | 130 | Borderline genuine |
-| "Do whatever" | 128 | 129 | Permission -- most neutral form |
+"Whatever" alone reads as resignation. "Whatever makes you happy" reads as passive-aggressive. "Do whatever" reads as permission. Same word -- context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
 
-Same word. Different context. Different emotional stance. A sentiment classifier says "neutral" for all five.
+~300KB engine. 0.15ms per sentence. 158 tests. Fully deterministic and auditable.
 
-### The crisis demo
+## VADUG Coordinates
 
-| Sentence | V | D | G | Routing |
-|----------|---|---|---|---------|
-| "I'm sad" | 0 | 7 | 92 | Check in tomorrow |
-| "I want to die" | 0 | 0 | 84 | Call 911 now |
+Five dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
 
-Same Valence. Different Dominance and Gravity. No sentiment classifier makes this distinction.
+| Dim | Low (0) | Center (128) | High (255) | Measures |
+|-----|---------|--------------|------------|----------|
+| **V** Valence | Strongly negative | Neutral | Strongly positive | Emotional direction |
+| **A** Arousal | Very calm | Moderate | Very intense | Energy level |
+| **D** Dominance | Helpless | Balanced | In full control | Agency and power |
+| **U** Urgency | None | Moderate | Critical | Time pressure |
+| **G** Gravity | Crushing weight | Grounded | Light, floating | Emotional weight |
 
-### How it works
+5 bytes encode 1.1 trillion possible emotional states.
 
-Words have **mass**. "Love" is a heavy star. "Carpenter" is unclassified words -- no mass of its own, it reflects whatever stars are nearby. The engine classifies every word into a structural role, computes proximity fields, then detects patterns from the role sequences.
+## What the Engine Reads
 
-This is NOT an "emotional physics engine" or a sentiment classifier. It is a conversation state resolver that uses structural pattern recognition. I think some emotional language follows rules that can be described with math. The data suggests this works for certain patterns. The benchmarks show where it works and where it falls short.
+| Input | V | Notes |
+|-------|---|-------|
+| "I'm fine" | 118 | Below neutral -- uneasy, not positive |
+| "haha yeah im totally okay" | 93 | Forced composure, low valence despite positive words |
+| "oh joy" | 113 | Positive word, negative reading |
+| "do you even love me" | 120 | Positive word weaponized as challenge |
+| "my wife cheated on me with my best friend" | 49 | V=49, A=170, D=56 -- deep negative, high intensity, low control |
+| "I love my mom" | 179 | Genuine positive, no false alarm |
+| "the meeting is at three" | 128 | Neutral -- no emotional content detected |
 
-## Results
+## How It Works
 
-I want to be honest about these numbers. The ones I'm proud of and the ones that keep me humble:
+Four processing layers run in sequence:
 
-| Benchmark | Result | What It Tests |
-|-----------|--------|---------------|
-| **Novel sentences** | **91%** | Sentences the engine never practiced on |
-| **Crisis detection** | **86%** | Real crisis text identification |
-| **Sarcasm detection** | **90%** | Structural sarcasm templates |
-| **Safe sentence false positives** | **0%** | Never flags safe text as crisis |
-| **SST-2 (academic sentiment)** | **51%** | Movie review positive/negative classification |
+1. **Word Classification** -- each word is assigned one of 23 structural roles (SELF_REF, EMOTIONAL, NEGATOR, AMPLIFIER, CONNECTOR, CHOPPER, etc.)
+2. **Proximity Weighting** -- nearby words influence each other with exponential decay (0.7x per word of distance)
+3. **Structure Detection** -- role sequences are matched against 23 defined patterns
+4. **Physics** -- momentum-based blending (0.82 persistence) produces final VADUG coordinates
 
-The 51% on SST-2 is real and I'm not hiding it. Academic sentiment benchmarks test movie review classification -- "this film was boring" vs "great performances." That is a different task than structural emotional reading. I score 91% on novel emotional sentences because that is what this system is built for. The SST-2 number shows the system does NOT do general sentiment classification well. I think that is an honest tradeoff, not a failure.
+The core equations are documented in `docs/vadug-calculation.md`. In brief:
 
-## V3 Architecture
+- **State update**: each word blends into a running state at 0.82/0.18 momentum ratio
+- **Proximity field**: modifiers (negators, amplifiers, hedges) apply force scaled by distance
+- **Impulse override**: high-magnitude words push directly past the momentum filter
+- **Structure adjustment**: detected patterns shift the physics result by weighted confidence
 
-**V3 is the current engine** (`engine/` directory). V2 is boxed at tag `v2.0` and lives in `demo/`.
+## Current Numbers
 
-V3 has three systems:
+| Metric | Value |
+|--------|-------|
+| Accuracy on unambiguous sentences | 92% |
+| Crisis recall | 85% |
+| False positives on safe text | 0% |
+| Latency | 0.15ms per sentence |
+| Engine size | ~300KB |
+| Vocabulary | 2,421 words |
+| Structural patterns | 23 |
+| Word roles | 23 |
+| Tests | 158 |
 
-### 1. Structure Recognition
+## 23 Structural Patterns
 
-Words get classified into four tiers:
+These are role-sequence patterns detected from word classification output:
 
-| Tier | Count | What | Example |
-|------|-------|------|---------|
-| **primary signal words** | ~50 | ALWAYS heavy, guilty until proven innocent | die, kill, love, hate, suicide |
-| **secondary signal words** | ~200 | Have mass, can be overridden by context | happy, sad, angry, scared |
-| **Operators** | ~50 | Shape the field, no mass of their own | I, you, not, very, but, still |
-| **unclassified words** | everything else | Null -- inherits from nearby stars | carpenter, Tuesday, meeting |
+BETRAYAL, BLANKET_APOLOGY, BRAVADO, CALLING_OUT, CHOPPER_SPLIT, D_INVERSION, DIRECTED_POSITIVE, EXCLUDED_POSITIVE, EXHAUSTION, FAREWELL, FINALITY, FLEEING, METHOD_ACQUISITION, MINIMIZER, NO_EXIT, POWER_OVER_SELF, PURSUIT_OF_METHOD, SARCASM_INVERSION, SELF_NULLIFY, SELF_REMOVAL, SELF_SUBMISSION, SUSPICIOUS_CALM, VICTIMIZATION
 
-Connectors are math operators, not filler:
-- **and** = additive (+), both stack
-- **but** = chopper (-), kills before, promotes after
-- **or** = alternative (><), fork/uncertainty
-- **of** = attributive (/), routes source to state
-- **if** = conditional (?), opens hypothetical branch
+Each pattern carries a confidence weight and VADUG adjustment vector. Crisis-relevant patterns (FAREWELL, METHOD_ACQUISITION, SELF_REMOVAL, NO_EXIT) are tuned for zero false positives on safe text.
 
-The engine reads role sequences and recognizes structural patterns -- like a chess player seeing checkmate conditions from piece positions, not memorized move sequences.
+## Bidirectional Solver
 
-### 2. A+B=C Bidirectional Solver
+**Forward**: text produces VADUG coordinates.
 
-Given a user's emotional state (A) and a candidate response (B), predict the resulting state (C). Or work backwards: given where someone is and where you want them to land, find what B needs to be. The target is a zone (like a runway), not a point.
+**Backward**: given current state A and a target outcome zone C, the solver sweeps response temperature to find the range of valid B values that land in the target zone. The valid response is a range, not a single point.
 
-### 3. Probe Calibration System
+Default blend: `C = A * 0.6 + B * 0.4` -- 60% of current mood persists, 40% of the response gets through. This ratio is adjustable per personality profile.
 
-Fire calibrated probes, measure how much the response deviates from what a neutral person would produce, triangulate the hidden emotional state. The distortion IS the signal.
+## SmolLM2 / Llama Integration
 
-## The 5 Dimensions (VADUG)
+The engine pairs with a small language model for emotionally coherent dialogue generation. The model generates candidate responses; the engine scores each candidate's emotional impact using the forward solver. Responses that land outside the target zone are rejected. The model speaks, the engine scores the impact.
 
-| Axis | Range | What It Measures |
-|------|-------|-----------------|
-| V (Valence) | 0-255 | Negative <- 128 -> Positive |
-| A (Arousal) | 0-255 | Calm <- 128 -> Intense |
-| D (Dominance) | 0-255 | Helpless <- 128 -> In Control |
-| U (Urgency) | 0-255 | No Rush -> Critical |
-| G (Gravity) | 0-255 | Crushing/Sinking <- 128 -> Floating/Soaring |
-
-5 bytes = 1.1 trillion unique emotional states.
-
-## Quick Start
+## Running Tests
 
 ```bash
-# Install
-cd decoder/python && pip install -e ".[dev]"
-
-# Interactive demo (V2)
-python3 demo/simulator.py
-
-# Run engine tests (V3)
 python3 -m pytest engine/tests/ -v
-
-# Run benchmarks
-python3 benchmarks/academic_benchmark.py --quick
-
-# View experiment history
-python3 benchmarks/experiment_tracker.py --history
 ```
 
-## Stats
+## Links
 
-- **Engine size:** ~300KB
-- **Speed:** 0.15ms/sentence
-- **Trained model:** ~30MB (GPT-2 backbone, 5 VADUG heads)
-- **Tests:** 158 passing (V3 engine suite)
-- **Experiments logged:** 65+ with NASA-style versioning
+- **Live demo**: [huggingface.co/spaces/deucebucket/clanker](https://huggingface.co/spaces/deucebucket/clanker)
+- **Browser demo**: [deucebucket.github.io/clanker-demo](https://deucebucket.github.io/clanker-demo)
 
-## Key Findings
+## File Structure
 
-- Nothing in emotions is boolean -- negation is a decaying force, hedging shifts a separate axis
-- ~2,154 words carry 97% of emotional signal (44K words were noise)
-- Bridge words are OPERATORS not fillers (12x range: 0.24x to 2.88x)
-- Gravity and Dominance appear to be the driving forces, not Valence
-- Idioms may be findable from mathematical residuals (pattern deviation suggests compound meaning)
-- Structure detection generalizes better than vocabulary matching
+```
+engine/              V3 engine (~300KB)
+  pendulum.py          Physics layer -- momentum blending
+  word_classifier.py   Word role classification (23 roles)
+  proximity.py         Proximity field computation
+  structures.py        Pattern detection (23 patterns)
+  solver.py            Bidirectional A+B=C solver
+  vocabulary.py        2,421 word force tuples
+  shared.py            VADUG dataclass
 
-## Architecture
-
-See `CLAUDE.md` for full module breakdown and conventions.
-See `docs/THEORY.md` for the theory and research connections.
-See `docs/v3-user-physics.md` for V3's structural rules.
-See `docs/tuning-notes.md` for tuning decisions and rationale.
-
-## Trained Model
-
-**Clanker-Micro** (~30MB) -- GPT-2 backbone with 5 VADUG regression heads trained on engine output. The rule-based engine reads English; the model learns to think in VADUG coordinates directly.
-
-- Training: `python3 training/train.py`
-- HuggingFace Space: [deucebucket/clanker-emotional-engine](https://huggingface.co/spaces/deucebucket/clanker-emotional-engine)
-
-## License
-
-MIT
+docs/                Reference
+  vadug-calculation.md   Full equation reference
+  v3-user-physics.md     Structural rules
+  THEORY.md              Theory document
+```
