@@ -2443,3 +2443,23 @@ _CYCLE11_EMOTIONAL_GAPS = {
     'meetings':     (0, 0, 0, 0, 0),             # override mundane-negative — truly neutral
 }
 EMOTIONAL_VOCABULARY.update(_CYCLE11_EMOTIONAL_GAPS)
+
+# ── Cycle 17: Reddit resolver error mining — high-frequency missing emotional words ──
+_CYCLE17_ERROR_MINING = {
+    # STRONG POSITIVE
+    'triumph':      (+70, +50, +60, +0, +40),    # victory/achievement
+    'masterpiece':  (+80, +20, +50, +0, +35),    # excellence
+    'treasure':     (+50, +15, +30, +0, +25),    # valued/precious
+    # STRONG NEGATIVE
+    'despise':      (-90, +40, +30, +10, -30),   # intense hatred
+    'loathsome':    (-100, +30, +10, +10, -35),  # deeply repulsive
+    'sickening':    (-80, +40, -20, +15, -30),   # nauseating disgust
+    'abomination':  (-100, +40, +10, +15, -40),  # extreme moral revulsion
+    'nonsense':     (-30, +15, +20, +5, -10),    # dismissive
+    # EMOTIONAL STATE
+    'emptiness':    (-50, -20, -40, +5, -35),    # void/hollowness
+    'fills':        (+20, +15, +10, +0, +10),    # "fills me with" — mild positive carrier
+    # CHALLENGE/DEFIANCE
+    'dare':         (+20, +40, +40, +15, +10),   # defiant challenge
+}
+EMOTIONAL_VOCABULARY.update(_CYCLE17_ERROR_MINING)
