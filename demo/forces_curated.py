@@ -2668,3 +2668,17 @@ _CONNECTION_WORDS = {
     'quiet':        (-5, -15, -5, +0, -5),       # reduced bandwidth
 }
 EMOTIONAL_VOCABULARY.update(_CONNECTION_WORDS)
+
+# ── Help as a lifter ──
+# Help is a ramp — it goes UP. Slightly positive V (lifting is positive).
+# But ASKING for help = the person is DOWN and needs the lift.
+# "help me" = pulling you to me, vulnerability. "helping" = active lift.
+# Context determines if it's calm lift or desperate pull.
+_HELP_WORDS = {
+    'help':         (+15, +15, +10, +10, +15),   # lifter — slightly positive, elevated G (it matters)
+    'helping':      (+20, +10, +15, +5, +10),    # active lifting — positive action
+    'helped':       (+25, +5, +15, +0, +15),     # lift completed — more positive (relief)
+    'helpful':      (+30, +5, +15, +0, +10),     # the lift worked
+    'helpless':     (-50, +10, -50, +20, -30),   # no ramp available — crisis-adjacent
+}
+EMOTIONAL_VOCABULARY.update(_HELP_WORDS)

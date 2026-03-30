@@ -260,6 +260,12 @@ BIGRAM_EXPRESSIONS = {
     ("dont", "talk"): (-30, 10, 25, 10, -15, "refuse: reject connection, high D"),
     ("shut", "up"): (-35, 25, 30, 15, -15, "sever: aggressive connection cut"),
 
+    # Help as lifter — context determines if calm or desperate
+    ("help", "me"): (-20, 20, -25, 20, -15, "pull: im down, lift me — vulnerability"),
+    ("help", "us"): (-15, 15, -15, 15, -10, "pull: we're down, lift us"),
+    ("not", "helping"): (-25, 15, -10, 10, -10, "frustration: the lift failed"),
+    ("help", "wanted"): (5, 5, 5, 5, 5, "mild: just looking for a ramp"),
+
     # Bullshit — universal nullifier, but "no bullshit" = authenticity
     # "no bullshit" = "no null? are you being real?" — hopeful/speculative
     # Hedges receiver POSITIVE — being asked to confirm they're presenting real value
