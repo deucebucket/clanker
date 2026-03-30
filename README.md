@@ -1,6 +1,6 @@
 # Clanker-Lang
 
-A 300KB engine that detects **emotional stance**, not just emotion. **88.3% essay benchmark, 72.8% on 174K Reddit posts.** One word, five readings:
+A 300KB engine that detects **emotional stance**, not just emotion. **98.3% essay benchmark (118/120), 72.8% on 174K Reddit posts.** One word, five readings:
 
 | Phrase | V | D | Reading |
 |--------|---|---|---------|
@@ -25,7 +25,7 @@ Same Valence. Different Dominance and Gravity. No classifier can make this disti
 
 ### How it works
 
-26 conversational forces act on text word-by-word, like PEMDAS for emotions. Two layers: **primary states** (grief, rage, joy — the raw emotion) and **modifiers** (sarcasm, hedging, deflection — skills that bend the state). Modifiers nudge, never override. The engine knows its own limits — returns NULL confidence when it can't resolve meaning, hands off to a neural model. **88.3% on essay benchmarks, 72.8% on 174K real Reddit posts.** Sarcasm detected via 6 structural templates ("crossed wires" — positive terminal + negative port). 2,900+ mapped vocabulary entries, 0.1ms/sentence, 300KB total.
+26 conversational forces act on text word-by-word, like PEMDAS for emotions. Two layers: **primary states** (grief, rage, joy — the raw emotion) and **modifiers** (sarcasm, hedging, deflection — skills that bend the state). Modifiers nudge, never override. The engine knows its own limits — returns NULL confidence when it can't resolve meaning, hands off to a neural model. **98.3% on essay benchmarks (118/120), 72.8% on 174K real Reddit posts.** Sarcasm detected via 6 structural templates ("crossed wires" — positive terminal + negative port). 2,900+ mapped vocabulary entries, 0.1ms/sentence, 300KB total.
 
 ## Try It
 
@@ -68,7 +68,7 @@ Validated across three independent test surfaces:
 
 | Benchmark | Result | What It Tests |
 |-----------|--------|---------------|
-| **Essay benchmark** | **88.3%** | Full emotional arcs (grief 100%, joy 100%, neutral 100%, sarcasm 93%, rage 93%) |
+| **Essay benchmark** | **98.3%** | 6 categories at 100% (grief, rage, joy, neutral, fear, conviction), sarcasm 93%, hedging 93% |
 | **Reddit real-world** | **72.8%** | 174K real posts, balanced accuracy |
 | **Crisis recall** | **72%** | Real crisis text detection |
 

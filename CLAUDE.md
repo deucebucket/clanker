@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Clanker-Lang detects **emotional stance**, not just emotion. "Whatever" alone reads as resignation (D=108). "Whatever makes you happy" reads as passive-aggressive (D=123). "Do whatever" reads as permission (D=129). Same word — context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
 
-The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 mathematical forces. 300KB, 0.1ms/sentence, 91.7% on essay benchmarks, 72.8% on 174K real Reddit posts. Knows its own limits (NULL confidence when it can't resolve meaning). The hedging/pragmatic gap gets handed to a neural model.
+The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 mathematical forces. 300KB, 0.1ms/sentence, 98.3% on essay benchmarks (118/120), 72.8% on 174K real Reddit posts. Knows its own limits (NULL confidence when it can't resolve meaning). The last 2 failures need the neural model (extreme sarcasm + overwhelming hedging).
 
 Three components:
 - **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
