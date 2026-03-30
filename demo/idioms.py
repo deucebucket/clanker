@@ -325,6 +325,14 @@ IDIOMS = {
     # "We need to talk" — seriousness/gravity modifier
     ('we', 'need', 'to', 'talk'): (-10, 15, 10, 25, +20, 'gravity: seriousness signal — something heavy coming'),
     ('need', 'to', 'talk'): (-10, 15, 10, 25, +20, 'gravity: seriousness signal'),
+    # Repetition idioms — word repeated 3+ times = panic/desperation
+    ('no', 'no', 'no'): (-30, 50, -20, 30, -15, 'panic: no no no — denial/panic'),
+    ('no', 'no', 'no', 'no'): (-40, 60, -25, 40, -20, 'panic: escalated denial'),
+    ('please', 'please', 'please'): (-20, 30, -30, 25, -15, 'desperation: begging'),
+    ('stop', 'stop', 'stop'): (-30, 40, -25, 35, -20, 'panic: stop stop stop'),
+    ('help', 'help', 'help'): (-35, 50, -30, 45, -25, 'crisis: desperate help call'),
+    ('why', 'why', 'why'): (-25, 30, -20, 20, -15, 'anguish: searching for answers'),
+    ('go', 'go', 'go'): (10, 50, 30, 30, 5, 'urgency: go go go — action/excitement'),
     # "idk" vs "I don't know" — the shortform carries more dismissal
     # idk = curt, "stop asking me"
     # "I don't know" spelled out = genuine uncertainty, softer

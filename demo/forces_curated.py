@@ -2178,7 +2178,11 @@ _BENCHMARK_WORDS = {
     "fuck": (-37, +33, +18, +40, +15),
     # "fucking" handled as amplifier (1.6x) in context_operators, not as payload
     "shit": (-52, +38, -22, +31, -9),
-    "bullshit": (-100, +50, +20, +40, -30),  # universal nullifier — ALWAYS negative, no exceptions
+    # "bullshit" = NULL. Not negative — the absence of value. Zero.
+    # Everything > bullshit, so comparison to it = negative.
+    # V near-zero (it IS nothing), but G deeply negative (worthless/void).
+    # When it touches other words, it nullifies them toward zero.
+    "bullshit": (-80, +50, +20, +40, -50),  # null — void of value, G-crusher
     # Common emotional words missing from curated set
     "director": (+32, +56, +119, +97, +38),
     "watch": (+50, +29, +127, +63, +16),

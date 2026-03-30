@@ -492,6 +492,8 @@ class PrePassInfo:
     double_negation: bool = False               # two negators cancel each other
     hedge_count: int = 0                        # number of hedging operators in sentence
     words_lower: list = None                    # lowercase word list for post-pass
+    repetition_word: str = None                 # word repeated 3+ times (panic signal)
+    repetition_count: int = 0                   # how many times repeated
 
     def __post_init__(self):
         self.idiom_spans = self.idiom_spans or {}
@@ -732,13 +734,20 @@ class PendulumV2:
 
             word_lower = word.lower()
 
-            # Clause boundary kills negation
+            # Clause boundary kills negation + "but" chops sentence
             if word_lower in CLAUSE_BOUNDARIES:
                 old_nf = negation_force
                 negation_force = 0.0
+                # "But" is a chopper — pulls V toward neutral, what follows overrides
+                # "I love you but I'm leaving" — but dampens the love, leaving takes over
+                if word_lower == "but":
+                    # "But" is a chopper — resets operator chain so second half starts fresh.
+                    # Doesn't pull V directly (that breaks balanced sentences like
+                    # "not happy but okay"). The chop effect comes from resetting context.
+                    pending_operators = {}  # fresh start after but
                 trace.append(self._trace_entry(
                     word, "BOUNDARY", state,
-                    f"clause boundary, negation {old_nf:.2f}→0.00"
+                    f"clause boundary{' (chopper)' if word_lower == 'but' else ''}, negation {old_nf:.2f}→0.00"
                 ))
                 i += 1
                 continue
@@ -1137,6 +1146,16 @@ class PendulumV2:
                         "theoretically", "conceivably", "likely", "unlikely"}
         info.hedge_count = sum(1 for w in lower_words if w in _hedge_words)
         info.words_lower = lower_words
+
+        # Repetition detection: "no no no" = panic, "please please" = desperation
+        # 3+ consecutive identical words = amplified emotional signal
+        from collections import Counter
+        word_counts = Counter(lower_words)
+        for word, count in word_counts.most_common(1):
+            if count >= 3:
+                info.repetition_word = word
+                info.repetition_count = count
+
         # Also count hedge PHRASES (multi-word hedging structures)
         text_lower = " ".join(lower_words)
         _hedge_phrases = ["not sure", "in theory", "in some cases", "in practice",
@@ -1398,6 +1417,15 @@ class PendulumV2:
             if has_haha:
                 # haha = genuine amusement, mild positive
                 v = v * 0.9 + 138 * 0.1
+
+        # Repetition detection (Layer 2): "no no no" = panic, amplify emotion
+        # Repeated words drag V further from neutral + spike A (arousal/panic)
+        if pre and pre.repetition_word and pre.repetition_count >= 3:
+            # Amplify V distance from neutral by repetition count
+            amp = 1.0 + (pre.repetition_count - 2) * 0.15  # 1.15x at 3, 1.30x at 4, 1.45x at 5
+            v = 128 + (v - 128) * amp
+            a = 128 + (a - 128) * amp  # arousal spikes too (panic energy)
+            a = min(a, 255)
 
         # Bravado detection (Layer 2 modifier): false confidence hides hurt
         # "I don't even care", "doesn't bother me" = D drops, V pulled negative

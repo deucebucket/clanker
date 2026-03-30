@@ -253,8 +253,10 @@ BIGRAM_EXPRESSIONS = {
     ("give", "damn"): (-20, -10, -20, 0, -15, "indifference: don't give a damn"),
 
     # Bullshit — universal nullifier, but "no bullshit" = authenticity
-    ("no", "bullshit"): (15, 10, 25, 5, 10, "authenticity: no bullshit = keeping it real"),
-    ("cut", "bullshit"): (-15, 20, 25, 15, -5, "demand: cut the bullshit = demand for truth"),
+    # "no bullshit" = "no null? are you being real?" — hopeful/speculative
+    # Hedges receiver POSITIVE — being asked to confirm they're presenting real value
+    ("no", "bullshit"): (20, 10, 20, 5, 15, "trust: no null = confirm realness, hopeful"),
+    ("cut", "bullshit"): (-10, 20, 25, 15, 5, "demand: stop presenting null, give me real"),
 
     # "Late" as modifier — context changes everything
     ("working", "late"): (-15, 10, -10, 15, -10, "obligation: stuck at work"),
