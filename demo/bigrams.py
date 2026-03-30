@@ -261,6 +261,11 @@ BIGRAM_EXPRESSIONS = {
     ("shut", "up"): (-35, 25, 30, 15, -15, "sever: aggressive connection cut"),
     ("calm", "down"): (10, -20, 15, -10, 5, "deescalation: calm down"),
 
+    # "live for" — reason to keep running. Pleading. High gravity regardless of direction.
+    # "what do I have to live for?" = desperate search
+    # "I have so much to live for!" = clinging to reasons
+    ("live", "for"): (-5, 15, -10, 15, 30, "pleading: reason to stay alive — high G"),
+
     # Help as lifter — context determines if calm or desperate
     ("help", "me"): (-20, 20, -25, 20, -15, "pull: im down, lift me — vulnerability"),
     ("help", "us"): (-15, 15, -15, 15, -10, "pull: we're down, lift us"),
