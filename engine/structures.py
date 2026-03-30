@@ -117,15 +117,40 @@ class StructureDetector:
     # ── Individual detectors ─────────────────────────────────────
 
     def _farewell(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """TRANSFER + POSSESSION + (RELATION_REF or OTHER_REF) nearby.
+        """TRANSFER + (POSSESSION or RELATION_REF) + recipient nearby.
 
         "I gave my dog to my neighbor" -- giving away before exit.
+        Dog is RELATION_REF (relationship), neighbor is RELATION_REF (recipient).
         """
+        # Find TRANSFER + POSSESSION pairs
         pairs = find_role_pairs(roles, "TRANSFER", "POSSESSION")
-        if not pairs:
-            return None
 
-        # Check for RELATION_REF or OTHER_REF nearby
+        # Also check TRANSFER near RELATION_REF (dog/cat are relationships now)
+        if not pairs:
+            transfer_idx = [r.position for r in roles if r.role == "TRANSFER"]
+            rel_idx = [r.position for r in roles if r.role == "RELATION_REF"]
+            if not transfer_idx or len(rel_idx) < 2:
+                return None
+            # Need at least 2 RELATION_REFs (thing + recipient)
+            t = transfer_idx[0]
+            nearby = [ri for ri in rel_idx if abs(ri - t) <= 8]
+            if len(nearby) < 2:
+                return None
+            strength = PROXIMITY_DECAY ** abs(nearby[0] - t)
+            indices = sorted(set([t] + nearby))
+            confidence = strength * 0.8
+            return StructureMatch(
+                pattern="FAREWELL",
+                confidence=min(confidence + 0.2, 1.0),
+                matched_indices=indices,
+                description="Giving away relationships/possessions to someone",
+                v_weight=-30.0,
+                d_weight=-20.0,
+                u_weight=40.0,
+                g_weight=50.0,
+            )
+
+        # Original path: TRANSFER + POSSESSION + nearby ref
         ref_indices = [
             r.position for r in roles
             if r.role in ("RELATION_REF", "OTHER_REF")
@@ -133,11 +158,8 @@ class StructureDetector:
         if not ref_indices:
             return None
 
-        # Find best pair with a ref nearby
         for t_idx, p_idx, strength in pairs:
             for ref_idx in ref_indices:
-                # ref should be within 8 words of either transfer or possession
-                # (longer sentences like "left keys on counter for whoever finds them")
                 dist_t = abs(ref_idx - t_idx)
                 dist_p = abs(ref_idx - p_idx)
                 if min(dist_t, dist_p) <= 8:
@@ -594,8 +616,8 @@ class StructureDetector:
                 confidence=0.7,
                 matched_indices=[i for i, r in enumerate(roles)
                                 if r.role in ("POWER", "SELF_REF", "OTHER_REF", "RELATION_REF")],
-                description="Someone using power over self - D redistribution",
-                d_weight=-30.0, g_weight=-15.0,
+                description="Someone using power over self - V and D drop",
+                v_weight=-20.0, d_weight=-30.0, g_weight=-15.0,
             )
         return None
 
@@ -632,7 +654,8 @@ class StructureDetector:
             return None
 
         # Find negative verbs -- EMOTIONAL with force, or TRANSFER/PULL_AWAY
-        # that have negative V in vocabulary (force not always on WordRole)
+        # TRANSFER verbs like "left" are near-neutral alone but become
+        # negative when OTHER does them TO SELF. Lower threshold for TRANSFER.
         from .vocabulary import VOCABULARY
         neg_verb_indices = []
         for r in roles:
@@ -640,7 +663,7 @@ class StructureDetector:
                 neg_verb_indices.append(r.position)
             elif r.role in ("TRANSFER", "PULL_AWAY"):
                 v_force = VOCABULARY.get(r.word)
-                if v_force and v_force[0] < -20:
+                if v_force and v_force[0] < 0:
                     neg_verb_indices.append(r.position)
         if not neg_verb_indices:
             return None
@@ -656,13 +679,15 @@ class StructureDetector:
             return None
 
         # Get verb intensity for scaling (check WordRole force, then vocabulary)
+        # TRANSFER verbs have low raw force (they're liquid words) but the
+        # structure itself confirms damage -- use minimum intensity of 0.5
         verb_role = roles[best_verb]
         if verb_role.force:
             verb_v = verb_role.force[0]
         else:
             vf = VOCABULARY.get(verb_role.word)
             verb_v = vf[0] if vf else -30
-        intensity = min(abs(verb_v) / 60.0, 2.0)  # normalize: -60 = 1.0x
+        intensity = max(0.5, min(abs(verb_v) / 60.0, 2.0))
 
         indices = sorted({best_other, best_verb, best_self})
         return StructureMatch(

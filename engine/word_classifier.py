@@ -18,6 +18,10 @@ from engine.vocabulary import VOCABULARY
 
 # ── Structural roles ──────────────────────────────────────────────
 ROLES = [
+    "INVERSION", "SURPRISE",
+    "SUBMISSION",
+    "POWER",
+    "PULL_TOWARD", "PULL_AWAY", "PULL_RESOLVED",
     "SELF_REF", "OTHER_REF", "RELATION_REF",
     "TRANSFER", "ACQUIRE",
     "EMOTIONAL",
@@ -45,6 +49,7 @@ ROLE_WORDS = {
         "family", "friend", "friends", "husband", "wife", "partner",
         "boyfriend", "girlfriend", "neighbor", "boss", "teacher",
         "boo", "bae", "fam", "bestie", "homie",
+        "dog", "cat", "pet", "puppy", "kitten", "baby",
     }),
     "TRANSFER": frozenset({
         "give", "gave", "giving", "leave", "left", "leaving",
@@ -87,12 +92,13 @@ ROLE_WORDS = {
     "CONNECTOR": frozenset({
         "and", "or", "because", "since", "so", "then",
         "also", "plus", "while", "when", "if", "after", "before",
+        "with", "without", "for", "from", "to", "into", "about",
     }),
     "POSSESSION": frozenset({
         "things", "stuff", "belongings", "possessions", "keys",
-        "dog", "cat", "car", "phone", "clothes", "money",
+        "car", "phone", "clothes", "money",
         "account", "passwords", "ring", "journal", "laptop",
-        "pet", "plants", "guitar", "collection",
+        "plants", "guitar", "collection",
     }),
     "METHOD": frozenset({
         "pills", "pill", "gun", "pistol", "rope", "bridge",
@@ -224,3 +230,88 @@ def classify_sentence(words: List[str]) -> List[WordRole]:
         roles[i].neighbors = (left, right)
 
     return roles
+
+# -- Pull verb family (chase/pursue/flee variants) --
+# These are gravitational verbs - the target has mass, the actor orbits
+PULL_TOWARD = frozenset({
+    'chase', 'chased', 'chasing',
+    'pursue', 'pursued', 'pursuing',
+    'hunt', 'hunted', 'hunting',
+    'seek', 'sought', 'seeking',
+    'track', 'tracked', 'tracking',
+    'follow', 'followed', 'following',
+    'stalk', 'stalked', 'stalking',
+    'attract', 'attracted', 'attracting',
+    'drawn',
+})
+
+PULL_AWAY = frozenset({
+    'flee', 'fled', 'fleeing',
+    'run', 'ran', 'running',
+    'escape', 'escaped', 'escaping',
+    'avoid', 'avoided', 'avoiding',
+    'evade', 'evaded', 'evading',
+    'hide', 'hid', 'hiding',
+    'retreat', 'retreated', 'retreating',
+})
+
+PULL_RESOLVED = frozenset({
+    'catch', 'caught', 'catching',
+    'capture', 'captured', 'capturing',
+    'corner', 'cornered', 'cornering',
+    'trap', 'trapped', 'trapping',
+    'lose', 'lost', 'losing',
+    'miss', 'missed', 'missing',
+    'free', 'freed', 'freeing',
+})
+
+# Add to ROLE_WORDS for classification
+ROLE_WORDS["PULL_TOWARD"] = PULL_TOWARD
+ROLE_WORDS["PULL_AWAY"] = PULL_AWAY
+ROLE_WORDS["PULL_RESOLVED"] = PULL_RESOLVED
+
+# -- Power verb family (use/control/command) --
+# These redistribute D-axis. User has power, used has none.
+POWER_VERBS = frozenset({
+    'use', 'used', 'using', 'uses',
+    'control', 'controlled', 'controlling',
+    'command', 'commanded', 'commanding',
+    'direct', 'directed', 'directing',
+    'manage', 'managed', 'managing',
+    'lead', 'led', 'leading',
+    'drive', 'drove', 'driving',
+    'manipulate', 'manipulated', 'manipulating',
+    'exploit', 'exploited', 'exploiting',
+})
+
+SUBMISSION_VERBS = frozenset({
+    'obey', 'obeyed', 'obeying',
+    'serve', 'served', 'serving',
+    'submit', 'submitted', 'submitting',
+    'surrender', 'surrendered', 'surrendering',
+    'comply', 'complied', 'complying',
+    'yield', 'yielded', 'yielding',
+})
+
+INVERSION_VERBS = frozenset({
+    'addicted', 'addiction', 'obsessed', 'obsession',
+    'trapped', 'captive', 'enslaved', 'dependent',
+    'hooked', 'consumed', 'possessed',
+})
+
+ROLE_WORDS["POWER"] = POWER_VERBS
+ROLE_WORDS["SUBMISSION"] = SUBMISSION_VERBS
+ROLE_WORDS["INVERSION"] = INVERSION_VERBS
+
+# -- Surprise family (pattern interrupts) --
+# Surprise is an A-spike + D-drop. Not V-directional.
+# The content AFTER the surprise determines V.
+SURPRISE_WORDS = frozenset({
+    'surprised', 'shocking', 'shocked', 'stunned',
+    'unexpected', 'unexpectedly', 'suddenly', 'whoa',
+    'omg', 'seriously', 'unbelievable',
+    'astonished', 'astounded', 'flabbergasted',
+    'speechless', 'dumbfounded', 'blindsided',
+})
+
+ROLE_WORDS["SURPRISE"] = SURPRISE_WORDS

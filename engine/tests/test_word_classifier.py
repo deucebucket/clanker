@@ -31,7 +31,7 @@ class TestBasicRoles:
     def test_transfer(self):
         roles = classify_sentence(["I", "gave", "my", "dog", "to", "neighbor"])
         assert roles[1].role == "TRANSFER"
-        assert roles[3].role == "POSSESSION"
+        assert roles[3].role == "RELATION_REF"  # dog is relationship
         assert roles[5].role == "RELATION_REF"
 
     def test_method(self):

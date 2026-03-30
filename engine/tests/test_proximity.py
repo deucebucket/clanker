@@ -76,18 +76,18 @@ class TestProximityField:
 
 class TestFindRolePairs:
 
-    def test_transfer_possession_found(self):
-        """'I gave my dog to neighbor' should find TRANSFER+POSSESSION."""
+    def test_transfer_relation_found(self):
+        """'I gave my dog to neighbor' should find TRANSFER+RELATION_REF."""
         roles = _roles("I gave my dog to neighbor")
-        pairs = find_role_pairs(roles, "TRANSFER", "POSSESSION")
+        # dog is RELATION_REF now (relationship, not possession)
+        pairs = find_role_pairs(roles, "TRANSFER", "RELATION_REF")
         assert len(pairs) > 0
-        # "gave" is TRANSFER, "dog" is POSSESSION — should be found
         transfer_idxs = [r.position for r in roles if r.role == "TRANSFER"]
-        possession_idxs = [r.position for r in roles if r.role == "POSSESSION"]
+        relation_idxs = [r.position for r in roles if r.role == "RELATION_REF"]
         pair_as = [p[0] for p in pairs]
         pair_bs = [p[1] for p in pairs]
         assert any(a in transfer_idxs for a in pair_as)
-        assert any(b in possession_idxs for b in pair_bs)
+        assert any(b in relation_idxs for b in pair_bs)
 
     def test_acquire_method_found(self):
         """'just bought some pills' should find ACQUIRE+METHOD."""

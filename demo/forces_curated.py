@@ -2187,7 +2187,7 @@ _BENCHMARK_WORDS = {
     "director": (+32, +56, +119, +97, +38),
     "watch": (+50, +29, +127, +63, +16),
     "show": (+51, +38, +77, +43, -4),
-    "today": (+37, +27, +67, +67, 0),
+    "today": (0, 5, 0, 30, 0),
     "getting": (+24, +83, -44, +28, 0),
     "keep": (+28, +13, +49, +18, +10),
     "face": (+28, +40, +49, +18, 0),
@@ -2810,7 +2810,7 @@ EMOTIONAL_VOCABULARY.update(_ACTION_WORDS)
 
 # ── Rejection/abandonment actions ──
 _REJECTION_WORDS = {
-    'left':         (-25, 10, -15, 10, -10),    # ambiguous -- VICTIMIZATION structure adds weight when confirmed
+    'left':         (-8, 5, -5, 5, -3),          # near-neutral -- "I left" = agency. VICTIMIZATION adds weight when confirmed
     'leaving':      (-20, 15, -10, 10, -10),
     'ignored':      (-35, 10, -25, 10, -15),    # social rejection
     'ignoring':     (-30, 10, -20, 10, -15),
@@ -2839,4 +2839,66 @@ _DIGITAL_REJECTION = {
     'unfriended':   (-35, 10, -25, 10, -15),    # removed from circle
 }
 EMOTIONAL_VOCABULARY.update(_DIGITAL_REJECTION)
+
+
+# ── Violence/aggression actions ──
+_VIOLENCE_WORDS = {
+    'stabbed':      (-80, 90, -60, 80, -40),
+    'stab':         (-70, 80, -50, 70, -35),
+    'stabbing':     (-75, 85, -55, 75, -38),
+    'punched':      (-60, 80, -40, 60, -25),
+    'slapped':      (-55, 70, -35, 50, -20),
+    'choked':       (-75, 85, -60, 80, -35),
+    'shoved':       (-45, 60, -30, 40, -15),
+    'grabbed':      (-35, 50, -25, 30, -10),
+    'attacked':     (-70, 85, -50, 70, -30),
+    'assaulted':    (-80, 85, -60, 80, -40),
+    'beaten':       (-75, 80, -55, 70, -35),
+    'strangled':    (-80, 90, -65, 85, -40),
+    'thrown':       (-40, 60, -30, 40, -15),
+}
+EMOTIONAL_VOCABULARY.update(_VIOLENCE_WORDS)
+
+
+# ── Mockery/humiliation ──
+_MOCKERY_WORDS = {
+    'mocked':       (-40, 25, 15, 10, -15),
+    'mocking':      (-35, 25, 15, 10, -15),
+    'ridiculed':    (-45, 30, 15, 10, -20),
+    'taunted':      (-35, 25, 15, 10, -15),
+    'teased':       (-20, 15, 10, 5, -8),
+    'harassed':     (-55, 40, -25, 30, -20),
+}
+EMOTIONAL_VOCABULARY.update(_MOCKERY_WORDS)
+
+
+# ── Resignation/dismissal overrides ──
+# Single-word responses carry emotional weight through what's MISSING.
+# "whatever" = I stopped fighting. "k" = stripped to minimum effort.
+_RESIGNATION_OVERRIDES = {
+    'whatever':     (-15, -20, -20, 0, -5),
+    'sure':         (-5, -15, -15, 0, -3),
+    'cool':         (-5, -15, -10, 0, -3),
+    'k':            (-10, -20, -15, 0, -5),
+    'nvm':          (-15, -15, -15, 5, -5),
+    'nevermind':    (-15, -15, -15, 5, -5),
+    'idk':          (-10, -15, -15, 0, -5),
+    'idc':          (-15, -20, -20, 0, -5),
+}
+EMOTIONAL_VOCABULARY.update(_RESIGNATION_OVERRIDES)
+
+
+# ── Achievement/success actions ──
+_ACHIEVEMENT_WORDS = {
+    'worked':       (20, 10, 15, 0, 8),         # it worked = success
+    'succeeded':    (35, 20, 30, 0, 15),
+    'accomplished': (30, 15, 25, 0, 15),
+    'achieved':     (30, 15, 25, 0, 15),
+    'graduated':    (35, 20, 25, 0, 20),
+    'promoted':     (30, 15, 25, 0, 15),
+    'hired':        (25, 15, 20, 0, 10),
+    'fired':        (-45, 30, -35, 25, -20),    # job loss
+    'fired!':       (-45, 30, -35, 25, -20),
+}
+EMOTIONAL_VOCABULARY.update(_ACHIEVEMENT_WORDS)
 
