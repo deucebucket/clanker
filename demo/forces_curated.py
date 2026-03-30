@@ -2463,3 +2463,26 @@ _CYCLE17_ERROR_MINING = {
     'dare':         (+20, +40, +40, +15, +10),   # defiant challenge
 }
 EMOTIONAL_VOCABULARY.update(_CYCLE17_ERROR_MINING)
+
+# ── Cycle 23: Reddit false-negative mining — words engine missed as negative ──
+_CYCLE23_FALSE_NEG_MINING = {
+    # SUFFERING / PAIN
+    'unbearable':   (-80, +40, -50, +30, -35),   # extreme suffering
+    'sorrow':       (-60, -10, -40, +5, -40),     # deep grief/sadness
+    'aches':        (-30, +15, -20, +10, -15),    # physical/emotional pain
+    'aching':       (-30, +15, -20, +10, -15),
+    'tremble':      (-25, +40, -30, +20, -15),    # fear/anxiety physical response
+    'trembles':     (-25, +40, -30, +20, -15),
+    'creeping':     (-25, +20, -20, +15, -15),    # slow dread/anxiety
+    # DISGUST / REVULSION
+    'nauseated':    (-60, +30, -30, +15, -25),    # physical disgust
+    'nauseous':     (-55, +25, -25, +10, -20),
+    'vile':         (-90, +35, +10, +10, -30),    # extreme moral disgust
+    'repulsive':    (-85, +30, +5, +10, -30),     # deeply disgusting
+    'revolting':    (-80, +35, +5, +10, -30),
+    # INTENSITY MODIFIERS (these appear in "unbelievably sad" etc.)
+    'unbelievably': (0, +20, 0, +5, 0),           # pure intensifier, no V direction
+    'shockingly':   (0, +25, 0, +10, 0),          # pure intensifier
+    'outrageously': (0, +25, 0, +10, 0),          # pure intensifier
+}
+EMOTIONAL_VOCABULARY.update(_CYCLE23_FALSE_NEG_MINING)
