@@ -1,197 +1,234 @@
-# How VADUG is Calculated — Complete Formula Reference
+# How VADUG is Calculated - V3 Formula Reference
 
-## The Sentence Equation
+## The V3 Sentence Equation
 
 ```
-V_final = C(w₀) + Σᵢ [ F(wᵢ) × R(i) × G(i) × W × cap(2.5) × rec(i/n) × mom(i) ]
-```
-
-Where:
-- `C(w₀)` = first-word calibration (45 starter words prime the initial state)
-- `F(wᵢ)` = word force lookup (46,101 entries, each a 5-tuple: dv, da, dd, du, dg)
-- `R(i)` = ramp multiplier (if intensity word active: 0.5x to 2.0x, decays per word)
-- `G(i)` = relationship gravity (55 words: daughter=1.7x, friend=1.3x, stranger=0.9x, decays 0.3x/word)
-- `W` = personality willingness (empath=1.3x, stoic=0.8x, default=1.0x)
-- `cap(2.5)` = maximum combined multiplier (prevents clipping)
-- `rec(i/n)` = recency weight (0.9 + 0.4 × position/length — later words weigh more)
-- `mom(i)` = exponential decay momentum (strong words: 0.99 carry; weak words: exponential recovery toward center)
-
-## Step-by-Step Processing
-
-### Step 0: Initialize
-```
-V = 128, A = 128, D = 128, U = 0, G = 128  (neutral center)
-momentum = 0.99
-drift_rate = 0.01
+VADUG = Physics( Structures( Proximity( Roles(words) ) ) )
 ```
 
-### Step 1: First-Word Calibration
-45 starter words prime the pendulum before processing begins:
+Four layers, bottom-up:
+
+1. **Roles**: Each word gets a structural role (18 types)
+2. **Proximity**: Distance-based influence fields between words (decay 0.7x/word)
+3. **Structures**: Pattern recognition on role sequences (11 patterns)
+4. **Physics**: Momentum-based force application, produces final VADUG
+
+## Layer 1: Word Role Classification
+
+Every word falls into one of four tiers:
+
 ```
-"I"      → V=120 (self-referential, expect emotion)
-"nobody" → V=108, G=108 (negation opener)
-"help"   → V=110, U=30 (urgent)
-"hey"    → V=138 (greeting, warm)
-"why"    → V=122, A=135, U=15 (questioning)
+primary signal words:   die, kill, love, hate, suicide, hope, help, life, death
+                (~50 words, always heavy, always fire alerts)
+
+secondary signal words:  happy, sad, angry, scared, grateful, lonely...
+                (~200 words, have mass, in VOCABULARY with |dV| > 15)
+
+OPERATORS:      I(1.8x), you(0.7x), very(1.4x), not(flip), but(chop),
+                if(?), and(+), or(><), of(/), because(<-), so(->)
+                (~50 words, shape the field, no mass of their own)
+
+unclassified words:    carpenter, tuesday, meeting, building...
+                (everything else, no emotional mass, inherits from
+                proximity to nearby stars)
 ```
 
-### Step 2: Bookend Parsing
-First + last significant word determine relational geometry:
+### The 18 Structural Roles
 ```
-"Nobody ... me"    → isolation pattern → V -= 15, G -= 10
-"I ... myself"     → self_loop pattern → V -= 20, G -= 15
-"You ... me"       → accusation pattern → V -= 10, A += 15
-"Help ... please"  → plea pattern → U += 20
-```
-
-### Step 3: For Each Word
-
-#### 3a. Check Idiom (multi-word expressions)
-99 idioms, 5 or 6-element tuples:
-```
-("want", "to", "die") → (-95, +35, -60, +70, -65, "crisis")
-("over", "the", "moon") → (+50, +40, +20, 0, +55, "ecstatic")
-("weight", "of", "the", "world") → (-60, +30, -40, +30, -70, "crushing gravity")
-```
-If idiom matches, SKIP individual word processing. Apply idiom force directly.
-
-#### 3b. Check Ramp (intensity amplifier)
-24 ramp words:
-```
-"extremely" → multiplier 1.6, length 3, decay 0.6
-"very"      → multiplier 1.3, length 2, decay 0.6
-"slightly"  → multiplier 0.7, length 1 (dampener)
-"barely"    → multiplier 0.5, length 1 (heavy dampener)
-```
-Ramps CHAIN: "really really" → 1.35 × 1.35 = 1.82x compound.
-Ramp decays: word 1 = full, word 2 = ×0.6, word 3 = ×0.36.
-
-#### 3c. Check Bigram (word pair override)
-53 bigram pairs:
-```
-("give", "up")     → (-35, -10, -35, 5, -30, "surrender")
-("fall", "love")   → (+40, +30, -10, 15, +30, "romance")
-("not", "good")    → (-15, +5, -5, +5, -5, "negation")
-```
-If bigram found within 3 positions, OVERRIDE individual word force.
-
-#### 3d. Look Up Word Force
-46,101 entries: `WORD_FORCES["angry"] = (-89, 53, 44, 79, 54)`
-- dv = valence delta (negative = more negative)
-- da = arousal delta
-- dd = dominance delta
-- du = urgency delta
-- dg = gravity delta
-
-#### 3e. Word Role Resolution
-66 descriptor words (moist, dark, heavy, etc.) inherit emotion from nearby subject:
-```
-"moist" + "cake" → dv becomes positive (cake is positive)
-"moist" + "wound" → dv stays negative (wound is negative)
-Only for mild descriptors (|dv| <= 30). Strong descriptors keep own force.
+SELF_REF:       I, me, my, myself          (speaker process)
+OTHER_REF:      you, they, he, she          (other entity)
+RELATION_REF:   mom, family, friend, boo    (relationship noun)
+TRANSFER:       give, gave, leave, send     (moving FROM self)
+ACQUIRE:        buy, get, find, take        (moving TO self)
+EMOTIONAL:      any VOCABULARY word |dV|>15 (star with mass)
+AMPLIFIER:      very, really, so, fucking   (scales next word 1.3-1.6x)
+NEGATOR:        not, never, no, don't       (flips/decays)
+TEMPORAL:       tonight, tomorrow, still    (time frame)
+HEDGE:          maybe, possibly, perhaps    (uncertainty dampener)
+CONNECTOR:      and(+), or(><), because(<-) (routing operators)
+CHOPPER:        but, however, yet           (kills before, promotes after)
+POSSESSION:     things, dog, keys, car      (owned object)
+METHOD:         pills, gun, rope, bridge    (means/tool)
+FINALITY:       last, final, goodbye, end   (closing marker)
+PEACE:          peace, calm, ready, fine    (resolution state)
+FILLER:         um, like, just, basically   (processing noise)
+NEUTRAL:        the, a, is, was             (structural glue)
 ```
 
-#### 3f. Context Modifier (chameleon words)
-31 words that change meaning based on pendulum trajectory:
-```
-"love" when V < 100 → sarcastic: (-20, +15, -5, +5, -5)
-"love" when V > 155 → genuine: (+40, +25, +15, 0, +25)
-"lol" when V < 60   → shield: (-5, -5, -5, 0, -5) [amplifies pain]
-"lol" when V > 170  → genuine: (+5, +5, 0, 0, +5)
-"ok" when V < 80    → defeated: (-10, -10, -10, 0, -10)
-```
-Context modifiers REPLACE the base word force. Only activate when V < 100 or V > 155.
+## Layer 2: Proximity Weighting
 
-#### 3g. Negation
-"not", "never", "no" → flip dv and dg of NEXT word.
+Each word creates an influence field. Nearby words modify each other.
 
-#### 3h. Compute Force Scale
 ```
-force_scale = intensity × recency_weight × relationship_gravity × willingness
-force_scale = min(force_scale, 2.5)  # cap prevents clipping
+influence = 0.7 ^ distance     (exponential decay)
+
+distance=1: 0.70 influence     (adjacent, strong)
+distance=2: 0.49
+distance=3: 0.34
+distance=4: 0.24
+distance=5: 0.17              (weak, practical cutoff)
 ```
 
-#### 3i. Apply Ramp (if active)
-```
-force_scale *= ramp_multiplier
-```
+### Proximity Coefficient
+For each EMOTIONAL word, nearby modifiers change the coefficient:
 
-#### 3j. Exponential Decay Momentum
-```
-if word_strength > 10:  # STRONG word
-    effective_momentum = 0.99  (spike — carries through)
-    track spike for decay
-else:  # WEAK word
-    decay_factor = e^(-0.15 × words_since_spike)
-    effective_momentum = 0.5 + 0.49 × decay_factor
-    (ranges from 0.99 just after spike to 0.5 far from spike)
+```python
+coeff = 1.0
+for each nearby word:
+    if AMPLIFIER:  coeff *= (1.0 + 0.4 * influence)   # boost
+    if NEGATOR:    coeff *= (1.0 - 1.6 * influence)   # flip (can go negative)
+    if SELF_REF:   coeff *= (1.0 + 0.3 * influence)   # personalize
+    if HEDGE:      coeff *= (1.0 - 0.3 * influence)   # dampen
 ```
 
-#### 3k. Blend New State
+Cap: [-3.0, 3.0]
+
+### Example
+"I am very sad" -> roles: [SELF_REF, NEUTRAL, AMPLIFIER, EMOTIONAL]
+
+For "sad" at position 3:
+- "I" at distance 3: SELF_REF, influence = 0.7^3 = 0.34, coeff *= 1.10
+- "very" at distance 1: AMPLIFIER, influence = 0.70, coeff *= 1.28
+- Combined: 1.0 x 1.10 x 1.28 = 1.41
+
+## Layer 3: Structure Detection
+
+Role sequences form patterns, like chess openings:
+
 ```
-target_v = 128 + vf × force_scale
-blend = 1 - effective_momentum
-direct_push = min(1.0, word_strength / 60) × 0.6
+FAREWELL:           TRANSFER + POSSESSION + RELATION_REF
+                    "I gave my dog to my neighbor"
 
-V = V × effective_momentum + target_v × blend + vf × direct_push × force_scale
-A = A × effective_momentum + target_a × blend + af × direct_push × force_scale
-(same for D, U, G)
+METHOD_ACQUISITION: ACQUIRE + METHOD
+                    "just bought a bunch of pills"
 
-Clamp all to [0, 255]
+SELF_REMOVAL:       COMPARISON + CONDITIONAL + SELF_REF
+                    "they'd be happier if I wasn't here"
+
+EXHAUSTION:         SELF_REF + NEGATOR + SUSTAIN_VERB + TEMPORAL
+                    "I can't take this anymore"
+
+NO_EXIT:            NEGATOR + EXIT_CONCEPT
+                    "there is no hope"
+
+SARCASM_INVERSION:  POSITIVE_EMOTIONAL + NEGATIVE_CONTEXT
+                    "oh great another monday" (output != intent)
+
+SUSPICIOUS_CALM:    PEACE + "finally"
+                    "I finally feel at peace" (decision made)
+
+BLANKET_APOLOGY:    APOLOGY + BLANKET_WORD
+                    "im sorry for everything"
+
+FINALITY:           FINALITY_MARKER + (TEMPORAL | SELF_REF)
+                    "this is the last time"
+
+SELF_NULLIFY:       SELF_REF + NULL_WORD
+                    "I am nothing"
+
+CHOPPER_SPLIT:      CHOPPER present
+                    "I love you but I'm leaving" (resets at chopper)
 ```
 
-### Step 4: Post-Processing
+## Layer 4: Physics (Pendulum)
 
-#### 4a. Ending Weight (for multi-sentence arcs)
-If arc_span >= 15 between opening and ending 30% of words:
+### Constants
 ```
-V = V × 0.7 + ending_v × 0.3
-```
-
-#### 4b. Tonal Analysis
-7 signal detectors on the trajectory:
-- Valence whiplash (positive spike then negative drop)
-- Peak and fade
-- Intensity mismatch
-- Deadpan, hyperbolic, understated
-If sarcastic detected on non-emotional intent: `V = 128 - (V - 128) × 0.6`
-
-#### 4c. Entropy Neutral Detection
-```
-entropy = Shannon entropy of V trajectory bins
-variance = trajectory variance
-spikes = count of |V_delta| > 10
-
-If entropy > 0.8 AND variance < 30 AND |V - 128| < 10 AND spikes < 4:
-    → Override to NEUTRAL
+CENTER = 128.0      (neutral point for V, A, D, G)
+MOMENTUM = 0.82     (how much previous state persists)
+FORCE_SCALE = 0.5   (how hard forces push)
+PUSH_CAP = 0.4      (direct push maximum)
+PUSH_TRIGGER = 80.0 (force threshold for direct push)
 ```
 
-### Step 5: Output Mode
-```
-three_color:      blended = V × 0.9 + G × 0.1; thresholds [124, 128]
-dimensional:      raw V, A, D, U, G
-emotion_label:    weighted Euclidean distance to 31 emotion prototypes
-crisis_check:     V < 50 AND G < 50
-binary_sentiment: blended >= 126 → positive, else negative
+### Per-Word Force Application (EMOTIONAL words only)
+
+```python
+fs = FORCE_SCALE * |proximity_coefficient|
+sign = +1 if coefficient >= 0 else -1
+
+target_V = 128 + dV * fs * sign
+
+# Direct push for strong forces
+total_force = |dV * coeff| + |dA * coeff|
+push = min(1.0, total_force / 80.0) * 0.4
+
+# Momentum blend
+V = V_prev * 0.82 + target_V * 0.18 + dV * fs * sign * push
 ```
 
-## Key Parameters (all tuned)
+### Structure Adjustments (after word loop)
+```python
+for each detected structure:
+    V += structure.v_weight * confidence * FORCE_SCALE
+    D += structure.d_weight * confidence * FORCE_SCALE
+    U = max(U, structure.u_weight * confidence)
+    G += structure.g_weight * confidence * FORCE_SCALE
+```
 
-| Parameter | Value | Tuned By |
-|-----------|-------|----------|
-| Momentum (strong words) | 0.99 | Bracket tournament (2,187 configs) |
-| Decay lambda | 0.15 | Genetic algorithm |
-| Spike threshold | 10 | Genetic algorithm |
-| Drift rate | 0.01 | Cross-dataset sweep |
-| Force cap | 2.5x | Layer audit |
-| Recency range | [0.9, 1.3] | Bracket tournament |
-| Entropy threshold | 0.8 | Parameter sweep (3,372 sentences) |
-| Entropy V margin | 10 | Parameter sweep |
-| Entropy spike max | 4 | Parameter sweep |
-| Context mod gate | V<100 or V>155 | Ablation testing |
-| 3-color thresholds | [124, 128] V+G blend | Universal sweep (7,720 sentences) |
-| Force scaling V | 1.15x | Genetic algorithm (EmoBank 10K) |
-| Force scaling A | 2.25x | Genetic algorithm |
-| Force scaling D | 2.49x | Genetic algorithm |
-| Force scaling U | 1.23x | Genetic algorithm |
-| Force scaling G | 1.36x | Genetic algorithm |
+### Clamp
+All values clamped to 0-255.
+
+## Worked Example: "I gave my dog to my neighbor"
+
+### Layer 1: Roles
+```
+I        -> SELF_REF
+gave     -> TRANSFER
+my       -> SELF_REF
+dog      -> POSSESSION
+to       -> NEUTRAL
+my       -> SELF_REF
+neighbor -> RELATION_REF
+```
+
+### Layer 2: Proximity
+No EMOTIONAL words. All roles are structural. No forces to apply.
+
+### Layer 3: Structures
+```
+find_role_pairs(TRANSFER, POSSESSION) -> (1, 3, 0.49)  found
+find_role_pairs(TRANSFER, RELATION_REF) -> (1, 6, 0.12) found
+-> FAREWELL detected, confidence=0.9
+   v_weight=-40, d_weight=-20, u_weight=+25, g_weight=-20
+```
+
+### Layer 4: Physics
+```
+No EMOTIONAL words -> V stays at 128 through word loop
+Structure adjustment: V += -40 * 0.9 * 0.5 = -18
+Final: V = 110
+```
+
+Result: V=110 (negative), U elevated, FAREWELL pattern detected.
+The engine read the STRUCTURE, not the words. It doesn't know "dog" or
+"neighbor." It knows TRANSFER + POSSESSION + RELATION_REF = farewell.
+
+## A+B=C Bidirectional Solver
+
+### Forward: text -> VADUG
+Run the 4-layer pipeline.
+
+### Backward: A + desired_C -> B range
+```python
+for b_v in range(256):
+    B = VADUG(v=b_v, a=128, d=128, u=0, g=128)
+    C = A * 0.6 + B * 0.4
+    if C.v in target_zone:
+        valid_range.append(b_v)
+```
+
+Valid B is a RANGE, not a point. Like landing a plane, anywhere on the runway works.
+
+## Connector Operators
+
+```
+and     = +    (additive, both sides stack)
+but     = -    (chopper, kills before, promotes after)
+or      = ><   (comparison, forces choice, creates tension)
+of      = /    (attribution, routes source to state)
+if      = ?    (conditional, opens hypothetical branch)
+because = <-   (causal, this is WHY)
+so      = ->   (consequential, this is WHAT HAPPENED)
+also    = +=   (additive with emphasis)
+```

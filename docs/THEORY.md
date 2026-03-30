@@ -1,6 +1,6 @@
 # Toward Multi-Dimensional Conversation State Resolution
 
-**Clanker-Lang — Working Theory and Results (V3)**
+**Clanker-Lang  --  Working Theory and Results (V3)**
 
 **Author:** deucebucket (independent researcher)
 
@@ -8,34 +8,34 @@
 
 ---
 
-> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission — where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V3 engine is ~300KB, runs in 0.15ms, and scores 91% on novel sentences, 86% on crisis detection, 90% on sarcasm — but only 51% on SST-2 academic sentiment (movie review classification is a different task). It returns NULL confidence when it can't resolve meaning. This is an experimental approach — I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
+> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission  --  where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V3 engine is ~300KB, runs in 0.15ms, and scores 91% on novel sentences, 86% on crisis detection, 90% on sarcasm  --  but only 51% on SST-2 academic sentiment (movie review classification is a different task). It returns NULL confidence when it can't resolve meaning. This is an experimental approach  --  I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
 
 ---
 
 ## 1. Thesis
 
-I think some emotional language follows structural patterns that can be recognized like chess positions. This paper describes my attempt to find and encode those patterns. I'm probably wrong about some of it — but the data is here for others to evaluate.
+I think some emotional language follows structural patterns that can be recognized like chess positions. This paper describes my attempt to find and encode those patterns. I'm probably wrong about some of it  --  but the data is here for others to evaluate.
 
 Most sentiment analysis reduces text to positive/negative/neutral. This works for product reviews but falls apart for anything nuanced. Consider:
 
 - "I'm sad."
 - "I want to die."
 
-Most classifiers label both "negative." But these sentences seem to occupy very different emotional spaces. The first looks like a state report. The second looks like a crisis signal. The difference doesn't appear to be one of degree on a single axis — it seems to involve *urgency*, *gravity*, and the speaker's sense of *agency*. A single positive/negative score can't capture this distinction.
+Most classifiers label both "negative." But these sentences seem to occupy very different emotional spaces. The first looks like a state report. The second looks like a crisis signal. The difference doesn't appear to be one of degree on a single axis  --  it seems to involve *urgency*, *gravity*, and the speaker's sense of *agency*. A single positive/negative score can't capture this distinction.
 
-This paper describes my experimental framework: Clanker-Lang, a system that attempts to map emotional language into a multi-dimensional coordinate space using structural pattern recognition. My working hypotheses (not claims — I'm testing these):
+This paper describes my experimental framework: Clanker-Lang, a system that attempts to map emotional language into a multi-dimensional coordinate space using structural pattern recognition. My working hypotheses (not claims  --  I'm testing these):
 
 1. **Emotional states may be representable as points in a continuous coordinate space.** Named emotions (happy, sad, angry) might be recognizable regions in a landscape where every point between them is also a valid state.
 
-2. **Some emotional processing in language appears to follow structural patterns.** Words have mass (emotional weight). Placing them near each other creates influence fields. The structure — which words are near which other words, and what roles they play — appears to determine meaning more than the words themselves. Like chess: the same piece in different positions means different things.
+2. **Some emotional processing in language appears to follow structural patterns.** Words have mass (emotional weight). Placing them near each other creates influence fields. The structure  --  which words are near which other words, and what roles they play  --  appears to determine meaning more than the words themselves. Like chess: the same piece in different positions means different things.
 
-3. **Large language models may have learned these patterns implicitly.** If patterns exist, LLMs likely encode them across attention heads — but implicitly and opaquely.
+3. **Large language models may have learned these patterns implicitly.** If patterns exist, LLMs likely encode them across attention heads  --  but implicitly and opaquely.
 
 4. **I'm trying to make some of these patterns explicit.** If I can hand a small model structured features instead of making it rediscover everything from raw text, it might need fewer parameters for this specific task.
 
-V3 moved from a vocabulary-matching approach (V2's 26 conversational forces) to structural pattern recognition. Words get classified into roles. Proximity fields compute influence. Then the engine reads role sequences and recognizes patterns — like a chess player seeing checkmate conditions from piece positions, not memorized move sequences. The data suggests this generalizes better, but I'm still early in validating that claim.
+V3 moved from a vocabulary-matching approach (V2's 26 conversational forces) to structural pattern recognition. Words get classified into roles. Proximity fields compute influence. Then the engine reads role sequences and recognizes patterns  --  like a chess player seeing checkmate conditions from piece positions, not memorized move sequences. The data suggests this generalizes better, but I'm still early in validating that claim.
 
-I use a physics analogy in places to describe how the engine works (forces, momentum, decay), but I want to be upfront — I haven't discovered actual laws. The analogy helps me think about the mechanics. The benchmarks show where it works and where it falls short.
+I use a physics analogy in places to describe how the engine works (forces, momentum, decay), but I want to be upfront  --  I haven't discovered actual laws. The analogy helps me think about the mechanics. The benchmarks show where it works and where it falls short.
 
 ---
 
@@ -43,7 +43,7 @@ I use a physics analogy in places to describe how the engine works (forces, mome
 
 ### 2.1 Why Five Dimensions
 
-The Pleasure-Arousal-Dominance (PAD) model (Mehrabian & Russell, 1974) proposed that three dimensions capture much of the structure of emotional experience. Decades of cross-cultural research have supported this framework. I arrived at similar dimensions independently before finding the PAD literature — which was encouraging, though I acknowledge this could be coincidence or confirmation bias rather than independent validation.
+The Pleasure-Arousal-Dominance (PAD) model (Mehrabian & Russell, 1974) proposed that three dimensions capture much of the structure of emotional experience. Decades of cross-cultural research have supported this framework. I arrived at similar dimensions independently before finding the PAD literature  --  which was encouraging, though I acknowledge this could be coincidence or confirmation bias rather than independent validation.
 
 But three dimensions are not enough.
 
@@ -79,23 +79,23 @@ Without Gravity, hate and dislike are distinguished only by intensity. With it, 
 
 Named emotions are landmarks in VADUG space. The coordinate (V=40, A=180, D=30, U=200, G=15) represents a cocktail of sadness, anger, and desperation with high urgency and crushing weight. No single English word names this state. German might have one. Japanese might express it through three. The coordinate is the ground truth; the word is the approximation.
 
-If this coordinate system is valid, it might have cross-cultural implications: different languages carve up emotional space differently, mapping different vocabularies to different regions. The underlying coordinate could be language-independent — but that's a hypothesis I haven't tested across languages yet.
+If this coordinate system is valid, it might have cross-cultural implications: different languages carve up emotional space differently, mapping different vocabularies to different regions. The underlying coordinate could be language-independent  --  but that's a hypothesis I haven't tested across languages yet.
 
-### 2.4 The Sixth Dimension: Dark Matter
+### 2.4 The Sixth Dimension: unclassified words
 
-Five dimensions define the *observable* emotional state. The sixth -- Dark Matter -- defines the *entity* experiencing it.
+Five dimensions define the *observable* emotional state. The sixth -- unclassified words -- defines the *entity* experiencing it.
 
-Dark Matter is a persistent bias variable shaped by accumulated experience. It is not random noise. It is the reason two people hearing the same sentence react differently: their dark matter was shaped by different histories.
+unclassified words is a persistent bias variable shaped by accumulated experience. It is not random noise. It is the reason two people hearing the same sentence react differently: their unclassified words was shaped by different histories.
 
 ```
-Dark Matter parameters:
+unclassified words parameters:
   seed:       unique per entity (like DNA -- born with a baseline)
   range:      emotional volatility (0=robot, 15=human, 50=unstable)
   drift:      accumulated trauma/joy (shifts over time from experience)
   resilience: how fast drift recovers toward zero (0.99=slow, 0.999=fast)
 ```
 
-Dark matter modifies VADUG through three mechanisms:
+unclassified words modifies VADUG through three mechanisms:
 
 1. **Valence bias:** Traumatized entities have lower baseline valence. The same input produces a more negative reading.
 2. **Gravity drag:** Accumulated trauma makes everything heavier. Drift pulls G downward.
@@ -103,7 +103,7 @@ Dark matter modifies VADUG through three mechanisms:
 
 The critical design property: **negativity bias is structural.** Negative experiences accumulate at 2x the rate of positive ones. This is not a tuning choice -- it reflects the well-documented negativity bias in human emotional processing (Baumeister et al., 2001). Trauma sticks harder than joy heals.
 
-Dark matter profiles create archetypes that behave differently under identical input:
+unclassified words profiles create archetypes that behave differently under identical input:
 
 | Profile     | Seed | Range | Drift  | Resilience | Behavior                    |
 |-------------|------|-------|--------|------------|-----------------------------|
@@ -113,13 +113,13 @@ Dark matter profiles create archetypes that behave differently under identical i
 | Volatile    | 500  | 35    | 0.0    | 0.99       | Wide swings, slow recovery  |
 | Stoic       | 600  | 3     | 0.0    | 0.9999     | Minimal emotional movement  |
 
-Dark matter is what makes the difference between "a sad movie" and "a sad life." The movie is the same for everyone. The life is filtered through each person's accumulated experience.
+unclassified words is what makes the difference between "a sad movie" and "a sad life." The movie is the same for everyone. The life is filtered through each person's accumulated experience.
 
 ---
 
 ## 3. Psychological Foundations
 
-The VADUG framework wasn't designed in isolation — it appears to parallel several established psychological models. Whether these parallels are meaningful or coincidental, I'll present the data and let others judge.
+The VADUG framework wasn't designed in isolation  --  it appears to parallel several established psychological models. Whether these parallels are meaningful or coincidental, I'll present the data and let others judge.
 
 ### 3.1 The TCI Stress Model of Crisis
 
@@ -141,14 +141,14 @@ This is not a metaphor. These are the actual VADUG values the engine produces wh
 
 The critical insight from TCI that informs the engine: **as escalation increases in duration, frequency, or intensity, the likelihood of responding to intervention decreases.** This is a narrowing funnel. In VADUG terms: once momentum is high and V is below 50 with A above 200, the pendulum enters crisis lock -- normal response forces cannot pull it back. Early intervention works because the pendulum has not yet built the momentum that makes it unstoppable.
 
-### 3.2 Window of Tolerance and Dark Matter Range
+### 3.2 Window of Tolerance and unclassified words Range
 
 Dan Siegel's (1999) Window of Tolerance defines the optimal zone of arousal within which a person can function effectively -- emotionally regulated, cognitively flexible, socially engaged. Above the window: hyperarousal (panic, rage, fight-or-flight). Below the window: hypoarousal (shutdown, dissociation, freeze).
 
-This maps directly to dark matter range parameters:
+This maps directly to unclassified words range parameters:
 
 ```
-Window of Tolerance       VADUG Dark Matter
+Window of Tolerance       VADUG unclassified words
 -------------------------------------------------
 Upper threshold       ->  max_A before hyperarousal flag
 Lower threshold       ->  min_A before hypoarousal flag
@@ -170,13 +170,13 @@ The mapping extends to all five dimensions, not just Arousal:
 
 Trauma narrows the window. Repeated crises without full recovery compress the tolerance range on every dimension. This is why a traumatized child escalates faster: their window is narrower, so smaller perturbations push them outside it.
 
-### 3.3 Allostatic Load and Dark Matter Drift
+### 3.3 Allostatic Load and unclassified words Drift
 
 Allostatic load (McEwen & Stellar, 1993) is the cumulative physiological cost of maintaining stability under repeated stress. It is "the wear and tear on the body" from chronic stress activation.
 
-The four mechanisms of accumulation map precisely to dark matter behavior:
+The four mechanisms of accumulation map precisely to unclassified words behavior:
 
-| Mechanism              | Description                        | Dark Matter Analog                    |
+| Mechanism              | Description                        | unclassified words Analog                    |
 |------------------------|------------------------------------|---------------------------------------|
 | Frequent activation    | Too many stress responses          | High crisis count -> drift accumulation|
 | Failed shutdown        | Stress response doesn't terminate  | Recovery doesn't reach baseline        |
@@ -192,7 +192,7 @@ drift_v += (crisis_low_v - old_baseline_v) * leak_factor
 
 Over many episodes, the drift accumulates: baseline V sinks, resting A creeps up, chronic urgency appears, gravity pulls down, tolerance narrows. This produces the clinical picture: a person with lower resting valence, higher resting arousal, chronic urgency, narrower tolerance for perturbation, and faster escalation through crisis phases.
 
-The allostatic load score translates to a count-based dark matter metric: how many of the five VADUG dimensions have drifted beyond healthy range (analogous to the MacArthur biomarker quartile method used in clinical research).
+The allostatic load score translates to a count-based unclassified words metric: how many of the five VADUG dimensions have drifted beyond healthy range (analogous to the MacArthur biomarker quartile method used in clinical research).
 
 ### 3.4 Polyvagal Theory and the Arousal Dimension
 
@@ -215,10 +215,10 @@ The six principles map to design constraints on how the engine generates respons
 | CARE Principle          | Engine Constraint                                        |
 |-------------------------|----------------------------------------------------------|
 | Developmentally focused | Response complexity adapts to recipient's capacity       |
-| Relationship based      | Continuity tracking through dark matter profiles         |
+| Relationship based      | Continuity tracking through unclassified words profiles         |
 | Competence centered     | Responses build on strengths, not just treat deficits    |
 | Trauma informed         | Negative VADUG states are signals, not errors to correct |
-| Ecologically oriented   | Setting conditions modify dark matter parameters         |
+| Ecologically oriented   | Setting conditions modify unclassified words parameters         |
 | Family involved         | Dual-VADUG tracking (speaker + listener)                 |
 
 The last point is critical. TCI's Four Questions are a dual-VADUG assessment:
@@ -227,7 +227,7 @@ The last point is critical. TCI's Four Questions are a dual-VADUG assessment:
 |---------------------------------------|------------------------------------------|
 | What am I feeling?                    | Read own VADUG state                     |
 | What does this person feel/need/want? | Estimate target's VADUG state            |
-| How is environment affecting this?    | Evaluate setting conditions -> dark matter|
+| How is environment affecting this?    | Evaluate setting conditions -> unclassified words|
 | How do I best respond?                | Calculate optimal response VADUG vector  |
 
 These are not abstract guidelines. They translate to a mathematical optimization: given the current state A, background conditions X, and target window W, find the response B that minimizes the distance between outcome C and the center of W.
@@ -246,20 +246,20 @@ The engine implication: negative VADUG states are *information*, not errors. The
 
 V3 moved from V2's three categories (operators/payloads/neutral) to a structural classification based on how words function in emotional sentences. Every word falls into one of four tiers:
 
-1. **Anchor stars** (~50 words) — ALWAYS heavy, always fire alerts: die, kill, love, hate, suicide, hope, help, life, death. Guilty until proven innocent by surrounding field. "Die" as an action = crisis alarm fires FIRST. Frame can lower after. "I want to die" — alarm stays. "I'm dying of laughter" — "of" routes die to comedy. "die hard is a great movie" — die is label. No alarm.
+1. **primary signal words** (~50 words)  --  ALWAYS heavy, always fire alerts: die, kill, love, hate, suicide, hope, help, life, death. Guilty until proven innocent by surrounding field. "Die" as an action = crisis alarm fires FIRST. Frame can lower after. "I want to die"  --  alarm stays. "I'm dying of laughter"  --  "of" routes die to comedy. "die hard is a great movie"  --  die is label. No alarm.
 
-2. **Regular stars** (~200 words) — have mass, can be overridden by context: happy, sad, angry, scared. These carry emotional force but the surrounding structure determines how much.
+2. **secondary signal words** (~200 words)  --  have mass, can be overridden by context: happy, sad, angry, scared. These carry emotional force but the surrounding structure determines how much.
 
-3. **Operators** (~50 words) — shape the field, no mass of their own: I, you, not, very, but, still. These include connectors that are math operators, not filler:
+3. **Operators** (~50 words)  --  shape the field, no mass of their own: I, you, not, very, but, still. These include connectors that are math operators, not filler:
    - **and/also/plus** = additive (+), both stack
    - **but/however/yet** = chopper (-), kills before, promotes after
    - **or/either** = alternative (><), fork/uncertainty
    - **of/from/by** = attributive (/), routes source to state
    - **if/when/unless** = conditional (?), opens hypothetical branch
 
-4. **Dark matter** (everything else) — null, inherits from surrounding field. "Carpenter" has no emotional mass but reflects whatever stars are nearby. Like moons — no light, only reflected light. The engine doesn't need them in the vocabulary.
+4. **unclassified words** (everything else)  --  null, inherits from surrounding field. "Carpenter" has no emotional mass but reflects whatever stars are nearby. Like moons  --  no light, only reflected light. The engine doesn't need them in the vocabulary.
 
-The V3 engine processes in three layers: word role classification, proximity field computation (exponential decay, 0.7x per word of distance), then structure detection — reading role sequences to recognize patterns like a chess player. See `docs/v3-user-physics.md` for the complete set of structural rules.
+The V3 engine processes in three layers: word role classification, proximity field computation (exponential decay, 0.7x per word of distance), then structure detection  --  reading role sequences to recognize patterns like a chess player. See `docs/v3-user-physics.md` for the complete set of structural rules.
 
 ### 4.1 V2: Three Categories of Words (Legacy, tagged v2.0)
 
@@ -384,7 +384,7 @@ This is why sentiment classifiers that strip stop words produce flat, undifferen
 
 ### 5.1 How Physics Gets Found
 
-The patterns documented above emerged through an iterative loop between the engine and the training data — not designed upfront, but found by looking at where the engine got things wrong:
+The patterns documented above emerged through an iterative loop between the engine and the training data  --  not designed upfront, but found by looking at where the engine got things wrong:
 
 ```
 1. Engine produces VADUG for sentence X
@@ -403,7 +403,7 @@ This bias propagates into any system trained on NRC data. My genetic algorithm t
 
 ### 5.3 Idiom Discovery from Residuals
 
-When the engine consistently predicts V=70 for a phrase but the ground truth is V=140, that gap might indicate an idiom — a phrase whose meaning exceeds the sum of its word-level forces. In V2 this led to a growing idiom dictionary. In V3 this is handled structurally — the pattern detector reads the role sequence instead of matching specific phrases.
+When the engine consistently predicts V=70 for a phrase but the ground truth is V=140, that gap might indicate an idiom  --  a phrase whose meaning exceeds the sum of its word-level forces. In V2 this led to a growing idiom dictionary. In V3 this is handled structurally  --  the pattern detector reads the role sequence instead of matching specific phrases.
 
 ### 5.4 The Coupling Problem
 
@@ -428,7 +428,7 @@ The goal is not to find the response with the highest valence. It is to find the
 
 A traumatized child's healthy baseline might be V=90, not V=200. Pushing toward V=200 is not healing -- it is mania. The target is the center of *their* window, not some universal "happy" coordinate.
 
-### 6.2 The Doctor Strange Approach
+### 6.2 The bidirectional solver Approach
 
 The outcome optimizer simulates all possible response strategies and selects the one that produces the best predicted trajectory:
 
@@ -459,7 +459,7 @@ Outcomes are classified into five bands based on the predicted VADUG:
 | Positive  | 156-210  | Healthy positive affect, moving well           |
 | Thriving  | 211-255  | Flourishing, high engagement, strong agency    |
 
-Dark matter determines which band the same response lands in. "I believe in you" produces V=170 (positive) for a resilient entity but V=85 (negative) for a deeply traumatized one -- because the traumatized entity's dark matter drift pulls the valence down and the gravity heavier. The same words, the same physics, different reality.
+unclassified words determines which band the same response lands in. "I believe in you" produces V=170 (positive) for a resilient entity but V=85 (negative) for a deeply traumatized one -- because the traumatized entity's unclassified words drift pulls the valence down and the gravity heavier. The same words, the same physics, different reality.
 
 ### 6.4 Response Harmony Mathematics
 
@@ -503,7 +503,7 @@ When 80-180:   response_G = 128 + (G - 128) * 0.5         (stay grounded)
 
 ### 7.1 Engine Performance
 
-I want to be honest about the numbers — both the ones I'm proud of and the ones that keep me humble.
+I want to be honest about the numbers  --  both the ones I'm proud of and the ones that keep me humble.
 
 **V3 engine results** (March 2026, `engine/` directory, 158 tests passing):
 
@@ -515,7 +515,7 @@ I want to be honest about the numbers — both the ones I'm proud of and the one
 | **Safe sentence false positives** | **0%** | Never flags safe text as crisis |
 | **SST-2 (academic sentiment)** | **51%** | Movie review positive/negative classification |
 
-The 51% on SST-2 is real and I'm not hiding it. Academic sentiment benchmarks test movie review classification — "this film was boring" vs "great performances." That is a different task than structural emotional reading. The system does NOT do general sentiment classification well. I think that is an honest tradeoff, not a failure.
+The 51% on SST-2 is real and I'm not hiding it. Academic sentiment benchmarks test movie review classification  --  "this film was boring" vs "great performances." That is a different task than structural emotional reading. The system does NOT do general sentiment classification well. I think that is an honest tradeoff, not a failure.
 
 **V2 engine results** (tagged v2.0, `demo/` directory, for historical reference):
 
@@ -534,7 +534,7 @@ These V2 benchmarks reduce the 5-dimensional output to positive/negative/neutral
 
 **EmoBank human agreement:** Valence r=0.41 correlation with human annotators. This is a calibration gap, not an architecture gap -- the engine measures from TCI perspective (in the room with the person), while EmoBank annotators rate from neutral observer perspective. The disagreement is systematic and explainable.
 
-**Cross-validation:** 91% on novel sentences (V3) is the number I trust most — these are sentences the engine never practiced on, testing whether structural patterns generalize. The essay benchmark (V2) was my own test set, so that number should be taken with the caveat that it shows the engine handles patterns I've encoded. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
+**Cross-validation:** 91% on novel sentences (V3) is the number I trust most  --  these are sentences the engine never practiced on, testing whether structural patterns generalize. The essay benchmark (V2) was my own test set, so that number should be taken with the caveat that it shows the engine handles patterns I've encoded. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
 
 **Ablation study:** 4 forces are essential on academic benchmarks; 8 additional forces shift D and G significantly but are invisible to 1D benchmark scoring. The full force set matters for crisis detection and therapeutic applications even when it does not move composite accuracy.
 
@@ -550,7 +550,7 @@ The trained Clanker-Micro model (7.7M parameters, 5-head classifier on GPT-2 bac
 - The model reads negation, double negation, deflection masking, and universal scope
 - **Teacher-student pipeline confirmed:** 300KB rule engine teaches 7.7M parameter model
 
-The idea behind this approach: the engine doesn't need to be perfect — it needs to be auditable and consistent in the patterns it implements. The model then attempts to learn those patterns and generalize to cases the engine can't reach. Whether this teacher-student approach works better than end-to-end training is still an open question — the data so far is encouraging but limited.
+The idea behind this approach: the engine doesn't need to be perfect  --  it needs to be auditable and consistent in the patterns it implements. The model then attempts to learn those patterns and generalize to cases the engine can't reach. Whether this teacher-student approach works better than end-to-end training is still an open question  --  the data so far is encouraging but limited.
 
 ### 7.3 Context Operator Range
 
@@ -642,7 +642,7 @@ Published ML research achieves AUC 0.68-0.88 for crisis prediction in adolescent
 
 Residential child care facilities can track per-resident VADUG baselines over time. The TCI stress model phases become detectable as trajectory patterns: a trigger appears as a sudden dV-negative with dA-positive. Escalation appears as sustained A-climbing with D-collapsing. The system can alert staff before outburst phase, during the escalation window when intervention is still effective.
 
-Setting conditions (noise, transitions, staffing changes) can be correlated with dark matter tolerance narrowing, identifying environmental modifications that expand the window of tolerance.
+Setting conditions (noise, transitions, staffing changes) can be correlated with unclassified words tolerance narrowing, identifying environmental modifications that expand the window of tolerance.
 
 ### 9.3 De-Escalation Optimization
 
@@ -656,11 +656,11 @@ TCI co-regulation strategies translate to specific VADUG targets for the respons
 | Space/time            | A: decreasing over iterations     | Allows natural damping         |
 | Validation            | V: 130-150, G: 128                | Affirms without inflating      |
 
-The outcome optimizer can rank candidate responses by predicted trajectory toward the target, selecting the strategy most likely to produce de-escalation for *this specific person* given their dark matter profile.
+The outcome optimizer can rank candidate responses by predicted trajectory toward the target, selecting the strategy most likely to produce de-escalation for *this specific person* given their unclassified words profile.
 
 ### 9.4 Emotional Fingerprinting
 
-Over time, each entity's dark matter profile encodes their characteristic emotional patterns: baseline position, volatility range, recovery rate, vulnerability dimensions. This is an emotional fingerprint -- not a label ("anxious person") but a continuous profile that evolves with experience.
+Over time, each entity's unclassified words profile encodes their characteristic emotional patterns: baseline position, volatility range, recovery rate, vulnerability dimensions. This is an emotional fingerprint -- not a label ("anxious person") but a continuous profile that evolves with experience.
 
 Applications: personalized response strategies, early warning when a profile is drifting toward crisis, longitudinal tracking of therapeutic progress (measured as window of tolerance expansion and drift recovery).
 
@@ -679,13 +679,13 @@ The common requirement: these systems need to *understand* emotion as a continuo
 
 ## 10. Conclusion
 
-Emotional language appears to have structure. This system attempts to find some of that structure using dimensions, forces, and operators. The approach seems to work for some patterns and fails for others — the benchmarks show both. I am trying to make some of these patterns explicit.
+Emotional language appears to have structure. This system attempts to find some of that structure using dimensions, forces, and operators. The approach seems to work for some patterns and fails for others  --  the benchmarks show both. I am trying to make some of these patterns explicit.
 
-The VADUG coordinate system encodes 1.1 trillion emotional states in 5 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The dark matter system makes each entity unique through persistent bias shaped by accumulated experience.
+The VADUG coordinate system encodes 1.1 trillion emotional states in 5 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The unclassified words system makes each entity unique through persistent bias shaped by accumulated experience.
 
-The psychological foundations are not decorative. TCI's stress model IS a VADUG trajectory. The window of tolerance IS a dark matter range. Allostatic load IS dark matter drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
+The psychological foundations are not decorative. TCI's stress model IS a VADUG trajectory. The window of tolerance IS a unclassified words range. Allostatic load IS unclassified words drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
 
-The system now operates as a three-layer API: sentence physics (0.1ms per sentence), conversation trajectory tracking, and Dark Matter anomaly detection. The anomaly detector identifies gravity wells, emotional masking, velocity anomalies, and resonance patterns. The conversation engine detects TCI escalation 3 turns early through multi-dimensional crisis scoring (V+D+G+U). Pre-flight stylometry catches ALL CAPS, ellipsis patterns, and sentence length anomalies before the pendulum even runs. Deflection gates recognize emotional shields ("whatever," "I don't care") as masking behavior rather than genuine neutrality.
+The system now operates as a three-layer API: sentence physics (0.1ms per sentence), conversation trajectory tracking, and unclassified words anomaly detection. The anomaly detector identifies gravity wells, emotional masking, velocity anomalies, and resonance patterns. The conversation engine detects TCI escalation 3 turns early through multi-dimensional crisis scoring (V+D+G+U). Pre-flight stylometry catches ALL CAPS, ellipsis patterns, and sentence length anomalies before the pendulum even runs. Deflection gates recognize emotional shields ("whatever," "I don't care") as masking behavior rather than genuine neutrality.
 
 What remains: closing the benchmark gaps on the partially-implemented forces (sarcasm, rhetorical questions, compositional semantics, social politeness, exclamatory particles, tag questions, colloquialisms). The 34% accuracy gap is pragmatic/implicit meaning that the rule engine cannot reach alone -- the teacher-student pipeline (300KB engine teaching a 7.7M parameter model) is the path forward. Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUG is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
 
@@ -735,7 +735,7 @@ The goal was never to build a better sentiment classifier. It was to build the e
 | `demo/arc.py`       | ChunkedPipeline, orchestrates 7-layer pipeline        |
 | `demo/morphemes.py` | Morphological decomposition roots                     |
 | `demo/fuzzy.py`     | Fuzzy matching for unknown words                      |
-| `demo/outcome_optimizer.py` | Doctor Strange mode: simulate all response outcomes (standalone) |
+| `demo/outcome_optimizer.py` | bidirectional solver mode: simulate all response outcomes (standalone) |
 | `demo/forces.py`    | Legacy V1 dictionary (46K entries) -- still imported for idioms |
 | `demo/pendulum.py`  | Legacy V1 engine -- still imported for IDIOMS dict    |
 

@@ -23,7 +23,7 @@ Same Valence. Different Dominance and Gravity. No sentiment classifier makes thi
 
 ### How it works
 
-Words have **mass**. "Love" is a heavy star. "Carpenter" is dark matter -- no mass of its own, it reflects whatever stars are nearby. The engine classifies every word into a structural role, computes proximity fields, then detects patterns from the role sequences.
+Words have **mass**. "Love" is a heavy star. "Carpenter" is unclassified words -- no mass of its own, it reflects whatever stars are nearby. The engine classifies every word into a structural role, computes proximity fields, then detects patterns from the role sequences.
 
 This is NOT an "emotional physics engine" or a sentiment classifier. It is a conversation state resolver that uses structural pattern recognition. I think some emotional language follows rules that can be described with math. The data suggests this works for certain patterns. The benchmarks show where it works and where it falls short.
 
@@ -53,10 +53,10 @@ Words get classified into four tiers:
 
 | Tier | Count | What | Example |
 |------|-------|------|---------|
-| **Anchor stars** | ~50 | ALWAYS heavy, guilty until proven innocent | die, kill, love, hate, suicide |
-| **Regular stars** | ~200 | Have mass, can be overridden by context | happy, sad, angry, scared |
+| **primary signal words** | ~50 | ALWAYS heavy, guilty until proven innocent | die, kill, love, hate, suicide |
+| **secondary signal words** | ~200 | Have mass, can be overridden by context | happy, sad, angry, scared |
 | **Operators** | ~50 | Shape the field, no mass of their own | I, you, not, very, but, still |
-| **Dark matter** | everything else | Null -- inherits from nearby stars | carpenter, Tuesday, meeting |
+| **unclassified words** | everything else | Null -- inherits from nearby stars | carpenter, Tuesday, meeting |
 
 Connectors are math operators, not filler:
 - **and** = additive (+), both stack
@@ -71,7 +71,7 @@ The engine reads role sequences and recognizes structural patterns -- like a che
 
 Given a user's emotional state (A) and a candidate response (B), predict the resulting state (C). Or work backwards: given where someone is and where you want them to land, find what B needs to be. The target is a zone (like a runway), not a point.
 
-### 3. Emotional Battleship
+### 3. Probe Calibration System
 
 Fire calibrated probes, measure how much the response deviates from what a neutral person would produce, triangulate the hidden emotional state. The distortion IS the signal.
 
