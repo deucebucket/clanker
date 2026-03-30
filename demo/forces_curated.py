@@ -2675,10 +2675,12 @@ EMOTIONAL_VOCABULARY.update(_CONNECTION_WORDS)
 # "help me" = pulling you to me, vulnerability. "helping" = active lift.
 # Context determines if it's calm lift or desperate pull.
 _HELP_WORDS = {
-    'help':         (+15, +15, +10, +10, +15),   # lifter — slightly positive, elevated G (it matters)
-    'helping':      (+20, +10, +15, +5, +10),    # active lifting — positive action
-    'helped':       (+25, +5, +15, +0, +15),     # lift completed — more positive (relief)
-    'helpful':      (+30, +5, +15, +0, +10),     # the lift worked
+    # "help" alone implies NEED — a deficit. Nobody says help when things are fine.
+    # The tense shifts the meaning: help (need), helping (active), helped (done/relief)
+    'help':         (-10, +15, -10, +15, +15),   # need/pull — something is lacking, elevated U+G
+    'helping':      (+15, +10, +15, +5, +10),    # active lifting — positive action in progress
+    'helped':       (+25, +5, +15, +0, +15),     # lift completed — relief
+    'helpful':      (+30, +5, +15, +0, +10),     # the lift worked — positive
     'helpless':     (-50, +10, -50, +20, -30),   # no ramp available — crisis-adjacent
 }
 EMOTIONAL_VOCABULARY.update(_HELP_WORDS)
