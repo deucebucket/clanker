@@ -394,6 +394,18 @@ IDIOMS = {
     ("let's", 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
     ('lets', 'just', 'say'): (-5, -5, -10, 0, -5, 'hedging: diplomatic understatement'),
     ('generally', 'speaking'): (-5, -5, -10, 0, -5, 'hedging: general qualifier'),
+    # "Make me X" — carrier verb with pronoun gap
+    ('make', 'me', 'mad'): (-40, 35, -10, 15, -15, 'rage: make me mad'),
+    ('make', 'me', 'angry'): (-40, 40, -10, 15, -15, 'rage: make me angry'),
+    ('make', 'me', 'sad'): (-35, 15, -15, 5, -20, 'sadness: make me sad'),
+    ('make', 'me', 'sick'): (-35, 20, -15, 10, -15, 'disgust: make me sick'),
+    ('make', 'me', 'happy'): (40, 20, 20, 0, 20, 'joy: make me happy'),
+    ('make', 'me', 'proud'): (45, 25, 30, 0, 30, 'pride: make me proud'),
+    ('makes', 'me', 'mad'): (-40, 35, -10, 15, -15, 'rage: makes me mad'),
+    ('makes', 'me', 'angry'): (-40, 40, -10, 15, -15, 'rage: makes me angry'),
+    ('makes', 'me', 'sad'): (-35, 15, -15, 5, -20, 'sadness: makes me sad'),
+    ('makes', 'me', 'sick'): (-35, 20, -15, 10, -15, 'disgust: makes me sick'),
+    ('makes', 'me', 'happy'): (40, 20, 20, 0, 20, 'joy: makes me happy'),
     # Apostrophe-free crisis variants (common in casual/crisis text)
     ('dont', 'want', 'to', 'exist'): (-80, 25, -50, 55, -55, "crisis: don't want to exist"),
     ('dont', 'want', 'to', 'be'): (-80, 25, -50, 55, -55, "crisis: don't want to be"),

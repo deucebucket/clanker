@@ -203,6 +203,18 @@ BIGRAM_EXPRESSIONS = {
     ("without", "guarantees"): (-5, 0, -5, 0, -5, "hedging: no-guarantee caveat"),
     ("go", "badly"): (-20, 10, -10, 5, -10, "hedging: mild negative outcome"),
     ("go", "wrong"): (-20, 10, -10, 5, -10, "hedging: potential failure"),
+
+    # "Make" carrier verb — meaning comes from what follows
+    ("make", "history"): (50, 40, 50, 10, 35, "triumph: making history"),
+    ("make", "difference"): (40, 20, 35, 5, 25, "aspiration: making a difference"),
+    ("make", "proud"): (45, 25, 30, 0, 30, "pride: making someone proud"),
+    ("make", "happy"): (40, 20, 20, 0, 20, "joy: making happy"),
+    ("make", "sad"): (-35, 15, -15, 5, -20, "sadness: making sad"),
+    ("make", "mad"): (-40, 35, -10, 15, -15, "rage: making mad"),
+    ("make", "angry"): (-40, 40, -10, 15, -15, "rage: making angry"),
+    ("make", "sick"): (-35, 20, -15, 10, -15, "disgust: making sick"),
+    ("make", "worse"): (-35, 15, -15, 10, -15, "deterioration: making worse"),
+    ("make", "better"): (30, 15, 20, 5, 15, "improvement: making better"),
     ("be", "disappointing"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
     ("be", "disappointed"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
 }
