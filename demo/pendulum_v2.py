@@ -1275,6 +1275,17 @@ class PendulumV2:
                     u = max(u, 50)  # crisis always has some urgency
                     break  # one crisis idiom is enough
 
+        # Minimization detection (Layer 2 modifier): pull V toward neutral
+        # "I'm fine", "not that bad", "just a little" = dampening severity
+        if pre and pre.idiom_spans:
+            for span_info in pre.idiom_spans.values():
+                _length, _force, label = span_info
+                if "minimization" in label:
+                    # Pull V 20% toward neutral — minimization dampens, doesn't erase
+                    v = v * 0.8 + 128 * 0.2
+                    d -= 5  # minimization = slight loss of agency
+                    break
+
         # Crisis detection: if deeply negative + high urgency, lock momentum
         if v < self.crisis_v and u > self.crisis_u:
             v = min(v, self.crisis_v)
