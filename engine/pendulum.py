@@ -11,6 +11,7 @@ from typing import List, Optional, Tuple
 from .shared import VADUG, PersonalityVector
 from .word_classifier import WordRole, classify_sentence, _clean
 from .proximity import proximity_coefficient
+from .vocabulary import VOCABULARY
 from .structures import StructureDetector, StructureMatch
 
 
@@ -69,7 +70,21 @@ def compute_vadug(
     trace_entries: List[dict] = []
 
     for i, wr in enumerate(roles):
-        if wr.role != "EMOTIONAL" or wr.force is None:
+        # Every word in vocabulary exerts force, not just EMOTIONAL role.
+        # A small star (monday V=-10) still pulls. Just less than a big star (dead V=-114).
+        # Dark matter words (not in vocab) have no force and skip.
+        word_force = wr.force
+        if word_force is None:
+            # Check vocabulary directly - word might have force but role != EMOTIONAL
+            word_force = VOCABULARY.get(wr.word)
+        if word_force is None:
+            # Fuzzy match: stemmer catches conjugations (hates->hate, kills->kill)
+            from .fuzzy import fuzzy_match
+            matched = fuzzy_match(wr.word)
+            if matched:
+                word_force = VOCABULARY.get(matched)
+
+        if word_force is None:
             trace_entries.append({
                 "word": wr.word,
                 "role": wr.role,
@@ -82,7 +97,7 @@ def compute_vadug(
             })
             continue
 
-        dv, da, dd, du, dg = wr.force
+        dv, da, dd, du, dg = word_force
         coeff = proximity_coefficient(roles, i)
 
         # Target = center + force * coefficient * scale
@@ -124,7 +139,14 @@ def compute_vadug(
 
     # ── Structure adjustments ───────────────────────────────────
     for sm in structures:
-        state_v += sm.v_weight * sm.confidence * FORCE_SCALE
+        # Sarcasm and bravado scale with distance from neutral
+        # Bigger positive = stronger correction (overcompensation = more mask)
+        if sm.pattern in ("SARCASM_INVERSION", "BRAVADO") and state_v > CENTER:
+            excess = state_v - CENTER
+            pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
+            state_v += pull
+        else:
+            state_v += sm.v_weight * sm.confidence * FORCE_SCALE
         state_d += sm.d_weight * sm.confidence * FORCE_SCALE
         state_u += sm.u_weight * sm.confidence * FORCE_SCALE
         state_g += sm.g_weight * sm.confidence * FORCE_SCALE

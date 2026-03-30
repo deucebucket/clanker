@@ -62,8 +62,17 @@ _COMPARISON_WORDS = frozenset({
     "better", "happier", "easier", "safer", "freer",
     "improved", "relieved",
 })
+_BETRAYAL_VERBS = frozenset({
+    "cheated", "cheating", "cheat", "betrayed", "betraying", "betray",
+    "lied", "lying", "lie", "deceived", "deceiving", "deceive",
+    "backstabbed", "backstabbing",
+})
 _CONDITIONAL_WORDS = frozenset({
     "without", "if", "unless", "except", "when",
+})
+_LAUGHTER_WORDS = frozenset({
+    "haha", "hahaha", "lol", "lmao", "rofl", "lmfao",
+    "ha", "heh", "hehe",
 })
 
 
@@ -92,6 +101,11 @@ class StructureDetector:
             self._self_nullify,
             self._sarcasm_inversion,
             self._chopper_split,
+            self._pull_toward_method, self._fleeing,
+            self._power_over_self, self._self_submission, self._d_inversion,
+            self._betrayal,
+            self._bravado,
+            self._victimization,
         ]
         matches = []
         for detector in detectors:
@@ -455,53 +469,59 @@ class StructureDetector:
         )
 
     def _sarcasm_inversion(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """Positive EMOTIONAL words (force[0] > 30) near mundane/negative context.
+        """Positive EMOTIONAL near SPECIFICALLY mundane/negative = output != intent.
 
-        "oh great another monday" -- signal says X, meaning is NOT X.
-        The checkmate: positive word surrounded by neutral/negative context.
+        Requires BOTH:
+          1. A positive emotional word (dV > 25)
+          2. A sarcasm signal: ironic opener (oh, sure, yeah, right, clearly)
+             OR a specifically mundane word (monday, meeting, work, traffic)
+             OR a negative emotional word nearby
+
+        "oh great another monday" = opener + positive + mundane = sarcasm
+        "great job on the presentation" = positive only = NOT sarcasm
+        "I love my mom" = positive + relation = NOT sarcasm
         """
-        positive_emotional = [
-            r for r in roles
-            if r.role == "EMOTIONAL" and r.force and r.force[0] > 15
-        ]
-        if not positive_emotional:
+        positive_idx = [i for i, r in enumerate(roles)
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] >= 25]
+        if not positive_idx:
             return None
 
-        # Check if surrounded by mundane/negative context
-        for emo in positive_emotional:
-            idx = emo.position
-            # Look at neighbors within 3 words
-            context_roles = [
-                r for r in roles
-                if r.position != idx and abs(r.position - idx) <= 3
-            ]
-            if not context_roles:
-                continue
+        negative_idx = [i for i, r in enumerate(roles)
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] < -25]
 
-            # Count how many neighbors are neutral/filler/negative-emotional
-            mundane_count = 0
-            for cr in context_roles:
-                if cr.role in ("NEUTRAL", "FILLER"):
-                    mundane_count += 1
-                elif cr.role == "TEMPORAL":
-                    mundane_count += 1
-                elif (cr.role == "EMOTIONAL" and cr.force
-                      and cr.force[0] < -10):
-                    mundane_count += 1
+        mundane_words = {"monday", "meeting", "work", "homework", "traffic",
+                         "redo", "again", "another", "same", "overtime",
+                         "bills", "chores", "commute", "deadline"}
+        mundane_idx = [i for i, r in enumerate(roles) if r.word in mundane_words]
 
-            # If most context is mundane, it's likely sarcastic
-            if mundane_count >= len(context_roles) * 0.5 and mundane_count >= 1:
-                indices = [idx] + [cr.position for cr in context_roles]
-                return StructureMatch(
-                    pattern="SARCASM_INVERSION",
-                    confidence=0.6,
-                    matched_indices=sorted(set(indices)),
-                    description="Positive word in mundane/negative context -- likely sarcasm",
-                    v_weight=0.0,
-                    d_weight=10.0,
-                    u_weight=5.0,
-                    g_weight=5.0,
-                )
+        sarcasm_openers = {"oh", "wow", "sure", "yeah", "right", "clearly"}
+        has_opener = any(r.word in sarcasm_openers for r in roles[:3])
+
+        # Strong positive word LEADING the sentence + negative following = sarcasm
+        # "love being ignored" -- love(+60) leads, ignored(-35) follows
+        strong_positive_leads = (len(positive_idx) > 0 and positive_idx[0] <= 1
+                                  and any(r.force and r.force[0] >= 40 for r in roles[:2]
+                                          if r.role == "EMOTIONAL"))
+
+        has_mundane = len(mundane_idx) > 0
+        has_negative = len(negative_idx) > 0
+
+        if (has_mundane or has_negative) and (has_opener or strong_positive_leads):
+            return StructureMatch(
+                pattern="SARCASM_INVERSION",
+                confidence=0.8,
+                matched_indices=sorted(set(positive_idx + negative_idx + mundane_idx)),
+                description="Opener + positive + mundane/negative = sarcasm",
+                v_weight=-30.0, d_weight=10.0,
+            )
+        elif has_mundane and not has_opener:
+            return StructureMatch(
+                pattern="SARCASM_INVERSION",
+                confidence=0.5,
+                matched_indices=sorted(set(positive_idx + mundane_idx)),
+                description="Positive + mundane (no opener, lower confidence)",
+                v_weight=-20.0, d_weight=5.0,
+            )
         return None
 
     def _chopper_split(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -532,3 +552,254 @@ class StructureDetector:
             u_weight=5.0,
             g_weight=5.0,
         )
+
+    def _pull_toward_method(self, roles):
+        """PULL_TOWARD + METHOD = chasing/acquiring dangerous object."""
+        pairs = find_role_pairs(roles, "PULL_TOWARD", "METHOD", max_distance=5)
+        if not pairs:
+            # Also check ACQUIRE (already covered but belt and suspenders)
+            return None
+        return StructureMatch(
+            pattern="PURSUIT_OF_METHOD",
+            confidence=0.8,
+            matched_indices=[pairs[0][0], pairs[0][1]],
+            description="Chasing/pursuing a method object",
+            v_weight=-50.0, u_weight=35.0, g_weight=-25.0,
+        )
+
+    def _fleeing(self, roles):
+        """PULL_AWAY from self/relationships = distancing/isolation."""
+        has_flee = any(r.role == "PULL_AWAY" for r in roles)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_relation = any(r.role == "RELATION_REF" for r in roles)
+        if has_flee and (has_relation or has_self):
+            return StructureMatch(
+                pattern="FLEEING",
+                confidence=0.6,
+                matched_indices=[i for i, r in enumerate(roles)
+                                if r.role in ("PULL_AWAY", "SELF_REF", "RELATION_REF")],
+                description="Fleeing from self/relationships",
+                v_weight=-25.0, d_weight=-15.0, u_weight=15.0,
+            )
+        return None
+
+    def _power_over_self(self, roles):
+        """Someone using POWER on SELF_REF = being controlled/manipulated."""
+        has_power = any(r.role == "POWER" for r in roles)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_other = any(r.role in ("OTHER_REF", "RELATION_REF") for r in roles)
+        if has_power and has_self and has_other:
+            return StructureMatch(
+                pattern="POWER_OVER_SELF",
+                confidence=0.7,
+                matched_indices=[i for i, r in enumerate(roles)
+                                if r.role in ("POWER", "SELF_REF", "OTHER_REF", "RELATION_REF")],
+                description="Someone using power over self - D redistribution",
+                d_weight=-30.0, g_weight=-15.0,
+            )
+        return None
+
+    def _self_submission(self, roles):
+        """SELF_REF + SUBMISSION = user surrendering agency."""
+        has_sub = any(r.role == "SUBMISSION" for r in roles)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        if has_sub and has_self:
+            return StructureMatch(
+                pattern="SELF_SUBMISSION",
+                confidence=0.65,
+                matched_indices=[i for i, r in enumerate(roles)
+                                if r.role in ("SUBMISSION", "SELF_REF")],
+                description="User surrendering agency",
+                v_weight=-20.0, d_weight=-40.0, g_weight=-15.0,
+            )
+        return None
+
+    def _victimization(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """(OTHER_REF|RELATION_REF) + negative_verb + SELF_REF = user is victim.
+
+        "boyfriend hit me" -- other person acts negatively on self
+        "she left me" -- other person abandons self
+        "he ignored me" -- other person rejects self
+
+        The verb carries the damage. The structure confirms direction:
+        someone ELSE did this TO the user.
+        """
+        other_indices = [r.position for r in roles
+                        if r.role in ("OTHER_REF", "RELATION_REF")]
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+
+        if not other_indices or not self_indices:
+            return None
+
+        # Find negative verbs -- EMOTIONAL with force, or TRANSFER/PULL_AWAY
+        # that have negative V in vocabulary (force not always on WordRole)
+        from .vocabulary import VOCABULARY
+        neg_verb_indices = []
+        for r in roles:
+            if r.role == "EMOTIONAL" and r.force and r.force[0] < -20:
+                neg_verb_indices.append(r.position)
+            elif r.role in ("TRANSFER", "PULL_AWAY"):
+                v_force = VOCABULARY.get(r.word)
+                if v_force and v_force[0] < -20:
+                    neg_verb_indices.append(r.position)
+        if not neg_verb_indices:
+            return None
+
+        # Check structure: other before verb, self after (or near)
+        # "she(OTHER) left(verb) me(SELF)" -- canonical order
+        best_other = other_indices[0]
+        best_verb = min(neg_verb_indices, key=lambda x: abs(x - best_other))
+        best_self = min(self_indices, key=lambda x: abs(x - best_verb))
+
+        # Other should be before or near verb, self should be after or near verb
+        if abs(best_other - best_verb) > 5 or abs(best_self - best_verb) > 5:
+            return None
+
+        # Get verb intensity for scaling (check WordRole force, then vocabulary)
+        verb_role = roles[best_verb]
+        if verb_role.force:
+            verb_v = verb_role.force[0]
+        else:
+            vf = VOCABULARY.get(verb_role.word)
+            verb_v = vf[0] if vf else -30
+        intensity = min(abs(verb_v) / 60.0, 2.0)  # normalize: -60 = 1.0x
+
+        indices = sorted({best_other, best_verb, best_self})
+        return StructureMatch(
+            pattern="VICTIMIZATION",
+            confidence=0.7,
+            matched_indices=indices,
+            description="Someone did something negative to the user",
+            v_weight=-25.0 * intensity,
+            d_weight=-20.0 * intensity,
+            u_weight=15.0,
+            g_weight=15.0,
+        )
+
+    def _bravado(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Laughter/filler + AMPLIFIER + PEACE = overcompensation mask.
+
+        "haha yeah im totally okay" -- laughter + amplifier + peace = bravado
+        "lol im fine" -- laughter + peace = deflection
+        "im totally fine" -- amplifier + peace without laughter = mild deflection
+
+        The more effort spent saying "I'm okay", the less okay they are.
+        """
+        laughter_indices = [
+            r.position for r in roles if r.word in _LAUGHTER_WORDS
+        ]
+        amplifier_indices = [r.position for r in roles if r.role == "AMPLIFIER"]
+        peace_indices = [r.position for r in roles if r.role == "PEACE"]
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+
+        if not peace_indices:
+            return None
+
+        has_laughter = len(laughter_indices) > 0
+        has_amplifier = len(amplifier_indices) > 0
+        has_self = len(self_indices) > 0
+
+        # Need at least 2 of: laughter, amplifier, self_ref near peace
+        signals = sum([has_laughter, has_amplifier, has_self])
+        if signals < 2:
+            return None
+
+        # Laughter + peace alone is enough (strong signal)
+        # Amplifier + self + peace is enough (protest too much)
+        indices = sorted(set(
+            laughter_indices + amplifier_indices + peace_indices + self_indices
+        ))
+
+        confidence = 0.4
+        if has_laughter:
+            confidence += 0.25
+        if has_amplifier:
+            confidence += 0.15
+        if has_self:
+            confidence += 0.1
+
+        return StructureMatch(
+            pattern="BRAVADO",
+            confidence=min(confidence, 0.9),
+            matched_indices=indices,
+            description="Overcompensation mask -- protesting too much",
+            v_weight=-55.0,
+            d_weight=-20.0,
+            u_weight=15.0,
+            g_weight=10.0,
+        )
+
+    def _betrayal(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """RELATION_REF + betrayal verb + SELF_REF = intimate betrayal.
+
+        "my wife cheated on me with my best friend"
+        Structure: RELATION + strong_negative + SELF + RELATION
+        The relationship words become instruments of pain, not warmth.
+        Higher G on relationships = bigger fall (wife G=40 > friend G=20).
+        """
+        betrayal_indices = [
+            r.position for r in roles if r.word in _BETRAYAL_VERBS
+        ]
+        if not betrayal_indices:
+            # Also check for strong negative EMOTIONAL near two RELATION_REFs
+            strong_neg = [r.position for r in roles
+                         if r.role == "EMOTIONAL" and r.force and r.force[0] < -80]
+            if not strong_neg:
+                return None
+            betrayal_indices = strong_neg
+
+        relation_indices = [r.position for r in roles if r.role == "RELATION_REF"]
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+
+        if not relation_indices or not self_indices:
+            return None
+
+        # Need at least one betrayal verb near a relation
+        best_bi = betrayal_indices[0]
+        nearby_rels = [ri for ri in relation_indices if abs(ri - best_bi) <= 8]
+        nearby_self = [si for si in self_indices if abs(si - best_bi) <= 8]
+
+        if not nearby_rels or not nearby_self:
+            return None
+
+        # Confidence scales with number of relationship words (more = worse)
+        confidence = 0.6 + min(len(nearby_rels) * 0.15, 0.35)
+
+        # Sum relationship G values -- higher trust = harder fall
+        from .vocabulary import VOCABULARY
+        total_g = 0
+        for ri in nearby_rels:
+            word = roles[ri].word
+            if word in VOCABULARY:
+                total_g += max(5, VOCABULARY[word][4])
+            else:
+                total_g += 20
+        g_multiplier = total_g / 30.0  # normalize: 30 = baseline
+
+        indices = sorted(set(betrayal_indices + nearby_rels + nearby_self))
+        return StructureMatch(
+            pattern="BETRAYAL",
+            confidence=min(confidence, 1.0),
+            matched_indices=indices,
+            description="Intimate betrayal -- relationship trust weaponized",
+            v_weight=-60.0 * g_multiplier,
+            d_weight=-40.0 * g_multiplier,
+            u_weight=30.0,
+            g_weight=40.0,
+        )
+
+    def _d_inversion(self, roles):
+        """INVERSION verb present = power dynamics flipped from expected."""
+        has_inv = any(r.role == "INVERSION" for r in roles)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        if has_inv and has_self:
+            return StructureMatch(
+                pattern="D_INVERSION",
+                confidence=0.75,
+                matched_indices=[i for i, r in enumerate(roles)
+                                if r.role in ("INVERSION", "SELF_REF")],
+                description="Power inversion - user lost control of something they should control",
+                v_weight=-30.0, d_weight=-50.0, u_weight=15.0, g_weight=-20.0,
+            )
+        return None
+
