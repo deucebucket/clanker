@@ -2610,3 +2610,22 @@ _CRISIS_METHOD_WORDS = {
     'cutting':      (-20, +15, -10, +15, -15),
 }
 EMOTIONAL_VOCABULARY.update(_CRISIS_METHOD_WORDS)
+
+# ── Short response words — emotional weight from brevity ──
+# "k" is not "ok". "k" is angry/dismissive acknowledgment.
+# "ok" hedges entirely on context — neutral by itself but amplifies previous.
+# These carry emotional weight from their SHORTNESS, not their meaning.
+_SHORT_RESPONSES = {
+    'k':            (-20, -15, -20, 0, -10),    # curt dismissal — "I acknowledge, nothing more"
+    'kk':           (-5, -5, -5, 0, -5),        # softer k — casual acknowledgment
+    'idk':          (-15, -5, -15, 5, -10),     # curt "stop asking me"
+    'idc':          (-20, -10, -25, 0, -15),    # "i dont care" — dismissal
+    'smh':          (-20, +10, +5, +5, -10),    # disappointment/disapproval
+    'bruh':         (-10, +10, +5, +5, -5),     # exasperation/disbelief
+    'oof':          (-15, +10, -10, +5, -10),   # sympathetic wince
+    'yikes':        (-20, +15, -10, +5, -10),   # alarm/cringe
+    'meh':          (-10, -15, -15, 0, -10),    # apathy/indifference
+    'nah':          (-5, -5, +5, 0, -5),        # casual rejection
+    'nope':         (-5, +5, +10, 0, -5),       # firm rejection (higher D than nah)
+}
+EMOTIONAL_VOCABULARY.update(_SHORT_RESPONSES)

@@ -304,15 +304,21 @@ IDIOMS = {
     ("i'm", 'fine'): (-15, -10, -15, 0, -10, 'minimization: im fine = probably not fine'),
     ('its', 'fine'): (-10, -10, -10, 0, -5, 'minimization: situation dismissal'),
     ("it's", 'fine'): (-10, -10, -10, 0, -5, 'minimization: situation dismissal'),
-    # Double-down = MORE suspicious, not less. "No really I'm fine" = definitely not fine.
-    ('no', 'im', 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
-    ('no', "i'm", 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
-    ('really', 'im', 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
-    ('really', "i'm", 'fine'): (-25, -5, -25, 5, -15, 'minimization: protest-too-much, less fine'),
+    # "No/really I'm fine" — not a double-down, it's a negative-observable.
+    # Maintains negative level, waits for next sentence to bloom or negate.
+    # "You said you're fine but you keep bringing it up" = context resolves it.
+    ('no', 'im', 'fine'): (-15, -10, -15, 0, -10, 'minimization: no im fine — observable, holding'),
+    ('no', "i'm", 'fine'): (-15, -10, -15, 0, -10, 'minimization: no im fine — observable, holding'),
+    ('really', 'im', 'fine'): (-15, -10, -15, 0, -10, 'minimization: really im fine — observable, holding'),
+    ('really', "i'm", 'fine'): (-15, -10, -15, 0, -10, 'minimization: really im fine — observable, holding'),
     ('but', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: but im fine = dismissing what came before'),
     ('but', "i'm", 'fine'): (-20, -5, -20, 5, -10, 'minimization: but im fine = dismissing what came before'),
     ('ok', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: ok im fine = shutting down'),
     ('okay', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: okay im fine = shutting down'),
+    # "idk" vs "I don't know" — the shortform carries more dismissal
+    # idk = curt, "stop asking me"
+    # "I don't know" spelled out = genuine uncertainty, softer
+    # "i dont know sorry" = unsure + slight remorse
     ('not', 'the', 'end', 'of', 'the', 'world'): (-5, -5, 5, 0, -5, 'minimization: scale reduction'),
     ('barely', 'anything'): (-10, -5, -10, 0, -5, 'minimization: quantity downplay'),
     ('hardly', 'matters'): (-15, -5, -15, 0, -10, 'minimization: significance denial'),

@@ -1366,6 +1366,36 @@ class PendulumV2:
                     d -= 5  # minimization = slight loss of agency
                     break
 
+        # Digital laughter detection (Layer 2 modifier):
+        # "lol" (lowercase) = tone marker, peppered in to signal lightness
+        # "LOL" (caps) = actually laughing, genuine amusement
+        # "lol" after crisis = minimization ("i want to die lol" = "I'm fine" for crisis)
+        # "haha" = genuine amusement. "HA HA" = sarcasm.
+        # "lmao/lmfao" = strong amusement (like caps LOL)
+        if pre and pre.words_lower:
+            # Check original case from the raw words (before lowering)
+            raw_words = [w for w in (pre.words_lower or [])]  # already lowered
+            # We need original case — check if ALL CAPS version appears
+            # For now, treat all as lowercase (preflight handles caps detection)
+            has_lol = 'lol' in pre.words_lower
+            has_lmao = 'lmao' in pre.words_lower or 'lmfao' in pre.words_lower
+            has_haha = 'haha' in pre.words_lower or 'hahaha' in pre.words_lower
+            if has_lol:
+                if v < 110:
+                    # "lol" after negative content = hedging/minimizing the pain
+                    # "i want to die lol" — the lol is an "I'm fine" for text
+                    v = v * 0.85 + 118 * 0.15  # pull slightly toward neutral
+                    d -= 5  # minimization
+                else:
+                    # "lol" in neutral/positive = light tone marker, tiny positive nudge
+                    v = v * 0.95 + 130 * 0.05
+            if has_lmao:
+                # lmao/lmfao = actually funny, genuine amusement
+                v = v * 0.85 + 145 * 0.15
+            if has_haha:
+                # haha = genuine amusement, mild positive
+                v = v * 0.9 + 138 * 0.1
+
         # Bravado detection (Layer 2 modifier): false confidence hides hurt
         # "I don't even care", "doesn't bother me" = D drops, V pulled negative
         # TCI insight: bravado is a coping mechanism — the real state is opposite
