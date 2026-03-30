@@ -4,7 +4,7 @@ emoji: "\U0001F527"
 colorFrom: gray
 colorTo: blue
 sdk: gradio
-sdk_version: "5.29.0"
+sdk_version: "5.50.0"
 python_version: "3.10"
 app_file: app.py
 pinned: false
@@ -16,16 +16,15 @@ startup_duration_timeout: 1h
 
 Rule-based emotional physics. 5D VADUG output. 0.3ms/sentence. Zero ML. Every number auditable.
 
-## Benchmarks (7,720 academic examples)
+## Benchmarks
 
-| Engine | SST-2 | GoEmotions | TweetEval | Weighted |
-|--------|-------|-----------|-----------|----------|
-| **Clanker** | **60.1%** | 50.7% | 71.3% | 55.5% |
-| VADER | 55.7% | 61.3% | 74.1% | 63.0% |
-| TextBlob | 53.8% | 57.1% | 49.0% | 55.2% |
-| RoBERTa (125M) | 69.0% | 61.4% | 76.6% | 65.0% |
+| Benchmark | Result | Categories at 100% |
+|-----------|--------|--------------------|
+| **Essay benchmark** | **91.7%** | Grief, Rage, Joy, Neutral, Fear |
+| **Reddit 174K posts** | **72.8%** | Balanced accuracy |
+| **Sarcasm detection** | **93.3%** | 6 structural templates |
 
-Clanker beats VADER on SST-2 by 4.4pp. Beats TextBlob on weighted average. Zero training, zero GPU.
+26 conversational forces. 2,900+ mapped vocabulary entries. Zero training, zero GPU.
 
 ## What This Demo Shows
 
