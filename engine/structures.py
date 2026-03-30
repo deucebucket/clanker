@@ -122,10 +122,11 @@ class StructureDetector:
         # Find best pair with a ref nearby
         for t_idx, p_idx, strength in pairs:
             for ref_idx in ref_indices:
-                # ref should be within 5 words of either transfer or possession
+                # ref should be within 8 words of either transfer or possession
+                # (longer sentences like "left keys on counter for whoever finds them")
                 dist_t = abs(ref_idx - t_idx)
                 dist_p = abs(ref_idx - p_idx)
-                if min(dist_t, dist_p) <= 5:
+                if min(dist_t, dist_p) <= 8:
                     indices = sorted({t_idx, p_idx, ref_idx})
                     confidence = strength * 0.8
                     return StructureMatch(
@@ -317,9 +318,13 @@ class StructureDetector:
         )
 
     def _exhaustion(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """SELF_REF + NEGATOR + sustain verb + TEMPORAL("anymore"/"forever").
+        """NEGATOR + sustain verb + optional TEMPORAL("anymore"/"forever").
 
         "I cant take this anymore" -- user at processing limits.
+        "cant do this shit anymore" -- implied self-ref via contraction.
+
+        SELF_REF is a boost, not a requirement. Contractions like "cant",
+        "dont", "wont" inherently imply the speaker.
         """
         self_indices = [r.position for r in roles if r.role == "SELF_REF"]
         negator_indices = [r.position for r in roles if r.role == "NEGATOR"]
@@ -332,21 +337,25 @@ class StructureDetector:
             or (r.role == "TEMPORAL" and r.word in ("anymore", "forever"))
         ]
 
-        if not self_indices or not negator_indices or not sustain_indices:
+        if not negator_indices or not sustain_indices:
             return None
 
-        # Core pattern: SELF_REF + NEGATOR + sustain verb (temporal is a boost)
+        # Core pattern: NEGATOR + sustain verb (SELF_REF and temporal are boosts)
         indices = set()
-        best_self = self_indices[0]
-        best_neg = min(negator_indices, key=lambda x: abs(x - best_self))
+        best_neg = negator_indices[0]
         best_sustain = min(sustain_indices, key=lambda x: abs(x - best_neg))
-        indices.update({best_self, best_neg, best_sustain})
+        indices.update({best_neg, best_sustain})
+
+        if self_indices:
+            best_self = min(self_indices, key=lambda x: abs(x - best_neg))
+            indices.add(best_self)
 
         span = max(indices) - min(indices)
         if span > 6:
             return None
 
-        confidence = 0.5
+        # Base confidence: lower without explicit SELF_REF
+        confidence = 0.5 if self_indices else 0.35
         if temporal_limit_indices:
             best_temp = min(
                 temporal_limit_indices,
@@ -355,6 +364,8 @@ class StructureDetector:
             if abs(best_temp - best_sustain) <= 4:
                 indices.add(best_temp)
                 confidence += 0.25
+        if self_indices:
+            confidence += 0.1
 
         return StructureMatch(
             pattern="EXHAUSTION",
