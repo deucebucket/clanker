@@ -15,15 +15,9 @@
           "neutral_pct": 22.7,
           "samples": 872
         },
-        "Clanker": {
-          "accuracy": 56.8,
-          "f1": 39.6,
-          "neutral_pct": 13.9,
-          "samples": 872
-        },
         "ClankerV2": {
-          "accuracy": 60.2,
-          "f1": 38.7,
+          "accuracy": 60.3,
+          "f1": 38.8,
           "neutral_pct": 0.0,
           "samples": 872
         },
@@ -50,15 +44,9 @@
           "neutral_pct": 35.5,
           "samples": 1000
         },
-        "Clanker": {
-          "accuracy": 50.8,
-          "f1": 49.7,
-          "neutral_pct": 21.3,
-          "samples": 1000
-        },
         "ClankerV2": {
-          "accuracy": 57.0,
-          "f1": 56.5,
+          "accuracy": 56.9,
+          "f1": 56.4,
           "neutral_pct": 44.7,
           "samples": 1000
         },
@@ -85,14 +73,8 @@
           "neutral_pct": 30.6,
           "samples": 1000
         },
-        "Clanker": {
-          "accuracy": 69.7,
-          "f1": 48.2,
-          "neutral_pct": 12.7,
-          "samples": 1000
-        },
         "ClankerV2": {
-          "accuracy": 63.6,
+          "accuracy": 63.7,
           "f1": 42.2,
           "neutral_pct": 0.0,
           "samples": 1000
