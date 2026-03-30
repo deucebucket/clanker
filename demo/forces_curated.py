@@ -612,7 +612,7 @@ EMOTIONAL_VOCABULARY = {
     'candy': ( +62,  +38,  +17,  +18,  -14),  # freq=129
     'cannot': ( -55,  -29,  -49,   +0,  -25),  # freq=198
     'capable': ( +58,  +15,  +14,   +2,  +19),  # freq=16
-    'care': ( +29,  +20,  +34,  +12,   +8),  # freq=901
+    'care': ( +29,  +20,  +34,  +12,  +35),  # embrace -- high G. to care = to hold.
     'career': ( +51,  +38,  +29,   +7,  +20),  # freq=104
     'carefree': ( +56,  -49,   +0,   +0,  +16),  # freq=15
     'careful': ( +28,  +13,  +74,  +18,   +0),  # freq=165
@@ -960,7 +960,7 @@ EMOTIONAL_VOCABULARY = {
     'fights': (-119, +112,  +92,  +89,  -27),  # freq=22
     'figure': ( +42,  -29,   +2,   +0,  +12),  # freq=147
     'figured': ( +35,   +0,  +24,   +0,  +14),  # freq=71
-    'finally': ( +29,  +29,  +34,  +12,  +16),  # freq=714
+    'finally': (  +5,  +10,  +10,  +15,   +5),  # temporal marker -- context determines polarity
     'finance': ( +56,  -11,  +97,   +0,  +32),  # freq=16
     'financial': ( +35,   +0,  +64,   +0,  +20),  # freq=93
     'fine': ( -32,  +24,  -22,  +49,   -9),  # freq=547
@@ -1383,7 +1383,7 @@ EMOTIONAL_VOCABULARY = {
     'necklace': ( +71,  +22,  +52,   +6,   +8),  # freq=35
     'needles': ( -59,  +22,  -54,  +15,  -29),  # freq=12
     'needless': ( -40,  -24, -109,   +0,  -32),  # freq=19
-    'negative': (-112,   +6, -127,   +3,  -63),  # freq=54
+    'negative': (-25,   +5,  -20,   +5,  -10),  # liquid -- medical=good, emotional=bad. Context determines.
     'nephew': ( +51,  +27,  +17,  +18,  -14),  # freq=134
     'nerve': ( +50, +108,  +72, +127,   -8),  # freq=132
     'nerves': ( -37,  +63,  -87,  +35,  -28),  # freq=91
@@ -1847,7 +1847,7 @@ EMOTIONAL_VOCABULARY = {
     'support': ( +37,   +9,  +22,   +0,  +12),  # freq=226
     'supposed': ( -47,  -27,  -44,   +0,  -24),  # freq=289
     'sure': ( +28,   +0,  +49,  +18,   +0),  # freq=3594
-    'surgery': ( -77, +103, -127, +127,  -61),  # freq=151
+    'surgery': ( -25, +30, -30, +40, -20),  # medical context -- scary alone, but "went well" = relief
     'surprises': ( +39,  +22,  +19,   +2,  +14),  # freq=21
     'surprising': ( +41,  +24,  +24,   +2,  +16),  # freq=32
     'surprisingly': ( +35,  +24,  +44,   +3,  +17),  # freq=23
@@ -2657,7 +2657,7 @@ EMOTIONAL_VOCABULARY.update(_SHORT_RESPONSES)
 # "fuck" alone = negative outburst (like "damn")
 # "fucking" = amplifier (handled in context_operators, not here)
 _SWEARING = {
-    'fuck':         (-40, +40, +20, +15, -10),   # outburst — anger/frustration
+    'fuck':         (-70, +50, +30, +20, -15),   # expletive/attack -- resists negation at |V|>60
     'shit':         (-30, +25, +10, +10, -10),   # frustration
     # 'bullshit' already in main vocab at V=-60 — don't overwrite
     'dammit':       (-25, +30, +10, +15, -5),    # frustration outburst
@@ -2766,7 +2766,7 @@ for word, new_g in _G_OVERRIDES.items():
 # Proximity and structure handle the rare positive cases.
 _ACTION_WORDS = {
     # Violence/abuse (almost always negative in conversation)
-    'hit':          (-80, 60, -50, 40, -30),     # violence/damage to user. D crashes, U spikes.
+    'hit':          (-45, 35, -25, 20, -15),     # moderate negative -- VICTIMIZATION amplifies for violence
     'hitting':      (-40, 45, 20, 25, -15),
     'slapping':     (-60, 50, 20, 25, -20),
     'kicked':       (-50, 50, 25, 20, -15),
@@ -2947,4 +2947,114 @@ _RESOLUTION_WORDS = {
     'managed':      (10, 5, 10, 0, 5),
 }
 EMOTIONAL_VOCABULARY.update(_RESOLUTION_WORDS)
+
+
+# ── Threat/oath words ──
+_THREAT_WORDS = {
+    'swear':        (-15, 20, 20, 15, -5),     # oath -- escalation signal
+    'promise':      (10, 5, 10, 5, 15),         # commitment -- can be positive or threatening
+    'warn':         (-20, 15, 25, 15, -5),
+    'warning':      (-20, 15, 25, 15, -5),
+    'threatening':  (-40, 30, 20, 20, -10),
+    'threat':       (-40, 30, 15, 20, -10),
+}
+EMOTIONAL_VOCABULARY.update(_THREAT_WORDS)
+
+
+# ── Medical/condition words ──
+_MEDICAL_WORDS = {
+    'herpes':       (-30, 15, -20, 5, -10),
+    'cancer':       (-80, 30, -50, 40, -40),
+    'sick':         (-30, 10, -20, 10, -15),
+    'infected':     (-35, 20, -25, 15, -15),
+    'pregnant':     (5, 30, 0, 30, 40),          # high G, context-dependent V
+    'disability':   (-15, 5, -15, 5, 20),
+}
+EMOTIONAL_VOCABULARY.update(_MEDICAL_WORDS)
+
+
+# ── Milestone/achievement words ──
+_MILESTONE_WORDS = {
+    'million':      (35, 15, 25, 5, 10),
+    'billion':      (20, 10, 20, 5, 10),
+    'streams':      (10, 5, 5, 0, 5),
+    'verified':     (20, 10, 15, 0, 10),
+    'published':    (25, 10, 20, 0, 15),
+    'accepted':     (30, 15, 20, 0, 15),
+    'paid':         (15, 5, 10, 0, 5),
+    'hero':         (40, 15, 30, 0, 20),
+    'dream':        (25, 10, 10, 5, 15),
+}
+EMOTIONAL_VOCABULARY.update(_MILESTONE_WORDS)
+
+
+# ── Comparison/judgment words ──
+_JUDGMENT_WORDS = {
+    'compare':      (-15, 5, -10, 5, -5),
+    'compared':     (-15, 5, -10, 5, -5),
+    'comparing':    (-15, 5, -10, 5, -5),
+    'judge':        (-20, 10, 15, 5, -5),
+    'judged':       (-25, 10, -10, 5, -10),
+    'judging':      (-20, 10, 15, 5, -5),
+    'criticize':    (-25, 10, 15, 5, -8),
+    'criticized':   (-30, 10, -15, 5, -10),
+    'blame':        (-30, 15, 15, 10, -10),
+    'blamed':       (-35, 15, -20, 10, -15),
+    'fault':        (-25, 10, -15, 5, -10),
+}
+EMOTIONAL_VOCABULARY.update(_JUDGMENT_WORDS)
+
+
+# ── Temporal intensity words ──
+# These amplify through permanence/repetition
+_TEMPORAL_INTENSITY = {
+    'always':       (-10, 5, -5, 5, -3),      # infinity -- relentless
+    'constantly':   (-10, 10, -5, 5, -3),      # nonstop pressure
+    'every':        (-5, 5, -5, 5, -3),        # totality
+    'forever':      (-5, 5, -5, 10, -5),       # permanence
+}
+EMOTIONAL_VOCABULARY.update(_TEMPORAL_INTENSITY)
+
+
+# ── Exclusion/comparison markers ──
+_EXCLUSION_WORDS = {
+    'except':       (-25, 5, -15, 5, -10),     # exclusion -- everyone EXCEPT me
+    'besides':      (-10, 5, -5, 0, -3),
+    'instead':      (-15, 5, -10, 5, -5),       # replacement -- they chose X instead of me
+    'without':      (-45, 15, -40, 15, -25),     # already exists but reconfirm
+    'more':         (-8, 5, -5, 0, -3),          # comparison -- implies less for speaker
+    'less':         (-10, -5, -5, 0, -5),        # already exists
+    'better':       (-5, 5, -5, 0, -3),          # context: "theyre better" = im worse
+    'prettier':     (-10, 5, -10, 0, -5),
+    'smarter':      (-8, 5, -10, 0, -5),
+    'faster':       (-5, 5, -5, 0, -3),
+}
+EMOTIONAL_VOCABULARY.update(_EXCLUSION_WORDS)
+
+
+# ── Doubt/questioning markers ──
+# "even" in "do you even care" = doubt amplifier
+# "actually" in "did you actually try" = skepticism
+_DOUBT_WORDS = {
+    'even':         (-10, 5, -5, 5, -3),         # doubt -- "do you EVEN"
+    'actually':     (-8, 5, 5, 0, -3),           # skepticism -- "did you ACTUALLY"
+    'really':       (-5, 5, -5, 0, -3),          # doubt when questioning: "do you really"
+    'anymore':      (-15, 5, -10, 5, -5),        # loss of state -- "i dont care anymore"
+    'supposed':     (-10, 5, -10, 5, -5),        # obligation unfulfilled -- "you were supposed to"
+}
+EMOTIONAL_VOCABULARY.update(_DOUBT_WORDS)
+
+
+# ── Upbringing/family structure ──
+_UPBRINGING_WORDS = {
+    'foster':       (-20, 5, -15, 5, 30),       # substitute care -- implies absent parents. High G.
+    'adopted':      (-5, 5, -5, 5, 35),          # near-neutral -- can be positive (chosen) or painful
+    'orphan':       (-40, 10, -30, 10, 40),      # parentless -- high G loss
+    'homeless':     (-50, 15, -40, 15, 35),
+    'abused':       (-70, 30, -50, 30, 40),
+    'neglected':    (-50, 10, -40, 10, 35),
+    'molested':     (-90, 40, -70, 50, 50),
+    'trafficked':   (-80, 40, -60, 50, 45),
+}
+EMOTIONAL_VOCABULARY.update(_UPBRINGING_WORDS)
 

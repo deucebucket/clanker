@@ -73,16 +73,26 @@ def compute_vadug(
         # Every word in vocabulary exerts force, not just EMOTIONAL role.
         # A small star (monday V=-10) still pulls. Just less than a big star (dead V=-114).
         # Dark matter words (not in vocab) have no force and skip.
-        word_force = wr.force
-        if word_force is None:
-            # Check vocabulary directly - word might have force but role != EMOTIONAL
-            word_force = VOCABULARY.get(wr.word)
-        if word_force is None:
-            # Fuzzy match: stemmer catches conjugations (hates->hate, kills->kill)
-            from .fuzzy import fuzzy_match
-            matched = fuzzy_match(wr.word)
-            if matched:
-                word_force = VOCABULARY.get(matched)
+        # POSSESSION words are objects -- "my remote" = thing, not emotion.
+        # Strip V/A/D but KEEP gravity (G). A car matters more than a pen.
+        # "he stole my car" = high G amplifies damage. "he stole my pen" = low G.
+        if wr.role == "POSSESSION":
+            vf = VOCABULARY.get(wr.word)
+            if vf:
+                word_force = (0, 0, 0, 0, max(5, vf[4]))  # zero emotions, keep G
+            else:
+                word_force = (0, 0, 0, 0, 5)  # unknown object = minimal G
+        else:
+            word_force = wr.force
+            if word_force is None:
+                # Check vocabulary directly - word might have force but role != EMOTIONAL
+                word_force = VOCABULARY.get(wr.word)
+            if word_force is None:
+                # Fuzzy match: stemmer catches conjugations (hates->hate, kills->kill)
+                from .fuzzy import fuzzy_match
+                matched = fuzzy_match(wr.word)
+                if matched:
+                    word_force = VOCABULARY.get(matched)
 
         if word_force is None:
             trace_entries.append({
@@ -141,10 +151,31 @@ def compute_vadug(
     for sm in structures:
         # Sarcasm and bravado scale with distance from neutral
         # Bigger positive = stronger correction (overcompensation = more mask)
-        if sm.pattern in ("SARCASM_INVERSION", "BRAVADO") and state_v > CENTER:
+        if sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
             state_v += pull
+        elif sm.pattern == "CHOPPER_SPLIT" and sm.matched_indices:
+            # "but" means: second half overrides first half.
+            # Check emotional content after the chop to determine direction.
+            chop_pos = sm.matched_indices[0]
+            after_words = [wr for wr in roles if wr.position > chop_pos]
+            after_v_sum = 0
+            for wr in after_words:
+                wf = wr.force or VOCABULARY.get(wr.word)
+                if wf:
+                    after_v_sum += wf[0]
+            has_negator_after = any(wr.role == "NEGATOR" for wr in after_words)
+            # Second half contradicts first half -- pull toward opposite
+            if (state_v > CENTER and (after_v_sum < 0 or (after_v_sum == 0 and has_negator_after))):
+                # Positive first half + negative/negated second = override hard
+                # The stronger the first half positive, the more the "but" hurts
+                distance = state_v - CENTER
+                state_v -= distance * 1.5 * sm.confidence
+            elif (state_v < CENTER and after_v_sum > 10):
+                # Negative first half + positive second = recovery
+                distance = CENTER - state_v
+                state_v += distance * 0.4 * sm.confidence
         else:
             state_v += sm.v_weight * sm.confidence * FORCE_SCALE
         state_d += sm.d_weight * sm.confidence * FORCE_SCALE

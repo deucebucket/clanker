@@ -112,6 +112,7 @@ class StructureDetector:
             self._calling_out,
             self._directed_positive,
             self._minimizer,
+            self._excluded_positive,
         ]
         matches = []
         for detector in detectors:
@@ -128,6 +129,10 @@ class StructureDetector:
         "I gave my dog to my neighbor" -- giving away before exit.
         Dog is RELATION_REF (relationship), neighbor is RELATION_REF (recipient).
         """
+        # "back" flips direction: "give back my stuff" = reclamation, not farewell
+        if any(r.word == "back" for r in roles):
+            return None
+
         # Find TRANSFER + POSSESSION pairs
         pairs = find_role_pairs(roles, "TRANSFER", "POSSESSION")
 
@@ -558,6 +563,21 @@ class StructureDetector:
                 description="Positive + mundane (no opener, lower confidence)",
                 v_weight=-20.0, d_weight=5.0,
             )
+        # SHORT sentence with opener + strong positive = compressed sarcasm
+        # "oh joy" "oh perfect" "oh wonderful" "wow great" -- brevity IS the tell
+        # Genuine joy would have more context: "oh what joy this brings"
+        elif has_opener and len(roles) <= 5:
+            # Check for strong positive (V >= 40)
+            strong_pos = any(r.force and r.force[0] >= 40
+                           for r in roles if r.role == "EMOTIONAL")
+            if strong_pos:
+                return StructureMatch(
+                    pattern="SARCASM_INVERSION",
+                    confidence=0.9,
+                    matched_indices=positive_idx,
+                    description="Opener + strong positive + short = compressed sarcasm",
+                    v_weight=-60.0, d_weight=10.0,
+                )
         return None
 
     def _chopper_split(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -876,7 +896,9 @@ class StructureDetector:
         has_action = any(r.word in action_words for r in roles)
         # Also genuine if self is thankful/proud/loving
         grateful_words = {"proud", "grateful", "thankful",
-                         "appreciate", "love", "favorite", "amazing"}
+                         "appreciate", "love", "favorite", "amazing",
+                         "care", "miss", "adore", "cherish",
+                         "believe", "support", "trust", "respect"}
         has_grateful = any(r.word in grateful_words for r in roles)
 
         # "thank you" is always genuine, regardless of self presence
@@ -958,6 +980,65 @@ class StructureDetector:
                 )
 
         return None
+
+    def _excluded_positive(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Positive emotion directed at OTHER while SELF is excluded or doubting.
+
+        "do you even love me" -- questioning if positive applies to self
+        "my parents love my brother more" -- positive goes to other, not self
+        "everyone got invited except me" -- positive event excludes self
+
+        Pattern: positive EMOTIONAL + (doubt marker OR exclusion marker OR
+        comparison marker) + SELF_REF = self excluded from the positive.
+        """
+        pos_indices = [r.position for r in roles
+                      if r.role == "EMOTIONAL" and r.force and r.force[0] > 25]
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+
+        if not pos_indices or not self_indices:
+            return None
+
+        # Doubt/exclusion/comparison markers
+        doubt_words = {"even", "actually", "really", "ever", "anymore"}
+        exclusion_words = {"except", "without", "instead", "but", "not"}
+        comparison_words = {"more", "less", "better", "worse", "prettier",
+                           "smarter", "faster", "rather", "over"}
+
+        has_doubt = any(r.word in doubt_words for r in roles)
+        has_exclusion = any(r.word in exclusion_words for r in roles)
+        has_comparison = any(r.word in comparison_words for r in roles)
+        has_negator = any(r.role == "NEGATOR" for r in roles)
+
+        # Need doubt/exclusion/comparison signal (not just negator alone --
+        # "cant believe we won" is amazement, not exclusion)
+        signals = sum([has_doubt, has_exclusion, has_comparison])
+        if signals == 0:
+            return None
+
+        # Check that OTHER/RELATION is also present (the one getting the positive)
+        has_other = any(r.role in ("OTHER_REF", "RELATION_REF") for r in roles)
+        if not has_other and not has_doubt:
+            return None
+
+        # Stronger with more signals
+        confidence = 0.5 + min(signals * 0.15, 0.35)
+
+        # Scale with how positive the positive word is (bigger love = bigger hurt)
+        max_pos_v = max(r.force[0] for r in roles
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] > 25)
+        intensity = min(max_pos_v / 50.0, 2.0)
+
+        indices = sorted(set(pos_indices + self_indices))
+        return StructureMatch(
+            pattern="EXCLUDED_POSITIVE",
+            confidence=min(confidence, 0.9),
+            matched_indices=indices,
+            description="Self excluded from positive -- doubt, comparison, or exclusion",
+            v_weight=-40.0 * intensity,
+            d_weight=-15.0,
+            u_weight=10.0,
+            g_weight=10.0,
+        )
 
     def _calling_out(self, roles: List[WordRole]) -> Optional[StructureMatch]:
         """'why' or 'how' + OTHER_REF = calling out behavior.

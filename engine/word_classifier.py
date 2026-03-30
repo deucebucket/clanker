@@ -39,9 +39,12 @@ ROLE_WORDS = {
         "mine", "id", "i'd", "ill", "i'll",
     }),
     "OTHER_REF": frozenset({
-        "you", "your", "yourself", "they", "them", "their",
-        "he", "him", "his", "she", "her", "it", "its",
-        "we", "us", "our",
+        "you", "your", "yours", "yourself", "youre", "youve", "youd", "youll",
+        "they", "them", "their", "theyre", "theyve", "theyd", "theyll",
+        "he", "him", "his", "hes", "she", "her", "hers", "shes",
+        "it", "its",
+        "we", "us", "our", "were", "weve",
+        "someone", "somebody", "everyone", "everybody", "anyone", "anybody",
     }),
     "RELATION_REF": frozenset({
         "mom", "mother", "dad", "father", "parent", "parents",
@@ -64,7 +67,7 @@ ROLE_WORDS = {
     "AMPLIFIER": frozenset({
         "very", "really", "extremely", "absolutely", "totally",
         "completely", "incredibly", "deeply", "truly", "super",
-        "hella", "so", "fucking", "freaking", "damn",
+        "hella", "so", "fucking", "freaking", "damn", "too",
     }),
     "NEGATOR": frozenset({
         "not", "no", "never", "nobody", "nothing", "nowhere",
@@ -96,9 +99,14 @@ ROLE_WORDS = {
     }),
     "POSSESSION": frozenset({
         "things", "stuff", "belongings", "possessions", "keys",
-        "car", "phone", "clothes", "money",
-        "account", "passwords", "ring", "journal", "laptop",
-        "plants", "guitar", "collection",
+        "car", "phone", "clothes", "money", "wallet", "purse",
+        "account", "passwords", "ring", "journal", "laptop", "computer",
+        "plants", "guitar", "collection", "remote", "tv", "console",
+        "house", "apartment", "room", "bed", "desk", "chair",
+        "bag", "backpack", "shoes", "jacket", "hoodie",
+        "food", "lunch", "dinner", "drink", "coffee",
+        "bike", "skateboard", "headphones", "charger",
+        "book", "notebook", "pen", "pencil",
     }),
     "METHOD": frozenset({
         "pills", "pill", "gun", "pistol", "rope", "bridge",

@@ -112,15 +112,65 @@ def proximity_coefficient(
             continue
 
         role = roles[i].role
-        if role not in ROLE_MODIFIERS:
-            continue
-
         distance = abs(i - target_idx)
         influence = PROXIMITY_DECAY ** distance
         if influence < INFLUENCE_CUTOFF:
             continue
 
-        modifier = ROLE_MODIFIERS[role]
-        coeff *= (1.0 + modifier * influence)
+        # Operator modifiers (amplifier, negator, self-ref, hedge)
+        if role in ROLE_MODIFIERS:
+            modifier = ROLE_MODIFIERS[role]
+            # Strong NEGATIVE words resist negation -- "no fuck you" != "not happy"
+            # Expletives/violence (V < -50) can't be logically negated
+            # Positive words CAN be negated: "not happy" = valid
+            if role == "NEGATOR" and roles[target_idx].force:
+                word_v = roles[target_idx].force[0]
+                if word_v < -50:
+                    resist = min(abs(word_v) / 127.0, 0.9)
+                    modifier *= (1.0 - resist)
+            coeff *= (1.0 + modifier * influence)
+
+        # Star-to-star gravity: stronger emotional words pull weaker ones
+        # Uses EMOTIONAL DISTANCE (skip neutral/connector words between stars)
+        # "cheated on me with my best" -- emotional distance cheated->best = 1
+        # Connectors/neutrals are transparent conduits, not walls
+        if role == "EMOTIONAL" and roles[i].force and roles[target_idx].force:
+            their_v = roles[i].force[0]
+            my_v = roles[target_idx].force[0]
+            if abs(their_v) > abs(my_v) * 1.5:
+                # Count only EMOTIONAL words between them for distance
+                lo, hi = min(i, target_idx), max(i, target_idx)
+                emo_between = sum(1 for k in range(lo+1, hi) 
+                                  if roles[k].role == "EMOTIONAL")
+                emo_distance = max(1, emo_between + 1)
+                emo_influence = PROXIMITY_DECAY ** emo_distance
+                mass_ratio = abs(their_v) / max(abs(my_v), 1)
+                pull = emo_influence * min(mass_ratio * 0.15, 0.8)
+                if their_v < 0:
+                    coeff *= (1.0 - pull)
+                else:
+                    coeff *= (1.0 + pull * 0.5)
+
+    # Relationship amplification: nearby RELATION_REF amplifies negative forces
+    # Wife(G=40) near cheated(-127) = betrayal hits harder because trust was higher
+    # The relationship G value IS the trust level -- higher trust = bigger fall
+    target_role = roles[target_idx]
+    if target_role.force and target_role.force[0] < -20:  # negative emotional word
+        for i in range(n):
+            if i == target_idx:
+                continue
+            if roles[i].role == "RELATION_REF":
+                distance = abs(i - target_idx)
+                influence = PROXIMITY_DECAY ** distance
+                if influence < INFLUENCE_CUTOFF:
+                    continue
+                # Get the relationship G value from vocabulary
+                from .vocabulary import VOCABULARY
+                rel_g = 20  # default
+                if roles[i].word in VOCABULARY:
+                    rel_g = max(5, VOCABULARY[roles[i].word][4])
+                # Amplify: higher relationship G = bigger betrayal multiplier
+                betrayal_mult = (rel_g / 20.0) * influence
+                coeff *= (1.0 + betrayal_mult * 0.3)
 
     return max(-COEFFICIENT_CAP, min(COEFFICIENT_CAP, coeff))
