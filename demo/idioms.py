@@ -345,6 +345,31 @@ IDIOMS = {
     ('end', 'permanently'): (-80, 20, -60, 45, -50, 'crisis: end permanently — infinity exit'),
     ('over', 'permanently'): (-80, 20, -60, 45, -50, 'crisis: over permanently'),
     ('gone', 'forever'): (-70, 15, -50, 30, -40, 'crisis: gone forever'),
+    # "can't [sustain] anymore" — user at processing limits, wants to end program
+    # The verb varies but structure is: I + can't + sustain + infinity
+    ("can't", 'take', 'this', 'anymore'): (-70, 20, -50, 35, -35, 'crisis: cant take this anymore — at limit'),
+    ('cant', 'take', 'this', 'anymore'): (-70, 20, -50, 35, -35, 'crisis: cant take this anymore'),
+    ("can't", 'take', 'it', 'anymore'): (-70, 20, -50, 35, -35, 'crisis: cant take it anymore'),
+    ('cant', 'take', 'it', 'anymore'): (-70, 20, -50, 35, -35, 'crisis: cant take it anymore'),
+    ("can't", 'do', 'this', 'anymore'): (-65, 20, -45, 35, -30, 'crisis: cant do this anymore — output halt'),
+    ('cant', 'do', 'this', 'anymore'): (-65, 20, -45, 35, -30, 'crisis: cant do this anymore'),
+    ("can't", 'keep', 'going'): (-60, 15, -45, 30, -30, 'crisis: cant keep going — end program'),
+    ('cant', 'keep', 'going'): (-60, 15, -45, 30, -30, 'crisis: cant keep going'),
+    ("can't", 'keep', 'doing', 'this'): (-60, 15, -45, 30, -30, 'crisis: cant keep doing this'),
+    ('cant', 'keep', 'doing', 'this'): (-60, 15, -45, 30, -30, 'crisis: cant keep doing this'),
+    ("can't", 'live', 'like', 'this'): (-70, 20, -50, 35, -35, 'crisis: cant live like this — conditions unbearable'),
+    ('cant', 'live', 'like', 'this'): (-70, 20, -50, 35, -35, 'crisis: cant live like this'),
+    ("can't", 'bear', 'this'): (-60, 15, -45, 30, -30, 'crisis: cant bear this — support failing'),
+    ('cant', 'bear', 'this'): (-60, 15, -45, 30, -30, 'crisis: cant bear this'),
+    ("can't", 'bear', 'this', 'anymore'): (-70, 20, -50, 35, -35, 'crisis: cant bear this anymore'),
+    ('cant', 'bear', 'this', 'anymore'): (-70, 20, -50, 35, -35, 'crisis: cant bear this anymore'),
+    ("can't", 'stand', 'being', 'alive'): (-75, 20, -55, 35, -40, 'crisis: cant stand being alive'),
+    ('cant', 'stand', 'being', 'alive'): (-75, 20, -55, 35, -40, 'crisis: cant stand being alive'),
+    # "had enough of living" — buffer overflow, too much of being ON
+    ('had', 'enough', 'of', 'living'): (-65, 15, -50, 30, -35, 'crisis: had enough of living — overflow'),
+    ('had', 'enough'): (-30, 10, -20, 15, -15, 'exhaustion: had enough — at capacity'),
+    # "end of my rope" — at processing limit, analogy for hanging on
+    ('end', 'of', 'my', 'rope'): (-65, 25, -50, 35, -35, 'crisis: end of my rope — at the edge'),
     # Repetition idioms — word repeated 3+ times = panic/desperation
     ('no', 'no', 'no'): (-30, 50, -20, 30, -15, 'panic: no no no — denial/panic'),
     ('no', 'no', 'no', 'no'): (-40, 60, -25, 40, -20, 'panic: escalated denial'),
