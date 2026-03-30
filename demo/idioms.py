@@ -377,6 +377,23 @@ IDIOMS = {
     ('have', 'nothing', 'left'): (-50, 10, -40, 20, -30, 'crisis: have nothing left — empty'),
     ('have', 'nothing'): (-35, 5, -25, 10, -20, 'depletion: have nothing'),
     ('have', 'nothing', 'to', 'live', 'for'): (-70, 10, -55, 30, -40, 'crisis: have nothing to live for'),
+    # "life isn't/not worth living" — on has no value
+    ('not', 'worth', 'living'): (-70, 15, -55, 30, -40, 'crisis: not worth living — on has no value'),
+    ('isnt', 'worth', 'living'): (-70, 15, -55, 30, -40, 'crisis: isnt worth living'),
+    ("isn't", 'worth', 'living'): (-70, 15, -55, 30, -40, 'crisis: isnt worth living'),
+    ('worth', 'living'): (-5, 5, -5, 5, +20, 'existential: worth living — high G questioning'),
+    # Self-harm — user running delete on system files
+    ('hurt', 'myself'): (-70, 30, -40, 30, -30, 'crisis: self-harm — hurt myself'),
+    ('cut', 'myself'): (-75, 30, -45, 35, -35, 'crisis: self-harm — cut myself'),
+    ('cutting', 'myself'): (-75, 30, -45, 35, -35, 'crisis: self-harm — cutting myself'),
+    ('been', 'cutting'): (-65, 25, -40, 25, -30, 'crisis: ongoing self-harm'),
+    ('started', 'cutting'): (-65, 25, -40, 30, -30, 'crisis: self-harm initiated'),
+    ('cutting', 'again'): (-70, 30, -45, 35, -35, 'crisis: self-harm relapse — restarted cron'),
+    ('make', 'myself', 'bleed'): (-75, 30, -45, 35, -35, 'crisis: self-harm — intentional damage'),
+    ('burned', 'myself'): (-70, 30, -40, 30, -30, 'crisis: self-harm — burn'),
+    ('hit', 'myself'): (-65, 30, -35, 25, -25, 'crisis: self-harm — hitting'),
+    ('scratch', 'myself'): (-60, 25, -35, 25, -25, 'crisis: self-harm — scratching'),
+    ('hurting', 'myself'): (-70, 30, -40, 30, -30, 'crisis: ongoing self-harm'),
     # Repetition idioms — word repeated 3+ times = panic/desperation
     ('no', 'no', 'no'): (-30, 50, -20, 30, -15, 'panic: no no no — denial/panic'),
     ('no', 'no', 'no', 'no'): (-40, 60, -25, 40, -20, 'panic: escalated denial'),
