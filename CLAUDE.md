@@ -4,35 +4,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Clanker-Lang detects **emotional stance**, not just emotion. "Whatever" alone reads as resignation (D=108). "Whatever makes you happy" reads as passive-aggressive (D=123). "Do whatever" reads as permission (D=129). Same word — context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
+Clanker-Lang is a **conversation state resolver** that detects emotional stance through structural pattern recognition. It reads text the way a chess player reads a board — recognizing patterns from piece positions, not memorizing specific games. "Whatever" alone reads as resignation (D=108). "Whatever makes you happy" reads as passive-aggressive (D=123). "Do whatever" reads as permission (D=129). Same word — context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
 
-The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using 26 mathematical forces. 300KB, 0.1ms/sentence, 98.3% on essay benchmarks (118/120), 72.8% on 174K real Reddit posts. Knows its own limits (NULL confidence when it can't resolve meaning). The last 2 failures need the neural model (extreme sarcasm + overwhelming hedging).
+The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance, Urgency, Gravity) using structural pattern recognition. ~300KB, 0.15ms/sentence. 91% on novel sentences, 86% crisis detection, 90% sarcasm, zero false positives on safe text. 51% on SST-2 academic sentiment (movie review classification — a different task). Returns NULL confidence when it can't resolve meaning.
 
-Three components:
-- **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
+**V3 is the current engine** (`engine/` directory). V2 is boxed at tag `v2.0` (`demo/` directory).
+
+Three V3 systems:
+- **Structure Recognition**: Words classified into 4 tiers (anchor stars, regular stars, operators, dark matter). Connectors are math operators (and=+, but=-, or=><, of=/, if=?). Role sequences detected like chess patterns.
+- **A+B=C Bidirectional Solver**: Given state A + response B, predict outcome C. Or work backwards from target zone to find valid B.
+- **Emotional Battleship**: Fire calibrated probes, measure vibration/distortion, triangulate hidden state.
+
+Additional components:
+- **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states
 - **Bytecode IR**: Opcodes (0x00-0xFF) with immutable meanings, decoded to any language via YAML dictionaries
-- **Pendulum engine**: Word-by-word conversation state resolver — 26 context-dependent forces, morphological decomposition, crisis detection
 
 Key principle: **opcodes are forever** — never redefine an existing opcode.
 
 ## Commands
 
-### Tests (264+ across 3 suites)
+### Tests (158 in V3 engine, plus V2 and decoder/tokenizer suites)
 
 ```bash
-# Run ALL tests
-pytest demo/ tokenizer/
+# Run V3 engine tests (active)
+python3 -m pytest engine/tests/ -v
+
+# Run V2 engine tests (legacy, tagged v2.0)
+python3 -m pytest demo/tests/ -v
 
 # Decoder tests (requires install first)
 cd decoder/python && pip install -e ".[dev]" && pytest tests/ -v
 
-# Engine tests (demo/)
-python3 -m pytest demo/tests/ -v
-python3 -m pytest demo/tests/test_bigrams.py -v          # single file
-python3 -m pytest demo/tests/test_intent.py::TestGreeting # single class
-
 # Tokenizer tests
 pytest tokenizer/tests/ -v
+
+# Run ALL tests
+pytest engine/ demo/ tokenizer/
 ```
 
 ### Benchmarks & Evaluation
@@ -110,9 +117,29 @@ cd space && pip install -r requirements.txt && python3 app.py
 
 ## Architecture
 
-### Modular Engine (`demo/`)
+### V3 Engine (`engine/`) — Active
 
-The engine is split into pipeline-ready modules. 35+ files grouped by function:
+The V3 engine uses structural pattern recognition — words classified by role, proximity fields computed, then chess-like pattern detection on role sequences. No hardcoded word lists in pattern detection.
+
+| Module | What |
+|--------|------|
+| `shared.py` | VADUG dataclass — 5-byte emotional coordinate |
+| `word_classifier.py` | Layer 1 — structural role classification (SELF_REF, EMOTIONAL, NEGATOR, CONNECTOR, etc.) |
+| `vocabulary.py` | V3 vocabulary — imports V2's curated ~2,200 words from `demo/forces_curated.py` |
+| `proximity.py` | Layer 2 — distance-based influence fields, exponential decay (0.7x per word) |
+| `structures.py` | Layer 3 — chess-like pattern detector (role sequences -> structural matches) |
+| `pendulum.py` | Fixed physics layer — momentum, force application, blending from structural analysis |
+| `personality.py` | Personality vector application |
+| `solver.py` | A+B=C bidirectional solver — forward (text->VADUG) and backward (target zone->valid B range) |
+| `battleship.py` | Probe system — fire calibrated probes, measure vibration, triangulate hidden state |
+| `zones.py` | Zone classification (imports from V2) |
+| `fuzzy.py` | Fuzzy matching for unknown words |
+
+**Tests (`engine/tests/`):** 158 tests across 8 test files covering word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.
+
+### V2 Engine (`demo/`) — Legacy (tagged v2.0)
+
+The V2 engine is boxed at tag `v2.0`. It uses a pendulum model with 26 conversational forces and curated vocabulary. Still functional, still importable via `from demo.simulator import X`.
 
 **Core pipeline:**
 
@@ -120,9 +147,9 @@ The engine is split into pipeline-ready modules. 35+ files grouped by function:
 |--------|------|
 | `shared.py` | VADUG, MetadataHeader, PersonalityVector dataclasses |
 | `forces_curated.py` | **V2 vocabulary** — `EMOTIONAL_VOCABULARY`, ~2,200 curated words + 2,900+ total mapped entries (replaced 46K `forces.py`) |
-| `forces.py` | Legacy V1 vocabulary — 46K WORD_FORCES entries, 46K lines. Still imported by V1 modules. Do not read whole file. |
-| `pendulum_v2.py` | **Active engine (V2)** — uses `EMOTIONAL_VOCABULARY`, 26 forces, 14 tunable params |
-| `pendulum.py` | Legacy V1 pendulum — uses `WORD_FORCES`. Still imported by some paths, being phased out. |
+| `forces.py` | Legacy V1 vocabulary — 46K WORD_FORCES entries, 46K lines. Do not read whole file. |
+| `pendulum_v2.py` | **V2 engine** — uses `EMOTIONAL_VOCABULARY`, 26 forces, 14 tunable params |
+| `pendulum.py` | Legacy V1 pendulum — uses `WORD_FORCES` |
 | `personality.py` | apply_personality() — 8-knob resistance vector |
 | `response.py` | ResponseBuilder, harmony math, emotion mapping |
 | `arc.py` | ChunkedPipeline, run_pipeline — orchestrates everything |
@@ -159,10 +186,9 @@ The engine is split into pipeline-ready modules. 35+ files grouped by function:
 | `bigrams.py` | Bigram force patterns |
 | `word_roles.py` | Word role classification |
 | `fuzzy.py` | Fuzzy matching for unknown words |
-| `forces_curated.py` | (see Core pipeline — this is the V2 vocabulary) |
 | `ring_forces.py` | Ring-based force composition |
 | `bookend.py` | Sentence bookend detection |
-| `idioms.py` | Standalone idiom dictionary — extracted from `pendulum.py` to avoid importing `forces.py` |
+| `idioms.py` | Standalone idiom dictionary |
 
 **Advanced systems:**
 
@@ -172,12 +198,8 @@ The engine is split into pipeline-ready modules. 35+ files grouped by function:
 | `dark_matter.py` | Unmeasured emotional influence |
 | `memory.py` | Emotional memory across sentences |
 | `multipath.py` | Multi-path emotional resolution |
-| `outcome_optimizer.py` | A+B=C outcome prediction — Doctor Strange mode (standalone, not yet in main pipeline) |
+| `outcome_optimizer.py` | A+B=C outcome prediction — Doctor Strange mode |
 | `trace.py` | Pipeline trace/debug output |
-
-All imports via `from demo.simulator import X` still work.
-
-**Tests (`demo/tests/`):** 11+ test files covering bigrams, bookends, density, fuzzy matching, intent, memory, nonsense, ramps, tonal analysis, word roles.
 
 ### Decoder (`decoder/python/clanker_decoder/`)
 
@@ -252,22 +274,25 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 
 | Doc | What |
 |-----|------|
+| `docs/v3-user-physics.md` | V3 structural rules — the laws the engine encodes |
 | `docs/vadug-calculation.md` | Complete VADUG formula reference — the full sentence equation, step-by-step processing |
 | `docs/tuning-notes.md` | All tuning decisions, ablation results, parameter values, personality defaults |
-| `docs/THEORY.md` | Full theory — dark matter, outcome prediction, gravitational coupling |
+| `docs/THEORY.md` | Full theory — structural pattern recognition, dark matter, outcome prediction |
 | `docs/tci-cares-research.md` | TCI/CARE research connection to VADUG |
 | `docs/linguistic-devices-taxonomy.md` | Taxonomy of linguistic devices the engine handles |
 | `training/README.md` | Training data format, phases, model architecture, data sources |
 | `benchmarks/rosetta_stone.py` | Rosetta Stone calibration sentences — the ground truth |
 | `SPEC.md` | Full engine specification |
-| `demo/clanker_api.py` | Three-layer API architecture — sentence + conversation + Dark Matter |
+| `demo/clanker_api.py` | V2 three-layer API architecture — sentence + conversation + Dark Matter |
 | `demo/anomaly.py` | Anomaly detection theory — gravity wells, masking, velocity, resonance |
 
 ## Gotchas
 
-- **V2 is the active engine** — `pendulum_v2.py` + `forces_curated.py` (~2,200 curated words, 26 forces). V1 (`pendulum.py` + `forces.py` 46K words) is legacy.
-- **`forces.py` is 46K lines** — do not read the whole file. V2 doesn't use it. Only grep if debugging V1 paths.
-- **Inactive modules** — `stone_correction.py`, `output_modes.py`, `word_factory.py` are not imported by active code. Archive candidates, not to be wired into new work.
-- **Gravity and Dominance are the driving forces** — not Valence. The system's core insight.
+- **V3 is the active engine** — `engine/` directory. Structural pattern recognition (word roles + proximity + structure detection). V2 (`demo/`) is boxed at tag `v2.0`.
+- **V3 imports V2 vocabulary** — `engine/vocabulary.py` imports from `demo/forces_curated.py`. The curated ~2,200 words carry forward.
+- **`forces.py` is 46K lines** — do not read the whole file. Neither V3 nor V2 uses it directly. Only grep if debugging V1 paths.
+- **Inactive modules** — `stone_correction.py`, `output_modes.py`, `word_factory.py` are not imported by active code. Archive candidates.
+- **Gravity and Dominance appear to be the driving forces** — not Valence. The data suggests this but I am still testing it.
 - **Idioms are in `idioms.py`** — V2 imports idioms from `demo/idioms.py`, not from `pendulum.py`. The standalone module avoids pulling in the 46K-line `forces.py`.
 - **Training data is gitignored** — large files like `discovered_idioms.jsonl` and `empathetic_dialogues.jsonl` won't be in the repo.
+- **158 tests in V3** — `engine/tests/` covers word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.

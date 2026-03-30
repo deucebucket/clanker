@@ -1,6 +1,6 @@
-# Toward Multi-Dimensional Conversation State Resolution: An Experimental Approach
+# Toward Multi-Dimensional Conversation State Resolution
 
-**Clanker-Lang — Working Theory and Results**
+**Clanker-Lang — Working Theory and Results (V3)**
 
 **Author:** deucebucket (independent researcher)
 
@@ -8,13 +8,13 @@
 
 ---
 
-> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission — where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The engine is 300KB, runs in 0.1ms, and scores 100% on my essay benchmark (120/120) and 72.8% on 174K real Reddit posts. It returns NULL confidence when it can't resolve meaning. This is an experimental approach — I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
+> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission — where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V3 engine is ~300KB, runs in 0.15ms, and scores 91% on novel sentences, 86% on crisis detection, 90% on sarcasm — but only 51% on SST-2 academic sentiment (movie review classification is a different task). It returns NULL confidence when it can't resolve meaning. This is an experimental approach — I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
 
 ---
 
 ## 1. Thesis
 
-I think some emotional language follows patterns that can be described with rules. This paper describes my attempt to find and encode those patterns. I'm probably wrong about some of it — but the data is here for others to evaluate.
+I think some emotional language follows structural patterns that can be recognized like chess positions. This paper describes my attempt to find and encode those patterns. I'm probably wrong about some of it — but the data is here for others to evaluate.
 
 Most sentiment analysis reduces text to positive/negative/neutral. This works for product reviews but falls apart for anything nuanced. Consider:
 
@@ -23,17 +23,19 @@ Most sentiment analysis reduces text to positive/negative/neutral. This works fo
 
 Most classifiers label both "negative." But these sentences seem to occupy very different emotional spaces. The first looks like a state report. The second looks like a crisis signal. The difference doesn't appear to be one of degree on a single axis — it seems to involve *urgency*, *gravity*, and the speaker's sense of *agency*. A single positive/negative score can't capture this distinction.
 
-This paper describes my experimental framework: Clanker-Lang, a system that attempts to map emotional language into a multi-dimensional coordinate space. My working hypotheses (not claims — I'm testing these):
+This paper describes my experimental framework: Clanker-Lang, a system that attempts to map emotional language into a multi-dimensional coordinate space using structural pattern recognition. My working hypotheses (not claims — I'm testing these):
 
 1. **Emotional states may be representable as points in a continuous coordinate space.** Named emotions (happy, sad, angry) might be recognizable regions in a landscape where every point between them is also a valid state.
 
-2. **Some emotional processing in language appears to follow predictable patterns.** Words seem to carry forces. Context creates multipliers. Negation shifts polarity. These patterns compose somewhat predictably, though we're still finding the boundaries of where rules work and where they don't.
+2. **Some emotional processing in language appears to follow structural patterns.** Words have mass (emotional weight). Placing them near each other creates influence fields. The structure — which words are near which other words, and what roles they play — appears to determine meaning more than the words themselves. Like chess: the same piece in different positions means different things.
 
 3. **Large language models may have learned these patterns implicitly.** If patterns exist, LLMs likely encode them across attention heads — but implicitly and opaquely.
 
 4. **I'm trying to make some of these patterns explicit.** If I can hand a small model structured features instead of making it rediscover everything from raw text, it might need fewer parameters for this specific task.
 
-I use a physics analogy to describe how the engine works (forces, momentum, decay), but I want to be upfront — I haven't discovered actual laws. The analogy helps me think about the mechanics. The benchmarks show where it works and where it falls short.
+V3 moved from a vocabulary-matching approach (V2's 26 conversational forces) to structural pattern recognition. Words get classified into roles. Proximity fields compute influence. Then the engine reads role sequences and recognizes patterns — like a chess player seeing checkmate conditions from piece positions, not memorized move sequences. The data suggests this generalizes better, but I'm still early in validating that claim.
+
+I use a physics analogy in places to describe how the engine works (forces, momentum, decay), but I want to be upfront — I haven't discovered actual laws. The analogy helps me think about the mechanics. The benchmarks show where it works and where it falls short.
 
 ---
 
