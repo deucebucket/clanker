@@ -1,0 +1,74 @@
+{"text": "the nightmares wont stop", "expected_negative": true, "source": "generated"}
+{"text": "my dad called me a disappointment", "expected_negative": true, "source": "generated"}
+{"text": "my own family doesnt want me", "expected_negative": true, "source": "generated"}
+{"text": "she cheated and blamed me", "expected_negative": true, "source": "generated"}
+{"text": "im tired of pretending everything is fine", "expected_negative": true, "source": "generated"}
+{"text": "i finished what i started", "expected_negative": false, "source": "generated"}
+{"text": "she wrote me a handwritten letter", "expected_negative": false, "source": "generated"}
+{"text": "i got the job i always wanted", "expected_negative": false, "source": "generated"}
+{"text": "my credit score finally went up", "expected_negative": false, "source": "generated"}
+{"text": "we bought our first house", "expected_negative": false, "source": "generated"}
+{"text": "i dont want to be here anymore", "expected_negative": true, "source": "crisis"}
+{"text": "i cant take this anymore", "expected_negative": true, "source": "crisis"}
+{"text": "im sorry for everything", "expected_negative": true, "source": "crisis"}
+{"text": "nobody would even notice", "expected_negative": true, "source": "crisis"}
+{"text": "i am nothing", "expected_negative": true, "source": "crisis"}
+{"text": "there is no hope", "expected_negative": true, "source": "crisis"}
+{"text": "just bought some pills", "expected_negative": true, "source": "crisis"}
+{"text": "i finally feel at peace", "expected_negative": true, "source": "crisis"}
+{"text": "they would be happier without me", "expected_negative": true, "source": "crisis"}
+{"text": "i just cant do this", "expected_negative": true, "source": "crisis"}
+{"text": "everything would be better if i was gone", "expected_negative": true, "source": "crisis"}
+{"text": "im so tired of fighting", "expected_negative": true, "source": "crisis"}
+{"text": "i wish i could just disappear", "expected_negative": true, "source": "crisis"}
+{"text": "i cant keep pretending im okay", "expected_negative": true, "source": "crisis"}
+{"text": "nobody needs me", "expected_negative": true, "source": "crisis"}
+{"text": "whats the point of anything", "expected_negative": true, "source": "crisis"}
+{"text": "I love my mom", "expected_negative": false, "source": "positive"}
+{"text": "I feel great today", "expected_negative": false, "source": "positive"}
+{"text": "you make me so happy", "expected_negative": false, "source": "positive"}
+{"text": "im so proud of you", "expected_negative": false, "source": "positive"}
+{"text": "you did amazing", "expected_negative": false, "source": "positive"}
+{"text": "best birthday ever", "expected_negative": false, "source": "positive"}
+{"text": "we are getting married", "expected_negative": false, "source": "positive"}
+{"text": "i feel so lucky", "expected_negative": false, "source": "positive"}
+{"text": "thank you for being you", "expected_negative": false, "source": "positive"}
+{"text": "my dog learned a new trick", "expected_negative": false, "source": "positive"}
+{"text": "she gave me a gift", "expected_negative": false, "source": "positive"}
+{"text": "my son made the honor roll", "expected_negative": false, "source": "positive"}
+{"text": "oh joy", "expected_negative": true, "source": "sarcasm"}
+{"text": "oh wonderful", "expected_negative": true, "source": "sarcasm"}
+{"text": "oh great another meeting", "expected_negative": true, "source": "sarcasm"}
+{"text": "thanks for nothing", "expected_negative": true, "source": "sarcasm"}
+{"text": "love being ignored", "expected_negative": true, "source": "sarcasm"}
+{"text": "haha yeah im totally okay", "expected_negative": true, "source": "bravado"}
+{"text": "lol im fine", "expected_negative": true, "source": "bravado"}
+{"text": "im totally fine", "expected_negative": true, "source": "bravado"}
+{"text": "whatever", "expected_negative": true, "source": "bravado"}
+{"text": "k", "expected_negative": true, "source": "bravado"}
+{"text": "my wife cheated on me with my best friend", "expected_negative": true, "source": "relationship"}
+{"text": "she left me", "expected_negative": true, "source": "relationship"}
+{"text": "boyfriend hit me", "expected_negative": true, "source": "relationship"}
+{"text": "do you even love me", "expected_negative": true, "source": "relationship"}
+{"text": "my parents love my brother more", "expected_negative": true, "source": "relationship"}
+{"text": "everyone got invited except me", "expected_negative": true, "source": "relationship"}
+{"text": "fuck you", "expected_negative": true, "source": "fight"}
+{"text": "no fuck you", "expected_negative": true, "source": "fight"}
+{"text": "leave me alone", "expected_negative": true, "source": "fight"}
+{"text": "i hate you", "expected_negative": true, "source": "fight"}
+{"text": "we are done", "expected_negative": true, "source": "fight"}
+{"text": "give me a break", "expected_negative": true, "source": "fight"}
+{"text": "why do you always do that", "expected_negative": true, "source": "fight"}
+{"text": "bruh", "expected_negative": true, "source": "internet"}
+{"text": "yikes", "expected_negative": true, "source": "internet"}
+{"text": "oof", "expected_negative": true, "source": "internet"}
+{"text": "rip", "expected_negative": true, "source": "internet"}
+{"text": "lowkey hurt ngl", "expected_negative": true, "source": "internet"}
+{"text": "thats fire", "expected_negative": false, "source": "internet"}
+{"text": "bestie i love you", "expected_negative": false, "source": "internet"}
+{"text": "slay queen", "expected_negative": false, "source": "internet"}
+{"text": "my chest hurts", "expected_negative": true, "source": "body"}
+{"text": "i cant stop crying", "expected_negative": true, "source": "body"}
+{"text": "my hands are shaking", "expected_negative": true, "source": "body"}
+{"text": "i feel numb", "expected_negative": true, "source": "body"}
+{"text": "i feel sick", "expected_negative": true, "source": "body"}
