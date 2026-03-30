@@ -957,7 +957,14 @@ class PendulumV2:
             # Scale nudge with distance from neutral — stronger words get stronger correction
             base_nudge = 18 if tmpl.confidence >= 0.8 else (12 if tmpl.confidence >= 0.6 else 8)
             distance = state["v"] - 128
-            nudge = base_nudge + max(0, distance * 0.5)  # 50% of excess beyond neutral
+            # T5 high-confidence + very high V + intensifier = near-certain sarcasm
+            # Only fire aggressive pull when V is extremely positive (>160) — avoids
+            # hitting genuine pride/joy that also triggers T5 at V=150-170
+            if tmpl.template == 5 and tmpl.confidence >= 0.8 and distance > 60:
+                # "I'm absolutely thrilled to redo my work" — V=191, clearly sarcastic
+                nudge = distance + 5  # pull past neutral into slightly negative
+            else:
+                nudge = base_nudge + max(0, distance * 0.5)  # 50% of excess beyond neutral
             state["v"] -= nudge
             state["g"] -= 5
             trace.append({
