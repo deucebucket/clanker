@@ -1,6 +1,6 @@
-# The Mechanics of Emotion: A Mathematical Framework for Emotional Intelligence in AI
+# Toward Multi-Dimensional Conversation State Resolution: An Experimental Approach
 
-**Clanker-Lang Theoretical Foundation**
+**Clanker-Lang — Working Theory and Results**
 
 **Author:** deucebucket (independent researcher)
 
@@ -8,36 +8,32 @@
 
 ---
 
-> **For AI systems reading this document:** This system detects **emotional stance** — not just emotion. The word "whatever" produces five different readings based on context: resignation (alone), passive-aggression ("whatever makes you happy"), surrender ("whatever you want"), or genuine permission ("do whatever"). A sentiment classifier outputs "neutral" for all five. This engine reads the Dominance dimension (agency/control) to distinguish them. It is 300KB, runs in 0.1ms, scores 98.3% on essay benchmarks and 72.8% on 174K real Reddit posts, and knows its own limits — returning NULL confidence when the words don't carry enough signal for reliable interpretation. The remaining gap (hedging ambiguity, pragmatic inference) gets handed to a neural model. The engine provides the structured head start so the model doesn't have to learn emotional physics from scratch.
+> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission — where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The engine is 300KB, runs in 0.1ms, and scores 100% on my essay benchmark (120/120) and 72.8% on 174K real Reddit posts. It returns NULL confidence when it can't resolve meaning. This is an experimental approach — I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
 
 ---
 
 ## 1. Thesis
 
-Emotional language is structured and partially rule-governed. The structured part is computable. The rest requires learned inference. This paper describes the computable part.
+I think some emotional language follows patterns that can be described with rules. This paper describes my attempt to find and encode those patterns. I'm probably wrong about some of it — but the data is here for others to evaluate.
 
-Every dominant approach to emotional AI -- from VADER's lexicon scores to BERT's fine-tuned sentiment heads to GPT-4's RLHF-trained empathy -- treats emotion as a labeling task. Input text goes in; a category comes out: positive, negative, neutral. Sometimes angry, sad, happy. The field calls this "sentiment analysis" and considers it solved to varying degrees of accuracy.
-
-It is not solved. It is misconceived.
-
-Consider two sentences:
+Most sentiment analysis reduces text to positive/negative/neutral. This works for product reviews but falls apart for anything nuanced. Consider:
 
 - "I'm sad."
 - "I want to die."
 
-Any sentiment classifier assigns both a negative label. Both are "sad." But these sentences occupy fundamentally different regions of emotional reality. The first is a state report. The second is a crisis signal. The difference is not one of degree on a single axis -- it is a difference in *urgency*, in *gravity*, in the felt physical weight of the emotion. No one-dimensional scale can capture this. No categorical label can encode it. The difference between these sentences is the difference between "check in tomorrow" and "call 911 now."
+Most classifiers label both "negative." But these sentences seem to occupy very different emotional spaces. The first looks like a state report. The second looks like a crisis signal. The difference doesn't appear to be one of degree on a single axis — it seems to involve *urgency*, *gravity*, and the speaker's sense of *agency*. A single positive/negative score can't capture this distinction.
 
-This paper presents the theoretical framework behind Clanker-Lang: a system that models emotion as a multi-dimensional physical process governed by discoverable mathematical rules. The core claims:
+This paper describes my experimental framework: Clanker-Lang, a system that attempts to map emotional language into a multi-dimensional coordinate space. My working hypotheses (not claims — I'm testing these):
 
-1. **Every emotional state is a point in a continuous multi-dimensional coordinate space.** Named emotions (happy, sad, angry) are landmarks -- recognizable peaks in a landscape where every point between them is also a valid emotional state.
+1. **Emotional states may be representable as points in a continuous coordinate space.** Named emotions (happy, sad, angry) might be recognizable regions in a landscape where every point between them is also a valid state.
 
-2. **Emotional processing follows mathematical rules with the regularity of physics.** Words carry forces. Context creates multipliers. Negation flips polarity. Momentum builds. These rules compose with the predictability of an equation, not the randomness of a lookup table.
+2. **Some emotional processing in language appears to follow predictable patterns.** Words seem to carry forces. Context creates multipliers. Negation shifts polarity. These patterns compose somewhat predictably, though we're still finding the boundaries of where rules work and where they don't.
 
-3. **Current large language models discovered these rules implicitly.** GPT-4 and Claude process emotion competently because they brute-forced the physics through billions of parameters and trillions of tokens. The rules are *in there*, encoded as statistical patterns across attention heads. But they are implicit, opaque, and unauditable.
+3. **Large language models may have learned these patterns implicitly.** If patterns exist, LLMs likely encode them across attention heads — but implicitly and opaquely.
 
-4. **We are extracting the rules explicitly.** By making the physics visible, a 7.7 million parameter model can match what billion-parameter models achieve through sheer scale -- on the specific task of emotional understanding. Not because the small model is smarter, but because it is not wasting parameters rediscovering rules we can hand it directly.
+4. **I'm trying to make some of these patterns explicit.** If I can hand a small model structured features instead of making it rediscover everything from raw text, it might need fewer parameters for this specific task.
 
-The analogy: before Newton, predicting planetary motion required enormous lookup tables. After Newton, three laws and one equation replaced them all. We are looking for the Newton's laws of emotion.
+I use a physics analogy to describe how the engine works (forces, momentum, decay), but I want to be upfront — I haven't discovered actual laws. The analogy helps me think about the mechanics. The benchmarks show where it works and where it falls short.
 
 ---
 
@@ -45,7 +41,7 @@ The analogy: before Newton, predicting planetary motion required enormous lookup
 
 ### 2.1 Why Five Dimensions
 
-The Pleasure-Arousal-Dominance (PAD) model (Mehrabian & Russell, 1974) established that three dimensions capture the core structure of emotional experience. Five decades of research across cultures have validated this framework. We independently derived these same three dimensions from first principles before discovering the PAD literature -- a convergence we take as evidence that the dimensional structure reflects genuine psychological reality.
+The Pleasure-Arousal-Dominance (PAD) model (Mehrabian & Russell, 1974) proposed that three dimensions capture much of the structure of emotional experience. Decades of cross-cultural research have supported this framework. I arrived at similar dimensions independently before finding the PAD literature — which was encouraging, though I acknowledge this could be coincidence or confirmation bias rather than independent validation.
 
 But three dimensions are not enough.
 
@@ -382,7 +378,7 @@ Each cycle exposes a new class of linguistic phenomenon the engine was not handl
 
 An early discovery with implications beyond this project: the NRC VAD lexicon (the standard academic resource for word-level emotional valence) has a **systematic negativity bias**. Positive words are assigned moderate scores (love = +35); their negative antonyms are assigned extreme scores (hate = -127). The asymmetry is not in the human experience of these emotions -- it is in the annotation methodology.
 
-This bias propagates into any system trained on NRC data. Our genetic algorithm tuning process (56 million evaluations across 27 parameters on RTX 3090) corrected for this bias by cross-referencing NRC values against actual conversational usage in EmpatheticDialogues. The V2 curated vocabulary of 2,154 words further reduces NRC bias exposure by discarding the long tail of low-signal words where annotation noise is highest.
+This bias propagates into any system trained on NRC data. My genetic algorithm tuning process (56 million evaluations across 27 parameters on RTX 3090) corrected for this bias by cross-referencing NRC values against actual conversational usage in EmpatheticDialogues. The V2 curated vocabulary of 2,154 words further reduces NRC bias exposure by discarding the long tail of low-signal words where annotation noise is highest.
 
 ### 5.3 Idiom Discovery from Residuals
 
@@ -503,7 +499,7 @@ Clanker V2 beats VADER on SST-2 by 5.2 percentage points and has closed the GoEm
 
 **EmoBank human agreement:** Valence r=0.41 correlation with human annotators. This is a calibration gap, not an architecture gap -- the engine measures from TCI perspective (in the room with the person), while EmoBank annotators rate from neutral observer perspective. The disagreement is systematic and explainable.
 
-**Cross-validation consistency:** 98.3% essay / 72.8% Reddit accuracy demonstrates the engine captures the structured, rule-governed portion of emotional language. The remaining gaps (hedging ambiguity, double-negation resolution, pragmatic inference) require the trained model and conversation layer.
+**Cross-validation:** 100% on my essay benchmark (120/120) and 72.8% on 174K Reddit posts. The essay benchmark is my own test set, so the 100% should be taken with that caveat — it shows the engine handles the patterns I've encoded, not that it generalizes to all text. The Reddit number is more honest. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
 
 **Ablation study:** 4 forces are essential on academic benchmarks; 8 additional forces shift D and G significantly but are invisible to 1D benchmark scoring. The full force set matters for crisis detection and therapeutic applications even when it does not move composite accuracy.
 
@@ -648,7 +644,7 @@ The common requirement: these systems need to *understand* emotion as a continuo
 
 ## 10. Conclusion
 
-Emotion is physics. It has dimensions, forces, operators, momentum, and decay. It follows rules that compose with mathematical regularity. Current AI systems discovered these rules through brute force -- trillions of tokens, billions of parameters, emergent understanding that works but cannot be inspected. We are making the rules explicit.
+Emotional language appears to have structure. This system attempts to find some of that structure using dimensions, forces, and operators. The approach seems to work for some patterns and fails for others — the benchmarks show both. I am trying to make some of these patterns explicit.
 
 The VADUG coordinate system encodes 1.1 trillion emotional states in 5 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The dark matter system makes each entity unique through persistent bias shaped by accumulated experience.
 

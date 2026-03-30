@@ -50,7 +50,7 @@ Output: V=80 A=230 D=98 U=104 G=91
 
 ## The Engine
 
-**V2** (`demo/pendulum_v2.py`) -- a 3-pass PEMDAS emotional physics engine.
+**V2** (`demo/pendulum_v2.py`) -- a 3-pass word-by-word conversation state resolver.
 
 `Force = Payload * Context(WHO * TENSE * INTENSITY) * Negation * Physics`
 

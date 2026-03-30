@@ -11,7 +11,7 @@ The engine computes 5D emotional coordinates (VADUG: Valence, Arousal, Dominance
 Three components:
 - **VADUG coordinate system**: 5 bytes encode 1.1 trillion emotional states (Valence, Arousal, Dominance, Urgency, Gravity)
 - **Bytecode IR**: Opcodes (0x00-0xFF) with immutable meanings, decoded to any language via YAML dictionaries
-- **Pendulum engine**: Rule-based emotional physics — word-by-word processing with momentum, 26 context-dependent forces, morphological decomposition, crisis detection
+- **Pendulum engine**: Word-by-word conversation state resolver — 26 context-dependent forces, morphological decomposition, crisis detection
 
 Key principle: **opcodes are forever** — never redefine an existing opcode.
 
