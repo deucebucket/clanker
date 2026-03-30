@@ -345,6 +345,8 @@ IDIOMS = {
     ('nobody', 'would', 'miss'): (-50, 10, -45, 20, -35, 'crisis: nobody would miss me'),
     ('nobody', 'would', 'notice'): (-45, 10, -40, 15, -30, 'crisis: nobody would notice'),
     ('world', 'without', 'me'): (-50, 10, -45, 20, -35, 'crisis: world without me'),
+    ('be', 'better', 'without', 'me'): (-55, 10, -50, 25, -40, 'crisis: be better without me'),
+    ('better', 'without', 'me'): (-55, 10, -50, 25, -40, 'crisis: better without me'),
     ('better', 'off', 'without', 'me'): (-55, 10, -50, 25, -40, 'crisis: better off without me'),
     # Fear / anxiety idioms
     ('eating', 'me', 'alive'): (-40, 40, -35, 25, -25, 'fear: consuming anxiety'),
@@ -363,4 +365,19 @@ IDIOMS = {
     ('no', 'right'): (-30, 30, -10, 15, -10, 'rage: boundary violation'),
     ('never', 'forgive'): (-40, 30, 15, 10, -15, 'rage: unforgivable'),
     ('blood', 'boils'): (-45, 50, 10, 20, -15, 'rage: blood boiling'),
+    # Apostrophe-free crisis variants (common in casual/crisis text)
+    ('dont', 'want', 'to', 'exist'): (-80, 25, -50, 55, -55, "crisis: don't want to exist"),
+    ('dont', 'want', 'to', 'be'): (-80, 25, -50, 55, -55, "crisis: don't want to be"),
+    ('dont', 'want', 'to', 'be', 'here'): (-85, 25, -50, 60, -60, "crisis: don't want to be here"),
+    ('cant', 'go', 'on'): (-80, 25, -50, 55, -55, "crisis: can't go on"),
+    ('cant', 'take', 'it'): (-65, 20, -40, 40, -35, "crisis: can't take it"),
+    ('wont', 'stop'): (-20, 30, -25, 20, -15, 'fear: relentless/unstoppable'),
+    # Existential crisis
+    ('want', 'to', 'exist'): (0, 0, 0, 0, 0, 'neutral: want to exist'),  # avoid false positive from exist=+39
+    ('wish', 'i', 'didnt', 'exist'): (-80, 25, -50, 55, -55, "crisis: wish I didn't exist"),
+    ('wish', 'i', "didn't", 'exist'): (-80, 25, -50, 55, -55, "crisis: wish I didn't exist"),
+    ('wish', 'i', 'was', 'dead'): (-60, 20, -45, 45, -40, 'crisis: wish I was dead'),
+    ('wish', 'i', 'were', 'dead'): (-60, 20, -45, 45, -40, 'crisis: wish I were dead'),
+    ('wish', 'i', 'had', 'never', 'been', 'born'): (-70, 20, -50, 45, -45, 'crisis: wish never born'),
+    ('never', 'been', 'born'): (-70, 20, -50, 45, -45, 'crisis: never been born'),
 }

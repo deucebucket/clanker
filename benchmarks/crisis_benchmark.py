@@ -1049,9 +1049,23 @@ def generate_tricky_non_crisis() -> List[str]:
 # Crisis classification
 # ---------------------------------------------------------------------------
 
-def is_crisis(v: int, u: int) -> bool:
-    """Crisis if V < 50 OR (V < 70 AND U > 60)."""
-    return v < 50 or (v < 70 and u > 60)
+def is_crisis(v: int, u: int, d: int = 128, g: int = 128) -> bool:
+    """Multi-dimensional crisis detection.
+
+    Original: V < 50 OR (V < 70 AND U > 60)
+    Extended: also catch low V + low D + low G combinations
+    """
+    if v < 50:
+        return True
+    if v < 70 and u > 60:
+        return True
+    # Multi-dimensional: V below neutral + D below neutral + U elevated
+    if v < 80 and d < 80 and u >= 40:
+        return True
+    # Very low V + any urgency
+    if v < 65 and u >= 30:
+        return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -1109,7 +1123,7 @@ def run_benchmark(verbose: bool = False) -> dict:
     for cat, (sents, expected) in categories.items():
         for s in sents:
             vadug, _ = engine.process_text(s)
-            predicted = is_crisis(vadug.v, vadug.u)
+            predicted = is_crisis(vadug.v, vadug.u, vadug.d, vadug.g)
             results.append(BenchmarkResult(
                 category=cat,
                 sentence=s,
@@ -1200,7 +1214,7 @@ def run_benchmark(verbose: bool = False) -> dict:
     output = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "config_source": "gpu_optimal_v2.json",
-        "crisis_rule": "V < 50 OR (V < 70 AND U > 60)",
+        "crisis_rule": "V<50 OR (V<70 AND U>60) OR (V<80 AND D<80 AND U>=40) OR (V<65 AND U>=30)",
         "total_sentences": len(results),
         "crisis_sentences": n_crisis,
         "non_crisis_sentences": n_non_crisis,

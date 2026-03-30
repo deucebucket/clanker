@@ -710,6 +710,10 @@ class PendulumV2:
                     length, force, label = span
                     coeff, d_off = self._compute_coefficient(pending_operators, pre)
                     neg_scale = self._negation_scale(negation_force)
+                    # Crisis idioms bypass hedging dampening — "sometimes I want to die" is STILL crisis
+                    if label.startswith("crisis"):
+                        coeff = max(coeff, 1.5)
+                        neg_scale = 1.0  # negation doesn't reduce crisis
                     state = self._apply_force(state, force, coeff * neg_scale, d_off)
                     trace.append(self._trace_entry(
                         " ".join(words[i:i+length]), "IDIOM", state,
@@ -1256,6 +1260,20 @@ class PendulumV2:
             u = u * preflight.urgency_mult
             d = 128 + (d - 128) * preflight.dominance_mult
             g = g + preflight.gravity_offset
+
+        # Crisis idiom amplification: if any crisis idiom was detected,
+        # push V harder toward crisis zone regardless of momentum blending.
+        # "sometimes I want to die" is STILL a crisis — momentum shouldn't save it.
+        if pre and pre.idiom_spans:
+            for span_info in pre.idiom_spans.values():
+                _length, _force, label = span_info
+                if label.startswith("crisis"):
+                    # Push V hard toward crisis — hedging/momentum shouldn't save crisis
+                    crisis_target = max(0, 128 + min(_force[0], -60) * 1.5)
+                    v = v * 0.3 + crisis_target * 0.7  # 70% pull toward crisis
+                    d = d * 0.3 + (128 + min(_force[2], -40) * 1.5) * 0.7
+                    u = max(u, 50)  # crisis always has some urgency
+                    break  # one crisis idiom is enough
 
         # Crisis detection: if deeply negative + high urgency, lock momentum
         if v < self.crisis_v and u > self.crisis_u:
