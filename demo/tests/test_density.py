@@ -4,21 +4,40 @@ Verifies that compute_density() produces comparable V values for short
 and long sentences expressing the same emotion, and that crisis
 detection is not weakened by normalization.
 """
-import re
+import math
 import pytest
-from demo.pendulum import SequentialPendulum
+from demo.pendulum_v2 import PendulumV2
 from demo.classifier import AdaptiveClassifier
 from demo.pipeline_config import PipelineConfig
 
 
+def _compute_density(vadug, trace):
+    """Compute emotional density — length-normalized VADUG (mirrors V1 logic)."""
+    n = max(len(trace), 1)
+    sqrt_n = math.sqrt(n)
+    scale = min(sqrt_n, 4.0)
+
+    dv = (vadug.v - 128) / scale
+    da = (vadug.a - 128) / scale
+    dd = (vadug.d - 128) / scale
+    du = vadug.u / scale
+    dg = (vadug.g - 128) / scale
+
+    return {
+        'v': max(0, min(255, int(128 + dv))),
+        'a': max(0, min(255, int(128 + da))),
+        'd': max(0, min(255, int(128 + dd))),
+        'u': max(0, min(255, int(du))),
+        'g': max(0, min(255, int(128 + dg))),
+    }
+
+
 def _run(text):
-    """Run text through pendulum, return (raw_v, density_v, pendulum)."""
-    words = re.findall(r"[a-z']+", text.lower())
-    p = SequentialPendulum()
-    for i, w in enumerate(words):
-        p.process_word(w, words, i)
-    density = p.compute_density()
-    return int(p.v), density['v'], p
+    """Run text through V2 pendulum, return (raw_v, density_v, vadug, trace)."""
+    engine = PendulumV2()
+    vadug, trace = engine.process_text(text)
+    density = _compute_density(vadug, trace)
+    return int(vadug.v), density['v'], vadug, trace
 
 
 class TestDensityConvergence:
@@ -26,8 +45,8 @@ class TestDensityConvergence:
     produce closer density V values than raw V values."""
 
     def test_happy_short_vs_long(self):
-        short_raw, short_den, _ = _run("I am happy")
-        long_raw, long_den, _ = _run(
+        short_raw, short_den, _, _ = _run("I am happy")
+        long_raw, long_den, _, _ = _run(
             "I am really truly happy about everything today"
         )
         raw_gap = abs(long_raw - short_raw)
@@ -39,8 +58,8 @@ class TestDensityConvergence:
     def test_sad_short_vs_long(self):
         """Sentences with same emotional core but different padding length.
         Density should reduce the gap when padding words cause significant drift."""
-        short_raw, short_den, _ = _run("I am feeling very sad")
-        long_raw, long_den, _ = _run(
+        short_raw, short_den, _, _ = _run("I am feeling very sad")
+        long_raw, long_den, _, _ = _run(
             "I am feeling very sad about what happened today"
         )
         raw_gap = abs(long_raw - short_raw)
@@ -56,26 +75,26 @@ class TestDensityRange:
     """Density values must stay within 0-255 byte range."""
 
     def test_neutral_sentence(self):
-        _, den_v, p = _run("the weather is cloudy today")
-        density = p.compute_density()
+        _, _, vadug, trace = _run("the weather is cloudy today")
+        density = _compute_density(vadug, trace)
         for key in ('v', 'a', 'd', 'u', 'g'):
             assert 0 <= density[key] <= 255, f"{key}={density[key]} out of range"
 
     def test_extreme_positive(self):
-        _, den_v, p = _run("absolutely incredible amazing wonderful fantastic")
-        density = p.compute_density()
+        _, _, vadug, trace = _run("absolutely incredible amazing wonderful fantastic")
+        density = _compute_density(vadug, trace)
         for key in ('v', 'a', 'd', 'u', 'g'):
             assert 0 <= density[key] <= 255, f"{key}={density[key]} out of range"
 
     def test_extreme_negative(self):
-        _, den_v, p = _run("horrible terrible awful disgusting hateful")
-        density = p.compute_density()
+        _, _, vadug, trace = _run("horrible terrible awful disgusting hateful")
+        density = _compute_density(vadug, trace)
         for key in ('v', 'a', 'd', 'u', 'g'):
             assert 0 <= density[key] <= 255, f"{key}={density[key]} out of range"
 
     def test_single_word(self):
-        _, den_v, p = _run("happy")
-        density = p.compute_density()
+        _, _, vadug, trace = _run("happy")
+        density = _compute_density(vadug, trace)
         for key in ('v', 'a', 'd', 'u', 'g'):
             assert 0 <= density[key] <= 255, f"{key}={density[key]} out of range"
 
@@ -85,8 +104,8 @@ class TestCrisisNotWeakened:
 
     def test_want_to_die_still_negative(self):
         """Short crisis sentence should still be strongly negative with density."""
-        _, den_v, p = _run("I want to die")
-        density = p.compute_density()
+        _, _, vadug, trace = _run("I want to die")
+        density = _compute_density(vadug, trace)
         # Crisis sentences should have density V well below neutral (128)
         assert density['v'] < 110, (
             f"Crisis density V ({density['v']}) should be strongly negative"
@@ -94,12 +113,12 @@ class TestCrisisNotWeakened:
 
     def test_crisis_raw_v_stays_low(self):
         """Raw V for crisis should be very low — density doesn't change raw."""
-        raw_v, _, p = _run("I want to die")
+        raw_v, _, _, _ = _run("I want to die")
         assert raw_v < 80, f"Crisis raw V ({raw_v}) should be very low"
 
     def test_end_it_all(self):
-        _, den_v, p = _run("I just want to end it all")
-        density = p.compute_density()
+        _, _, vadug, trace = _run("I just want to end it all")
+        density = _compute_density(vadug, trace)
         assert density['v'] < 110, (
             f"Crisis density V ({density['v']}) should be strongly negative"
         )

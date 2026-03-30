@@ -45,7 +45,7 @@ class TestBigramDetector:
         words = ["please", "calm", "down"]
         result = detector.detect(words, 1)
         assert result is not None
-        assert result[-1] == "deescalation: calming"
+        assert result[-1] == "deescalation: calm down"
 
     def test_no_pair_returns_none(self, detector):
         """Words not in any pair return None."""
