@@ -120,7 +120,7 @@ python3 benchmarks/experiment_tracker.py --history
 - ~2,154 words carry 97% of emotional signal (44K words were noise)
 - Bridge words are OPERATORS not fillers (12x range: 0.24x to 2.88x)
 - Gravity and Dominance appear to be the driving forces, not Valence
-- Idioms are discoverable from mathematical residuals (pattern deviation = idiom)
+- Idioms may be findable from mathematical residuals (pattern deviation suggests compound meaning)
 - Structure detection generalizes better than vocabulary matching
 
 ## Architecture

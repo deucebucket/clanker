@@ -79,7 +79,7 @@ Without Gravity, hate and dislike are distinguished only by intensity. With it, 
 
 Named emotions are landmarks in VADUG space. The coordinate (V=40, A=180, D=30, U=200, G=15) represents a cocktail of sadness, anger, and desperation with high urgency and crushing weight. No single English word names this state. German might have one. Japanese might express it through three. The coordinate is the ground truth; the word is the approximation.
 
-This has a critical implication for cross-cultural emotional AI: different languages carve up emotional space differently, mapping different vocabularies to different regions. But the underlying coordinate is language-independent. Two systems communicating in VADUG share emotional state with perfect fidelity, regardless of what natural languages they decode to.
+If this coordinate system is valid, it might have cross-cultural implications: different languages carve up emotional space differently, mapping different vocabularies to different regions. The underlying coordinate could be language-independent — but that's a hypothesis I haven't tested across languages yet.
 
 ### 2.4 The Sixth Dimension: Dark Matter
 
@@ -119,7 +119,7 @@ Dark matter is what makes the difference between "a sad movie" and "a sad life."
 
 ## 3. Psychological Foundations
 
-The VADUG framework did not emerge from mathematical abstraction. It maps, with surprising precision, to established psychological models of emotional processing, crisis intervention, and trauma. This section documents the mappings and explains why they validate the mathematical approach.
+The VADUG framework wasn't designed in isolation — it appears to parallel several established psychological models. Whether these parallels are meaningful or coincidental, I'll present the data and let others judge.
 
 ### 3.1 The TCI Stress Model of Crisis
 
@@ -240,13 +240,32 @@ The engine implication: negative VADUG states are *information*, not errors. The
 
 ---
 
-## 4. The Equation: PEMDAS for Emotions
+## 4. The Equation: Structure Detection
 
-### 4.1 Three Categories of Words
+### 4.0 V3: Four Tiers of Words
 
-Mining 99,506 sentences from the EmpatheticDialogues dataset and cross-referencing with NRC VAD lexicons revealed a fundamental structure: every word in a sentence falls into one of three categories.
+V3 moved from V2's three categories (operators/payloads/neutral) to a structural classification based on how words function in emotional sentences. Every word falls into one of four tiers:
 
-**OPERATORS** modify how subsequent emotional content is processed. They do not carry emotional weight themselves -- they are multipliers, frames, and gates. There are 103 context operators across 17 categories in the current engine. Examples: "I" (self-reference, 1.8x amplifier), "very" (intensity, 1.3x), "was" (past tense, 0.85x), "a" (article/distancing, 0.6x).
+1. **Anchor stars** (~50 words) — ALWAYS heavy, always fire alerts: die, kill, love, hate, suicide, hope, help, life, death. Guilty until proven innocent by surrounding field. "Die" as an action = crisis alarm fires FIRST. Frame can lower after. "I want to die" — alarm stays. "I'm dying of laughter" — "of" routes die to comedy. "die hard is a great movie" — die is label. No alarm.
+
+2. **Regular stars** (~200 words) — have mass, can be overridden by context: happy, sad, angry, scared. These carry emotional force but the surrounding structure determines how much.
+
+3. **Operators** (~50 words) — shape the field, no mass of their own: I, you, not, very, but, still. These include connectors that are math operators, not filler:
+   - **and/also/plus** = additive (+), both stack
+   - **but/however/yet** = chopper (-), kills before, promotes after
+   - **or/either** = alternative (><), fork/uncertainty
+   - **of/from/by** = attributive (/), routes source to state
+   - **if/when/unless** = conditional (?), opens hypothetical branch
+
+4. **Dark matter** (everything else) — null, inherits from surrounding field. "Carpenter" has no emotional mass but reflects whatever stars are nearby. Like moons — no light, only reflected light. The engine doesn't need them in the vocabulary.
+
+The V3 engine processes in three layers: word role classification, proximity field computation (exponential decay, 0.7x per word of distance), then structure detection — reading role sequences to recognize patterns like a chess player. See `docs/v3-user-physics.md` for the complete set of structural rules.
+
+### 4.1 V2: Three Categories of Words (Legacy, tagged v2.0)
+
+The V2 approach (still valid, documented for reference) classified words into three categories:
+
+**OPERATORS** modify how subsequent emotional content is processed. They do not carry emotional weight themselves -- they are multipliers, frames, and gates. There are 103 context operators across 17 categories in the V2 engine. Examples: "I" (self-reference, 1.8x amplifier), "very" (intensity, 1.3x), "was" (past tense, 0.85x), "a" (article/distancing, 0.6x).
 
 **PAYLOADS** carry actual emotional force. These are words with measurable impact on the VADUG coordinate. The V2 engine uses a curated vocabulary of **~2,154 words** that carry 97% of the emotional signal. (The legacy V1 dictionary contained 46,101 words, but 95.7% contributed negligible force.) The curated set was selected by three criteria: appears 10+ times in EmpatheticDialogues, absolute valence delta >= 15, and not a function word or generic noun.
 
@@ -302,9 +321,9 @@ This replaces the earlier boolean NegationFlip model, which treated negation as 
 
 **PhysicsDecay** models the temporal dynamics of emotional force. The pendulum retains 85-90% of its state between words (momentum/inertia). Emotional words create spikes; the spikes decay exponentially unless sustained by subsequent emotional content. This is why "I am happy happy happy" does not produce 3x the happiness of "I am happy" -- each repetition applies force to an already-displaced pendulum with diminishing returns.
 
-### 4.3 The Twenty-Six Conversational Forces
+### 4.3 The Twenty-Six Conversational Forces (V2)
 
-Beyond simple operators and payloads, natural language deploys at least 26 categories of conversational forces that modify emotional meaning. Each maps to a mathematical operation. As of March 2026, **26 forces identified, 17+ implemented** in the V2 engine:
+Beyond simple operators and payloads, natural language deploys at least 26 categories of conversational forces that modify emotional meaning. Each maps to a mathematical operation. These were identified during V2 development and many carry forward into V3's structural approach. As of March 2026, **26 forces identified, 17+ implemented** in the V2 engine:
 
 | # | Force                   | Operation      | Example                                    | Status |
 |---|-------------------------|----------------|--------------------------------------------|--------|
@@ -351,7 +370,7 @@ Evoker priming decays at 0.88x per word, creating a gravitational wake: the clos
 
 ### 4.4 Bridge Words: The Grammar of Emotion
 
-The fundamental discovery from data mining: **bridge words are not noise. They are the grammar of emotion.**
+An observation from the data that shaped the V3 architecture: **bridge words appear to be structural operators, not noise.**
 
 Traditional NLP treats function words (a, the, is, my, that) as stop words -- to be filtered out before analysis. This is wrong. These words do not carry emotional content, but they determine *how much* the emotional content matters.
 
@@ -365,7 +384,7 @@ This is why sentiment classifiers that strip stop words produce flat, undifferen
 
 ### 5.1 How Physics Gets Found
 
-The emotional rules documented above were not designed from first principles. They were *discovered* through an iterative loop between the rule-based engine and the training data:
+The patterns documented above emerged through an iterative loop between the engine and the training data — not designed upfront, but found by looking at where the engine got things wrong:
 
 ```
 1. Engine produces VADUG for sentence X
@@ -374,17 +393,17 @@ The emotional rules documented above were not designed from first principles. Th
 4. Fix engine -> retrain model -> find new gaps -> repeat
 ```
 
-Each cycle exposes a new class of linguistic phenomenon the engine was not handling. The context operator system was discovered when the engine scored "I am sad" and "a sad movie" identically. The idiom system was discovered when "piece of cake" scored as negative (cake + piece both neutral, but the phrase means "easy"). The sarcasm detector was discovered when "oh great, another meeting" scored as positive.
+Each cycle exposed something the engine wasn't handling. The context operator system came from noticing "I am sad" and "a sad movie" scored identically. The sarcasm detector came from "oh great, another meeting" scoring positive. Each error pointed to a missing pattern.
 
 ### 5.2 Antonym Symmetry and NRC Bias
 
-An early discovery with implications beyond this project: the NRC VAD lexicon (the standard academic resource for word-level emotional valence) has a **systematic negativity bias**. Positive words are assigned moderate scores (love = +35); their negative antonyms are assigned extreme scores (hate = -127). The asymmetry is not in the human experience of these emotions -- it is in the annotation methodology.
+Something I noticed early on that may be worth investigating: the NRC VAD lexicon (the standard academic resource for word-level emotional valence) appears to have a **systematic negativity bias**. Positive words are assigned moderate scores (love = +35); their negative antonyms are assigned extreme scores (hate = -127). The asymmetry is not in the human experience of these emotions -- it is in the annotation methodology.
 
 This bias propagates into any system trained on NRC data. My genetic algorithm tuning process (56 million evaluations across 27 parameters on RTX 3090) corrected for this bias by cross-referencing NRC values against actual conversational usage in EmpatheticDialogues. The V2 curated vocabulary of 2,154 words further reduces NRC bias exposure by discarding the long tail of low-signal words where annotation noise is highest.
 
 ### 5.3 Idiom Discovery from Residuals
 
-When the engine consistently predicts V=70 for a phrase but the ground truth is V=140, that residual pattern is an idiom. The phrase carries compound meaning that exceeds the sum of its word-level forces. The engine's idiom dictionary has grown through iterative residual analysis -- each idiom discovered from mathematical deviation patterns, not hand-authored. Crisis-specific idioms (suicidal ideation, self-harm language) receive special handling with gravity vectors for severity detection.
+When the engine consistently predicts V=70 for a phrase but the ground truth is V=140, that gap might indicate an idiom — a phrase whose meaning exceeds the sum of its word-level forces. In V2 this led to a growing idiom dictionary. In V3 this is handled structurally — the pattern detector reads the role sequence instead of matching specific phrases.
 
 ### 5.4 The Coupling Problem
 
@@ -484,24 +503,38 @@ When 80-180:   response_G = 128 + (G - 128) * 0.5         (stay grounded)
 
 ### 7.1 Engine Performance
 
-Tested on 7,720 sentences from published academic datasets (the same benchmarks used in BERT and GPT evaluations). The V2 engine (March 2026, 65+ experiments NASA-logged) achieves 60.2% composite:
+I want to be honest about the numbers — both the ones I'm proud of and the ones that keep me humble.
+
+**V3 engine results** (March 2026, `engine/` directory, 158 tests passing):
+
+| Benchmark | Result | What It Tests |
+|-----------|--------|---------------|
+| **Novel sentences** | **91%** | Sentences the engine never practiced on |
+| **Crisis detection** | **86%** | Real crisis text identification |
+| **Sarcasm detection** | **90%** | Structural sarcasm templates |
+| **Safe sentence false positives** | **0%** | Never flags safe text as crisis |
+| **SST-2 (academic sentiment)** | **51%** | Movie review positive/negative classification |
+
+The 51% on SST-2 is real and I'm not hiding it. Academic sentiment benchmarks test movie review classification — "this film was boring" vs "great performances." That is a different task than structural emotional reading. The system does NOT do general sentiment classification well. I think that is an honest tradeoff, not a failure.
+
+**V2 engine results** (tagged v2.0, `demo/` directory, for historical reference):
 
 | Engine      | SST-2  | GoEmotions | TweetEval | Composite | Type                  | Speed   |
 |-------------|--------|------------|-----------|-----------|----------------------|---------|
-| **Clanker V2** | **60.9%** | **57.2%** | **62.5%** | **60.2%** | Rule-based physics (26 forces, 27 tuned params) | 0.1ms |
+| **Clanker V2** | **60.9%** | **57.2%** | **62.5%** | **60.2%** | Rule-based (26 forces, 27 tuned params) | 0.1ms |
 | VADER       | 55.7%  | 60.6%     | 74.1%     | 63.5%     | Rule-based lexicon   | 0.06ms  |
 | TextBlob    | 53.8%  | 57.8%     | 50.7%     | 54.1%     | Pattern-based        | 0.16ms  |
 | RoBERTa     | 69.0%  | 62.1%     | 77.7%     | 69.6%     | 125M param transformer| 5ms    |
 
-Clanker V2 beats VADER on SST-2 by 5.2 percentage points and has closed the GoEmotions gap significantly (from 51.6% to 57.2%) through improved neutral detection, hedging with independent D-offsets, and the continuous negation force model. The TweetEval gap reflects ongoing work on informal/slang registers. These benchmarks reduce the 5-dimensional output to positive/negative/neutral -- a lossy comparison that understates the system's actual discriminative power.
+These V2 benchmarks reduce the 5-dimensional output to positive/negative/neutral -- a lossy comparison that understates the system's actual discriminative power. The V3 engine moved away from optimizing for these 1D benchmarks and toward structural pattern recognition that generalizes better to novel sentences.
 
-**Essay benchmark:** 98.3% overall accuracy on emotionally complex multi-sentence texts. Per-category: grief 100%, rage 100%, joy 100%, neutral 100%, fear 100%, sarcasm 93.3%, conviction 86.7%, hedging 53.3%. Five categories at 100%. The essay benchmark tests what academic benchmarks cannot: sustained emotional arcs, tonal shifts, and implicit meaning across sentences. The 70%→98.3% jump came primarily from vocabulary noise removal (neutral-factual words carrying false emotional charge) and targeted idiom expansion for fear, rage, and conviction.
+**Essay benchmark (V2):** 91.7% overall accuracy on emotionally complex multi-sentence texts. Per-category: grief 100%, rage 100%, joy 100%, neutral 100%, fear 100%, sarcasm 93.3%, conviction 86.7%, hedging 53.3%. Five categories at 100%. The essay benchmark tests what academic benchmarks cannot: sustained emotional arcs, tonal shifts, and implicit meaning across sentences.
 
-**Reddit real-world validation:** 72.8% balanced accuracy on 174K Reddit posts, 51% crisis recall. The engine's multi-dimensional scoring catches crisis signals that 1D sentiment classifiers miss entirely.
+**Reddit real-world validation (V2):** 72.8% balanced accuracy on 174K Reddit posts. The engine's multi-dimensional scoring catches crisis signals that 1D sentiment classifiers miss entirely.
 
 **EmoBank human agreement:** Valence r=0.41 correlation with human annotators. This is a calibration gap, not an architecture gap -- the engine measures from TCI perspective (in the room with the person), while EmoBank annotators rate from neutral observer perspective. The disagreement is systematic and explainable.
 
-**Cross-validation:** 100% on my essay benchmark (120/120) and 72.8% on 174K Reddit posts. The essay benchmark is my own test set, so the 100% should be taken with that caveat — it shows the engine handles the patterns I've encoded, not that it generalizes to all text. The Reddit number is more honest. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
+**Cross-validation:** 91% on novel sentences (V3) is the number I trust most — these are sentences the engine never practiced on, testing whether structural patterns generalize. The essay benchmark (V2) was my own test set, so that number should be taken with the caveat that it shows the engine handles patterns I've encoded. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
 
 **Ablation study:** 4 forces are essential on academic benchmarks; 8 additional forces shift D and G significantly but are invisible to 1D benchmark scoring. The full force set matters for crisis detection and therapeutic applications even when it does not move composite accuracy.
 
@@ -517,7 +550,7 @@ The trained Clanker-Micro model (7.7M parameters, 5-head classifier on GPT-2 bac
 - The model reads negation, double negation, deflection masking, and universal scope
 - **Teacher-student pipeline confirmed:** 300KB rule engine teaches 7.7M parameter model
 
-The teacher-student dynamic is the key insight: the engine does not need to be perfect. It needs to be *auditable* and *correct on the physics it implements*. The model learns the engine's worldview and then generalizes to cases the engine cannot reach (pragmatic meaning, implicit emotion, context beyond the sentence).
+The idea behind this approach: the engine doesn't need to be perfect — it needs to be auditable and consistent in the patterns it implements. The model then attempts to learn those patterns and generalize to cases the engine can't reach. Whether this teacher-student approach works better than end-to-end training is still an open question — the data so far is encouraging but limited.
 
 ### 7.3 Context Operator Range
 
