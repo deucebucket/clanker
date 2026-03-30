@@ -950,7 +950,9 @@ class PendulumV2:
 
         # Layer 0: Template detection — subtle nudge only
         tmpl = _SARCASM_TEMPLATES.detect(words)
-        if tmpl.detected and tmpl.confidence >= 0.5 and state["v"] > 120:
+        # Don't apply sarcasm nudge if sentence is heavily hedged — hedging ≠ sarcasm
+        hedge_guard = pre and pre.hedge_count >= 2
+        if tmpl.detected and tmpl.confidence >= 0.5 and state["v"] > 120 and not hedge_guard:
             # Only nudge if V is positive-ish (don't push already-negative further)
             # Scale nudge with distance from neutral — stronger words get stronger correction
             base_nudge = 18 if tmpl.confidence >= 0.8 else (12 if tmpl.confidence >= 0.6 else 8)
