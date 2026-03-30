@@ -2629,3 +2629,19 @@ _SHORT_RESPONSES = {
     'nope':         (-5, +5, +10, 0, -5),       # firm rejection (higher D than nah)
 }
 EMOTIONAL_VOCABULARY.update(_SHORT_RESPONSES)
+
+# ── Swearing — standalone vs modifier are different ──
+# "fuck" alone = negative outburst (like "damn")
+# "fucking" = amplifier (handled in context_operators, not here)
+_SWEARING = {
+    'fuck':         (-40, +40, +20, +15, -10),   # outburst — anger/frustration
+    'shit':         (-30, +25, +10, +10, -10),   # frustration
+    # 'bullshit' already in main vocab at V=-60 — don't overwrite
+    'dammit':       (-25, +30, +10, +15, -5),    # frustration outburst
+    'goddamn':      (-20, +25, +10, +10, -5),    # emphasis outburst
+    # NOTE: "damn" excluded — too context-dependent.
+    # "damn you"=curse, "I don't give a damn"=indifference, "damn that's good"=amplifier
+    # Handled via context_operators as amplifier ("damn good") and bigrams.
+    'hell':         (-15, +20, +10, +10, -5),    # mild outburst
+}
+EMOTIONAL_VOCABULARY.update(_SWEARING)

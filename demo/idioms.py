@@ -315,6 +315,16 @@ IDIOMS = {
     ('but', "i'm", 'fine'): (-20, -5, -20, 5, -10, 'minimization: but im fine = dismissing what came before'),
     ('ok', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: ok im fine = shutting down'),
     ('okay', 'im', 'fine'): (-20, -5, -20, 5, -10, 'minimization: okay im fine = shutting down'),
+    # "Sorry" patterns — real vs weaponized
+    ('sorry', 'you', 'feel'): (-15, 10, 20, 5, -10, 'jab: apologizing for their reaction not your actions'),
+    ('sorry', 'you', 'feel', 'that', 'way'): (-20, 10, 25, 5, -15, 'jab: classic non-apology'),
+    ('im', 'sorry', 'but'): (-5, 10, 10, 5, -5, 'contradiction: about to negate the apology'),
+    # "I mean" — negator/clarifier
+    ('i', 'mean', 'im', 'fine'): (-15, -10, -15, 0, -10, 'minimization: correcting to im fine = not fine'),
+    ('i', 'mean', "i'm", 'fine'): (-15, -10, -15, 0, -10, 'minimization: correcting to im fine = not fine'),
+    # "We need to talk" — seriousness/gravity modifier
+    ('we', 'need', 'to', 'talk'): (-10, 15, 10, 25, +20, 'gravity: seriousness signal — something heavy coming'),
+    ('need', 'to', 'talk'): (-10, 15, 10, 25, +20, 'gravity: seriousness signal'),
     # "idk" vs "I don't know" — the shortform carries more dismissal
     # idk = curt, "stop asking me"
     # "I don't know" spelled out = genuine uncertainty, softer

@@ -233,6 +233,25 @@ BIGRAM_EXPRESSIONS = {
     ("warm", "heart"): (40, 10, 20, 0, 25, "love: warm heart"),
     ("heavy", "heart"): (-35, -5, -20, 5, -25, "sadness: heavy heart"),
 
+    # "Sorry" weaponized vs genuine
+    # "sorry you feel" = apologizing for their REACTION, not your actions = jab
+    # "sorry but" = contradiction incoming, not actually sorry
+    ("sorry", "you"): (-10, 10, 15, 5, -5, "jab: sorry for your reaction, not my action"),
+    ("sorry", "but"): (-5, 10, 10, 5, -5, "contradiction: not actually sorry"),
+    ("im", "sorry"): (-15, 5, -10, 0, -10, "genuine: actual apology"),
+
+    # "I mean" — clarifier that negates previous, implies what follows
+    # "I wanna kill myself, I mean I'm fine" — replaces first statement
+    ("i", "mean"): (0, 5, 0, 5, 0, "clarifier: negates previous, implies next"),
+
+    # "Anyway/anyways" — redirect/topic-killer
+    ("anyway", "so"): (0, 5, 5, 0, 0, "redirect: back to topic"),
+
+    # "Damn" context — dual-use word
+    ("damn", "you"): (-35, 30, 15, 15, -10, "curse: damn you"),
+    ("damn", "it"): (-25, 25, 10, 10, -5, "frustration: damn it"),
+    ("give", "damn"): (-20, -10, -20, 0, -15, "indifference: don't give a damn"),
+
     # "Late" as modifier — context changes everything
     ("working", "late"): (-15, 10, -10, 15, -10, "obligation: stuck at work"),
     ("running", "late"): (-10, 15, -5, 20, -5, "urgency: behind schedule"),

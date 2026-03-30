@@ -1333,6 +1333,9 @@ class PendulumV2:
             u = u * preflight.urgency_mult
             d = 128 + (d - 128) * preflight.dominance_mult
             g = g + preflight.gravity_offset
+            # Ellipsis valence drag — "im fine..." drags V further from neutral
+            if preflight.valence_drag != 1.0:
+                v = 128 + (v - 128) * preflight.valence_drag
 
         # Hedge stacking: 3+ hedging operators = heavy uncertainty, pull V toward neutral
         # "It's possible that some people could potentially be upset" = 4 hedges

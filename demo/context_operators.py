@@ -105,6 +105,10 @@ CONTEXT_OPERATORS = {
     "super":        (1.5, "amplifiers"),
     "hella":        (1.5, "amplifiers"),
     "mad":          (1.4, "amplifiers"),   # "mad angry" = very angry (slang)
+    "fucking":      (1.6, "amplifiers"),   # spice word — amplifies direction of next word
+    "freakin":      (1.4, "amplifiers"),   # softened fucking
+    "freaking":     (1.4, "amplifiers"),
+    # "damn" excluded — dual-use: "damn good"=amplifier, "damn you"=curse, "don't give a damn"=indifference
 
     # --- Diminishers ---
     "just":     (0.7, "diminishers"),
@@ -144,6 +148,11 @@ CONTEXT_OPERATORS = {
     "assume":       (0.60, "hedging", -10),
     "wonder":       (0.50, "hedging", -15),
     "feel":         (0.90, "hedging", -5),
+    # Glass breakers — "honestly" / "to be honest" = laying it bare
+    # Not dishonesty signal — emphasizes what follows. Like "feel" but stronger.
+    # Often precedes negative truth ("honestly, this sucks")
+    "honestly":     (1.20, "glass_breaker", -5),
+    "truthfully":   (1.20, "glass_breaker", -5),
     "felt":         (0.85, "hedging", -5),
 
     # --- Present tense ---

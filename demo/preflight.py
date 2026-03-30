@@ -25,6 +25,7 @@ class PreflightResult:
     urgency_mult: float = 1.0      # U multiplier from structure
     dominance_mult: float = 1.0    # D multiplier from structure
     gravity_offset: float = 0.0    # G offset from structure
+    valence_drag: float = 1.0      # V amplifier — ellipsis drags emotion further
 
     # Raw metrics (for debugging/logging)
     caps_ratio: float = 0.0        # % of uppercase letters
@@ -96,11 +97,15 @@ class PreflightAnalyzer:
                 result.urgency_mult *= 1.2  # !!!  = very urgent
 
         # Ellipsis (... patterns)
-        # Signals hesitation, trailing off, processing weight
+        # "..." is a drumroll — DRAGS emotion further in its current direction.
+        # "im fine..." = even more negative (the dots add "but wait there's more")
+        # Also signals hesitation and processing weight.
         if result.ellipsis_count > 0:
             result.dominance_mult *= 0.85   # hesitation = lower D
             result.gravity_offset -= 5.0 * result.ellipsis_count  # heavier G
             result.arousal_mult *= 0.9      # trailing off = lower A
+            # V-drag: amplify distance from neutral (emotion drags further)
+            result.valence_drag = 1.15 * result.ellipsis_count  # 15% amplification per ...
 
         # Sentence length as velocity
         # Very short (1-3 words) = high density, high urgency
