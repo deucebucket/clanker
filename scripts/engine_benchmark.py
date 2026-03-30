@@ -232,10 +232,31 @@ POSITIVE_POOLS = [
 
 
 def generate_novel_batch(n=10):
-    """Generate n random novel test sentences."""
+    """Generate n random novel test sentences from multiple pools."""
     batch = []
-    neg_sample = random.sample(NEGATIVE_POOLS, min(n // 2, len(NEGATIVE_POOLS)))
-    pos_sample = random.sample(POSITIVE_POOLS, min(n // 2, len(POSITIVE_POOLS)))
+
+    # Try expanded pools first (450 sentences from training data)
+    expanded_path = os.path.join(NOVEL_DIR, "expanded_pools.json")
+    if os.path.exists(expanded_path):
+        import json as _json
+        with open(expanded_path) as f:
+            pools = _json.load(f)
+        neg_pool = [t for t, _ in pools.get("negative", [])]
+        pos_pool = [t for t, _ in pools.get("positive", [])]
+        border_pool = pools.get("borderline", [])
+    else:
+        neg_pool = NEGATIVE_POOLS
+        pos_pool = POSITIVE_POOLS
+        border_pool = []
+
+    # Combine with hardcoded pools
+    all_neg = list(set(neg_pool + NEGATIVE_POOLS))
+    all_pos = list(set(pos_pool + POSITIVE_POOLS))
+
+    # Sample
+    neg_sample = random.sample(all_neg, min(n // 2, len(all_neg)))
+    pos_sample = random.sample(all_pos, min(n - n // 2, len(all_pos)))
+
     for s in neg_sample:
         batch.append({"text": s, "expected_negative": True, "source": "generated"})
     for s in pos_sample:
