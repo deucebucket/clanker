@@ -203,6 +203,8 @@ BIGRAM_EXPRESSIONS = {
     ("without", "guarantees"): (-5, 0, -5, 0, -5, "hedging: no-guarantee caveat"),
     ("go", "badly"): (-20, 10, -10, 5, -10, "hedging: mild negative outcome"),
     ("go", "wrong"): (-20, 10, -10, 5, -10, "hedging: potential failure"),
+    ("be", "disappointing"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
+    ("be", "disappointed"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
 }
 
 
