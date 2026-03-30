@@ -2528,3 +2528,43 @@ _SLANG_VOCABULARY = {
     'thicc':        (+25, +15, +10, +0, +5),     # body-positive compliment
 }
 EMOTIONAL_VOCABULARY.update(_SLANG_VOCABULARY)
+
+# ── Object Gravity Dictionary ──
+# "A broken car sucks, but not the same negative as a broken heart."
+# These are nouns whose GRAVITY (importance to emotional stakes) is knowable.
+# V is near-zero for most (objects aren't positive or negative by themselves).
+# G is the key — how much does this object MATTER emotionally?
+#
+# Tier 1 (G=+40 to +50): life-or-death, core identity, irreplaceable
+# Tier 2 (G=+20 to +35): important relationships, home, livelihood
+# Tier 3 (G=+5 to +15):  daily life objects, replaceable but annoying
+# Tier 4 (G=0):          truly neutral objects (engine default)
+#
+# The model fills the long tail — context determines if "phone" is Tier 3
+# (inconvenient) or Tier 1 (dead mom's last photos). Engine knows anchors.
+_OBJECT_GRAVITY = {
+    # Tier 1 — life, death, core self (G=40-50)
+    'soul':         (+5, 0, +5, 0, +50),       # deepest self
+    'child':        (+15, +10, +5, +5, +45),    # someone's kid
+    'baby':         (+20, +10, -5, +5, +45),    # infant — maximum vulnerability
+    'blood':        (-5, +15, +5, +10, +40),    # life force / violence signal
+    'breath':       (+5, +10, -5, +5, +35),     # life/death proximity
+    'life':         (+0, +5, +5, +0, +45),      # override — life is max stakes
+    # Tier 2 — relationships, home, livelihood (G=20-35)
+    'father':       (+30, +10, +20, +0, +30),   # parent bond
+    'parent':       (+25, +10, +15, +0, +30),
+    'husband':      (+30, +10, +10, +0, +30),
+    'wife':         (+30, +10, +10, +0, +30),
+    'partner':      (+25, +10, +10, +0, +25),
+    'brain':        (+5, +5, +5, +0, +25),      # cognition — identity-adjacent
+    'chest':        (-5, +10, -5, +5, +25),     # physical anxiety locus
+    'stomach':      (-5, +5, -5, +5, +15),      # gut feeling
+    'money':        (+5, +10, +10, +10, +20),   # livelihood
+    'house':        (+10, +5, +10, +0, +20),    # shelter — basic need
+    # Tier 3 — daily life, replaceable (G=5-15)
+    'car':          (+5, +5, +10, +5, +10),     # transportation
+    'phone':        (+5, +5, +5, +5, +10),      # communication device
+    'school':       (+5, +5, +5, +5, +10),      # education
+    'computer':     (+5, +5, +5, +5, +5),       # tool
+}
+EMOTIONAL_VOCABULARY.update(_OBJECT_GRAVITY)
