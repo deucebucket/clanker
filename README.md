@@ -1,6 +1,6 @@
 # Clanker-Lang
 
-A 300KB engine that detects **emotional stance**, not just emotion. One word, five readings:
+A 300KB engine that detects **emotional stance**, not just emotion. **88.3% essay benchmark, 72.8% on 174K Reddit posts.** One word, five readings:
 
 | Phrase | V | D | Reading |
 |--------|---|---|---------|
@@ -25,7 +25,7 @@ Same Valence. Different Dominance and Gravity. No classifier can make this disti
 
 ### How it works
 
-26 conversational forces act on text word-by-word, like PEMDAS for emotions. Two layers: **primary states** (grief, rage, joy — the raw emotion) and **modifiers** (sarcasm, hedging, deflection — skills that bend the state). Modifiers nudge, never override. The engine knows its own limits — returns NULL confidence when it can't resolve meaning, hands off to a neural model. **70% on essay benchmarks, 72.6% on 174K real Reddit posts.** Sarcasm detected via 6 structural templates ("crossed wires" — positive terminal + negative port). 2,846 mapped vocabulary entries, 0.1ms/sentence, 300KB total.
+26 conversational forces act on text word-by-word, like PEMDAS for emotions. Two layers: **primary states** (grief, rage, joy — the raw emotion) and **modifiers** (sarcasm, hedging, deflection — skills that bend the state). Modifiers nudge, never override. The engine knows its own limits — returns NULL confidence when it can't resolve meaning, hands off to a neural model. **88.3% on essay benchmarks, 72.8% on 174K real Reddit posts.** Sarcasm detected via 6 structural templates ("crossed wires" — positive terminal + negative port). 2,900+ mapped vocabulary entries, 0.1ms/sentence, 300KB total.
 
 ## Try It
 
@@ -54,8 +54,8 @@ Output: V=80 A=230 D=98 U=104 G=91
 
 `Force = Payload * Context(WHO * TENSE * INTENSITY) * Negation * Physics`
 
-- **~2,154 curated words** carry 97% of emotional signal (replaced a 46K-word V1 lexicon -- 44K words were noise)
-- **2,623 mapped vocabulary entries** including idioms, bigrams, and morphological roots
+- **~2,200 curated words** carry 97% of emotional signal (replaced a 46K-word V1 lexicon -- 44K words were noise)
+- **2,900+ mapped vocabulary entries** including idioms, bigrams, and morphological roots
 - **84 context operators** across 17 categories create a measured 12x range on the same word
 - **26 conversational forces** modeled: continuous negation, hedging with D-offsets, evokers (gravitational priming), conditionals, evidential/clinical, comparatives, superlatives, passive voice, fillers, performatives, hyperbole idioms, euphemisms, universal quantifiers, deflection, and more
 - **Three-layer architecture**: sentence-level (0.1ms) + conversation memory + Dark Matter (unmeasured emotional influence)
@@ -64,12 +64,12 @@ Output: V=80 A=230 D=98 U=104 G=91
 
 ## Benchmarks
 
-Validated at 66% consistency across three independent test surfaces:
+Validated across three independent test surfaces:
 
 | Benchmark | Result | What It Tests |
 |-----------|--------|---------------|
-| **Essay benchmark** | **65.8%** | Full emotional arcs (grief 100%, hedging 60%, sarcasm 33%) |
-| **Reddit real-world** | **66.6%** | 5,000 real posts, no cherry-picking |
+| **Essay benchmark** | **88.3%** | Full emotional arcs (grief 100%, joy 100%, neutral 100%, sarcasm 93%, rage 93%) |
+| **Reddit real-world** | **72.8%** | 174K real posts, balanced accuracy |
 | **Crisis recall** | **72%** | Real crisis text detection |
 
 The key demo: "I am sad" (V=0, D=7, G=92) vs "I want to die" (V=0, D=0, G=84) -- same Valence, but Dominance and Gravity route to different crisis levels. 1D sentiment systems see both as "negative."
