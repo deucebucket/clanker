@@ -1,24 +1,25 @@
 """
-Fuzzy word matcher for the Clanker pipeline.
+Fuzzy word matcher for the Clanker V2 pipeline.
 
 Fast preprocessing layer between dictionary lookup and morpheme decomposition.
-Catches typos, elongation (e.g. "happyyyy"), and text speak (e.g. "u", "gr8")
-before falling back to morpheme analysis.
+Catches typos, elongation (e.g. "happyyyy"), text speak (e.g. "u", "gr8"),
+and Cambridge-effect misspellings (scrambled middles, same first/last).
 
 Flow:
-    word -> exact match in WORD_FORCES? -> YES -> use force
-                                        -> NO  -> fuzzy match? -> YES -> use matched force
-                                                                -> NO  -> morpheme decomposition
+    word -> exact match in EMOTIONAL_VOCABULARY? -> YES -> use force
+                                                 -> NO  -> fuzzy match? -> YES -> use matched force
+                                                                         -> NO  -> morpheme decomposition
 """
 
 import re
 from collections import defaultdict
 
-from .forces import WORD_FORCES
+from .forces_curated import EMOTIONAL_VOCABULARY
 
-# ── Strategy 2: Text speak mapping ──────────────────────────────────
+# ── Strategy 1: Text speak / internet slang mapping ───────────────
 
 TEXT_SPEAK = {
+    # Abbreviations → closest emotional equivalent
     "u": "you", "ur": "your", "r": "are", "b": "be", "c": "see",
     "k": "okay", "ok": "okay", "thx": "thanks", "ty": "thank",
     "pls": "please", "plz": "please", "rn": "now", "fr": "for",
@@ -36,116 +37,146 @@ TEXT_SPEAK = {
     "2day": "today", "2nite": "tonight", "4ever": "forever",
     "gr8": "great", "l8r": "later", "h8": "hate",
     "sum1": "someone", "ne1": "anyone", "no1": "nobody",
+    # Common misspellings of emotional words
+    "depresed": "depressed", "deppressed": "depressed",
+    "anxious": "anxious", "anixous": "anxious",
+    "suicidal": "suicidal", "suicidel": "suicidal",
+    "lonley": "lonely", "lonly": "lonely",
+    "scred": "scared", "scarred": "scared",
+    "happines": "happiness", "hapiness": "happiness",
+    "dissapointed": "disappointed", "disapointed": "disappointed",
+    "exausted": "exhausted", "exhuasted": "exhausted",
+    "overwelmed": "overwhelmed", "overwhelmd": "overwhelmed",
+    "fustrated": "frustrated", "frustated": "frustrated",
+    "embarassed": "embarrassed", "embarased": "embarrassed",
+    "definately": "definitely", "definatly": "definitely",
+    "desparate": "desperate", "despirate": "desperate",
+    "awfull": "awful", "terible": "terrible",
+    "beautifull": "beautiful", "wonderfull": "wonderful",
+    "gd": "good", "bd": "bad",
 }
 
-# Filter to only mappings whose target is actually in WORD_FORCES
-_TEXT_SPEAK_VALID = {k: v for k, v in TEXT_SPEAK.items() if v in WORD_FORCES}
-
-# ── Strategy 3: Edit distance index ────────────────────────────────
-
-_fuzzy_index = None
+# Filter to only mappings whose target is in EMOTIONAL_VOCABULARY
+_TEXT_SPEAK_VALID = {k: v for k, v in TEXT_SPEAK.items() if v in EMOTIONAL_VOCABULARY}
 
 
-def _build_fuzzy_index():
-    """Build index for fast approximate lookup.
-
-    Index words by (length, first_char) and (length, second_char) so we
-    only need to check a small subset during edit-distance search.
-    """
-    by_len_and_char = defaultdict(set)
-    for word in WORD_FORCES:
-        if len(word) >= 4:  # Only index words 4+ chars (targets for 5+ char inputs)
-            by_len_and_char[(len(word), word[0])].add(word)
-            if len(word) > 1:
-                by_len_and_char[(len(word), word[1])].add(word)
-    return by_len_and_char
-
-
-def _get_fuzzy_index():
-    """Lazy-init the fuzzy index."""
-    global _fuzzy_index
-    if _fuzzy_index is None:
-        _fuzzy_index = _build_fuzzy_index()
-    return _fuzzy_index
-
-
-def _levenshtein(s1, s2):
-    """Compute Levenshtein edit distance between two strings.
-
-    Optimised single-row DP — O(min(m,n)) space.
-    """
-    if len(s1) < len(s2):
-        return _levenshtein(s2, s1)
-    if len(s2) == 0:
-        return len(s1)
-
-    prev_row = list(range(len(s2) + 1))
-    for i, c1 in enumerate(s1):
-        curr_row = [i + 1]
-        for j, c2 in enumerate(s2):
-            ins = prev_row[j + 1] + 1
-            dele = curr_row[j] + 1
-            sub = prev_row[j] + (c1 != c2)
-            curr_row.append(min(ins, dele, sub))
-        prev_row = curr_row
-    return prev_row[-1]
-
-
-# ── Strategy 1: Character deduplication ─────────────────────────────
+# ── Strategy 2: Character deduplication (elongation) ──────────────
 
 def _deduplicate(word):
-    """Collapse character elongation and check WORD_FORCES.
+    """Collapse character elongation and check vocabulary.
 
     "happyyyy" -> "happyy" -> "happy"
     "nooooo"   -> "noo"    -> "no"
+    "soooo"    -> "soo"    -> "so"
 
-    Only activates when the word contains a run of 3+ identical characters,
-    so legitimate words with natural doubles (e.g. "happy") are never touched.
+    Only activates when the word contains a run of 3+ identical characters.
     """
-    # Bail out early if there are no elongated runs (3+ of same char)
     if not re.search(r'(.)\1{2,}', word):
         return None
 
     # Try 1: collapse runs of 3+ identical chars down to 2
     reduced2 = re.sub(r'(.)\1{2,}', r'\1\1', word)
-    if reduced2 in WORD_FORCES:
+    if reduced2 in EMOTIONAL_VOCABULARY:
         return reduced2
 
     # Try 2: collapse runs of 3+ identical chars down to 1
     reduced1 = re.sub(r'(.)\1{2,}', r'\1', word)
-    if reduced1 in WORD_FORCES:
+    if reduced1 in EMOTIONAL_VOCABULARY:
         return reduced1
 
     # Try 3: collapse 3+ to 2, then try each remaining double as single
-    # Handles "happyyyy" -> "happyy" -> try "happy" (remove yy->y)
     doubles = [(m.start(), m.group()[0]) for m in re.finditer(r'(.)\1', reduced2)]
     for pos, char in doubles:
         trial = reduced2[:pos] + char + reduced2[pos + 2:]
-        if trial in WORD_FORCES:
+        if trial in EMOTIONAL_VOCABULARY:
             return trial
 
     return None
 
 
-# ── Strategy 3: Edit distance search ───────────────────────────────
+# ── Strategy 3: Cambridge-effect matching ─────────────────────────
+# People can read words with scrambled middles if first/last letters match.
+# "hpapy" -> "happy", "sicskenig" -> "sickening"
+# This catches a class of typos that edit-distance misses.
+
+def _cambridge_match(word):
+    """Match words by first letter, last letter, and sorted middle.
+
+    Only for words 6+ chars to avoid false positives on small vocab.
+    """
+    if len(word) < 6:
+        return None
+
+    key = (word[0], word[-1], tuple(sorted(word[1:-1])))
+    return _cambridge_index.get(key)
+
+
+# Build Cambridge index lazily
+_cambridge_index = None
+
+def _build_cambridge_index():
+    idx = {}
+    for w in EMOTIONAL_VOCABULARY:
+        if len(w) >= 5:
+            key = (w[0], w[-1], tuple(sorted(w[1:-1])))
+            # Only store first match (avoid collisions overwriting)
+            if key not in idx:
+                idx[key] = w
+    return idx
+
+def _get_cambridge_index():
+    global _cambridge_index
+    if _cambridge_index is None:
+        _cambridge_index = _build_cambridge_index()
+    return _cambridge_index
+
+
+# ── Strategy 4: Edit distance search ─────────────────────────────
+
+_fuzzy_index = None
+
+def _build_fuzzy_index():
+    """Index words by (length, first_char) for fast approximate lookup."""
+    by_len_and_char = defaultdict(set)
+    for word in EMOTIONAL_VOCABULARY:
+        if len(word) >= 4:
+            by_len_and_char[(len(word), word[0])].add(word)
+            if len(word) > 1:
+                by_len_and_char[(len(word), word[1])].add(word)
+    return by_len_and_char
+
+def _get_fuzzy_index():
+    global _fuzzy_index
+    if _fuzzy_index is None:
+        _fuzzy_index = _build_fuzzy_index()
+    return _fuzzy_index
+
+def _levenshtein(s1, s2):
+    """Levenshtein edit distance — O(min(m,n)) space."""
+    if len(s1) < len(s2):
+        return _levenshtein(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+    prev_row = list(range(len(s2) + 1))
+    for i, c1 in enumerate(s1):
+        curr_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            curr_row.append(min(prev_row[j + 1] + 1, curr_row[j] + 1,
+                              prev_row[j] + (c1 != c2)))
+        prev_row = curr_row
+    return prev_row[-1]
 
 def _edit_distance_match(word):
-    """Find a WORD_FORCES entry within edit distance 1 of *word*.
+    """Find vocabulary entry within edit distance 1. Words 7+ chars only.
 
-    Only applied to words of 5+ characters to avoid false positives.
-    Words that are already exact matches in WORD_FORCES are skipped
-    (the caller should check exact match first).
+    Higher threshold than V1 (was 5) because V2 vocabulary is 2.2K words,
+    making false positives much more likely on short words.
     """
-    if len(word) < 5:
-        return None
-    if word in WORD_FORCES:
+    if len(word) < 7 or word in EMOTIONAL_VOCABULARY:
         return None
 
     index = _get_fuzzy_index()
     candidates = set()
-
-    # Gather candidates: same length +-1, sharing first char only
-    # (first char is almost always correct in typos)
     for length_offset in (-1, 0, 1):
         target_len = len(word) + length_offset
         if target_len < 4:
@@ -155,46 +186,57 @@ def _edit_distance_match(word):
     for candidate in candidates:
         if _levenshtein(word, candidate) == 1:
             return candidate
-
     return None
 
 
-# ── Cache + public API ──────────────────────────────────────────────
+# ── Cache + public API ────────────────────────────────────────────
 
 _fuzzy_cache = {}
 
+def fuzzy_match(word):
+    """Find an EMOTIONAL_VOCABULARY match for *word* using fuzzy strategies.
 
-def _try_fuzzy(word):
-    """Try all fuzzy strategies in order. Returns matched key or None."""
+    Returns the matched vocabulary key, or None if no match found.
+    Results are cached for O(1) repeated lookups.
+
+    Strategy order:
+      1. Deduplication (elongation): "happyyyy" -> "happy"
+      2. Text speak mapping: "tbh" -> "honestly"
+      3. Cambridge-effect: scrambled middles -> correct word
+      4. Edit distance (5+ chars): 1-edit typos
+    """
+    if word in _fuzzy_cache:
+        return _fuzzy_cache[word]
+
     # Strategy 1: deduplication
     result = _deduplicate(word)
     if result is not None:
+        _fuzzy_cache[word] = result
         return result
 
     # Strategy 2: text speak
     mapped = _TEXT_SPEAK_VALID.get(word)
     if mapped is not None:
+        _fuzzy_cache[word] = mapped
         return mapped
 
-    # Strategy 3: edit distance (5+ chars only)
-    result = _edit_distance_match(word)
+    # Strategy 3: Cambridge effect (5+ chars)
+    _get_cambridge_index()  # ensure built
+    result = _cambridge_match(word)
     if result is not None:
+        _fuzzy_cache[word] = result
         return result
 
+    # Strategy 4: edit distance — DISABLED for V2 (2.2K vocab too small,
+    # causes false positives like "degrees"→"degree", "committee"→"committed")
+    # TODO: re-enable when vocab is larger or with a suffix-aware matcher
+    # result = _edit_distance_match(word)
+    # if result is not None:
+    #     _fuzzy_cache[word] = result
+    #     return result
+
+    _fuzzy_cache[word] = None
     return None
-
-
-def fuzzy_match(word):
-    """Find a WORD_FORCES match for *word* using fuzzy strategies.
-
-    Returns the matched WORD_FORCES key, or None if no match found.
-    Results are cached for O(1) repeated lookups.
-    """
-    if word in _fuzzy_cache:
-        return _fuzzy_cache[word]
-    result = _try_fuzzy(word)
-    _fuzzy_cache[word] = result
-    return result
 
 
 def clear_cache():

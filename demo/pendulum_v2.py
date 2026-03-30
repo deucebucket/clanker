@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from demo.shared import VADUG
 from demo.forces_curated import EMOTIONAL_VOCABULARY
+from demo.fuzzy import fuzzy_match as _fuzzy_match
 from demo.context_operators import (
     CONTEXT_OPERATORS, QUESTION_STARTERS, QUESTION_DAMPENER,
     is_question, _COEFF_CAP, _COEFF_FLOOR, _parse_operator,
@@ -935,6 +936,25 @@ class PendulumV2:
                 trace.append(self._trace_entry(word, "FILLER", state, f"D{self.filler_d_offset}"))
 
             else:
+                # Try fuzzy matching before giving up (typos, elongation, text speak)
+                fuzzy_hit = _fuzzy_match(word_lower)
+                if fuzzy_hit and fuzzy_hit in EMOTIONAL_VOCABULARY:
+                    force = EMOTIONAL_VOCABULARY[fuzzy_hit]
+                    coeff, d_off = self._compute_coefficient(pending_operators, pre)
+                    d_off += dominance_prime * self.force_scale
+                    neg_scale = self._negation_scale(negation_force)
+                    state = self._apply_force(state, force, coeff * neg_scale, d_off)
+                    trace.append(self._trace_entry(
+                        word, "FUZZY", state,
+                        f"→{fuzzy_hit} coeff={coeff:.2f} neg_f={negation_force:.2f}"
+                    ))
+                    pending_operators = {}
+                    negation_force *= self.negation_decay_payload
+                    gravity_prime *= self.evoker_decay
+                    dominance_prime *= self.evoker_decay
+                    i += 1
+                    continue
+
                 # NEUTRAL — moderate negation decay
                 negation_force *= self.negation_decay_neutral
                 trace.append(self._trace_entry(word, "NEUTRAL", state, f"neg_f={negation_force:.2f}"))
