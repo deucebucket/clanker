@@ -1102,7 +1102,8 @@ EMOTIONAL_VOCABULARY = {
     'healthier': ( +43,   -6,  +24,   +0,  +16),  # freq=23
     'healthy': ( +50,  +20,  +72,   +0,  +24),  # freq=218
     'hearing': ( +37,   -2,  +29,   +0,  +16),  # freq=96
-    'heart': ( +62,  +42,  +77,  +67,   +8),  # freq=336
+    'heart': ( +10, +10, +5, +5, +15),  # body part with emotional weight — intimacy/vulnerability
+    # V near-neutral but G elevated: "my heart" signals something important is at stake
     'heartbreaking': (-100,  +83,  -32,  +62,  -39),  # freq=27
     'heaven': ( +32,  +13,  +24,   +0,  +27),  # freq=29
     'heavy': ( -32,  +24,  -44,  +15,  -40),  # freq=67

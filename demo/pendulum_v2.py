@@ -909,6 +909,8 @@ class PendulumV2:
                 # PAYLOAD — apply force modulated by continuous negation + gravity priming
                 force = EMOTIONAL_VOCABULARY[word_lower]
                 coeff, d_off = self._compute_coefficient(pending_operators, pre)
+                # Self-adjacent emotion: handled via "me X" bigrams (me mad, me sad, etc.)
+                # General amplifier was tested but caused regressions — bigrams are more precise
                 # Add evoker priming to D-offset
                 d_off += dominance_prime * self.force_scale
                 # Passive voice lowers D (removed agency)

@@ -215,6 +215,23 @@ BIGRAM_EXPRESSIONS = {
     ("make", "sick"): (-35, 20, -15, 10, -15, "disgust: making sick"),
     ("make", "worse"): (-35, 15, -15, 10, -15, "deterioration: making worse"),
     ("make", "better"): (30, 15, 20, 5, 15, "improvement: making better"),
+
+    # "me X" — baby talk / raw self+state. Zero distance = maximum signal.
+    # These override individual word forces with the direct emotional meaning.
+    ("me", "mad"): (-60, 40, -10, 15, -15, "raw: me mad — unfiltered rage"),
+    ("me", "sad"): (-55, 15, -20, 5, -25, "raw: me sad — unfiltered grief"),
+    ("me", "happy"): (55, 25, 15, 0, 20, "raw: me happy — unfiltered joy"),
+    ("me", "scared"): (-50, 40, -35, 20, -20, "raw: me scared — unfiltered fear"),
+    ("me", "angry"): (-60, 45, -10, 15, -15, "raw: me angry — unfiltered rage"),
+    ("me", "sick"): (-40, 20, -20, 10, -15, "raw: me sick — unfiltered disgust"),
+    ("me", "tired"): (-30, -15, -25, 5, -20, "raw: me tired — unfiltered exhaustion"),
+    ("me", "hurt"): (-55, 25, -30, 15, -25, "raw: me hurt — unfiltered pain"),
+
+    # Body-part compounds — the modifier carries the emotion, not the body part
+    ("broken", "heart"): (-60, 20, -40, 10, -35, "grief: broken heart"),
+    ("heart", "broken"): (-60, 20, -40, 10, -35, "grief: heart is broken"),
+    ("warm", "heart"): (40, 10, 20, 0, 25, "love: warm heart"),
+    ("heavy", "heart"): (-35, -5, -20, 5, -25, "sadness: heavy heart"),
     ("be", "disappointing"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
     ("be", "disappointed"): (-25, 5, -10, 0, -10, "hedging: softened disappointment"),
 }
