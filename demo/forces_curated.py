@@ -2569,6 +2569,26 @@ _OBJECT_GRAVITY = {
 }
 EMOTIONAL_VOCABULARY.update(_OBJECT_GRAVITY)
 
+# ── Body autonomy words ──
+# These are body experiences that are almost always negative in context.
+# "Period" is only positive as RELIEF ("I got my period!" = not pregnant).
+# The base reading is negative — context/exclamation can flip it.
+_BODY_AUTONOMY = {
+    'period':       (-15, +10, -10, +5, +15),    # menstrual — negative + high G (body stakes)
+    'periods':      (-15, +10, -10, +5, +15),
+    'cramps':       (-30, +20, -20, +10, +10),   # pain
+    'cramping':     (-25, +15, -15, +10, +10),
+    'bleeding':     (-25, +20, -15, +15, +15),   # could be injury or menstrual
+    'nausea':       (-30, +15, -20, +10, +5),
+    'nauseous':     (-30, +15, -20, +10, +5),    # may already exist from cycle 23
+    'pregnant':     (-5, +25, -10, +15, +45),    # near-neutral V but MASSIVE G — life-changing
+    'pregnancy':    (-5, +20, -10, +10, +40),
+    'miscarriage':  (-70, +20, -50, +15, +45),   # devastating loss + high G
+    'contraction':  (-20, +30, -15, +20, +30),   # labor pain
+    'contractions': (-20, +30, -15, +20, +30),
+}
+EMOTIONAL_VOCABULARY.update(_BODY_AUTONOMY)
+
 # ── Crisis method/planning/farewell words ──
 # These words are neutral in isolation but become crisis signals in combination.
 # Mild negative V + elevated U + high G = "something heavy is being discussed"
