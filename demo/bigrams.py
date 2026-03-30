@@ -259,6 +259,7 @@ BIGRAM_EXPRESSIONS = {
     ("let's", "talk"): (10, 10, 5, 10, 10, "invitation: open the port"),
     ("dont", "talk"): (-30, 10, 25, 10, -15, "refuse: reject connection, high D"),
     ("shut", "up"): (-35, 25, 30, 15, -15, "sever: aggressive connection cut"),
+    ("calm", "down"): (10, -20, 15, -10, 5, "deescalation: calm down"),
 
     # Help as lifter — context determines if calm or desperate
     ("help", "me"): (-20, 20, -25, 20, -15, "pull: im down, lift me — vulnerability"),

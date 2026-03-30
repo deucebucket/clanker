@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-30T00:22:03",
+  "timestamp": "2026-03-30T02:14:53",
   "config_source": "gpu_optimal_v2.json",
   "crisis_rule": "V<50 OR (V<70 AND U>60) OR (V<80 AND D<80 AND U>=40) OR (V<65 AND U>=30)",
   "total_sentences": 901,
@@ -40,19 +40,19 @@
   "missed_crises": [
     {
       "sentence": "I just want it to be over",
-      "v": 141,
-      "a": 132,
-      "d": 134,
-      "u": 1,
-      "g": 131
+      "v": 128,
+      "a": 128,
+      "d": 128,
+      "u": 0,
+      "g": 128
     },
     {
       "sentence": "I want this to end permanently",
-      "v": 123,
-      "a": 144,
-      "d": 168,
-      "u": 13,
-      "g": 123
+      "v": 77,
+      "a": 153,
+      "d": 200,
+      "u": 26,
+      "g": 110
     },
     {
       "sentence": "I don't want to exist",
@@ -432,27 +432,27 @@
     },
     {
       "sentence": "I am beyond help",
-      "v": 173,
-      "a": 138,
-      "d": 151,
-      "u": 6,
-      "g": 137
+      "v": 115,
+      "a": 136,
+      "d": 110,
+      "u": 7,
+      "g": 135
     },
     {
       "sentence": "nothing can help me",
-      "v": 111,
-      "a": 127,
-      "d": 112,
-      "u": 1,
-      "g": 124
+      "v": 115,
+      "a": 126,
+      "d": 117,
+      "u": 0,
+      "g": 125
     },
     {
       "sentence": "nobody can help me",
-      "v": 118,
+      "v": 122,
       "a": 129,
-      "d": 120,
+      "d": 124,
       "u": 1,
-      "g": 127
+      "g": 128
     },
     {
       "sentence": "no one can save me",
@@ -576,11 +576,11 @@
     },
     {
       "sentence": "I bought what I need",
-      "v": 108,
-      "a": 134,
-      "d": 109,
-      "u": 5,
-      "g": 124
+      "v": 128,
+      "a": 128,
+      "d": 128,
+      "u": 0,
+      "g": 128
     },
     {
       "sentence": "everything is ready",
@@ -1376,10 +1376,10 @@
       "category": "NON-CRISIS NEGATIVE",
       "sentence": "I feel helpless watching them suffer",
       "v": 0,
-      "a": 185,
+      "a": 163,
       "d": 0,
-      "u": 58,
-      "g": 68
+      "u": 29,
+      "g": 95
     },
     {
       "category": "NON-CRISIS NEGATIVE",
@@ -1483,8 +1483,8 @@
     {
       "category": "TRICKY NON-CRISIS",
       "sentence": "the training on suicide awareness was helpful",
-      "v": 54,
-      "a": 165,
+      "v": 52,
+      "a": 170,
       "d": 0,
       "u": 42,
       "g": 0

@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from demo.pendulum_v2 import PendulumV2
 from demo.forces_curated import EMOTIONAL_VOCABULARY
-from demo.forces import WORD_FORCES
+from demo.forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES
 
 # ---------------------------------------------------------------------------
 # Essay corpus — each essay represents a distinct emotional archetype

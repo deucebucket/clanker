@@ -7,9 +7,10 @@ thresholds (force a decision), while questions/greetings use wide thresholds
 """
 
 
-from .forces import WORD_FORCES
+from .forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES  # V2 vocab
 from .entropy import EntropyClassifier
-from .multipath import MultiPathProcessor
+# from .multipath import MultiPathProcessor  # V1 only — archived
+MultiPathProcessor = None
 
 class AdaptiveClassifier:
     """Classify VADUG into positive/negative/neutral with intent-adaptive thresholds."""
@@ -18,7 +19,7 @@ class AdaptiveClassifier:
     # Tuned on 71K sentences (15 books + Reddit + tweets), 4000 sample sweep
     _word_forces = WORD_FORCES
     _entropy = EntropyClassifier()
-    _multipath = MultiPathProcessor()
+    _multipath = MultiPathProcessor() if MultiPathProcessor else None
 
     THRESHOLDS = {
         "EMOTIONAL": {"low": 123, "high": 124},   # tight — force decision after decay retune

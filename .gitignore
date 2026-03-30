@@ -37,3 +37,5 @@ benchmarks/misses_full.json
 benchmarks/gpu_optimal.json
 benchmarks/gpu_optimal_v2.json
 benchmarks/experiment_baseline.json
+archive/
+CLAUDE.md.bak

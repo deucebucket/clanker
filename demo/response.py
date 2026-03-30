@@ -5,7 +5,7 @@ import math
 import random
 
 from .shared import VADUG, VADU, MetadataHeader, PersonalityVector
-from .forces import WORD_FORCES
+from .forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES  # V2 vocab
 
 # =============================================================
 # STEP 2: Metadata Classification

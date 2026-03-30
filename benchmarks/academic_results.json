@@ -16,14 +16,14 @@
           "samples": 872
         },
         "Clanker": {
-          "accuracy": 56.7,
-          "f1": 39.5,
+          "accuracy": 56.8,
+          "f1": 39.6,
           "neutral_pct": 13.9,
           "samples": 872
         },
         "ClankerV2": {
           "accuracy": 60.2,
-          "f1": 38.8,
+          "f1": 38.7,
           "neutral_pct": 0.0,
           "samples": 872
         },
@@ -51,15 +51,15 @@
           "samples": 1000
         },
         "Clanker": {
-          "accuracy": 51.2,
-          "f1": 50.1,
-          "neutral_pct": 20.9,
+          "accuracy": 50.8,
+          "f1": 49.7,
+          "neutral_pct": 21.3,
           "samples": 1000
         },
         "ClankerV2": {
-          "accuracy": 56.6,
-          "f1": 56.2,
-          "neutral_pct": 43.7,
+          "accuracy": 57.0,
+          "f1": 56.5,
+          "neutral_pct": 44.7,
           "samples": 1000
         },
         "RoBERTa": {
@@ -86,14 +86,14 @@
           "samples": 1000
         },
         "Clanker": {
-          "accuracy": 69.6,
-          "f1": 48.1,
-          "neutral_pct": 12.6,
+          "accuracy": 69.7,
+          "f1": 48.2,
+          "neutral_pct": 12.7,
           "samples": 1000
         },
         "ClankerV2": {
-          "accuracy": 63.9,
-          "f1": 42.3,
+          "accuracy": 63.6,
+          "f1": 42.2,
           "neutral_pct": 0.0,
           "samples": 1000
         },

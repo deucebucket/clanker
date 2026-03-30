@@ -1085,7 +1085,7 @@ def run_rosetta_stone():
     import sys, re
     sys.path.insert(0, '.')
     sys.path.insert(0, 'demo')
-    from demo.simulator import SequentialPendulum
+    from demo.pendulum_v2 import PendulumV2 as SequentialPendulum
     from demo.tonal import TonalAnalyzer, apply_tonal_adjustment
     from demo.intent import IntentDetector
 

@@ -66,7 +66,7 @@ class WordRoleDetector:
                 if next_word in self.BRIDGES:
                     continue  # skip bridge, keep looking
                 # Found a subject — check its valence in WORD_FORCES
-                from .forces import WORD_FORCES
+                from .forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES  # V2 vocab
                 if next_word in WORD_FORCES:
                     subject_dv = WORD_FORCES[next_word][0]
                     if subject_dv > 10:
@@ -84,7 +84,7 @@ class WordRoleDetector:
                 prev_word = words[prev_idx]
                 if prev_word in self.BRIDGES:
                     continue
-                from .forces import WORD_FORCES
+                from .forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES  # V2 vocab
                 if prev_word in WORD_FORCES:
                     subject_dv = WORD_FORCES[prev_word][0]
                     if subject_dv > 10:

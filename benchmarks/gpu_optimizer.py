@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "demo"))
 
 def load_test_data():
     """Load benchmark sentences with word forces pre-extracted."""
-    from demo.forces import WORD_FORCES
+    from demo.forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES
     from demo.intent import IntentDetector
     from datasets import load_dataset
 

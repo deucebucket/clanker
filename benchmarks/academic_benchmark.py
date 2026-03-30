@@ -9,7 +9,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "demo"))
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
-from demo.simulator import SequentialPendulum, VADUG, nearest_emotion, WORD_FORCES
+from demo.shared import VADUG
+from demo.forces_curated import EMOTIONAL_VOCABULARY as WORD_FORCES
+from demo.response import nearest_emotion
 from demo.classifier import AdaptiveClassifier
 from demo.intent import IntentDetector
 from demo.morphemes import ROOTS, PREFIXES, SUFFIXES
@@ -150,7 +152,8 @@ def main():
     mx = 1000 if args.quick else None
 
     print(f"\n{'#'*80}")
-    print(f"  ACADEMIC BENCHMARK — {len(WORD_FORCES)} word forces, {len(ROOTS)} morpheme roots")
+    from demo.forces_curated import EMOTIONAL_VOCABULARY
+    print(f"  ACADEMIC BENCHMARK — V2 engine, {len(EMOTIONAL_VOCABULARY)} curated words, {len(ROOTS)} morpheme roots")
     print(f"{'#'*80}")
 
     all_r = []
