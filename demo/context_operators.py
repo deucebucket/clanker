@@ -148,6 +148,13 @@ CONTEXT_OPERATORS = {
     "assume":       (0.60, "hedging", -10),
     "wonder":       (0.50, "hedging", -15),
     "feel":         (0.90, "hedging", -5),
+    # Need/want as urgency multipliers — they amplify what follows
+    # "need" = stronger urgency, heavier multiplier
+    # "want" = desire, softer multiplier
+    # Need/want: add urgency but don't amplify direction — they're transparent carriers
+    "need":         (1.0, "urgency_mult", -5),    # urgency + vulnerability (D-drop), neutral coefficient
+    "want":         (1.0, "desire_mult"),          # desire marker, neutral coefficient
+
     # Glass breakers — "honestly" / "to be honest" = laying it bare
     # Not dishonesty signal — emphasizes what follows. Like "feel" but stronger.
     # Often precedes negative truth ("honestly, this sucks")

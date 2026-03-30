@@ -2649,3 +2649,22 @@ _SWEARING = {
     'hell':         (-15, +20, +10, +10, -5),    # mild outburst
 }
 EMOTIONAL_VOCABULARY.update(_SWEARING)
+
+# ── Connection/transfer words ──
+# "Talk" = human HDMI port. Not emotional by itself — it's the act of
+# connecting/transferring between two entities. Emotional weight comes
+# from the STATE of the connection (opening, closing, urgency).
+_CONNECTION_WORDS = {
+    'talk':         (0, +5, +5, +5, +10),         # connection word — V neutral, G elevated (it matters)
+    'talking':      (0, +5, +5, +5, +10),
+    'speak':        (+5, +10, +10, +10, +10),    # more formal connection
+    'listen':       (+10, +5, -5, +5, +10),      # receiving — slight positive, lower D (receptive)
+    'listening':    (+10, +5, -5, +5, +10),
+    'hear':         (+10, +5, -5, +5, +10),      # same as listen
+    'communicate':  (+10, +10, +10, +10, +10),   # bidirectional transfer
+    'discuss':      (+5, +10, +10, +10, +10),    # structured transfer
+    'conversation': (+10, +5, +5, +5, +10),      # ongoing connection
+    'silence':      (-15, -20, -10, +5, -15),    # connection severed — absence of transfer
+    'quiet':        (-5, -15, -5, +0, -5),       # reduced bandwidth
+}
+EMOTIONAL_VOCABULARY.update(_CONNECTION_WORDS)

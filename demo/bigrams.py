@@ -252,6 +252,14 @@ BIGRAM_EXPRESSIONS = {
     ("damn", "it"): (-25, 25, 10, 10, -5, "frustration: damn it"),
     ("give", "damn"): (-20, -10, -20, 0, -15, "indifference: don't give a damn"),
 
+    # Talk — connection state bigrams
+    ("stop", "talking"): (-25, 15, 20, 15, -10, "sever: cut the connection, negative"),
+    ("keep", "talking"): (10, 10, -5, 5, 10, "maintain: keep the connection open"),
+    ("lets", "talk"): (10, 10, 5, 10, 10, "invitation: open the port"),
+    ("let's", "talk"): (10, 10, 5, 10, 10, "invitation: open the port"),
+    ("dont", "talk"): (-30, 10, 25, 10, -15, "refuse: reject connection, high D"),
+    ("shut", "up"): (-35, 25, 30, 15, -15, "sever: aggressive connection cut"),
+
     # Bullshit — universal nullifier, but "no bullshit" = authenticity
     # "no bullshit" = "no null? are you being real?" — hopeful/speculative
     # Hedges receiver POSITIVE — being asked to confirm they're presenting real value
