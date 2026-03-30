@@ -2486,3 +2486,44 @@ _CYCLE23_FALSE_NEG_MINING = {
     'outrageously': (0, +25, 0, +10, 0),          # pure intensifier
 }
 EMOTIONAL_VOCABULARY.update(_CYCLE23_FALSE_NEG_MINING)
+
+# ── Internet/Gen-Z slang with real emotional physics ──
+# These aren't just mappings to formal words — they carry their own forces.
+# "boo" isn't just "partner" — it's warmth + belonging + vulnerability.
+_SLANG_VOCABULARY = {
+    # Relationship / community — high V, moderate G (belonging matters)
+    'boo':          (+50, +20, +10, +0, +30),    # romantic partner — warmth + vulnerability
+    'bae':          (+50, +20, +10, +0, +30),    # same energy as boo
+    'fam':          (+40, +15, +20, +0, +25),    # chosen family — loyalty + belonging
+    'sis':          (+35, +15, +15, +0, +20),    # solidarity — "I see you"
+    'homie':        (+40, +15, +20, +0, +20),    # deep friendship bond
+    'bestie':       (+45, +20, +15, +0, +25),    # best friend — high trust
+    # Affirmation / hype — high V, high A
+    'deadass':      (0, +30, +30, +10, +5),      # pure intensifier — "I'm serious"
+    'nocap':        (0, +25, +25, +5, +5),       # truthfulness marker
+    'yeet':         (+20, +60, +30, +10, -5),    # explosive energy, low gravity
+    'stan':         (+50, +40, +10, +0, +15),    # intense devotion/fandom
+    'simp':         (-15, +10, -30, +0, -10),    # devotion BUT with D-crush (loss of agency)
+    'flex':         (+30, +30, +50, +5, +10),    # showing off — high D (confidence display)
+    'drip':         (+35, +20, +40, +0, +10),    # style/confidence
+    'clout':        (+25, +20, +40, +5, +10),    # social influence/status
+    # Negative slang — carries real weight
+    'salty':        (-25, +20, -10, +5, -10),    # bitter/resentful
+    'pressed':      (-20, +30, -15, +10, -5),    # bothered/upset about it
+    'cancelled':    (-40, +25, +10, +15, -20),   # social rejection
+    'ghosted':      (-45, -10, -35, +10, -25),   # already in vocab but verify
+    'catfished':    (-50, +30, -30, +15, -20),   # betrayed/deceived
+    'doomscrolling': (-30, +15, -20, +10, -15),  # anxiety-feeding behavior
+    # Emotional state slang
+    'vibe':         (+30, +10, +15, +0, +15),    # general positive feeling
+    'vibing':       (+35, +15, +15, +0, +15),    # in the flow
+    'rekt':         (-60, +30, -40, +15, -20),   # destroyed/devastated
+    'tilted':       (-30, +35, -20, +15, -10),   # frustrated/off-balance (gaming)
+    'snatched':     (+40, +30, +30, +0, +10),    # looking amazing
+    'slaps':        (+50, +35, +20, +0, +15),    # something is really good
+    'hits':         (+30, +25, +10, +5, +15),    # emotionally resonates — "this hits different"
+    'rent-free':    (-10, +15, -15, +10, -10),   # can't stop thinking about it
+    'ick':          (-40, +20, -20, +5, -15),    # sudden disgust/turn-off
+    'thicc':        (+25, +15, +10, +0, +5),     # body-positive compliment
+}
+EMOTIONAL_VOCABULARY.update(_SLANG_VOCABULARY)
