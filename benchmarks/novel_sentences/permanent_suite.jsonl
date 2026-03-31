@@ -342,7 +342,7 @@
 {"text": "I was trying to cross over a fence but ended up tearing my jeans", "expected_negative": true, "source": "generated"}
 {"text": "I am not isolated", "expected_negative": false, "source": "generated"}
 {"text": "I was the best cake I ever had. I am glad I don't know how to bake", "expected_negative": false, "source": "generated"}
-{"text": "I remember my dad watching football so much as a kid. I used to get so bored.", "expected_negative": false, "source": "generated"}
+{"text": "I remember my dad watching football so much as a kid. I used to get so bored.", "expected_negative": true, "source": "generated"}
 {"text": "The facebook indicator was within expected range.", "expected_negative": false, "source": "generated"}
 {"text": "oh, that is nerve wracking. What did you try to do to cope?", "expected_negative": true, "source": "generated"}
 {"text": "Whatever just get over it", "expected_negative": true, "source": "generated"}

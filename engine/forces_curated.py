@@ -5571,6 +5571,12 @@ _VOCAB_FIXES = {
     'scenery':      (5, 0, 0, 0, 10),              # override: was +55. Visual setting.
     'director':     (0, 5, 5, 0, 10),              # override: was +32. Role, not emotion.
     'character':    (0, 5, 0, 0, 10),              # override: was +35. Story element.
+    # ── Slurs/derogatory: these carry heavy negative force ──
+    'whore':        (-60, 30, -30, 10, -20),
+    'slut':         (-55, 25, -25, 10, -18),
+    'bitch':        (-50, 30, -20, 10, -15),       # can be reclaimed but default = slur
+    'hoe':          (-45, 20, -20, 5, -12),
+    'skank':        (-50, 20, -25, 5, -15),
     # Bookend compound command tokens (collapsed from "shut [spice] up" etc.)
     'shutup':       (-40, 40, 40, 15, -10),       # silence command. D+40 = controller has power. V negative.
     'getout':       (-45, 50, 45, 20, -15),        # expulsion command. Stronger than shutup.
