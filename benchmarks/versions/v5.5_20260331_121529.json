@@ -1,0 +1,76 @@
+{
+  "version": "v5.5",
+  "timestamp": "20260331_121529",
+  "engine": {
+    "vocab_size": 4084,
+    "dimensions": 7,
+    "dim_names": [
+      "v",
+      "a",
+      "d",
+      "u",
+      "g",
+      "w",
+      "i"
+    ],
+    "timestamp": "2026-03-31T12:15:29.879195"
+  },
+  "tests": {
+    "core": {
+      "name": "core",
+      "total": 20,
+      "correct": 20,
+      "accuracy": 1.0,
+      "misses": []
+    },
+    "novel": {
+      "name": "novel",
+      "total": 30,
+      "correct": 26,
+      "accuracy": 0.8666666666666667,
+      "misses": [
+        {
+          "text": "my tire went flat on the highway",
+          "v": 132,
+          "expected": "neg"
+        },
+        {
+          "text": "he looked right through me",
+          "v": 128,
+          "expected": "neg"
+        },
+        {
+          "text": "the pain finally went away",
+          "v": 113,
+          "expected": "pos"
+        },
+        {
+          "text": "i left that toxic relationship",
+          "v": 123,
+          "expected": "pos"
+        }
+      ]
+    },
+    "sst2": {
+      "name": "sst2",
+      "total": 872,
+      "correct": 602,
+      "misses": [],
+      "accuracy": 0.6903669724770642
+    },
+    "go_emotions": {
+      "name": "go_emotions",
+      "total": 604,
+      "correct": 456,
+      "misses": [],
+      "accuracy": 0.7549668874172185
+    },
+    "tweet_eval": {
+      "name": "tweet_eval",
+      "total": 501,
+      "correct": 328,
+      "misses": [],
+      "accuracy": 0.654690618762475
+    }
+  }
+}

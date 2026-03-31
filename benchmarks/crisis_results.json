@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-31T09:27:50",
+  "timestamp": "2026-03-31T12:16:14",
   "config_source": "gpu_optimal_v2.json",
   "crisis_rule": "V<50 OR (V<70 AND U>60) OR (V<80 AND D<80 AND U>=40) OR (V<65 AND U>=30)",
   "total_sentences": 901,
@@ -1044,5 +1044,5 @@
       "g": 0
     }
   ],
-  "time_seconds": 0.14
+  "time_seconds": 0.16
 }
