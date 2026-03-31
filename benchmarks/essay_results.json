@@ -1,39 +1,39 @@
 {
-  "overall_accuracy": 100.0,
+  "overall_accuracy": 85.8,
   "total_sentences": 120,
   "missing_words": {},
   "per_essay": {
     "sarcastic": {
-      "accuracy": 100.0,
-      "coverage": 30.1
+      "accuracy": 93.3,
+      "coverage": 50.4
     },
     "grief": {
-      "accuracy": 100.0,
-      "coverage": 32.6
+      "accuracy": 93.3,
+      "coverage": 49.2
     },
     "rage": {
-      "accuracy": 100.0,
-      "coverage": 24.6
+      "accuracy": 93.3,
+      "coverage": 41.5
     },
     "joy": {
-      "accuracy": 100.0,
-      "coverage": 35.6
+      "accuracy": 60.0,
+      "coverage": 49.2
     },
     "conviction": {
-      "accuracy": 100.0,
-      "coverage": 30.1
+      "accuracy": 93.3,
+      "coverage": 39.0
     },
     "fear": {
-      "accuracy": 100.0,
-      "coverage": 33.9
+      "accuracy": 93.3,
+      "coverage": 46.6
     },
     "neutral_report": {
-      "accuracy": 100.0,
-      "coverage": 6.0
+      "accuracy": 80.0,
+      "coverage": 20.1
     },
     "conditional_hedging": {
-      "accuracy": 100.0,
-      "coverage": 18.4
+      "accuracy": 80.0,
+      "coverage": 33.6
     }
   }
 }

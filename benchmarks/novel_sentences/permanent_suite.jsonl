@@ -621,3 +621,10 @@
 {"text": "My same exact sentiments, it can be lonely out here.", "expected_negative": true, "source": "generated"}
 {"text": "This is not lottery", "expected_negative": true, "source": "generated"}
 {"text": "i was upset to see someone put a dent in my door", "expected_negative": true, "source": "generated"}
+{"text": "Aw! That's horrible, I'm sorry to hear that.", "expected_negative": true, "source": "generated"}
+{"text": "Every time I watch baseball, I think of my grandpa.", "expected_negative": false, "source": "generated"}
+{"text": "I love the heat, the hotter the better.", "expected_negative": false, "source": "generated"}
+{"text": "That makes total sense! Good job for thinking ahead like that!", "expected_negative": false, "source": "generated"}
+{"text": "I really like the new BMW, it blew away my expectations.", "expected_negative": true, "source": "generated"}
+{"text": "thats great, happy for yo", "expected_negative": false, "source": "generated"}
+{"text": "Oh great, another humid day in paradise.", "expected_negative": true, "source": "generated"}
