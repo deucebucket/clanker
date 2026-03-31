@@ -140,14 +140,23 @@ def resolve_force_flow(roles: List[WordRole]) -> Optional[ForceFlow]:
     # IMPERATIVE detection: strong force word + no actor + no target + short sentence
     # = bare command aimed at the listener. "Shut up" = USER → OTHER.
     # "Get out" = USER → OTHER. The speaker is the actor, the listener is the target.
-    if (actor_idx == -1 and target_idx == -1
-            and best_force_strength >= 25 and len(roles) <= 6):
-        actor_role = "SELF_REF"   # speaker is the commander
-        target_role = "OTHER_REF"  # listener is the target
+    #
+    # ALSO: command tokens (getout, shutup, fuckoff) with possessive SELF_REF
+    # ("get out of MY way", "shut MY door") = SELF is authority, not target.
+    # The possessive "my" after a command = ownership, not victimhood.
+    _COMMAND_TOKENS = {"shutup", "getout", "fuckoff", "backoff", "pissoff"}
+    force_word_text = roles[best_force_idx].word if best_force_idx >= 0 else ""
+    is_command_token = force_word_text in _COMMAND_TOKENS
 
-    # Also: actor found but no target + short + strong force = imperative
-    # "shut up" may have no entity at all, or just the command token
-    if (actor_role == "" and target_role == ""
+    if is_command_token:
+        # Command token always = SELF commands OTHER, regardless of possessives
+        actor_role = "SELF_REF"
+        target_role = "OTHER_REF"
+    elif (actor_idx == -1 and target_idx == -1
+            and best_force_strength >= 25 and len(roles) <= 6):
+        actor_role = "SELF_REF"
+        target_role = "OTHER_REF"
+    elif (actor_role == "" and target_role == ""
             and best_force_strength >= 30):
         actor_role = "SELF_REF"
         target_role = "OTHER_REF"
