@@ -78,7 +78,7 @@ def resolve_force_flow(roles: List[WordRole]) -> Optional[ForceFlow]:
 
     Returns ForceFlow or None if no clear SVO found.
     """
-    if len(roles) < 2:
+    if len(roles) < 1:
         return None
 
     # Find the strongest emotional force word
@@ -137,9 +137,23 @@ def resolve_force_flow(roles: List[WordRole]) -> Optional[ForceFlow]:
             and best_force_strength >= 25):
         target_role = "SELF_REF"  # implied, no index
 
-    # If no actor found, check for implicit subject
-    # "stopped working" has no entity — subject is contextual
-    if actor_idx == -1 and target_idx == -1:
+    # IMPERATIVE detection: strong force word + no actor + no target + short sentence
+    # = bare command aimed at the listener. "Shut up" = USER → OTHER.
+    # "Get out" = USER → OTHER. The speaker is the actor, the listener is the target.
+    if (actor_idx == -1 and target_idx == -1
+            and best_force_strength >= 25 and len(roles) <= 6):
+        actor_role = "SELF_REF"   # speaker is the commander
+        target_role = "OTHER_REF"  # listener is the target
+
+    # Also: actor found but no target + short + strong force = imperative
+    # "shut up" may have no entity at all, or just the command token
+    if (actor_role == "" and target_role == ""
+            and best_force_strength >= 30):
+        actor_role = "SELF_REF"
+        target_role = "OTHER_REF"
+
+    # If no actor or target resolved (even implied), give up
+    if actor_role == "" and target_role == "":
         return None
 
     # Check for negation: either a NEGATOR between actor and force,
