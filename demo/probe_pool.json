@@ -2122,7 +2122,7 @@
   },
   {
     "text": "Your childhood pet collar was found in a box during the move.",
-    "tier": "N",
+    "tier": "NEG",
     "cat": "G",
     "theme": "family",
     "engine_v": 136
@@ -2276,7 +2276,7 @@
   },
   {
     "text": "Your child outgrew the clothes you bought just last month.",
-    "tier": "N",
+    "tier": "NEG",
     "cat": "G",
     "theme": "family",
     "engine_v": 119
