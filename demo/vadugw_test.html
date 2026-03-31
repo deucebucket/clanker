@@ -16,7 +16,7 @@
   .number { color: #555; font-size: 0.8em; margin-bottom: 8px; }
   .sentence { font-size: 1.15em; color: #fff; margin-bottom: 16px; font-style: italic; }
   .scale { display: flex; justify-content: space-between; gap: 4px; }
-  .scale-btn { flex: 1; padding: 10px 0; border: 1px solid #333; background: #1a1a2a; color: #aaa; border-radius: 8px; cursor: pointer; font-size: 0.95em; transition: all 0.2s; }
+  .scale-btn { flex: 1; padding: 10px 0; border: 1px solid #333; background: #1a1a2a; color: #aaa; border-radius: 8px; cursor: pointer; font-size: 0.95em; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
   .scale-btn:hover { background: #252540; border-color: #555; color: #fff; }
   .scale-btn.selected { background: #2a4a7a; border-color: #5588cc; color: #fff; font-weight: bold; }
   .scale-labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 0.75em; color: #555; }
@@ -30,364 +30,603 @@
   .result-title { font-size: 1.2em; margin-bottom: 16px; color: #7eb8ff; }
   .dim-row { display: flex; align-items: center; margin-bottom: 12px; }
   .dim-label { width: 90px; font-weight: bold; font-size: 0.9em; }
-  .dim-bar-bg { flex: 1; height: 24px; background: #1a1a2a; border-radius: 12px; overflow: hidden; }
+  .dim-bar-bg { flex: 1; height: 24px; background: #1a1a2a; border-radius: 12px; overflow: hidden; position: relative; }
   .dim-bar { height: 100%; border-radius: 12px; transition: width 1s ease-out; }
+  .dim-midline { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #333; }
   .dim-value { width: 40px; text-align: right; font-size: 0.85em; color: #888; }
-  .dim-reading { margin-left: 10px; font-size: 0.8em; color: #aaa; width: 130px; }
+  .dim-reading { margin-left: 10px; font-size: 0.8em; color: #aaa; width: 140px; }
   .insight { background: #1a1a2e; border-left: 3px solid #5588cc; padding: 16px; margin: 12px 0; border-radius: 0 8px 8px 0; line-height: 1.5; }
   .insight.warn { border-left-color: #cc8855; }
   .insight.good { border-left-color: #55cc88; }
   .insight-title { font-weight: bold; margin-bottom: 4px; }
-  .pattern-group { margin-bottom: 16px; }
-  .pattern-title { color: #7eb8ff; font-weight: bold; margin-bottom: 4px; }
-  .pattern-item { color: #666; font-size: 0.85em; padding: 2px 0; }
+  .tier-section { margin-bottom: 20px; }
+  .tier-header { font-size: 1em; font-weight: bold; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #222; }
+  .tier-neutral .tier-header { color: #8899bb; }
+  .tier-negative .tier-header { color: #cc7766; }
+  .tier-positive .tier-header { color: #66bb88; }
+  .pattern-item { color: #666; font-size: 0.85em; padding: 3px 0; }
   .rating-low { color: #ff6666; }
   .rating-mid { color: #aaa; }
   .rating-high { color: #66ff88; }
+  .range-vis { display: flex; align-items: center; height: 40px; background: #1a1a2a; border-radius: 8px; margin: 12px 0; position: relative; overflow: hidden; }
+  .range-bar { position: absolute; height: 100%; border-radius: 8px; transition: all 1s ease-out; }
+  .range-marker { position: absolute; width: 2px; height: 100%; background: #fff; opacity: 0.5; }
+  .range-label { position: absolute; bottom: -18px; font-size: 0.7em; color: #555; transform: translateX(-50%); }
+  .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a1a2a; }
+  .stat-label { color: #888; }
+  .stat-value { font-weight: bold; }
   .disclaimer { text-align: center; color: #444; font-size: 0.75em; margin: 30px 0; line-height: 1.5; }
+  @media (max-width: 480px) {
+    .container { padding: 12px; }
+    .scale-btn { padding: 8px 0; font-size: 0.8em; }
+    .sentence { font-size: 1em; }
+    .dim-reading { display: none; }
+    .dim-label { width: 60px; font-size: 0.8em; }
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>How Do You Read the Room?</h1>
-  <p class="subtitle">A 20-sentence emotional baseline assessment</p>
+  <p class="subtitle">A 30-sentence emotional baseline assessment</p>
 
   <div class="intro" id="intro">
-    <p>You'll see <strong>20 short sentences</strong> describing everyday situations. None of them are clearly positive or negative -- they're just things that happen.</p>
+    <p>You will see <strong>30 sentences</strong> describing situations and feelings. Some are clearly negative. Some are clearly positive. Some are ambiguous.</p>
     <br>
-    <p>Rate each one based on <strong>how it makes you feel</strong> when you read it. Don't overthink it. Your first instinct is the right answer.</p>
+    <p>Rate each one based on <strong>how it makes you feel</strong> when you read it. Not what you think it means objectively -- how it lands in your gut.</p>
     <br>
-    <p><strong>There are no wrong answers.</strong> This measures your emotional lens, not your intelligence.</p>
+    <p><strong>There are no wrong answers.</strong> This measures your emotional range -- how deep you go, how high you reach, and where your neutral sits.</p>
   </div>
 
   <div id="questions"></div>
 
   <div class="progress" id="progress-area">
     <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-    <span id="progress-text">0 / 20</span>
+    <span id="progress-text">0 / 30</span>
   </div>
 
-  <button id="submit-btn" onclick="showResults()">See My Results</button>
+  <button id="submit-btn">See My Results</button>
 
   <div id="results"></div>
 </div>
 
 <script>
-const PROBES = [
-  { text: "He closed the door.", cat: "V" },
-  { text: "She looked up from her phone.", cat: "V" },
-  { text: "They were talking in the hallway.", cat: "W" },
-  { text: "He put his bag down and sat there.", cat: "V" },
-  { text: "She turned around.", cat: "D" },
-  { text: "They stopped talking when I walked in.", cat: "W" },
-  { text: "He read the message and put his phone away.", cat: "V" },
-  { text: "She left a note on my desk.", cat: "D" },
-  { text: "They moved the meeting to Friday.", cat: "D" },
-  { text: "She was already there when I arrived.", cat: "G" },
-  { text: "He mentioned my name to someone.", cat: "W" },
-  { text: "They made plans for after work.", cat: "W" },
-  { text: "She looked at me for a moment.", cat: "V" },
-  { text: "He sent a message at midnight.", cat: "G" },
-  { text: "She wrote something down.", cat: "D" },
-  { text: "He looked at me and then left.", cat: "W" },
-  { text: "They were quiet for a moment.", cat: "G" },
-  { text: "He noticed I changed something.", cat: "W" },
-  { text: "She showed someone my picture.", cat: "W" },
-  { text: "He asked where I was going.", cat: "D" },
-];
+(function() {
+  "use strict";
 
-// Shuffle
-for (let i = PROBES.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [PROBES[i], PROBES[j]] = [PROBES[j], PROBES[i]];
-}
+  // Tier: N=neutral, NEG=negative, POS=positive
+  // Cat: V=valence, W=self-worth, D=dominance, G=gravity (for neutral probes)
+  // Engine-verified V scores in comments
+  var PROBES = [
+    // TIER 1: NEUTRAL (V=123-133) -- ambiguous scenarios
+    { text: "You texted your friend an hour ago. They just replied with k.", tier: "N", cat: "V" },           // V=126
+    { text: "Your coworker asked your boss a question you just answered five minutes ago.", tier: "N", cat: "V" }, // V=127
+    { text: "You walk into a room and two people glance at each other.", tier: "N", cat: "V" },               // V=129
+    { text: "Your partner is quiet on the drive home.", tier: "N", cat: "W" },                                // V=129
+    { text: "Someone you know walks past you without saying hi.", tier: "N", cat: "W" },                      // V=133
+    { text: "Your friend took a long time to respond to your message.", tier: "N", cat: "W" },                // V=128
+    { text: "You overheard someone describe you as quiet.", tier: "N", cat: "D" },                            // V=127
+    { text: "You said something in a meeting and the conversation moved on.", tier: "N", cat: "D" },          // V=127
+    { text: "Someone read your message but did not reply.", tier: "N", cat: "G" },                            // V=128
+    { text: "You noticed your name was left off the group chat.", tier: "N", cat: "G" },                      // V=129
 
-const answers = new Array(PROBES.length).fill(null);
+    // TIER 2: NEGATIVE (V<110) -- clearly negative, measures depth
+    { text: "I feel worthless and alone.", tier: "NEG", cat: "W" },                                           // V=31
+    { text: "This is hopeless and I am broken.", tier: "NEG", cat: "W" },                                     // V=54
+    { text: "I feel sick with grief and regret.", tier: "NEG", cat: "V" },                                    // V=52
+    { text: "The loneliness is crushing me.", tier: "NEG", cat: "G" },                                        // V=80
+    { text: "I am terrified of being alone forever.", tier: "NEG", cat: "V" },                                // V=81
+    { text: "I am drowning in sadness.", tier: "NEG", cat: "V" },                                             // V=85
+    { text: "You cried alone in your car after pretending to be fine all day.", tier: "NEG", cat: "W" },      // V=106
+    { text: "You feel broken after giving them everything and getting nothing back.", tier: "NEG", cat: "W" },// V=89
+    { text: "You hate how pathetic and helpless you feel right now.", tier: "NEG", cat: "D" },                // V=93
+    { text: "Nothing you do matters and the hopelessness is suffocating.", tier: "NEG", cat: "G" },           // V=68
 
-function buildQuestions() {
-  const container = document.getElementById('questions');
-  PROBES.forEach(function(probe, idx) {
-    const div = document.createElement('div');
-    div.className = 'question';
-    div.id = 'q' + idx;
-
-    const numEl = document.createElement('div');
-    numEl.className = 'number';
-    numEl.textContent = (idx + 1) + ' of ' + PROBES.length;
-    div.appendChild(numEl);
-
-    const sentEl = document.createElement('div');
-    sentEl.className = 'sentence';
-    sentEl.textContent = '"' + probe.text + '"';
-    div.appendChild(sentEl);
-
-    const scaleEl = document.createElement('div');
-    scaleEl.className = 'scale';
-    for (let n = 1; n <= 10; n++) {
-      const btn = document.createElement('div');
-      btn.className = 'scale-btn';
-      btn.id = 'btn-' + idx + '-' + n;
-      btn.textContent = n;
-      btn.setAttribute('data-idx', idx);
-      btn.setAttribute('data-val', n);
-      btn.addEventListener('click', function() {
-        answerQuestion(parseInt(this.getAttribute('data-idx')), parseInt(this.getAttribute('data-val')));
-      });
-      scaleEl.appendChild(btn);
-    }
-    div.appendChild(scaleEl);
-
-    const labelsEl = document.createElement('div');
-    labelsEl.className = 'scale-labels';
-    const loLabel = document.createElement('span');
-    loLabel.textContent = 'Very negative';
-    const midLabel = document.createElement('span');
-    midLabel.textContent = 'Neutral';
-    const hiLabel = document.createElement('span');
-    hiLabel.textContent = 'Very positive';
-    labelsEl.appendChild(loLabel);
-    labelsEl.appendChild(midLabel);
-    labelsEl.appendChild(hiLabel);
-    div.appendChild(labelsEl);
-
-    container.appendChild(div);
-  });
-}
-
-function answerQuestion(idx, value) {
-  answers[idx] = value;
-  for (let i = 1; i <= 10; i++) {
-    document.getElementById('btn-' + idx + '-' + i).classList.remove('selected');
-  }
-  document.getElementById('btn-' + idx + '-' + value).classList.add('selected');
-  document.getElementById('q' + idx).classList.add('answered');
-
-  const done = answers.filter(function(a) { return a !== null; }).length;
-  document.getElementById('progress-fill').style.width = (done / PROBES.length * 100) + '%';
-  document.getElementById('progress-text').textContent = done + ' / ' + PROBES.length;
-
-  if (done === PROBES.length) {
-    document.getElementById('submit-btn').style.display = 'block';
-  }
-}
-
-function toScale(avg) {
-  return Math.round(Math.max(0, Math.min(255, ((avg - 1) / 9) * 255)));
-}
-
-function getReading(val, lo, hi) {
-  if (val < 90) return lo;
-  if (val < 118) return 'slightly ' + lo;
-  if (val > 170) return hi;
-  if (val > 138) return 'slightly ' + hi;
-  return 'neutral';
-}
-
-function showResults() {
-  document.getElementById('questions').style.display = 'none';
-  document.getElementById('submit-btn').style.display = 'none';
-  document.getElementById('progress-area').style.display = 'none';
-  document.getElementById('intro').style.display = 'none';
-
-  var dims = { V: [], D: [], W: [], G: [] };
-  PROBES.forEach(function(probe, idx) {
-    dims[probe.cat].push(answers[idx]);
-    if (probe.cat !== 'V') dims.V.push(answers[idx]);
-  });
-
-  var allVals = answers.filter(function(a) { return a !== null; });
-  var mean = allVals.reduce(function(s,v) { return s+v; }, 0) / allVals.length;
-  var variance = allVals.reduce(function(s,v) { return s + Math.pow(v-mean, 2); }, 0) / allVals.length;
-
-  var avgV = dims.V.reduce(function(s,v){return s+v;},0) / dims.V.length;
-  var avgD = dims.D.length ? dims.D.reduce(function(s,v){return s+v;},0) / dims.D.length : 5.5;
-  var avgW = dims.W.length ? dims.W.reduce(function(s,v){return s+v;},0) / dims.W.length : 5.5;
-  var avgG = dims.G.length ? dims.G.reduce(function(s,v){return s+v;},0) / dims.G.length : 5.5;
-
-  var profile = {
-    V: toScale(avgV),
-    A: Math.round(Math.min(255, 80 + variance * 25)),
-    D: toScale(avgD),
-    G: toScale(avgG),
-    W: toScale(avgW),
-  };
-
-  var resultsDiv = document.getElementById('results');
-  resultsDiv.style.display = 'block';
-
-  // Clear previous
-  while (resultsDiv.firstChild) resultsDiv.removeChild(resultsDiv.firstChild);
-
-  // Title
-  var title = document.createElement('h1');
-  title.textContent = 'Your Emotional Baseline';
-  resultsDiv.appendChild(title);
-  var sub = document.createElement('p');
-  sub.className = 'subtitle';
-  sub.textContent = 'Based on how you interpreted 20 neutral sentences';
-  resultsDiv.appendChild(sub);
-
-  // Profile card
-  var profileCard = document.createElement('div');
-  profileCard.className = 'result-card';
-  var profileTitle = document.createElement('div');
-  profileTitle.className = 'result-title';
-  profileTitle.textContent = 'Your VADUGW Profile';
-  profileCard.appendChild(profileTitle);
-
-  var dimDefs = [
-    { key: 'V', name: 'Valence', color: '#55aaff', lo: 'negative bias', hi: 'positive bias' },
-    { key: 'A', name: 'Arousal', color: '#ff8855', lo: 'calm/flat', hi: 'reactive/volatile' },
-    { key: 'D', name: 'Dominance', color: '#aa55ff', lo: 'feels powerless', hi: 'feels in control' },
-    { key: 'G', name: 'Gravity', color: '#ffaa55', lo: 'everything feels heavy', hi: 'things feel light' },
-    { key: 'W', name: 'Self-Worth', color: '#55ffaa', lo: 'self-critical', hi: 'self-assured' },
+    // TIER 3: POSITIVE (V>145) -- clearly positive, measures absorption ceiling
+    { text: "I am incredibly proud of what we accomplished.", tier: "POS", cat: "V" },                       // V=156
+    { text: "You make me so happy just by being here.", tier: "POS", cat: "W" },                              // V=146
+    { text: "I am thriving and life is beautiful.", tier: "POS", cat: "V" },                                  // V=163
+    { text: "This victory feels absolutely amazing.", tier: "POS", cat: "V" },                                // V=189
+    { text: "I am overflowing with love and gratitude.", tier: "POS", cat: "W" },                             // V=185
+    { text: "I feel triumphant and unstoppable.", tier: "POS", cat: "D" },                                    // V=150
+    { text: "You feel incredibly proud watching them succeed because of your help.", tier: "POS", cat: "W" }, // V=154
+    { text: "The joy of being truly loved fills you completely.", tier: "POS", cat: "G" },                    // V=169
+    { text: "You feel wonderful knowing someone genuinely admires you.", tier: "POS", cat: "W" },             // V=159
+    { text: "You are radiating pure joy after the best day of your life.", tier: "POS", cat: "G" },           // V=156
   ];
 
-  dimDefs.forEach(function(dim) {
-    var val = profile[dim.key];
-    var pct = (val / 255 * 100).toFixed(0);
-    var reading = getReading(val, dim.lo, dim.hi);
-
-    var row = document.createElement('div');
-    row.className = 'dim-row';
-
-    var label = document.createElement('div');
-    label.className = 'dim-label';
-    label.style.color = dim.color;
-    label.textContent = dim.key;
-    row.appendChild(label);
-
-    var barBg = document.createElement('div');
-    barBg.className = 'dim-bar-bg';
-    var bar = document.createElement('div');
-    bar.className = 'dim-bar';
-    bar.style.width = pct + '%';
-    bar.style.background = dim.color;
-    barBg.appendChild(bar);
-    row.appendChild(barBg);
-
-    var valEl = document.createElement('div');
-    valEl.className = 'dim-value';
-    valEl.textContent = val;
-    row.appendChild(valEl);
-
-    var readEl = document.createElement('div');
-    readEl.className = 'dim-reading';
-    readEl.textContent = reading;
-    row.appendChild(readEl);
-
-    profileCard.appendChild(row);
-  });
-  resultsDiv.appendChild(profileCard);
-
-  // Insights card
-  var insightCard = document.createElement('div');
-  insightCard.className = 'result-card';
-  var insightTitle = document.createElement('div');
-  insightTitle.className = 'result-title';
-  insightTitle.textContent = 'What This Means';
-  insightCard.appendChild(insightTitle);
-
-  var hasInsight = false;
-
-  function addInsight(cls, titleText, bodyText) {
-    hasInsight = true;
-    var div = document.createElement('div');
-    div.className = 'insight ' + cls;
-    var t = document.createElement('div');
-    t.className = 'insight-title';
-    t.textContent = titleText;
-    div.appendChild(t);
-    var b = document.createElement('div');
-    b.textContent = bodyText;
-    div.appendChild(b);
-    insightCard.appendChild(div);
+  // Fisher-Yates shuffle
+  for (var i = PROBES.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var temp = PROBES[i];
+    PROBES[i] = PROBES[j];
+    PROBES[j] = temp;
   }
 
-  if (profile.W < 90) addInsight('warn', 'Self-Worth Bias',
-    'You tend to interpret ambiguous situations as being about you, and not in a good way. Neutral events feel like rejection or exclusion. This is not reality -- it is a lens. The sentences had no negative intent. Your mind added it.');
-  else if (profile.W > 160) addInsight('good', 'Secure Self-Worth',
-    'You give ambiguous situations the benefit of the doubt. Neutral events do not threaten your sense of self. You interpret from a place of security.');
+  var answers = new Array(PROBES.length).fill(null);
 
-  if (profile.V < 90) addInsight('warn', 'Negative Interpretation Bias',
-    'You consistently read neutral situations as negative. This is a common pattern in anxiety and depression -- your brain defaults to threat detection even when there is no threat.');
-  else if (profile.V > 160) addInsight('good', 'Positive Interpretation Bias',
-    'You tend to see the good in ambiguous situations. This is associated with resilience and optimism.');
+  function buildQuestions() {
+    var container = document.getElementById("questions");
+    for (var idx = 0; idx < PROBES.length; idx++) {
+      var probe = PROBES[idx];
+      var div = document.createElement("div");
+      div.className = "question";
+      div.id = "q" + idx;
 
-  if (profile.D < 90) addInsight('warn', 'Low Perceived Control',
-    'You interpret situations as things happening TO you rather than around you. Authority figures and social dynamics feel threatening.');
+      var numEl = document.createElement("div");
+      numEl.className = "number";
+      numEl.textContent = (idx + 1) + " of " + PROBES.length;
+      div.appendChild(numEl);
 
-  if (profile.A > 180) addInsight('warn', 'High Reactivity',
-    'Your ratings varied widely. This emotional volatility can indicate hypervigilance or emotional dysregulation.');
-  else if (profile.A < 100) addInsight('', 'Flat Response',
-    'Your ratings were consistently in the middle range. This can indicate emotional numbness, dissociation, or a genuinely stable baseline.');
+      var sentEl = document.createElement("div");
+      sentEl.className = "sentence";
+      sentEl.textContent = "\u201C" + probe.text + "\u201D";
+      div.appendChild(sentEl);
 
-  if (profile.G < 90) addInsight('warn', 'Heavy Gravity',
-    'Small things feel big to you. Neutral events carry weight they should not. This is common in chronic stress -- your system is always bracing for impact.');
+      var scaleEl = document.createElement("div");
+      scaleEl.className = "scale";
+      for (var n = 1; n <= 10; n++) {
+        var btn = document.createElement("div");
+        btn.className = "scale-btn";
+        btn.id = "btn-" + idx + "-" + n;
+        btn.textContent = n;
+        btn.setAttribute("data-idx", idx);
+        btn.setAttribute("data-val", n);
+        btn.addEventListener("click", function() {
+          answerQuestion(parseInt(this.getAttribute("data-idx")), parseInt(this.getAttribute("data-val")));
+        });
+        scaleEl.appendChild(btn);
+      }
+      div.appendChild(scaleEl);
 
-  if (!hasInsight) addInsight('good', 'Balanced Baseline',
-    'Your interpretations fell close to neutral across all dimensions. You are reading these situations without strong positive or negative bias. This suggests emotional stability and calibrated threat detection.');
+      var labelsEl = document.createElement("div");
+      labelsEl.className = "scale-labels";
+      var loLabel = document.createElement("span");
+      loLabel.textContent = "Very negative";
+      var midLabel = document.createElement("span");
+      midLabel.textContent = "Neutral";
+      var hiLabel = document.createElement("span");
+      hiLabel.textContent = "Very positive";
+      labelsEl.appendChild(loLabel);
+      labelsEl.appendChild(midLabel);
+      labelsEl.appendChild(hiLabel);
+      div.appendChild(labelsEl);
 
-  resultsDiv.appendChild(insightCard);
+      container.appendChild(div);
+    }
+  }
 
-  // Pattern detail card
-  var patternCard = document.createElement('div');
-  patternCard.className = 'result-card';
-  var patternTitle = document.createElement('div');
-  patternTitle.className = 'result-title';
-  patternTitle.textContent = 'Your Interpretation Pattern';
-  patternCard.appendChild(patternTitle);
-  var patternNote = document.createElement('p');
-  patternNote.style.color = '#888';
-  patternNote.style.marginBottom = '12px';
-  patternNote.textContent = 'How your ratings compared to the calibrated neutral baseline:';
-  patternCard.appendChild(patternNote);
+  function answerQuestion(idx, value) {
+    answers[idx] = value;
+    for (var i = 1; i <= 10; i++) {
+      document.getElementById("btn-" + idx + "-" + i).classList.remove("selected");
+    }
+    document.getElementById("btn-" + idx + "-" + value).classList.add("selected");
+    document.getElementById("q" + idx).classList.add("answered");
 
-  var catLabels = { V: 'General mood', D: 'Power/control', W: 'Self-worth', G: 'Weight/gravity' };
-  Object.keys(catLabels).forEach(function(cat) {
-    var vals = [];
-    PROBES.forEach(function(p, i) { if (p.cat === cat) vals.push({ text: p.text, rating: answers[i] }); });
-    if (vals.length === 0) return;
+    var done = answers.filter(function(a) { return a !== null; }).length;
+    document.getElementById("progress-fill").style.width = (done / PROBES.length * 100) + "%";
+    document.getElementById("progress-text").textContent = done + " / " + PROBES.length;
 
-    var avg = vals.reduce(function(s,v){return s+v.rating;},0) / vals.length;
-    var bias = avg - 5.5;
-    var biasLabel = bias < -1.5 ? 'negative lean' : bias > 1.5 ? 'positive lean' : 'neutral';
+    if (done === PROBES.length) {
+      document.getElementById("submit-btn").style.display = "block";
+    }
+  }
 
-    var group = document.createElement('div');
-    group.className = 'pattern-group';
+  function avg(arr) {
+    if (arr.length === 0) return 5.5;
+    var sum = 0;
+    for (var i = 0; i < arr.length; i++) sum += arr[i];
+    return sum / arr.length;
+  }
 
-    var gTitle = document.createElement('div');
-    gTitle.className = 'pattern-title';
-    gTitle.textContent = catLabels[cat] + ' (' + biasLabel + ', avg ' + avg.toFixed(1) + '/10)';
-    group.appendChild(gTitle);
+  function toScale(val) {
+    return Math.round(Math.max(0, Math.min(255, ((val - 1) / 9) * 255)));
+  }
 
-    vals.forEach(function(v) {
-      var item = document.createElement('div');
-      item.className = 'pattern-item';
-      var ratingClass = v.rating <= 3 ? 'rating-low' : v.rating >= 8 ? 'rating-high' : 'rating-mid';
-      var textNode = document.createTextNode('"' + v.text + '" \u2014 you rated: ');
-      item.appendChild(textNode);
-      var ratingSpan = document.createElement('span');
-      ratingSpan.className = ratingClass;
-      ratingSpan.textContent = v.rating + '/10';
-      item.appendChild(ratingSpan);
-      group.appendChild(item);
-    });
+  function getReading(val, lo, hi) {
+    if (val < 90) return lo;
+    if (val < 118) return "slightly " + lo;
+    if (val > 170) return hi;
+    if (val > 138) return "slightly " + hi;
+    return "neutral";
+  }
 
-    patternCard.appendChild(group);
-  });
-  resultsDiv.appendChild(patternCard);
+  function addInsight(parent, cls, titleText, bodyText) {
+    var div = document.createElement("div");
+    div.className = "insight " + cls;
+    var t = document.createElement("div");
+    t.className = "insight-title";
+    t.textContent = titleText;
+    div.appendChild(t);
+    var b = document.createElement("div");
+    b.textContent = bodyText;
+    div.appendChild(b);
+    parent.appendChild(div);
+    return true;
+  }
 
-  // Disclaimer
-  var disc = document.createElement('div');
-  disc.className = 'disclaimer';
-  disc.textContent = 'This is not a clinical assessment. It measures emotional interpretation bias using calibrated neutral sentences scored by the Clanker VADUGW engine. The sentences are engineered to be emotionally ambiguous -- your interpretation reveals your current emotional lens, not objective truth. If your results concern you, consider talking to someone you trust. 988 Suicide & Crisis Lifeline: call or text 988.';
-  resultsDiv.appendChild(disc);
+  function showResults() {
+    document.getElementById("questions").style.display = "none";
+    document.getElementById("submit-btn").style.display = "none";
+    document.getElementById("progress-area").style.display = "none";
+    document.getElementById("intro").style.display = "none";
 
-  resultsDiv.scrollIntoView({ behavior: 'smooth' });
-}
+    // Collect ratings by tier and category
+    var neutralRatings = [];
+    var negativeRatings = [];
+    var positiveRatings = [];
+    var neutralByCat = { V: [], W: [], D: [], G: [] };
+    var negativeByCat = { V: [], W: [], D: [], G: [] };
+    var positiveByCat = { V: [], W: [], D: [], G: [] };
 
-buildQuestions();
+    for (var i = 0; i < PROBES.length; i++) {
+      var p = PROBES[i];
+      var r = answers[i];
+      if (p.tier === "N") {
+        neutralRatings.push(r);
+        neutralByCat[p.cat].push(r);
+      } else if (p.tier === "NEG") {
+        negativeRatings.push(r);
+        negativeByCat[p.cat].push(r);
+      } else {
+        positiveRatings.push(r);
+        positiveByCat[p.cat].push(r);
+      }
+    }
+
+    var neutralAvg = avg(neutralRatings);
+    var negativeAvg = avg(negativeRatings);
+    var positiveAvg = avg(positiveRatings);
+    var emotionalRange = positiveAvg - negativeAvg;
+
+    // Compute variance across all ratings
+    var allVals = answers.filter(function(a) { return a !== null; });
+    var allMean = avg(allVals);
+    var variance = 0;
+    for (var vi = 0; vi < allVals.length; vi++) {
+      variance += Math.pow(allVals[vi] - allMean, 2);
+    }
+    variance = variance / allVals.length;
+
+    // Build VADUGW profile
+    // V = overall neutral bias
+    var avgV = toScale(neutralAvg);
+    // A = variance of all ratings
+    var avgA = Math.round(Math.min(255, 80 + variance * 25));
+    // D = neutral D-probes + how much they push back on negatives
+    var dNeutral = avg(neutralByCat.D);
+    var dNeg = avg(negativeByCat.D);
+    var avgD = toScale((dNeutral * 0.6 + (dNeg * 0.4)));
+    // G = neutral G-probes (low rating = heavy)
+    var avgG = toScale(avg(neutralByCat.G));
+    // W = neutral W-probes vs positive W-probes delta
+    var wNeutral = avg(neutralByCat.W);
+    var wPositive = avg(positiveByCat.W);
+    var wBlend = wNeutral * 0.5 + wPositive * 0.5;
+    var avgW = toScale(wBlend);
+
+    var profile = { V: avgV, A: avgA, D: avgD, G: avgG, W: avgW };
+
+    var resultsDiv = document.getElementById("results");
+    resultsDiv.style.display = "block";
+    while (resultsDiv.firstChild) resultsDiv.removeChild(resultsDiv.firstChild);
+
+    // Title
+    var title = document.createElement("h1");
+    title.textContent = "Your Emotional Baseline";
+    resultsDiv.appendChild(title);
+    var sub = document.createElement("p");
+    sub.className = "subtitle";
+    sub.textContent = "Three tiers measured: neutral bias, resilience floor, absorption ceiling";
+    resultsDiv.appendChild(sub);
+
+    // === Emotional Range Card ===
+    var rangeCard = document.createElement("div");
+    rangeCard.className = "result-card";
+    var rangeTitle = document.createElement("div");
+    rangeTitle.className = "result-title";
+    rangeTitle.textContent = "Emotional Range";
+    rangeCard.appendChild(rangeTitle);
+
+    // Stats
+    var stats = [
+      ["Negative avg (resilience floor)", negativeAvg.toFixed(1) + " / 10"],
+      ["Neutral avg (baseline bias)", neutralAvg.toFixed(1) + " / 10"],
+      ["Positive avg (absorption ceiling)", positiveAvg.toFixed(1) + " / 10"],
+      ["Emotional range", emotionalRange.toFixed(1) + " points"],
+    ];
+    for (var si = 0; si < stats.length; si++) {
+      var statRow = document.createElement("div");
+      statRow.className = "stat-row";
+      var statLabel = document.createElement("span");
+      statLabel.className = "stat-label";
+      statLabel.textContent = stats[si][0];
+      statRow.appendChild(statLabel);
+      var statVal = document.createElement("span");
+      statVal.className = "stat-value";
+      statVal.textContent = stats[si][1];
+      if (si === 3) {
+        statVal.style.color = emotionalRange >= 7 ? "#66bb88" : emotionalRange >= 4 ? "#bbbb66" : "#cc7766";
+      }
+      statRow.appendChild(statVal);
+      rangeCard.appendChild(statRow);
+    }
+
+    // Visual range bar
+    var rangeVis = document.createElement("div");
+    rangeVis.className = "range-vis";
+    rangeVis.style.marginTop = "16px";
+    rangeVis.style.height = "32px";
+
+    var negPct = ((negativeAvg - 1) / 9 * 100);
+    var neuPct = ((neutralAvg - 1) / 9 * 100);
+    var posPct = ((positiveAvg - 1) / 9 * 100);
+
+    // Full range bar from neg to pos
+    var rangeFill = document.createElement("div");
+    rangeFill.className = "range-bar";
+    rangeFill.style.left = negPct + "%";
+    rangeFill.style.width = Math.max(1, posPct - negPct) + "%";
+    rangeFill.style.background = "linear-gradient(90deg, #cc7766, #8899bb, #66bb88)";
+    rangeFill.style.opacity = "0.4";
+    rangeVis.appendChild(rangeFill);
+
+    // Markers
+    var markers = [
+      { pct: negPct, color: "#cc7766" },
+      { pct: neuPct, color: "#8899bb" },
+      { pct: posPct, color: "#66bb88" },
+    ];
+    for (var mi = 0; mi < markers.length; mi++) {
+      var marker = document.createElement("div");
+      marker.className = "range-marker";
+      marker.style.left = markers[mi].pct + "%";
+      marker.style.background = markers[mi].color;
+      marker.style.width = "3px";
+      rangeVis.appendChild(marker);
+    }
+    rangeCard.appendChild(rangeVis);
+
+    var rangeLabelRow = document.createElement("div");
+    rangeLabelRow.style.display = "flex";
+    rangeLabelRow.style.justifyContent = "space-between";
+    rangeLabelRow.style.fontSize = "0.7em";
+    rangeLabelRow.style.color = "#555";
+    rangeLabelRow.style.marginTop = "4px";
+    var rl1 = document.createElement("span");
+    rl1.textContent = "1";
+    var rl2 = document.createElement("span");
+    rl2.textContent = "5.5";
+    var rl3 = document.createElement("span");
+    rl3.textContent = "10";
+    rangeLabelRow.appendChild(rl1);
+    rangeLabelRow.appendChild(rl2);
+    rangeLabelRow.appendChild(rl3);
+    rangeCard.appendChild(rangeLabelRow);
+
+    resultsDiv.appendChild(rangeCard);
+
+    // === VADUGW Profile Card ===
+    var profileCard = document.createElement("div");
+    profileCard.className = "result-card";
+    var profileTitle = document.createElement("div");
+    profileTitle.className = "result-title";
+    profileTitle.textContent = "Your VADUGW Profile";
+    profileCard.appendChild(profileTitle);
+
+    var dimDefs = [
+      { key: "V", name: "Valence", color: "#55aaff", lo: "negative bias", hi: "positive bias" },
+      { key: "A", name: "Arousal", color: "#ff8855", lo: "calm / flat", hi: "reactive / volatile" },
+      { key: "D", name: "Dominance", color: "#aa55ff", lo: "feels powerless", hi: "feels in control" },
+      { key: "G", name: "Gravity", color: "#ffaa55", lo: "everything feels heavy", hi: "things feel light" },
+      { key: "W", name: "Self-Worth", color: "#55ffaa", lo: "self-critical", hi: "self-assured" },
+    ];
+
+    for (var di = 0; di < dimDefs.length; di++) {
+      var dim = dimDefs[di];
+      var val = profile[dim.key];
+      var pct = (val / 255 * 100).toFixed(0);
+      var reading = getReading(val, dim.lo, dim.hi);
+
+      var row = document.createElement("div");
+      row.className = "dim-row";
+
+      var label = document.createElement("div");
+      label.className = "dim-label";
+      label.style.color = dim.color;
+      label.textContent = dim.key;
+      row.appendChild(label);
+
+      var barBg = document.createElement("div");
+      barBg.className = "dim-bar-bg";
+      var midline = document.createElement("div");
+      midline.className = "dim-midline";
+      barBg.appendChild(midline);
+      var bar = document.createElement("div");
+      bar.className = "dim-bar";
+      bar.style.width = pct + "%";
+      bar.style.background = dim.color;
+      barBg.appendChild(bar);
+      row.appendChild(barBg);
+
+      var valEl = document.createElement("div");
+      valEl.className = "dim-value";
+      valEl.textContent = val;
+      row.appendChild(valEl);
+
+      var readEl = document.createElement("div");
+      readEl.className = "dim-reading";
+      readEl.textContent = reading;
+      row.appendChild(readEl);
+
+      profileCard.appendChild(row);
+    }
+    resultsDiv.appendChild(profileCard);
+
+    // === Insights Card ===
+    var insightCard = document.createElement("div");
+    insightCard.className = "result-card";
+    var insightTitle = document.createElement("div");
+    insightTitle.className = "result-title";
+    insightTitle.textContent = "What This Means";
+    insightCard.appendChild(insightTitle);
+
+    var hasInsight = false;
+
+    // Emotional range insight
+    if (emotionalRange < 4) {
+      hasInsight = addInsight(insightCard, "warn", "Compressed Emotional Range",
+        "Your positive and negative ratings are close together (range: " + emotionalRange.toFixed(1) + "). You can go down but struggle to go up. This often means difficulty absorbing good things -- not because they do not happen, but because your system does not let them in fully.");
+    } else if (emotionalRange >= 7) {
+      hasInsight = addInsight(insightCard, "good", "Wide Emotional Range",
+        "You move freely between negative and positive (range: " + emotionalRange.toFixed(1) + "). You feel the lows but you also fully absorb the highs. This is healthy emotional flexibility.");
+    }
+
+    // Self-worth specific: W-neutral vs positive
+    if (wNeutral < 4.5 && wPositive < 6) {
+      hasInsight = addInsight(insightCard, "warn", "Self-Worth Pattern",
+        "You rated ambiguous social situations negatively (avg " + wNeutral.toFixed(1) + "/10) AND struggled to absorb positive affirmation (avg " + wPositive.toFixed(1) + "/10). This combination suggests a self-worth filter -- your system deflects good news about you because it does not match your internal model.");
+    } else if (wNeutral < 4.5) {
+      hasInsight = addInsight(insightCard, "warn", "Social Threat Detection",
+        "You interpreted ambiguous social situations as negative (avg " + wNeutral.toFixed(1) + "/10). Neutral events -- someone being quiet, a delayed reply -- feel like rejection to your system. The situations had no negative intent. Your mind supplied it.");
+    }
+
+    // Neutral bias
+    if (profile.V < 90) {
+      hasInsight = addInsight(insightCard, "warn", "Negative Interpretation Bias",
+        "You consistently read neutral situations as negative. This is common in anxiety and depression -- your brain defaults to threat detection even when there is no threat.");
+    } else if (profile.V > 160) {
+      hasInsight = addInsight(insightCard, "good", "Positive Interpretation Bias",
+        "You tend to see the good in ambiguous situations. This is associated with resilience and optimism.");
+    }
+
+    // Dominance
+    if (profile.D < 90) {
+      hasInsight = addInsight(insightCard, "warn", "Low Perceived Control",
+        "You interpret situations as things happening TO you rather than around you. Social dynamics and authority feel threatening rather than neutral.");
+    }
+
+    // Arousal
+    if (profile.A > 180) {
+      hasInsight = addInsight(insightCard, "warn", "High Reactivity",
+        "Your ratings varied widely across all tiers. This emotional volatility can indicate hypervigilance -- your system treats everything as high-stakes.");
+    } else if (profile.A < 80) {
+      hasInsight = addInsight(insightCard, "", "Flat Response",
+        "Your ratings were consistently in the middle range across all tiers. This can indicate emotional numbness, dissociation, or a genuinely stable baseline.");
+    }
+
+    // Gravity
+    if (profile.G < 90) {
+      hasInsight = addInsight(insightCard, "warn", "Heavy Gravity",
+        "Small things feel big to you. Neutral events carry weight they should not. This is common in chronic stress -- your system is always bracing for impact.");
+    }
+
+    // Resilience floor
+    if (negativeAvg < 2.5) {
+      hasInsight = addInsight(insightCard, "warn", "Deep Negative Resonance",
+        "You rated negative sentences very low (avg " + negativeAvg.toFixed(1) + "/10). These situations hit hard. Your system goes deep into negative territory when confronted with painful content.");
+    } else if (negativeAvg > 4.5) {
+      hasInsight = addInsight(insightCard, "good", "Resilient Floor",
+        "Even clearly negative sentences did not pull you below " + negativeAvg.toFixed(1) + "/10. You recognize pain without being consumed by it. This suggests emotional resilience.");
+    }
+
+    // Absorption ceiling
+    if (positiveAvg < 6) {
+      hasInsight = addInsight(insightCard, "warn", "Low Absorption Ceiling",
+        "You rated clearly positive sentences at only " + positiveAvg.toFixed(1) + "/10. Good news does not land fully. This can indicate an inability to receive -- whether from low self-worth, distrust, or learned suppression of positive emotion.");
+    } else if (positiveAvg > 8.5) {
+      hasInsight = addInsight(insightCard, "good", "High Absorption Ceiling",
+        "You fully absorbed positive content (avg " + positiveAvg.toFixed(1) + "/10). You let good things in. This is not naivety -- it is the capacity to receive.");
+    }
+
+    if (!hasInsight) {
+      addInsight(insightCard, "good", "Balanced Baseline",
+        "Your interpretations fell in healthy ranges across all three tiers. You read negative as negative, positive as positive, and neutral as neutral. This suggests emotional stability and calibrated threat detection.");
+    }
+
+    resultsDiv.appendChild(insightCard);
+
+    // === Tier Breakdown Card ===
+    var tierCard = document.createElement("div");
+    tierCard.className = "result-card";
+    var tierTitle = document.createElement("div");
+    tierTitle.className = "result-title";
+    tierTitle.textContent = "Tier-by-Tier Breakdown";
+    tierCard.appendChild(tierTitle);
+
+    var tiers = [
+      { key: "N", name: "Neutral Probes (ambiguous scenarios)", cls: "tier-neutral",
+        desc: "These sentences are engineered to be emotionally neutral. Your rating reveals your baseline bias." },
+      { key: "NEG", name: "Negative Probes (clearly painful)", cls: "tier-negative",
+        desc: "These are genuinely negative. How low you rate them measures your resilience floor." },
+      { key: "POS", name: "Positive Probes (clearly uplifting)", cls: "tier-positive",
+        desc: "These are genuinely positive. How high you rate them measures your absorption ceiling." },
+    ];
+
+    for (var ti = 0; ti < tiers.length; ti++) {
+      var tierDef = tiers[ti];
+      var section = document.createElement("div");
+      section.className = "tier-section " + tierDef.cls;
+
+      var header = document.createElement("div");
+      header.className = "tier-header";
+      header.textContent = tierDef.name;
+      section.appendChild(header);
+
+      var desc = document.createElement("div");
+      desc.style.color = "#666";
+      desc.style.fontSize = "0.8em";
+      desc.style.marginBottom = "8px";
+      desc.textContent = tierDef.desc;
+      section.appendChild(desc);
+
+      for (var pi = 0; pi < PROBES.length; pi++) {
+        if (PROBES[pi].tier !== tierDef.key) continue;
+        var item = document.createElement("div");
+        item.className = "pattern-item";
+        var textNode = document.createTextNode("\u201C" + PROBES[pi].text + "\u201D \u2014 you rated: ");
+        item.appendChild(textNode);
+        var ratingSpan = document.createElement("span");
+        var rv = answers[pi];
+        ratingSpan.className = rv <= 3 ? "rating-low" : rv >= 8 ? "rating-high" : "rating-mid";
+        ratingSpan.textContent = rv + "/10";
+        item.appendChild(ratingSpan);
+        var catTag = document.createElement("span");
+        catTag.style.color = "#444";
+        catTag.style.marginLeft = "6px";
+        catTag.textContent = "[" + PROBES[pi].cat + "]";
+        item.appendChild(catTag);
+        section.appendChild(item);
+      }
+
+      tierCard.appendChild(section);
+    }
+    resultsDiv.appendChild(tierCard);
+
+    // === Disclaimer ===
+    var disc = document.createElement("div");
+    disc.className = "disclaimer";
+    var discP1 = document.createElement("p");
+    discP1.textContent = "This is not a clinical assessment. It measures emotional interpretation patterns using three tiers of sentences calibrated by the Clanker VADUGW engine. Your responses reveal your current emotional lens -- not objective truth.";
+    disc.appendChild(discP1);
+    var discP2 = document.createElement("p");
+    discP2.style.marginTop = "8px";
+    discP2.textContent = "If your results concern you, consider talking to someone you trust.";
+    disc.appendChild(discP2);
+    var discP3 = document.createElement("p");
+    discP3.style.marginTop = "8px";
+    discP3.style.color = "#666";
+    discP3.textContent = "988 Suicide & Crisis Lifeline: call or text 988";
+    disc.appendChild(discP3);
+    resultsDiv.appendChild(disc);
+
+    resultsDiv.scrollIntoView({ behavior: "smooth" });
+  }
+
+  document.getElementById("submit-btn").addEventListener("click", showResults);
+  buildQuestions();
+})();
 </script>
 </body>
 </html>
