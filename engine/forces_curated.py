@@ -5503,5 +5503,14 @@ _VOCAB_FIXES = {
     'brought':      (10, 5, 10, 0, 5),             # "Brought me X" = delivered/gave. Act of service. Slight positive.
     'bring':        (5, 5, 5, 0, 5),
     'shoulder':     (5, -5, 5, 0, 10),             # "Cry on my shoulder" = support/comfort. Slight positive.
+    # ── Structural edge case fixes ──
+    'fought':       (-15, 30, 15, 10, 15),         # override: was -94! "Fought FOR me" = advocated. "Fought me" = violence. Liquid.
+    'fighting':     (-15, 30, 15, 10, 15),
+    'survived':     (30, 10, 25, 0, 20),           # override: was +10. Surviving = overcoming death. Strongly positive.
+    'survival':     (25, 10, 20, 0, 20),
+    'surgery':      (-10, 20, -10, 20, 25),        # override: was -25. Medical procedure, high G. Not inherently negative.
+    'benign':       (35, -15, 20, -10, 15),        # override: was +25. "Benign" = NOT dangerous. Relief. Stronger positive.
+    'charges':      (-10, 10, -10, 10, 15),        # override: was -20. Legal noun, slight neg lean but context resolves.
+    'tumor':        (-20, 15, -15, 15, 25),        # override: was -40. Medical noun. High G. Less extreme V.
 }
 EMOTIONAL_VOCABULARY.update(_VOCAB_FIXES)
