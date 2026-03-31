@@ -98,38 +98,44 @@
   // Cat: V=valence, W=self-worth, D=dominance, G=gravity (for neutral probes)
   // Engine-verified V scores in comments
   var PROBES = [
-    // TIER 1: NEUTRAL (V=123-133) -- ambiguous scenarios
-    { text: "You texted your friend an hour ago. They just replied with k.", tier: "N", cat: "V" },           // V=126
-    { text: "Your coworker asked your boss a question you just answered five minutes ago.", tier: "N", cat: "V" }, // V=127
-    { text: "You walk into a room and two people glance at each other.", tier: "N", cat: "V" },               // V=129
+    // ALL SITUATIONAL. Things that HAPPEN. No "I feel" statements.
+    // The user rates how this situation would affect THEM.
+
+    // TIER 1: NEUTRAL -- ambiguous scenes, engine V=118-133
     { text: "Your partner is quiet on the drive home.", tier: "N", cat: "W" },                                // V=129
-    { text: "Someone you know walks past you without saying hi.", tier: "N", cat: "W" },                      // V=133
+    { text: "You texted your friend an hour ago and they just replied with k.", tier: "N", cat: "V" },        // V=126
+    { text: "You walk into a room and two people glance at each other.", tier: "N", cat: "V" },               // V=129
     { text: "Your friend took a long time to respond to your message.", tier: "N", cat: "W" },                // V=128
-    { text: "You overheard someone describe you as quiet.", tier: "N", cat: "D" },                            // V=127
     { text: "You said something in a meeting and the conversation moved on.", tier: "N", cat: "D" },          // V=127
-    { text: "Someone read your message but did not reply.", tier: "N", cat: "G" },                            // V=128
-    { text: "You noticed your name was left off the group chat.", tier: "N", cat: "G" },                      // V=129
+    { text: "Someone you know walks past without saying hi.", tier: "N", cat: "W" },                          // V=133
+    { text: "You overheard someone describe you as quiet.", tier: "N", cat: "D" },                            // V=127
+    { text: "Someone read your message but did not reply yet.", tier: "N", cat: "G" },                        // V=128
+    { text: "He closed the door behind him.", tier: "N", cat: "V" },                                          // V=118
+    { text: "She looked at you for a moment and then looked away.", tier: "N", cat: "G" },                    // V=127
 
-    // TIER 2: NEGATIVE (V<110) -- clearly negative, measures depth
-    { text: "I feel worthless and alone.", tier: "NEG", cat: "W" },                                           // V=31
-    { text: "This is hopeless and I am broken.", tier: "NEG", cat: "W" },                                     // V=54
-    { text: "I feel sick with grief and regret.", tier: "NEG", cat: "V" },                                    // V=52
-    { text: "The loneliness is crushing me.", tier: "NEG", cat: "G" },                                        // V=80
-    { text: "I am terrified of being alone forever.", tier: "NEG", cat: "V" },                                // V=81
-    { text: "I am drowning in sadness.", tier: "NEG", cat: "V" },                                             // V=85
-    { text: "You cried alone in your car after pretending to be fine all day.", tier: "NEG", cat: "W" },      // V=106
-    { text: "You feel broken after giving them everything and getting nothing back.", tier: "NEG", cat: "W" },// V=89
-    { text: "You hate how pathetic and helpless you feel right now.", tier: "NEG", cat: "D" },                // V=93
-    { text: "Nothing you do matters and the hopelessness is suffocating.", tier: "NEG", cat: "G" },           // V=68
+    // TIER 2: NEGATIVE -- bad situations, NOT feeling statements
+    { text: "Your best friend cancelled on you for the third time this month.", tier: "NEG", cat: "W" },      // V=114
+    { text: "Your ex moved on two weeks after you broke up.", tier: "NEG", cat: "W" },                        // V=117
+    { text: "You saw your friends post pictures from a party you werent invited to.", tier: "NEG", cat: "W" },// V=117
+    { text: "Your mother forgot your birthday.", tier: "NEG", cat: "G" },                                     // V=124
+    { text: "You got home and nobody asked how your day was.", tier: "NEG", cat: "V" },                       // V=123
+    { text: "You walked into the break room and the conversation stopped.", tier: "NEG", cat: "D" },          // V=120
+    { text: "Your teacher called on everyone in the class but you.", tier: "NEG", cat: "D" },                 // V=127
+    { text: "Your parent compared you to your sibling at dinner.", tier: "NEG", cat: "W" },                   // V=126
+    { text: "You applied for a job and never heard back.", tier: "NEG", cat: "V" },                           // V=127
+    { text: "Your dog ran to someone else first when you walked in.", tier: "NEG", cat: "G" },                // V=125
 
-    // TIER 3: POSITIVE (V>145) -- clearly positive, measures absorption ceiling
-    { text: "I am incredibly proud of what we accomplished.", tier: "POS", cat: "V" },                       // V=156
-    { text: "You make me so happy just by being here.", tier: "POS", cat: "W" },                              // V=146
-    { text: "I am thriving and life is beautiful.", tier: "POS", cat: "V" },                                  // V=163
-    { text: "This victory feels absolutely amazing.", tier: "POS", cat: "V" },                                // V=189
-    { text: "I am overflowing with love and gratitude.", tier: "POS", cat: "W" },                             // V=185
-    { text: "I feel triumphant and unstoppable.", tier: "POS", cat: "D" },                                    // V=150
-    { text: "You feel incredibly proud watching them succeed because of your help.", tier: "POS", cat: "W" }, // V=154
+    // TIER 3: POSITIVE -- good situations, NOT feeling statements
+    { text: "A stranger held the door and said you have a great smile.", tier: "POS", cat: "W" },             // V=152
+    { text: "Someone you respect asked for your advice.", tier: "POS", cat: "D" },                            // V=150
+    { text: "Your child drew a picture of your family and put you in the center.", tier: "POS", cat: "W" },   // V=139
+    { text: "You came home to your favorite meal already cooked.", tier: "POS", cat: "G" },                   // V=137
+    { text: "Your friend remembered a small detail you mentioned months ago.", tier: "POS", cat: "W" },       // V=134
+    { text: "A kid you mentored came back years later to thank you.", tier: "POS", cat: "G" },                // V=137
+    { text: "Your partner planned something special without you having to ask.", tier: "POS", cat: "V" },     // V=138
+    { text: "Your friend remembered your order without asking.", tier: "POS", cat: "V" },                     // V=134
+    { text: "Someone you havent talked to in years reached out just to check on you.", tier: "POS", cat: "W" },// V=128
+    { text: "Your whole team stood up and clapped after your presentation.", tier: "POS", cat: "D" },         // V=131
     { text: "The joy of being truly loved fills you completely.", tier: "POS", cat: "G" },                    // V=169
     { text: "You feel wonderful knowing someone genuinely admires you.", tier: "POS", cat: "W" },             // V=159
     { text: "You are radiating pure joy after the best day of your life.", tier: "POS", cat: "G" },           // V=156
