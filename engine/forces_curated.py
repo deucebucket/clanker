@@ -5621,6 +5621,10 @@ _VOCAB_FIXES = {
     'bummed':       (-15, 5, -10, 0, -5),          # override: was -47. Mild disappointment.
     'ugh':          (-10, 10, -5, 0, -5),          # override: was -42. Mild disgust/annoyance.
     'shady':        (-10, 10, -5, 5, -5),          # override: was -40. Suspicious but could be playful.
+    # ── Novel miss fixes cycle 11 ──
+    'highway':      (0, 5, 0, 0, 5),               # override: was +29. Location noun. Neutral.
+    'away':         (-10, 5, -5, 0, -5),             # override: was -15. Slight neg lean. "Far away" = distance. "Went away" = departure.
+    'relationship': (10, 5, 5, 0, 25),             # override: was +37. Still slight positive (relationships have value) but less extreme.
     # ── SST-2 round 2: next batch of over-weighted words ──
     'like':         (5, 0, 0, 0, 0),               # override: was +15. FILLER/comparison word. "Like a dream" ≠ positive.
     'watch':        (0, 5, 0, 0, 5),               # override: was +50. Action verb. "Watch a movie" ≠ positive.
