@@ -256,8 +256,8 @@ EMOTIONAL_VOCABULARY = {
     'bleeding': ( -77,  +90, -109,  +97,  -36),  # freq=12
     'crash': ( -67,  +40,  -44, +111,  -36),  # freq=76
     'crisis': ( -89, +119, -127, +127,  -36),  # freq=9
-    'cry': ( -52,  +63,  -67,  +31,  -40),  # freq=109
-    'crying': ( -78,  +40,  -55,  +47,  -54),  # freq=83
+    'cry': ( -20,  +40,  -25,  +20,  +30),  # liquid -- happy tears vs sad tears. High G, reduced V.
+    'crying': ( -25,  +35,  -20,  +25,  +30),
     'danger': ( -77, +119, -127, +127,  +24),  # freq=16
     'dangerous': (-127, +119,  +69, +100,  -34),  # freq=103
     'dead': (-114,  +45, -127,  +39,  -97),  # freq=155
@@ -742,7 +742,7 @@ EMOTIONAL_VOCABULARY = {
     'credit': ( +28,  +27,  +99,  +54,  +10),  # freq=155
     'creep': ( -52,  +49,  -22,  +31,   +9),  # freq=21
     'creepy': ( -42,  +63,  -67,  +31,   +9),  # freq=100
-    'cried': ( -94,  +29, -109,  +23,  -51),  # freq=109
+    'cried': ( -25,  +30,  -20,  +20,  +30),  # liquid -- happy/sad tears. context determines.
     'crime': ( -89,  +90,  -82,  +77,  -24),  # freq=35
     'crowded': ( +42,  -38,  +24,   +0,  +16),  # freq=21
     'cruel': (-102,  +90,  +82,  +57,  +24),  # freq=29
@@ -1333,7 +1333,7 @@ EMOTIONAL_VOCABULARY = {
     'meal': ( +35,   -4,   -2,   +0,   +9),  # freq=154
     'means': ( +25,  -22,   -9,   +0,   +5),  # freq=137
     'medication': ( -32,  +24,  -44,  +49,   -9),  # freq=29
-    'medicine': ( +46,  -31,  +49,   +0,  +23),  # freq=52
+    'medicine': ( +10,  +5,  +10,  +10,  +20),  # context-dependent -- "on medicine" vs "medicine stopped"
     'member': ( +43,  -29,  +14,   +0,  +16),  # freq=57
     'memories': (  -5,  +15,   -5,   +5,   -5),  # freq=593 — ambiguous, context-dependent
     'memory': (  -5,  +15,   -5,   +5,   -5),  # freq=128 — ambiguous, context-dependent
@@ -1879,7 +1879,7 @@ EMOTIONAL_VOCABULARY = {
     'teaching': ( +32,   -4,  +32,   +0,  +14),  # freq=62
     'team': ( +29,  +20,  +34,   +0,  +16),  # freq=383
     'tear': ( -52,  +63,  -92,  +31,  -29),  # freq=19
-    'tears': ( -77,  +74, -109,  +39,  -61),  # freq=34
+    'tears': ( -20,  +40,  -20,  +20,  +30),  # liquid -- tears of joy vs tears of pain
     'teary': ( -94,   -6, -124,   +0,  -53),  # freq=12
     'tech': ( +39,   -2,  +69,   +0,  +23),  # freq=33
     'tent': ( +62,  +33,  +59,  +18,  +10),  # freq=21
@@ -2038,7 +2038,7 @@ EMOTIONAL_VOCABULARY = {
     'wish': ( -10,  10,  -20,  15,  25),  # longing -- wanting what you dont have. G high (it matters), D low (powerless)
     'wished': ( -12,  8,  -22,  12,  25),
     'wishing': ( -10,  10,  -18,  15,  25),
-    'without': ( -45,  +15,  -40,  +15,  -25),  # freq=592 — absence, deprivation
+    'without': ( -10,   +5,  -10,   +5,   -5),  # liquid -- "without you" = loss, "without asking" = ease
     'woke': ( +29, +127,  +89, +127,  +24),  # freq=171
     'wolf': ( +48,  +56,  +67,  +61,  +14),  # freq=10
     'women': ( +35,  +24,   +2,   +3,  +10),  # freq=86
@@ -2278,8 +2278,8 @@ _MIRROR_CORRECTIONS = {
     "hope": (+45, +15, +20, +10, +25),
     # brave/afraid: afraid=-78, so brave=+78
     "brave": (+78, +22, +52, +6, +14),
-    # proud/ashamed: ashamed=-102, so proud=+102
-    "proud": (+102, +22, +52, 0, +19),
+    # proud/ashamed: NOT symmetric. proud is strong positive but not +102.
+    "proud": (+50, +15, +30, 0, +15),
     # safe/dangerous: dangerous=-127, so safe=+127
     "safe": (+127, -20, +72, 0, +16),
     # trust/betrayed: betrayed=-106, so trust=+106
@@ -2759,6 +2759,53 @@ for word, new_g in _G_OVERRIDES.items():
         old = EMOTIONAL_VOCABULARY[word]
         EMOTIONAL_VOCABULARY[word] = (old[0], old[1], old[2], old[3], new_g)
 
+# ── Relationship V neutralization ──
+# Relationship words are NOT positive or negative. They are HEAVY.
+# "Mom" doesn't carry valence. Mom carries GRAVITY.
+# Mom forgot = devastating (G amplifies negative action)
+# Mom hugged = amazing (G amplifies positive action)
+# The relationship amplifies whatever action follows -- it doesn't add its own V.
+_RELATIONSHIP_V_NEUTRAL = [
+    'mom', 'mother', 'dad', 'father', 'parent', 'parents',
+    'brother', 'sister', 'sibling',
+    'son', 'daughter', 'child', 'children', 'baby',
+    'husband', 'wife', 'partner',
+    'boyfriend', 'girlfriend',
+    'family', 'grandma', 'grandmother', 'grandpa', 'grandfather',
+    'uncle', 'aunt', 'cousin',
+    'friend', 'friends',
+    'neighbor', 'boss', 'coworker', 'teacher',
+]
+for word in _RELATIONSHIP_V_NEUTRAL:
+    if word in EMOTIONAL_VOCABULARY:
+        old = EMOTIONAL_VOCABULARY[word]
+        # Zero out V, keep A low, keep D neutral, keep G
+        EMOTIONAL_VOCABULARY[word] = (0, max(0, old[1] // 3), 0, 0, old[4])
+
+
+# ── Event/object V neutralization ──
+# Events and milestone nouns are NOT inherently positive or negative.
+# They are HIGH GRAVITY -- things that MATTER.
+# "graduation" alone = milestone (G high, V neutral)
+# "I graduated" = positive (the VERB carries direction)
+# "my mom forgot my graduation" = negative (forgot carries direction, graduation is the weight)
+# The noun is the mass. The verb is the force. F = m * a.
+_EVENT_V_NEUTRAL = [
+    'graduation', 'birthday', 'wedding', 'christmas', 'holiday',
+    'vacation', 'party', 'gift', 'present',
+    'school', 'college', 'church', 'hospital',
+    'promotion', 'raise', 'bonus',
+    'dinner', 'breakfast', 'lunch',
+    'home', 'house', 'thoughts', 'mind',
+    'life', 'world', 'future', 'past',
+    'money', 'job', 'career', 'work',
+]
+for word in _EVENT_V_NEUTRAL:
+    if word in EMOTIONAL_VOCABULARY:
+        old = EMOTIONAL_VOCABULARY[word]
+        # Reduce V to near-zero but keep G high
+        EMOTIONAL_VOCABULARY[word] = (old[0] // 5, old[1] // 3, old[2] // 4, old[3], max(20, old[4]))
+
 
 # ── Action Words (liquid -- context shifts meaning) ──
 # These carry their MOST COMMON emotional reading.
@@ -2878,7 +2925,7 @@ EMOTIONAL_VOCABULARY.update(_MOCKERY_WORDS)
 # "whatever" = I stopped fighting. "k" = stripped to minimum effort.
 _RESIGNATION_OVERRIDES = {
     'whatever':     (-15, -20, -20, 0, -5),
-    'sure':         (-5, -15, -15, 0, -3),
+    'sure':         (-2, -5, -3, 0, -1),      # near-zero -- liquid. context determines.
     'cool':         (-5, -15, -10, 0, -3),
     'k':            (-10, -20, -15, 0, -5),
     'nvm':          (-15, -15, -15, 5, -5),
@@ -3047,7 +3094,7 @@ EMOTIONAL_VOCABULARY.update(_DOUBT_WORDS)
 
 # ── Upbringing/family structure ──
 _UPBRINGING_WORDS = {
-    'foster':       (-20, 5, -15, 5, 30),       # substitute care -- implies absent parents. High G.
+    'foster':       (-3, 0, -3, 0, -10),         # neutralizer/dampener -- substitute. reduces what follows. not negative itself.
     'adopted':      (-5, 5, -5, 5, 35),          # near-neutral -- can be positive (chosen) or painful
     'orphan':       (-40, 10, -30, 10, 40),      # parentless -- high G loss
     'homeless':     (-50, 15, -40, 15, 35),
@@ -3058,3 +3105,1201 @@ _UPBRINGING_WORDS = {
 }
 EMOTIONAL_VOCABULARY.update(_UPBRINGING_WORDS)
 
+
+# ── Missing common words (found by benchmark) ──
+_BENCHMARK_FIXES = {
+    'disappointment': (-45, 10, -25, 10, -25),
+    'disappointments': (-40, 10, -20, 10, -20),
+    'forgot':         (-25, 8, -15, 8, -10),
+    'forget':         (-15, 5, -10, 5, -8),
+    'forgetting':     (-15, 5, -10, 5, -8),
+    'finished':       (15, 5, 15, 0, 5),       # achievement -- completed something
+    'started':        (5, 10, 5, 5, 3),         # beginning -- mild positive energy
+    'called':         (-5, 5, 5, 0, 0),         # near-neutral -- "called me" = labeled
+    'invisible':      (-35, -10, -30, 5, -15),  # social erasure
+    'burden':         (-45, 10, -35, 10, -20),  # self as weight on others
+    'replaced':       (-40, 15, -30, 10, -20),  # substituted out
+    'trapped':        (-40, 20, -40, 20, -15),  # no agency
+    'stuck':          (-25, 10, -25, 10, -10),  # mild trapped
+    'empty':          (-30, -15, -20, 5, -15),  # hollow
+    'numb':           (-25, -20, -15, 0, -10),  # disconnected
+    'exhausted':      (-30, -15, -25, 10, -15), # depleted
+    'drained':        (-25, -15, -20, 5, -10),  # emptied out
+    'overwhelmed':    (-35, 30, -30, 20, -15),  # too much input
+    'suffocating':    (-45, 35, -40, 25, -20),  # can't breathe metaphor
+    # ── Common reducers/modifiers found by SST-2 gap analysis ──
+    'little':       (-15, -5, -10, 0, -5),     # reducer -- "little to love" = almost none
+    'despite':      (-10, 5, 5, 0, -3),         # concession -- upcoming contradiction
+    'only':         (-10, -5, -5, 0, -3),        # minimizer -- "only manages" = barely
+    'almost':       (-8, 0, -5, 0, -3),          # fell short -- "almost good" = not good
+    'seems':        (-5, 0, -5, 0, -3),          # uncertainty -- not confirmed
+    'lacks':        (-30, 5, -15, 5, -10),       # absence of quality
+    'lacking':      (-25, 5, -12, 5, -8),
+    'obvious':      (-15, 5, 5, 0, -5),          # dismissive -- "obvious plot"
+    'predictable':  (-20, -5, 5, 0, -5),
+    'flat':         (-20, -10, -10, 0, -5),
+    'dull':         (-25, -15, -10, 0, -8),
+    'generic':      (-15, -5, -5, 0, -5),
+    'bland':        (-20, -10, -10, 0, -5),
+    'mediocre':     (-25, -5, -10, 0, -8),
+    'forgettable':  (-20, -5, -10, 0, -5),
+    'pointless':    (-30, 5, -15, 5, -10),
+    'mess':         (-30, 10, -15, 10, -10),
+    'waste':        (-35, 10, -20, 10, -10),
+    'wasted':       (-30, 10, -15, 10, -8),
+    'filth':        (-50, 15, -25, 10, -15),
+    'garbage':      (-40, 10, -20, 10, -12),
+    'trash':        (-35, 10, -15, 10, -10),
+    'awful':        (-50, 15, -25, 10, -15),
+    'horrible':     (-50, 15, -25, 10, -15),
+    'terrible':     (-50, 15, -25, 10, -15),
+    'worst':        (-55, 15, -30, 10, -18),
+    'pathetic':     (-45, 10, -20, 10, -12),
+    'absurd':       (-25, 10, -10, 5, -8),
+    'ridiculous':   (-30, 10, -10, 5, -10),
+    'foolish':      (-25, 10, -10, 5, -8),
+    'shallow':      (-25, -5, -10, 0, -8),
+    'lazy':         (-25, -10, -15, 0, -8),
+    'pretentious':  (-30, 5, 10, 0, -10),
+    'overrated':    (-25, 5, -10, 5, -8),
+    'disappointing':(-35, 10, -20, 10, -12),
+    'uninspired':   (-25, -10, -15, 0, -8),
+    'unfunny':      (-25, 5, -10, 5, -8),
+    'tiresome':     (-25, -10, -15, 5, -8),
+    'clunky':       (-20, 5, -10, 0, -5),
+    'cliche':       (-20, 0, -10, 0, -5),
+    # Positive review words
+    'brilliant':    (+55, 15, 20, 0, 12),
+    'masterpiece':  (+60, 15, 25, 0, 15),
+    'stunning':     (+50, 20, 15, 0, 12),
+    'superb':       (+55, 15, 20, 0, 12),
+    'flawless':     (+50, 10, 20, 0, 12),
+    'captivating':  (+45, 15, 15, 0, 10),
+    'riveting':     (+45, 20, 15, 0, 10),
+    'heartwarming': (+50, 15, 15, 0, 15),
+    'touching':     (+35, 10, 10, 0, 10),
+    'compelling':   (+40, 15, 15, 0, 10),
+    'gripping':     (+40, 20, 15, 0, 10),
+    'beautifully':  (+45, 10, 15, 0, 10),
+    'finest':       (+50, 10, 20, 0, 12),
+    'thrilling':    (+45, 20, 15, 0, 10),
+    'remarkable':   (+45, 10, 15, 0, 10),
+    'refreshing':   (+35, 10, 10, 0, 8),
+    'entertaining': (+35, 15, 10, 0, 8),
+    'enjoyable':    (+35, 10, 10, 0, 8),
+    'delightful':   (+45, 15, 15, 0, 10),
+    'witty':        (+35, 10, 15, 0, 8),
+    'clever':       (+30, 10, 15, 0, 8),
+    'engaging':     (+35, 15, 10, 0, 8),
+    'powerful':     (+40, 15, 20, 0, 10),
+    'impressive':   (+40, 10, 15, 0, 10),
+    'cooked':       (-30, 15, -20, 10, -10),  # slang -- destroyed/ruined
+    'shade':        (-20, 10, 15, 5, -5),    # slang -- indirect disrespect
+    'ratio':        (-25, 15, -15, 10, -10), # slang -- publicly outperformed/rejected
+    'stopped':      (-15, 5, -10, 5, -5),     # cessation -- something ended
+    'broken':       (-30, 10, -25, 10, -15),  # damaged state
+    'ruined':       (-50, 20, -30, 15, -20),  # destruction (override if exists)
+    'failed':       (-35, 15, -25, 15, -15),  # failure
+    'failing':      (-30, 15, -20, 15, -12),
+    'losing':       (-25, 15, -20, 10, -10),
+    'lost':         (-30, 10, -25, 10, -15),
+    'missing':      (-20, 10, -15, 10, -10),  # absence
+    'working':      (10, 5, 10, 0, 3),        # mild positive -- functioning
+}
+EMOTIONAL_VOCABULARY.update(_BENCHMARK_FIXES)
+
+
+
+# ── RoBERTa-mined emotional words (63 words) ──
+# Extracted by scoring frequent missing words through RoBERTa.
+# Filtered: removed structural words, bias (gay/police from twitter data),
+# and words already handled by other roles (fucking=AMPLIFIER, just=FILLER).
+_ROBERTA_MINED = {
+    'bloody':       (-54, +27, -27, +0, -14),
+    'destruction':  (-53, +26, -27, +0, -14),
+    'hated':        (-53, +26, -27, +0, -14),
+    'terrorist':    (-52, +26, -26, +0, -13),
+    'mean':         (-40, +20, -20, +0, -10),     # reduced -- "mean" is also average/intend
+    'bombing':      (-51, +25, -26, +0, -13),
+    'terminal':     (-50, +25, -25, +0, -13),
+    'criminal':     (-50, +25, -25, +0, -13),
+    'terrorists':   (-50, +25, -25, +0, -13),
+    'concerning':   (-48, +24, -24, +0, -12),
+    'killed':       (-47, +23, -24, +0, -12),
+    'forced':       (-47, +23, -24, +0, -12),
+    'scandal':      (-46, +23, -23, +0, -12),
+    'violation':    (-45, +22, -23, +0, -12),
+    'problems':     (-44, +22, -22, +0, -11),
+    'divided':      (-44, +22, -22, +0, -11),
+    'lies':         (-41, +20, -21, +0, -11),
+    'struggling':   (-40, +20, -20, +0, -10),
+    'deaths':       (-37, +18, -19, +0, -10),
+    'knife':        (-36, +18, -18, +0, -9),
+    'buried':       (-36, +18, -18, +0, -9),
+    'judgment':     (-36, +18, -18, +0, -9),
+    'important':    (+36, +9, +12, +0, +7),
+    'interest':     (+20, +5, +10, +0, +5),        # reduced -- context-dep
+    'skills':       (+36, +9, +12, +0, +7),
+    'music':        (+38, +9, +12, +0, +7),
+    'unique':       (+38, +9, +12, +0, +7),
+    'vital':        (+39, +9, +13, +0, +7),
+    'stronger':     (+39, +9, +13, +0, +7),
+    'strong':       (+41, +10, +13, +0, +8),
+    'smiling':      (+42, +10, +14, +0, +8),
+    'benefits':     (+43, +10, +14, +0, +8),
+    'loves':        (+46, +11, +15, +0, +9),
+    'helps':        (+47, +11, +15, +0, +9),
+    'smooth':       (+47, +11, +15, +0, +9),
+    'historic':     (+47, +11, +15, +0, +9),
+    'adore':        (+48, +12, +16, +0, +9),
+    'potential':    (+30, +8, +10, +0, +6),         # reduced -- context-dep
+    'clean':        (+49, +12, +16, +0, +9),
+    'greater':      (+30, +8, +10, +0, +6),         # reduced -- comparative
+    'fascinating':  (+51, +12, +17, +0, +10),
+    'victory':      (+53, +13, +17, +0, +10),
+    'enjoyed':      (+54, +13, +18, +0, +10),
+    'magic':        (+54, +13, +18, +0, +10),
+    'gold':         (+30, +8, +10, +0, +6),         # reduced -- physical object
+    'ideal':        (+56, +14, +18, +0, +11),
+    'outstanding':  (+57, +14, +19, +0, +11),
+}
+EMOTIONAL_VOCABULARY.update(_ROBERTA_MINED)
+
+
+# ── Common modifiers + slang found by corpus mining ──
+_CORPUS_MINED = {
+    'happened':     (-10, 10, -5, 10, 5),      # event occurred -- slight unease, urgency
+    'happening':    (-8, 10, -5, 10, 5),
+    'again':        (-10, 5, -8, 5, -5),        # repetition -- wearing down
+    'anymore':      (-15, 5, -10, 5, -5),       # loss of state (override if exists)
+    'wait':         (-5, 5, -5, 10, 0),          # patience/urgency
+    'waiting':      (-8, 5, -8, 10, -3),
+    'down':         (-15, 5, -10, 5, -5),        # negative direction
+    'kids':         (0, 5, 0, 0, 45),            # relationship -- high G like child
+    'kid':          (0, 5, 0, 0, 45),
+    'guy':          (0, 0, 0, 0, 5),             # neutral person reference
+    'girl':         (0, 0, 0, 0, 5),
+    'man':          (0, 5, 5, 0, 5),             # neutral/mild empathy filler
+    'must':         (-5, 5, 5, 5, 0),            # inference/obligation
+    'sounds':       (0, 0, 0, 0, 0),             # hedging -- passes through
+    'first':        (5, 5, 5, 5, 5),             # milestone marker
+    'once':         (-5, 0, -3, 0, -3),          # past -- something ended
+    'another':      (-5, 5, -3, 5, -3),          # repetition
+    'anything':     (-5, 5, -5, 5, 0),           # open/desperate depending on context
+    'ago':          (-3, 0, -3, 0, -3),          # past temporal
+    'yesterday':    (0, 0, 0, 10, 0),            # time marker -- urgency only
+    'rough':        (-25, 10, -15, 5, -8),       # difficulty/hardship
+    'tough':        (-20, 10, -10, 5, -5),
+    'harsh':        (-30, 15, -15, 5, -10),
+    'brutal':       (-40, 20, -20, 10, -12),
+    'insane':       (-20, 25, -10, 10, -5),      # slang -- extreme, often negative
+    'nuts':         (-15, 20, -5, 5, -3),
+    'wild':         (-5, 20, 5, 5, 0),           # intense, context-dependent
+    'crazy':        (-15, 15, -5, 10, -5),       # override if exists -- slang varies
+    'messed':       (-25, 10, -15, 10, -8),
+    'screwed':      (-30, 15, -20, 10, -10),
+    'ruined':       (-45, 15, -25, 10, -15),     # override if exists
+    'wrecked':      (-40, 15, -20, 10, -12),
+    'done':         (-10, -5, -10, 5, -5),       # finality -- "im done"
+    'over':         (-10, -5, -5, 5, -5),        # ending
+    'gone':         (-20, 5, -15, 5, -10),       # absence
+    'lost':         (-30, 10, -25, 10, -15),     # override
+    'left':         (-8, 5, -5, 5, -3),          # override -- near neutral, VICTIMIZATION resolves
+    'wrong':        (-25, 10, -15, 10, -8),
+    'fault':        (-25, 10, -15, 5, -10),      # override if exists
+    'blame':        (-30, 15, 15, 10, -10),      # override
+    'worth':        (10, 5, 10, 0, 10),          # value
+    'worthy':       (15, 5, 15, 0, 10),
+    'deserve':      (5, 5, 5, 5, 10),            # context-dep -- "i deserve better" vs "you deserve this"
+    'deserved':     (5, 5, 5, 5, 10),
+    'matters':      (5, 5, 5, 5, 15),            # gravity -- this matters
+    'counts':       (5, 5, 5, 0, 10),
+    'enough':       (-15, 10, -5, 5, -8),        # "not enough" = lacking. override.
+}
+EMOTIONAL_VOCABULARY.update(_CORPUS_MINED)
+
+
+# ── Novel sentence gap fills (round 2) ──
+_NOVEL_GAPS_2 = {
+    'laughed':      (-5, 20, 5, 0, 5),          # liquid -- laughed at vs laughed with
+    'grave':        (-20, -10, -15, 0, 30),      # death-related, high G
+    'singled':      (-15, 10, -10, 5, -5),       # isolated/targeted
+    'suspended':    (-25, 15, -20, 10, -10),     # punished/removed
+    'defending':    (10, 15, 15, 10, 5),          # standing up for
+    'garnished':    (-20, 5, -20, 10, -10),      # wages taken
+    'wages':        (0, 0, 0, 0, 20),            # money -- object with G
+    'fainted':      (-25, 20, -30, 20, -10),     # medical event
+    'chose':        (-5, 5, 5, 5, 5),            # decision -- near neutral
+    'danced':       (25, 15, 10, 0, 10),         # joyful movement
+    'normal':       (10, -5, 10, 0, 5),          # stability/relief
+    'benign':       (25, -10, 15, 0, 15),        # medical relief
+    'sunset':       (15, -5, 5, 0, 8),           # peaceful/romantic
+    'mile':         (10, 10, 10, 0, 5),          # achievement context
+    'breathe':      (-10, 10, -10, 5, -5),       # liquid -- cant breathe vs finally breathe
+    'texts':        (-5, 5, -5, 5, 10),          # high G (communication)
+    'subtweeted':   (-20, 10, 10, 5, -8),        # indirect attack
+    'screenshotted':(-15, 10, -5, 5, -5),        # privacy violation
+    'watching':     (-3, 5, 5, 5, 0),            # near neutral -- context determines
+    'reaching':     (5, 5, 5, 5, 5),             # effort
+    'stopping':     (-5, 5, -5, 5, 0),           # cessation
+    'asking':       (0, 5, -5, 5, 0),            # neutral request
+    # Fix overwieghted words
+    'stories':      (5, 5, 5, 0, 5),             # was +37, too positive for neutral noun
+    'space':        (0, -5, 0, 0, 0),            # was +31, "needs space" = distance
+    'shared':       (5, 5, 5, 0, 5),             # was +35, context-dep
+    'credit':       (5, 5, 10, 0, 5),            # was +28, too positive
+    'order':        (0, 0, 5, 0, 0),             # was +28, too positive for neutral noun
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_2)
+
+
+# ── Novel sentence gap fills (round 3) ──
+_NOVEL_GAPS_3 = {
+    'texting':      (-5, 5, 0, 5, 10),          # communication -- context determines
+    'her':          (0, 0, 0, 0, 0),             # pronoun -- neutral
+    'feelings':     (10, 10, -5, 5, 20),         # emotional state -- high G
+    'were':         (0, 0, 0, 0, 0),             # verb -- neutral
+    'treated':      (-10, 5, -10, 5, -5),        # "treated like" = objectified
+    'listened':     (10, 5, 5, 5, 5),            # attention given
+    'should':       (-8, 5, -5, 5, -3),          # obligation/regret
+    'have':         (0, 0, 0, 0, 0),             # auxiliary -- neutral
+    'been':         (0, 0, 0, 0, 0),
+    'there':        (0, 0, 0, 0, 0),
+    'things':       (0, 0, 0, 0, 5),             # objects
+    'could':        (-5, 0, -5, 0, -3),          # hypothetical -- missed opportunity
+    'year':         (0, 0, 0, 5, 5),             # time marker
+    'years':        (0, 0, 0, 5, 5),
+    'situation':    (-5, 5, -5, 5, 5),           # context -- usually negative context
+    'hand':         (5, 0, 5, 0, 10),            # connection -- high G (touch)
+    'how':          (0, 0, 0, 0, 0),             # question word
+    'coffee':       (5, 5, 0, 0, 3),             # comfort object
+    'curled':       (10, -5, 5, 0, 5),           # warmth/comfort
+    'next':         (0, 0, 0, 0, 0),
+    'when':         (0, 0, 0, 0, 0),
+    'everyone':     (0, 5, 0, 5, 10),            # scope amplifier -- high G
+    'saw':          (-5, 5, -5, 5, 0),           # witnessed -- slight negative lean
+    'breakdown':    (-45, 30, -30, 20, -15),     # emotional collapse
+    'myself':       (5, 5, 10, 0, 15),           # self-empowerment or self-reference
+    'learned':      (15, 5, 15, 0, 8),           # growth/achievement
+    'their':        (0, 0, 0, 0, 0),
+    'approval':     (10, 5, -10, 5, 15),         # seeking validation -- high G
+    'underwater':   (-30, 15, -25, 10, -10),     # drowning metaphor
+    'think':        (0, 5, 5, 0, 0),
+    'straight':     (5, 0, 5, 0, 0),
+    'bittersweet':  (-10, 5, -5, 0, 10),         # mixed -- lean negative
+    'necessary':    (5, 5, 10, 5, 5),            # needed -- slight positive
+    'let':          (-5, 0, -5, 0, 0),           # release/permission
+    'them':         (0, 0, 0, 0, 0),
+    'own':          (5, 0, 10, 0, 5),            # ownership/agency
+    'fumbled':      (-25, 10, -15, 10, -8),      # slang -- dropped the ball
+    'bag':          (0, 0, 0, 0, 5),             # slang object
+    'caught':       (-10, 15, -5, 10, 0),        # surprise/trap
+    'aired':        (-20, 10, -10, 10, -8),      # exposed/put on blast
+    'out':          (-5, 5, -3, 0, 0),           # direction/exposure
+    'purpose':      (-10, 10, 10, 5, -5),        # "on purpose" = intentional harm
+    'she':          (0, 0, 0, 0, 0),             # pronoun
+    'they':         (0, 0, 0, 0, 0),
+    'bro':          (-3, 5, 5, 0, 5),            # casual address
+    'cant':         (-10, 5, -10, 5, -5),        # inability -- override negator force
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_3)
+
+
+# ── Novel sentence gap fills (round 4) ──
+_NOVEL_GAPS_4 = {
+    'intrusive':    (-35, 20, -20, 15, -10),     # unwanted -- intrusive thoughts
+    'disconnected': (-25, -10, -20, 5, -10),      # isolation
+    'autopilot':    (-15, -15, -10, 0, -5),       # disengaged from life
+    'people':       (0, 0, 0, 0, 5),              # neutral collective
+    'attacks':      (-40, 30, -25, 20, -12),       # assault -- panic attacks
+    'frequent':     (0, 0, 0, 0, 0),              # neutral modifier
+    'reached':      (10, 5, 10, 5, 5),            # effort -- reaching out
+    'check':        (0, 5, 5, 0, 0),
+    'media':        (0, 5, 0, 5, 5),
+    'said':         (0, 5, 5, 0, 0),
+    'didnt':        (-10, 5, -5, 5, -3),          # negation -- same as dont
+    'doing':        (0, 5, 5, 0, 0),
+    'would':        (-3, 0, -3, 0, 0),            # hypothetical
+    'having':       (0, 0, 0, 0, 0),
+    'safe':         (20, -10, 20, 0, 15),         # security -- important G
+    'trusting':     (10, 5, -5, 0, 15),           # vulnerability
+    'trouble':      (-20, 10, -15, 10, -8),
+    'flashbacks':   (-40, 30, -25, 20, -12),
+    'wya':          (-5, 5, 0, 5, 0),             # where you at -- checking
+    'ong':          (10, 10, 10, 0, 5),           # on god -- emphasis/genuine
+    'thats':        (0, 0, 0, 0, 0),
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_4)
+
+
+# ── Novel sentence gap fills (round 5) ──
+_NOVEL_GAPS_5 = {
+    'erased':       (-30, 10, -25, 10, -12),     # deleted from existence
+    'photo':        (0, 0, 0, 0, 10),            # object -- high G (memories)
+    'question':     (-10, 10, -5, 5, -3),        # doubt/challenge
+    'sanity':       (5, 5, 5, 0, 20),            # mental health -- high G
+    'twisted':      (-30, 15, -15, 10, -10),     # manipulated/distorted
+    'words':        (0, 5, 0, 0, 5),             # neutral carrier
+    'until':        (0, 0, 0, 0, 0),             # temporal connector
+    'stayed':       (10, -5, 10, 0, 10),         # presence/commitment
+    'went':         (0, 5, 0, 5, 0),             # movement -- neutral
+    'time':         (0, 0, 0, 5, 5),             # temporal -- neutral with G
+    'since':        (0, 0, 0, 0, 0),             # temporal connector
+    'none':         (-15, -5, -10, 0, -5),       # absence/zero
+    'audacity':     (-25, 20, 15, 10, -8),       # offense/disbelief
+    'youre':        (0, 0, 0, 0, 0),             # contraction -- neutral
+    'here':         (0, 0, 0, 0, 0),             # location -- neutral
+    'thing':        (0, 0, 0, 0, 0),             # object -- neutral
+    'wouldnt':      (-5, 0, -5, 0, 0),           # hypothetical negation
+    'exhaust':      (-25, -10, -20, 5, -8),
+    'exhausting':   (-25, -10, -20, 5, -8),
+    'avoid':        (-10, 5, -10, 5, -5),        # avoidance behavior
+    'conflict':     (-25, 15, -10, 10, -8),
+    'hollow':       (-20, -5, -15, 0, -8),       # empty/insincere
+    'pretend':      (-15, 5, -10, 5, -5),        # masking
+    'pretending':   (-15, 5, -10, 5, -5),
+    'scream':       (-30, 40, -15, 20, -10),
+    'punch':        (-35, 40, 20, 20, -10),
+    'dare':         (-15, 20, 20, 10, -5),
+    'invited':      (15, 10, 5, 0, 10),          # included/welcomed
+    'photo':        (0, 0, 0, 0, 10),
+    'mowed':        (10, 5, 5, 0, 5),            # act of service
+    'groceries':    (0, 0, 0, 0, 5),
+    'procedure':    (-10, 10, -10, 15, 10),      # medical -- high G
+    'nurse':        (10, 5, 10, 0, 15),          # caretaker
+    'flowers':      (20, 5, 10, 0, 10),
+    'doorstep':     (0, 0, 0, 0, 5),
+    'apartment':    (0, 0, 0, 0, 15),            # home -- high G
+    'thanksgiving': (10, 5, 5, 0, 15),           # holiday gathering
+    'date':         (10, 15, 5, 5, 10),          # romantic context
+    'smiled':       (25, 10, 10, 0, 8),
+    'meant':        (5, 5, 5, 5, 5),
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_5)
+
+
+# ── Novel sentence gap fills (round 6) ──
+_NOVEL_GAPS_6 = {
+    'corrects':     (-15, 10, 15, 5, -5),        # correction = power dynamic
+    'keeps':        (0, 0, 5, 0, 0),
+    'weaponize':    (-40, 15, 15, 10, -12),       # using something AS a weapon
+    'weaponized':   (-40, 15, 15, 10, -12),
+    'insecurities': (-30, 10, -25, 5, -12),
+    'insecurity':   (-25, 10, -20, 5, -10),
+    'reads':        (5, -5, 5, 0, 5),             # near-neutral -- reading to someone vs reading texts
+    'being':        (0, 0, 0, 0, 0),
+    'asked':        (0, 5, -5, 5, 0),
+    'judges':       (-20, 10, 15, 5, -8),         # judgment
+    'judging':      (-20, 10, 15, 5, -8),
+    'sees':         (5, 5, 5, 0, 5),              # recognition -- mild positive
+    'else':         (0, 0, 0, 0, 0),
+    'does':         (0, 0, 0, 0, 0),
+    'voice':        (5, 5, 5, 0, 10),             # expression -- high G
+    'doesnt':       (-10, 5, -5, 5, -3),          # negation
+    'matter':       (5, 0, 5, 0, 10),             # importance -- G
+    'shrink':       (-15, -5, -20, 0, -5),        # making self smaller
+    'shrinking':    (-15, -5, -20, 0, -5),
+    'expect':       (-10, 5, 10, 5, -3),          # obligation/pressure
+    'expects':      (-10, 5, 10, 5, -3),
+    'eggshells':    (-25, 15, -20, 10, -10),      # walking on eggshells = anxiety
+    'score':        (-5, 5, 10, 0, 0),            # keeping score = resentment context
+    'arguments':    (-25, 15, -10, 10, -8),
+    'ghost':        (-20, -10, -15, 0, -8),       # invisible/ignored
+    'disappearing': (-25, 5, -20, 5, -10),
+    'perform':      (-10, 5, -5, 5, -3),          # performing = masking
+    'comfortable':  (15, -10, 10, 0, 8),
+    'accept':       (15, 5, 10, 0, 10),
+    'accepts':      (15, 5, 10, 0, 10),
+    'fight':        (-20, 25, 15, 15, -5),        # conflict -- but "fight for me" = positive
+    'excited':      (40, 25, 15, 5, 10),
+    'excitement':   (35, 25, 10, 5, 8),
+    'bike':         (5, 10, 5, 0, 5),
+    'ring':         (5, 5, 5, 0, 15),             # high G -- engagement ring
+    'laugh':        (15, 15, 10, 0, 8),           # override -- was +28
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_6)
+
+
+# ── Novel sentence gap fills (round 7) ──
+_NOVEL_GAPS_7 = {
+    'shouldnt':     (-10, 5, -5, 5, -3),         # regret/prohibition
+    'staring':      (-5, 5, -5, 0, 0),           # fixation
+    'ceiling':      (0, -5, 0, 0, 0),            # physical -- neutral
+    'version':      (0, 0, 0, 0, 0),             # neutral concept
+    'cycle':        (-5, 5, -5, 5, 10),          # pattern -- high G (cycles of behavior)
+    'through':      (0, 5, 5, 0, 0),             # movement/endurance
+    'gave':         (5, 5, 5, 0, 5),             # giving -- mild positive (override old)
+    'built':        (15, 10, 15, 0, 8),          # construction/achievement
+    'real':         (5, 5, 5, 0, 5),
+    'hair':         (0, 0, 0, 0, 5),
+    'harmed':       (-40, 15, -25, 15, -12),     # self-harm
+    'harm':         (-35, 15, -20, 15, -10),
+    'days':         (0, 0, 0, 5, 0),             # temporal
+    'isnt':         (-8, 5, -5, 5, -3),          # negation
+    'working':      (8, 5, 8, 0, 3),             # functioning -- override
+    'sober':        (15, -5, 20, 0, 20),         # recovery milestone -- high G
+    'sobriety':     (15, -5, 20, 0, 20),
+    'cycle':        (-5, 5, -5, 5, 10),
+    'replaying':    (-15, 10, -10, 5, -5),       # stuck in loop
+    'brain':        (0, 5, 0, 0, 10),            # high G -- mental state
+    'asleep':       (5, -15, 5, 0, 0),           # rest state
+    'ceiling':      (0, -5, 0, 0, 0),
+    'honest':       (15, 5, 10, 0, 10),          # integrity
+    'honestly':     (5, 5, 5, 0, 5),             # override old V=+50
+    'belong':       (10, 5, 5, 0, 15),           # inclusion -- high G
+    'talented':     (30, 10, 15, 0, 10),
+    'meals':        (5, 0, 5, 0, 5),
+    'answered':     (5, 5, 5, 0, 5),
+    'phone':        (0, 5, 0, 5, 15),            # override -- high G communication
+    'deserve':      (5, 5, 5, 5, 10),            # override
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_7)
+
+
+# ── Novel sentence gap fills (round 8) ──
+_NOVEL_GAPS_8 = {
+    'ideas':        (10, 10, 10, 0, 10),         # creative output -- G matters
+    'replacement':  (-20, 10, -20, 10, -10),     # being replaced
+    'knows':        (5, 0, 10, 0, 5),            # awareness/understanding
+    'bearable':     (10, -5, 5, 0, 5),           # making it through
+    'skipped':      (-10, 5, -10, 5, -5),        # missed/avoided
+    'water':        (3, 0, 0, 0, 3),             # basic need -- tiny positive
+    'walk':         (8, 5, 8, 0, 5),             # movement/exercise
+    'around':       (0, 0, 0, 0, 0),
+    'blinds':       (0, 0, 0, 0, 0),
+    'opened':       (5, 5, 5, 0, 3),             # opening = progress
+    'block':        (0, 5, 0, 0, 0),
+    'drank':        (3, 0, 0, 0, 0),
+    'bed':          (0, -5, 0, 0, 5),            # rest context
+    'brushed':      (3, 0, 3, 0, 0),             # self-care
+    'teeth':        (0, 0, 0, 0, 0),
+    'morning':      (5, 5, 5, 5, 3),             # new day -- mild positive
+    'recital':      (10, 10, 5, 5, 15),          # performance -- high G (child's event)
+    'promote':      (10, 5, 10, 0, 8),
+    'promoted':     (15, 10, 15, 0, 10),         # achievement
+    'blame':        (-30, 15, 15, 10, -10),      # override
+    'trained':      (10, 5, 10, 0, 5),
+    'silence':      (-10, -15, -5, 0, 5),        # absence of sound -- slight negative
+    'sentences':    (0, 0, 0, 0, 0),
+    'bill':         (-15, 5, -10, 10, 10),       # financial stress -- G from importance
+    'bills':        (-15, 5, -10, 10, 10),
+    'paycheck':     (5, 5, 5, 5, 15),            # income -- high G
+    'homeless':     (-50, 15, -40, 15, 35),      # severe -- high G
+    'shut':         (-15, 10, -10, 10, -5),
+    'promised':     (-5, 5, -5, 5, 10),          # commitment -- high G, context-dep
+    'different':    (0, 5, 0, 5, 0),
+    'scares':       (-25, 20, -15, 10, -8),
+    'scared':       (-30, 25, -20, 15, -10),     # override -- was too extreme
+    'traumatizing': (-40, 20, -25, 15, -15),
+    'traumatized':  (-45, 15, -30, 10, -18),
+    'yelled':       (-30, 25, 15, 15, -10),
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_8)
+
+
+# ── Permanent suite gap fills ──
+_PERM_GAPS = {
+    'odds':         (-10, 10, -5, 5, 5),         # adversity context
+    'turned':       (-15, 10, -10, 10, -5),       # reversal -- "turned on me"
+    'slightly':     (-3, 0, 0, 0, 0),
+    'dogs':         (5, 5, 0, 0, 30),             # pet -- high G
+    'playing':      (10, 10, 5, 0, 5),            # recreation
+    'video':        (0, 5, 0, 0, 0),
+    'messages':     (0, 5, 0, 5, 10),             # communication -- G
+    'between':      (0, 0, 0, 0, 0),
+    'food':         (5, 0, 5, 5, 10),             # basic need -- G
+    'found':        (-5, 10, 5, 10, 0),           # discovery -- slight neg lean (found out = bad news often)
+    'something':    (-3, 5, -3, 5, 0),            # vague -- slight unease
+    'scan':         (-10, 10, -10, 15, 10),       # medical test -- G + urgency
+    'kitchen':      (5, 0, 5, 0, 5),              # domestic warmth
+    'visited':      (5, 5, 5, 5, 5),              # went to see
+    'chat':         (5, 5, 5, 0, 5),              # communication
+    'choose':       (-5, 10, 5, 10, 5),           # forced choice = stress
+    'speaking':     (0, 5, 5, 0, 0),
+    'generally':    (0, 0, 0, 0, 0),
+}
+EMOTIONAL_VOCABULARY.update(_PERM_GAPS)
+
+
+# ── Novel sentence gap fills (round 9) ──
+_NOVEL_GAPS_9 = {
+    'theyd':        (0, 0, 0, 0, 0),             # contraction -- they would
+    'someone':      (0, 0, 0, 0, 5),             # person reference -- already OTHER_REF
+    'conversation': (0, 5, 0, 0, 5),
+    'dissociating': (-30, -15, -25, 10, -12),    # mental health -- disconnection
+    'dissociate':   (-25, -15, -20, 10, -10),
+    'mirror':       (-5, 5, -5, 0, 10),          # self-reflection -- high G
+    'guilty':       (-35, 10, -20, 10, -12),
+    'meal':         (5, 0, 5, 0, 5),             # basic need
+    'rings':        (0, 5, 0, 5, 5),
+    'apartment':    (0, 0, 0, 0, 10),            # override with G
+    'quiet':        (-5, -15, -5, 0, 0),         # absence of sound
+    'holidays':     (5, 5, 0, 5, 15),            # high G event
+    'stranger':     (0, 5, 0, 0, 3),
+    'leaves':       (0, 0, 0, 0, 0),             # nature -- neutral
+    'color':        (5, 5, 5, 0, 3),
+    'song':         (10, 5, 5, 0, 8),
+    'reminded':     (5, 5, 0, 5, 5),
+    'sun':          (10, 5, 5, 0, 5),
+    'window':       (0, 0, 0, 0, 0),
+    'perfect':      (40, 10, 15, 0, 10),
+    'smiled':       (25, 10, 10, 0, 8),          # override -- confirm
+    'lucky':        (10, 5, -5, 0, 5),           # reduced -- "youre lucky" is often condescending
+    'bother':       (-15, 5, -15, 5, -5),        # burden
+    'clothes':      (0, 0, 0, 0, 5),
+}
+EMOTIONAL_VOCABULARY.update(_NOVEL_GAPS_9)
+
+
+# ── Final vocab gaps from permanent suite ──
+_FINAL_GAPS = {
+    'got':          (5, 5, 5, 5, 0),             # acquisition -- mild positive ("got the job")
+    'off':          (-5, 5, -3, 0, 0),            # removal/separation -- slight negative
+    'ran':          (5, 15, 10, 5, 0),            # movement/effort
+    'day':          (0, 0, 0, 5, 3),              # time marker -- near neutral
+    'night':        (-5, -5, -3, 0, 3),           # darkness -- slight negative lean
+    'today':        (0, 5, 0, 10, 0),             # immediacy -- urgency only (override)
+    'room':         (0, 0, 0, 0, 3),
+    'house':        (0, 0, 0, 0, 15),             # G override
+    'door':         (0, 0, 0, 0, 5),
+    'car':          (0, 0, 0, 0, 20),             # G override
+    'name':         (0, 0, 0, 0, 10),             # identity -- high G
+    'face':         (0, 5, 0, 0, 8),
+    'eyes':         (0, 5, 0, 0, 5),
+    'heart':        (5, 5, 0, 5, 20),             # emotional core -- high G
+    'head':         (0, 5, 0, 0, 8),
+    'body':         (0, 5, 0, 0, 15),             # physical self -- high G
+    'mind':         (0, 5, 0, 0, 15),             # mental self -- high G (override)
+    'world':        (0, 5, 0, 0, 10),             # scope
+    'person':       (0, 0, 0, 0, 10),
+    'reason':       (0, 5, 5, 5, 5),
+    'truth':        (10, 5, 10, 5, 10),
+    'lie':          (-30, 10, -15, 10, -10),
+    'real':         (5, 5, 5, 0, 5),              # authenticity (override confirm)
+    'fake':         (-25, 10, -10, 5, -8),
+    'true':         (10, 5, 10, 0, 8),
+    'wrong':        (-25, 10, -15, 10, -8),       # override confirm
+    'right':        (5, 5, 10, 0, 5),             # correctness -- mild pos
+}
+EMOTIONAL_VOCABULARY.update(_FINAL_GAPS)
+
+
+# ── Round 10 gaps ──
+_R10 = {
+    'whisper':      (-10, -10, -10, 5, -5),      # secrecy/exclusion
+    'whispered':    (-10, -10, -10, 5, -5),
+    'rolled':       (-10, 10, 5, 0, -3),          # "rolled eyes" = dismissal
+    'carried':      (15, 10, 15, 0, 10),          # bearing weight for someone
+    'carry':        (5, 10, 10, 5, 5),
+    'clapped':      (20, 15, 10, 0, 8),           # applause
+    'writes':       (5, 0, 5, 0, 5),
+    'wrote':        (5, 0, 5, 0, 5),
+    'letters':      (5, 0, 0, 0, 10),             # high G -- personal correspondence
+    'piece':        (0, 0, 0, 0, 0),
+    'biggest':      (5, 5, 5, 0, 3),
+    'performance':  (10, 10, 10, 5, 10),          # achievement context
+    'holding':      (5, 5, 5, 0, 8),              # connection
+    'hands':        (5, 5, 5, 0, 8),              # connection
+    'drew':         (10, 5, 10, 0, 8),            # created
+    'picture':      (5, 0, 0, 0, 10),             # memory -- high G
+    'flinched':     (-25, 20, -25, 15, -10),      # fear response
+    'flinch':       (-20, 20, -20, 10, -8),
+    'raised':       (-5, 15, 15, 10, 0),          # "raised voice" = aggression context
+    'restaurant':   (5, 5, 0, 0, 5),
+    'mistake':      (-20, 10, -15, 5, -8),
+    'mistakes':     (-20, 10, -15, 5, -8),
+    'perfection':   (-5, 5, 5, 5, 5),             # unrealistic standard
+    'lighter':      (10, -5, 5, 0, 5),            # relief
+}
+EMOTIONAL_VOCABULARY.update(_R10)
+
+
+# ── Round 11: love languages + control/abuse ──
+_R11 = {
+    'interrupt':    (-15, 10, 15, 5, -5),
+    'interrupts':   (-15, 10, 15, 5, -5),
+    'jacket':       (5, 0, 0, 0, 5),
+    'framed':       (10, 5, 10, 0, 8),           # preserved/displayed
+    'ever':         (-5, 5, -3, 0, -3),
+    'monitors':     (-20, 10, 20, 10, -8),        # surveillance = control
+    'location':     (0, 0, 0, 5, 5),
+    'isolate':      (-35, 10, 20, 10, -12),       # cutting off from support
+    'isolated':     (-30, -5, -25, 5, -10),
+    'controls':     (-25, 10, 25, 10, -8),        # domination
+    'controlling':  (-25, 10, 25, 10, -8),
+    'wear':         (0, 0, 0, 0, 0),
+    'tabs':         (-10, 5, 15, 5, -3),          # keeping tabs = surveillance
+    'spending':     (-5, 5, -5, 5, 5),
+    'tells':        (-3, 5, 10, 5, 0),
+    'needy':        (-20, 10, -20, 5, -8),        # insult / invalidation
+    'clingy':       (-20, 10, -15, 5, -8),
+    'bombs':        (-15, 15, 10, 10, -5),        # love bombing
+    'punishes':     (-30, 15, 25, 10, -10),
+    'punished':     (-30, 15, -20, 10, -10),
+    'threatens':    (-30, 20, 20, 20, -10),
+    'guilts':       (-20, 10, 15, 10, -8),
+    'guilt':        (-30, 10, -20, 10, -12),
+    'memorized':    (15, 5, 10, 0, 10),           # attention/care
+    'schedule':     (0, 5, 5, 5, 5),
+    'surprise':     (15, 20, 5, 5, 8),
+    'soup':         (5, 0, 0, 0, 5),              # comfort
+    'songs':        (10, 5, 5, 0, 8),
+    'wifi':         (0, 0, 0, 0, 0),
+    'joke':         (5, 10, 5, 0, 3),             # reduced from old V=+20
+    'drawing':      (10, 5, 10, 0, 8),
+    'introduced':   (10, 10, 10, 0, 8),
+}
+EMOTIONAL_VOCABULARY.update(_R11)
+
+
+# ── Round 12: relationship dynamics ──
+_R12 = {
+    'remembers':    (15, 5, 10, 0, 10),          # attention/care
+    'weve':         (0, 0, 0, 0, 0),             # contraction
+    'validate':     (20, 5, 10, 0, 10),          # affirming someone's experience
+    'validates':    (20, 5, 10, 0, 10),
+    'dismissing':   (-25, 10, 15, 5, -8),        # invalidation
+    'dismisses':    (-25, 10, 15, 5, -8),
+    'advocates':    (20, 10, 15, 5, 10),         # fighting for someone
+    'closed':       (-5, -5, -5, 0, 0),
+    'doors':        (0, 0, 0, 0, 0),
+    'thin':         (-5, 5, -5, 0, -3),
+    'ice':          (-10, 5, -5, 5, -3),         # "thin ice" = precarious
+    'drains':       (-25, -10, -15, 5, -8),      # energy vampire
+    'drained':      (-25, -15, -20, 5, -10),
+    'lights':       (10, 10, 5, 0, 5),
+    'granted':      (-15, -5, -10, 0, -5),       # "taken for granted"
+    'celebrates':   (25, 15, 10, 0, 10),
+    'allergies':    (0, 0, 0, 0, 10),            # personal detail = G
+    'defended':     (15, 10, 15, 5, 10),         # stood up for
+    'future':       (5, 5, 5, 5, 10),            # forward-looking (override neutral)
+    'convenient':   (-5, 0, 5, 0, -3),           # "when convenient" = selfish
+    'ego':          (-10, 5, 15, 0, -3),
+    'constantly':   (-10, 10, -5, 5, -3),        # override
+    'amplifies':    (-10, 10, 10, 5, -3),        # making bigger (negative context usually)
+    'minimizes':    (-20, 5, 15, 5, -8),         # shrinking experience
+    'worst':        (-40, 10, -25, 10, -12),     # override
+    'rock':         (15, -5, 20, 0, 15),         # "my rock" = stability
+    'walking':      (0, 5, 0, 5, 0),
+    'energy':       (5, 10, 5, 0, 5),
+    'room':         (0, 0, 0, 0, 3),             # override
+}
+EMOTIONAL_VOCABULARY.update(_R12)
+
+
+# ── Round 13 + GPT-recommended vocabulary expansion ──
+_R13_GPT = {
+    # Round 13 gaps
+    'shows':        (0, 5, 5, 0, 0),
+    'affection':    (25, 10, 5, 0, 15),
+    'twists':       (-20, 10, 10, 5, -5),
+    'weapons':      (-30, 20, 15, 10, -10),
+    'withdrawing':  (-20, -5, -15, 5, -8),
+    'drove':        (0, 10, 5, 5, 0),            # movement -- neutral
+    'town':         (0, 0, 0, 0, 0),
+    'bring':        (5, 5, 5, 0, 3),
+    'brings':       (5, 5, 5, 0, 3),
+    'notes':        (5, 0, 5, 0, 5),
+    'makes':        (0, 5, 5, 0, 0),
+    'fundraiser':   (15, 10, 10, 5, 10),
+    'medical':      (-5, 5, -5, 10, 10),
+    'sunday':       (5, -5, 0, 0, 5),
+    'umbrella':     (0, 0, 0, 0, 0),
+    'wakes':        (5, 10, 5, 5, 3),
+    'organized':    (10, 5, 10, 5, 5),
+    'recipe':       (10, 5, 5, 0, 8),
+    'grandmother':  (0, 0, 0, 0, 40),            # relationship -- high G
+    'greeted':      (10, 10, 5, 0, 5),
+    'dimmed':       (-15, -5, -15, 0, -5),
+    'rewrite':      (-10, 5, 10, 5, -5),
+    # GPT bucket 1: passive-aggressive cues
+    'nice':         (10, 0, 5, 0, 3),            # reduced -- "must be nice" = PA
+    'cute':         (15, 5, 5, 0, 5),            # can be condescending
+    'please':       (5, 0, -5, 5, 3),            # plea or politeness
+    # GPT bucket 2: numb/flat distress
+    'checked':      (-5, -5, -5, 0, 0),
+    'detached':     (-20, -15, -15, 0, -8),
+    'fried':        (-25, -10, -20, 5, -8),
+    'wrecked':      (-40, 15, -20, 10, -12),     # override
+    'spent':        (-15, -10, -15, 5, -5),      # emotionally spent
+    # GPT bucket 3: modern distress
+    'spiraling':    (-35, 25, -25, 15, -12),
+    'spiral':       (-30, 20, -20, 10, -10),
+    'crashing':     (-30, 25, -20, 15, -10),
+    'unraveling':   (-30, 15, -20, 10, -10),
+    'snapped':      (-35, 30, -15, 15, -10),
+    'doom':         (-40, 10, -25, 10, -15),
+    'burnout':      (-30, -15, -25, 10, -12),
+    'drowning':     (-35, 20, -25, 15, -12),
+    # GPT bucket 4: self-worth/erasure
+    'unwanted':     (-35, 10, -25, 10, -15),
+    'replaceable':  (-25, 5, -20, 5, -10),
+    'unlovable':    (-40, 10, -30, 10, -18),
+    'forgettable':  (-25, -5, -20, 5, -10),
+    'irrelevant':   (-25, -5, -20, 5, -10),
+    'meaningless':  (-35, -5, -25, 5, -15),
+    # GPT bucket 5: abuse verbs
+    'pressured':    (-25, 15, -15, 10, -8),
+    'cornered':     (-30, 20, -25, 15, -10),
+    'coerced':      (-35, 15, -25, 10, -12),
+    'demeaned':     (-35, 10, -20, 10, -12),
+    'belittled':    (-30, 10, -20, 10, -10),
+    'gaslit':       (-35, 15, -20, 10, -12),
+    'gaslighting':  (-35, 15, -20, 10, -12),
+    'manipulated':  (-35, 15, -15, 10, -12),
+    # GPT bucket 6: internet crisis
+    'meh':          (-10, -15, -10, 0, -5),
+    'unalive':      (-50, 15, -30, 30, -20),     # platform-evasive crisis language
+}
+EMOTIONAL_VOCABULARY.update(_R13_GPT)
+
+
+# ── Final GPT audit gaps ──
+_GPT_FINAL = {
+    'clearly':      (-5, 5, 10, 0, 0),           # sarcasm opener already, mild force
+    'controlled':   (-25, 10, -20, 10, -8),
+    'dismissed':    (-25, 10, 15, 5, -8),
+    'obviously':    (-8, 5, 10, 0, -3),           # dismissive / condescending
+}
+EMOTIONAL_VOCABULARY.update(_GPT_FINAL)
+
+
+# ── Round 14: silent treatment, gossip, performance, empathy drain ──
+_R14 = {
+    'silent':       (-15, -15, -10, 5, -5),      # silence as weapon
+    'treatment':    (-10, 5, -5, 5, -3),          # "silent treatment" = punishment
+    'gossip':       (-25, 15, 10, 5, -8),         # talking behind back
+    'gossiping':    (-25, 15, 10, 5, -8),
+    'acts':         (-5, 5, 5, 0, 0),             # performing/pretending
+    'lap':          (5, -5, 5, 0, 5),             # comfort/warmth
+    'pocket':       (0, 0, 0, 0, 0),
+    'performing':   (-10, 10, -5, 5, -3),         # masking/performing for others
+    'audience':     (-5, 5, -5, 5, 0),
+    'absorb':       (-10, 5, -10, 5, -5),         # taking in others emotions
+    'absorbs':      (-10, 5, -10, 5, -5),
+    'everyones':    (0, 5, 0, 5, 5),
+    'emotions':     (0, 10, 0, 5, 15),            # high G -- emotional content
+    'see':          (0, 5, 0, 0, 0),
+    'drain':        (-25, -10, -15, 5, -8),       # override confirm
+    'call':         (0, 5, 0, 5, 0),
+    'promises':     (-5, 5, -5, 5, 10),           # high G -- broken promises
+    'keeps':        (0, 0, 5, 0, 0),              # confirm
+    'asleep':       (5, -15, 5, 0, 0),            # rest
+    'cookies':      (10, 5, 5, 0, 5),             # comfort food
+    'smells':       (5, 5, 0, 0, 0),
+    'fresh':        (10, 5, 5, 0, 3),
+    'renewed':      (15, 10, 10, 0, 8),
+    'elevator':     (0, 0, 0, 0, 0),
+    'barista':      (0, 5, 0, 0, 0),
+    'spelled':      (0, 0, 0, 0, 0),
+    'green':        (5, 5, 5, 0, 0),
+    'shower':       (5, -5, 5, 0, 3),
+    'lasted':       (5, 0, 5, 0, 3),
+    'opinion':      (-5, 5, 5, 0, 0),
+    'listener':     (5, 0, -5, 0, 5),
+    'empathy':      (10, 5, -5, 0, 15),           # high G
+    'weapon':       (-30, 20, 15, 10, -10),
+    'pieces':       (-10, 5, -10, 5, -5),         # "pieces of myself"
+    'weight':       (-10, 5, -10, 5, -5),         # burden
+    'notice':       (0, 5, -5, 5, 5),
+}
+EMOTIONAL_VOCABULARY.update(_R14)
+
+
+# ── Round 15: physical reactions + care signals ──
+_R15 = {
+    'fakes':        (-20, 5, -10, 5, -5),         # pretending
+    'faking':       (-20, 5, -10, 5, -5),
+    'convincingly': (-5, 5, 10, 0, 0),
+    'making':       (0, 5, 5, 0, 0),
+    'bled':         (-30, 20, -20, 15, -10),
+    'bleeding':     (-30, 20, -20, 15, -10),
+    'send':         (0, 5, 5, 5, 0),
+    'defends':      (15, 10, 15, 5, 10),
+    'notices':      (10, 5, 10, 0, 8),            # attention/care
+    'before':       (0, 0, 0, 0, 0),
+    'say':          (0, 5, 5, 0, 0),
+    'details':      (5, 5, 5, 0, 8),              # attention to detail = care
+    'braided':      (10, 5, 5, 0, 8),             # intimate care act
+    'lump':         (-15, 10, -10, 5, -5),        # "lump in throat"
+    'throat':       (-10, 10, -10, 5, -3),
+    'stomach':      (-10, 10, -10, 10, -3),       # "stomach dropped"
+    'tongue':       (-5, 5, -5, 0, 0),
+    'shaking':      (-20, 25, -20, 15, -8),
+    'dropped':      (-20, 15, -15, 10, -5),       # override -- "stomach dropped" "heart dropped"
+    'bond':         (15, 5, 10, 0, 10),            # connection
+    'accountability':(-5, 5, 10, 5, 5),
+    'texts':        (0, 5, 0, 5, 5),              # override -- neutral communication
+    'morning':      (5, 5, 5, 5, 3),              # override confirm
+    'fail':         (-25, 10, -20, 10, -8),
+    'judgment':     (-20, 10, 10, 5, -5),          # override confirm
+    'space':        (0, -5, 0, 0, 0),              # override confirm
+    'photo':        (0, 0, 0, 0, 10),              # high G memory
+    'photos':       (0, 0, 0, 0, 10),
+    'movie':        (5, 5, 0, 0, 5),
+    'comfort':      (15, -10, 10, 0, 10),
+    'car':          (0, 0, 0, 0, 15),              # override with G
+}
+EMOTIONAL_VOCABULARY.update(_R15)
+
+
+# ── Round 16: competition, mockery, care acts ──
+_R16 = {
+    'screenshot':   (-15, 10, -5, 5, -5),        # privacy violation
+    'screenshots':  (-15, 10, -5, 5, -5),
+    'laughs':       (-5, 15, 5, 0, 0),            # liquid -- laughs at vs laughs with
+    'competes':     (-15, 10, 10, 5, -5),         # competition instead of support
+    'competing':    (-15, 10, 10, 5, -5),
+    'supporting':   (20, 5, 10, 0, 10),           # active support
+    'bookshelf':    (5, 5, 5, 0, 5),              # built something
+    'drives':       (0, 5, 5, 5, 0),              # movement -- neutral
+    'copies':       (-10, 5, -5, 5, -3),          # copying/stealing identity
+    'compliments':  (10, 5, 5, 0, 5),             # positive attention
+    'insult':       (-30, 15, 15, 10, -10),
+    'insults':      (-30, 15, 15, 10, -10),
+    'boundaries':   (10, 5, 15, 0, 10),           # healthy -- high G
+    'boundary':     (10, 5, 15, 0, 10),
+    'dreams':       (10, 10, 5, 0, 10),           # aspirations -- high G
+    'memory':       (5, 5, -5, 0, 10),            # high G -- identity
+    'doubt':        (-20, 10, -15, 10, -8),
+    'doubts':       (-20, 10, -15, 10, -8),
+    'poems':        (15, 5, 10, 0, 10),           # creative expression of care
+    'napkins':      (0, 0, 0, 0, 0),
+    'taught':       (15, 5, 15, 0, 10),           # passing knowledge
+    'fish':         (5, 5, 5, 0, 5),
+    'soup':         (5, 0, 0, 0, 5),              # comfort food
+    'named':        (5, 5, 5, 0, 10),             # honor -- high G
+    'hour':         (0, 0, 0, 5, 0),              # time marker
+    'scratch':      (5, 5, 10, 0, 5),             # "from scratch" = effort
+}
+EMOTIONAL_VOCABULARY.update(_R16)
+
+
+# ── Round 17: social manipulation + sacrifice acts ──
+_R17 = {
+    'rehearse':     (-10, 10, -10, 5, -3),        # anxiety -- preparing for confrontation
+    'conversations':(-3, 5, 0, 0, 5),
+    'happen':       (-5, 5, -3, 5, 0),            # "what happened" = unease
+    'conveniently': (-10, 0, 10, 0, -3),          # sarcastic availability
+    'plans':        (0, 5, 5, 5, 0),
+    'needed':       (-5, 5, -5, 5, -3),           # "i needed" = unmet need
+    'moving':       (0, 5, 0, 5, 0),
+    'posts':        (0, 5, 0, 0, 5),
+    'bringing':     (-5, 5, 0, 5, 0),             # "bringing up" = resurfacing
+    'favors':       (-5, 5, -5, 5, -3),           # weaponized generosity
+    'sat':          (5, -5, 5, 0, 5),             # presence -- staying
+    'six':          (0, 0, 0, 0, 0),
+    'hours':        (0, 0, 0, 5, 0),
+    'covered':      (10, 5, 10, 0, 8),            # covered shift = support
+    'shift':        (0, 5, 0, 5, 0),
+    'donated':      (15, 10, 15, 0, 10),          # giving -- selfless act
+    'type':         (0, 0, 0, 0, 0),
+    'rare':         (0, 5, 0, 5, 5),
+    'blood':        (-5, 10, -5, 10, 10),         # medical + sacrifice context
+    'crayon':       (10, 5, 5, 0, 8),             # childlike -- warmth
+    'sign':         (0, 5, 0, 0, 0),
+    'language':     (0, 5, 0, 0, 5),
+    'waiting':      (-8, 5, -8, 10, -3),          # override
+    'fixed':        (10, 5, 10, 0, 5),            # repaired
+    'leaky':        (-5, 5, -5, 5, 0),
+    'faucet':       (0, 0, 0, 0, 0),
+    'volunteers':   (-5, 5, -5, 5, -3),           # "volunteers my time" = boundary violation
+    'passive':      (-10, -5, -5, 0, -3),
+    'aggressive':   (-20, 20, 15, 10, -5),
+    'accidentally': (-8, 5, -5, 5, -3),           # "accidentally forget" = deliberate
+    'invite':       (10, 10, 5, 0, 5),            # inclusion
+    'likes':        (5, 5, 0, 0, 3),
+}
+EMOTIONAL_VOCABULARY.update(_R17)
+
+
+# ── Round 18: sacrifice + score-keeping ──
+_R18 = {
+    'bullet':       (-15, 30, 15, 20, 15),       # "took a bullet" = ultimate sacrifice. High G.
+    'stood':        (5, 10, 15, 5, 5),            # stood up / stood between = protection
+    'awake':        (-5, 10, 5, 10, 0),           # staying awake = sacrifice of rest
+    'archived':     (-10, 5, 5, 5, -3),           # preserving evidence / control
+    'remind':       (-10, 5, 10, 5, -3),          # "remind me daily" = score-keeping
+    'reminds':      (-10, 5, 10, 5, -3),
+    'turns':        (-5, 5, 5, 5, 0),             # override -- "turns into" = transformation
+    'competition':  (-15, 10, 10, 5, -5),
+    'trophies':     (-5, 5, 5, 0, 5),             # "collect mistakes like trophies"
+    'collect':      (-5, 5, 5, 0, 0),
+    'owe':          (-15, 5, -15, 10, -5),        # debt/obligation
+    'owes':         (-15, 5, -15, 10, -5),
+    'root':         (-5, 5, -5, 5, 0),            # "root against" = opposition
+    'enjoys':       (5, 10, 10, 0, 3),            # liquid -- "enjoys watching me struggle" = sadistic
+    'celebrated':   (15, 15, 10, 0, 8),           # override -- celebration
+    'celebrates':   (15, 15, 10, 0, 8),
+    'crowd':        (5, 15, 0, 5, 5),
+    'chanted':      (10, 20, 5, 5, 5),
+    'stage':        (5, 10, 5, 5, 5),
+    'wiped':        (5, 5, 5, 0, 5),              # care act -- wiping tears
+    'danger':       (-35, 25, -20, 20, -10),
+    'daily':        (-3, 5, 0, 5, 0),
+    'ex':           (-15, 10, -5, 10, 10),        # high G -- past relationship
+    'smiles':       (5, 5, 5, 0, 3),              # liquid -- context determines
+    'struggle':     (-25, 15, -20, 10, -8),
+    'sacrificed':   (10, 10, 10, 5, 15),          # giving up for someone -- high G
+    'sacrifice':    (5, 10, 10, 5, 15),
+}
+EMOTIONAL_VOCABULARY.update(_R18)
+
+
+# ── Round 19: social rejection + recognition ──
+_R19 = {
+    'looked':       (0, 5, 5, 0, 0),             # neutral -- "looked through me" = structural
+    'glass':        (-5, 0, -5, 0, 0),            # "like glass" = invisible/fragile
+    'subject':      (-5, 5, 5, 0, 0),             # "changed the subject" = avoidance
+    'seen':         (-10, 5, -5, 5, -3),          # "left on seen" = acknowledged rejection
+    'week':         (0, 0, 0, 5, 0),
+    'standing':     (10, 10, 10, 0, 5),           # "standing ovation" = recognition
+    'ovation':      (25, 15, 15, 0, 10),          # applause/recognition
+    'calmed':       (15, -10, 10, 0, 8),          # brought peace -- care act
+    'during':       (0, 0, 0, 0, 0),
+    'degree':       (15, 5, 15, 0, 15),           # achievement -- high G
+    'spoke':        (0, 5, 5, 0, 0),
+    'tone':         (-5, 5, 5, 0, 0),             # "tone changed" = shift
+    'closed':       (-5, -5, -5, 0, 0),
+    'door':         (0, 0, 0, 0, 5),
+    'unfollowed':   (-20, 10, -10, 5, -8),        # digital rejection -- override
+    'stories':      (5, 5, 5, 0, 5),              # override confirm
+    'window':       (0, 0, 0, 0, 0),
+    'seat':         (5, 0, 5, 0, 3),              # "saved me a seat" = inclusion
+    'panic':        (-40, 35, -30, 25, -12),      # override -- stronger
+    'attack':       (-35, 30, -20, 20, -10),      # override -- "panic attack"
+}
+EMOTIONAL_VOCABULARY.update(_R19)
+
+
+# ── Round 20: rumor, therapy, art, body modification ──
+_R20 = {
+    'spread':       (-15, 10, 10, 10, -5),        # spreading rumors/info
+    'rumors':       (-30, 15, 10, 10, -10),
+    'rumor':        (-25, 15, 10, 10, -8),
+    'showed':       (0, 5, 5, 5, 0),
+    'herself':      (0, 0, 0, 0, 0),
+    'therapy':      (5, 5, -5, 5, 20),             # high G -- mental health
+    'therapist':    (10, 5, -5, 0, 20),            # caretaker -- high G
+    'poem':         (15, 5, 10, 0, 10),            # creative expression
+    'tattooed':     (10, 10, 10, 0, 15),           # permanent commitment -- high G
+    'tattoo':       (5, 10, 10, 0, 10),
+    'portrait':     (10, 5, 10, 0, 10),
+    'painted':      (10, 5, 10, 0, 8),
+    'mariachi':     (15, 15, 5, 0, 5),
+    'adopted':      (10, 10, 10, 0, 20),           # override -- chosen family. high G
+    'flew':         (5, 10, 5, 5, 5),              # effort/distance
+    'candlelight':  (10, -5, 5, 0, 15),            # high G -- memorial/honor
+    'vigil':        (-5, -10, -5, 0, 20),          # high G -- remembrance
+    'honor':        (20, 10, 15, 0, 15),
+    'lullaby':      (15, -10, 5, 0, 15),           # tenderness -- high G
+    'deployed':     (-15, 15, 15, 15, 20),         # military -- sacrifice, high G
+    'recovering':   (5, 5, -5, 5, 10),             # healing process
+    'garden':       (10, -5, 5, 0, 8),
+    'planted':      (10, 5, 10, 0, 8),
+    'locked':       (-20, 10, -20, 10, -8),        # "locked out" = excluded/trapped
+    'poisoned':     (-35, 15, 15, 10, -12),        # turning others against
+    'recorded':     (-5, 5, 5, 5, 5),              # context-dep -- recorded without permission vs recorded lullaby
+    'permission':   (-5, 5, -5, 5, 5),
+    'evidence':     (-10, 10, 10, 10, 5),
+    'deleted':      (-15, 10, -10, 5, -5),         # override confirm
+    'childhood':    (0, 0, 0, 0, 20),              # high G -- identity period (override V=0)
+    'uninvited':    (-20, 10, -10, 5, -8),
+    'wrist':        (0, 5, 0, 0, 5),
+}
+EMOTIONAL_VOCABULARY.update(_R20)
+
+
+# ── Hitting 3,000 ──
+_THREE_K = {
+    'proposal':     (20, 15, 10, 5, 15),
+    'proposed':     (20, 15, 10, 5, 15),
+    'engagement':   (20, 15, 10, 5, 20),
+    'anniversary':  (10, 5, 5, 0, 20),
+    'milestone':    (10, 10, 10, 5, 10),
+    'progress':     (15, 5, 15, 0, 8),
+    'achievement':  (20, 10, 20, 0, 10),
+    'celebrate':    (20, 15, 10, 0, 8),
+    'blessing':     (20, 5, 10, 0, 15),
+}
+EMOTIONAL_VOCABULARY.update(_THREE_K)
+
+
+# ── Final push to 3,000 ──
+_FINAL_3K = {
+    'grateful':     (30, 5, 10, 0, 15),
+    'thankful':     (25, 5, 10, 0, 12),
+    'humble':       (10, -5, -5, 0, 10),
+    'blessed':      (25, 5, 5, 0, 15),
+    'resilient':    (20, 10, 20, 0, 10),
+    'strength':     (15, 10, 20, 0, 10),
+    'courage':      (20, 15, 25, 0, 12),
+    'warrior':      (15, 15, 25, 0, 10),
+    'survivor':     (15, 10, 20, 0, 15),
+    'healing':      (15, -5, 10, 0, 15),
+}
+EMOTIONAL_VOCABULARY.update(_FINAL_3K)
+
+
+# ── 3,000 ──
+_HIT_3K = {
+    'kindness':     (25, 5, 10, 0, 12),
+    'compassion':   (25, 5, 5, 0, 15),
+    'dignity':      (15, 5, 20, 0, 15),
+    'integrity':    (20, 5, 20, 0, 12),
+    'generosity':   (20, 5, 10, 0, 10),
+}
+EMOTIONAL_VOCABULARY.update(_HIT_3K)
+
+
+# ── MEGA round: 38 words from 72 fresh sentences ──
+_MEGA = {
+    'publicly':     (-10, 10, 10, 5, -3),
+    'corrected':    (-15, 10, 15, 5, -5),
+    'moved':        (-5, 5, 0, 5, 0),
+    'desk':         (0, 0, 0, 0, 5),
+    'corner':       (-5, -5, -5, 0, -3),
+    'sends':        (5, 5, 5, 5, 0),
+    'responds':     (5, 5, 5, 0, 3),
+    'within':       (0, 0, 0, 0, 0),
+    'minutes':      (0, 0, 0, 5, 0),
+    'while':        (0, 0, 0, 0, 0),
+    'three':        (0, 0, 0, 0, 0),
+    'jobs':         (0, 5, 0, 5, 10),
+    'librarian':    (10, -5, 5, 0, 10),
+    'noises':       (-10, 10, -5, 5, -3),
+    'weighing':     (-5, 5, -5, 0, -3),
+    'froze':        (-20, 10, -15, 10, -8),
+    'gives':        (0, 5, 5, 0, 0),
+    'allowance':    (-10, 0, -15, 0, -5),
+    'single':       (-5, 0, 0, 0, 3),
+    'defensive':    (-15, 15, 15, 5, -5),
+    'came':         (0, 5, 0, 5, 0),
+    'pull':         (-5, 10, 5, 5, 0),
+    'any':          (0, 0, 0, 0, 0),
+    'younger':      (0, 5, 0, 0, 0),
+    'already':      (-3, 5, 0, 5, 0),
+    'two':          (0, 0, 0, 0, 0),
+    'sides':        (-10, 5, -5, 5, -3),
+    'inviting':     (10, 10, 5, 0, 5),
+    'copied':       (-10, 5, -5, 5, -3),
+    'entire':       (-5, 5, -3, 5, 0),
+    'ketchup':      (0, 0, 0, 0, 0),
+    'apologizing':  (-10, 5, -10, 5, -3),
+    'sent':         (0, 5, 5, 5, 0),
+    'email':        (0, 5, 0, 5, 5),
+    'rereading':    (-5, 5, -5, 0, 0),
+    'ten':          (0, 0, 0, 0, 0),
+    'times':        (0, 5, 0, 5, 0),
+    'bought':       (5, 5, 5, 0, 3),
+}
+EMOTIONAL_VOCABULARY.update(_MEGA)
+
+
+# ── New domain vocabulary: medical, legal, dating, parenting, customer service ──
+_DOMAINS = {
+    'chemotherapy':  (-35, 15, -25, 20, 30),      # serious medical -- very high G
+    'wants':         (0, 5, 5, 5, 0),
+    'urgently':      (-10, 15, 5, 25, 5),          # high urgency
+    'filed':         (-15, 10, 10, 15, 5),          # legal action
+    'custody':       (-20, 15, -15, 20, 35),        # extremely high G -- children at stake
+    'sided':         (10, 5, 10, 5, 5),             # "sided with me" = support
+    'violated':      (-35, 20, 15, 20, -10),        # broke rules/boundaries
+    'restraining':   (-20, 15, 15, 15, 10),         # legal protection
+    'subpoenaed':    (-20, 15, 5, 20, 5),
+    'records':       (-5, 5, 0, 5, 5),
+    'charges':       (-20, 15, -10, 15, 10),        # legal charges -- high G
+    'netflix':       (5, -5, 0, 0, 0),
+    'pickup':        (-5, 5, 5, 0, 0),
+    'line':          (0, 0, 0, 0, 0),
+    'sons':          (0, 5, 0, 0, 40),              # relationship -- high G
+    'classmate':     (0, 5, 0, 0, 5),
+    'resolving':     (10, 5, 10, 5, 5),
+    'issue':         (-10, 5, -5, 10, 5),
+    'supervisor':    (-5, 10, 15, 10, 5),           # authority figure
+    'tumor':         (-40, 20, -25, 25, 30),
+    'mass':          (-25, 15, -15, 20, 20),        # medical mass
+    'specialist':    (-5, 5, 5, 10, 10),
+    'cleared':       (15, -5, 15, 0, 8),            # "cleared to go" = relief
+    'visitation':    (-15, 10, -15, 10, 25),        # custody -- high G
+    'settlement':    (5, -5, 5, 5, 10),
+    'unmatched':     (-15, 10, -10, 5, -5),         # dating rejection
+    'ghosted':       (-30, 10, -20, 10, -10),       # override confirm
+    'midnight':      (-5, -5, -5, 5, 0),
+    'suspended':     (-25, 15, -20, 10, -10),       # override confirm
+    'nightmares':    (-30, 20, -20, 15, -10),
+    'refund':        (-10, 10, -5, 10, 5),
+    'kitchen':       (5, 0, 5, 0, 5),               # override confirm
+    'report':        (-10, 5, 5, 10, 5),
+}
+EMOTIONAL_VOCABULARY.update(_DOMAINS)
+
+
+# ── Domains 2: sports, military, immigration, aging, addiction ──
+_DOMAINS_2 = {
+    'coach':        (5, 10, 15, 5, 10),
+    'benched':      (-20, 10, -20, 10, -8),        # excluded from participation
+    'game':         (5, 15, 5, 5, 5),
+    'waited':       (10, -5, 5, 5, 10),             # patience/loyalty -- high G
+    'deployment':   (-10, 10, 10, 15, 20),          # military -- high G
+    'where':        (0, 0, 0, 0, 0),
+    'accent':       (-5, 5, -5, 0, 5),
+    'differently':  (-10, 5, -5, 5, -3),            # "treated differently" = othered
+    'put':          (-5, 5, 0, 5, 0),
+    'poured':       (5, 5, 10, 5, 5),               # action -- "poured it out" = agency
+    'bottle':       (-10, 5, -5, 5, 10),            # addiction context -- high G
+    'sink':         (0, 0, 0, 0, 0),
+    'relapsed':     (-35, 15, -25, 15, 20),         # addiction setback -- high G
+    'relapse':      (-30, 15, -20, 15, 20),
+    'months':       (0, 0, 0, 5, 0),
+    'clean':        (20, -5, 15, 0, 15),            # sobriety -- override, high G
+    'sponsor':      (10, 5, 5, 0, 15),              # support person -- high G
+    'citizenship':  (15, 10, 15, 5, 20),            # achievement -- high G
+    'papers':       (0, 5, 0, 5, 10),               # documents -- G from importance
+    'retirement':   (5, -5, 0, 0, 15),              # milestone -- high G
+    'booed':        (-25, 20, -15, 10, -8),
+    'scored':       (20, 20, 15, 5, 8),
+    'winning':      (25, 20, 20, 5, 10),
+    'championship': (15, 20, 15, 10, 15),
+    'teammates':    (5, 10, 5, 0, 10),
+    'battle':       (-20, 25, 15, 15, 10),
+    'buddy':        (10, 5, 10, 0, 10),
+    'overseas':     (-5, 5, 5, 5, 5),
+    'welcomed':     (20, 10, 10, 0, 10),
+    'hid':          (-15, 10, -15, 5, -5),
+    'bottles':      (-10, 5, -5, 5, 8),
+    'drugs':        (-30, 15, -20, 15, 15),
+    'picked':       (-5, 5, -5, 5, 0),              # "picked last" = excluded
+}
+EMOTIONAL_VOCABULARY.update(_DOMAINS_2)
+
+
+# ── Domains 3: religion, academic, housing, food, pet loss ──
+_DOMAINS_3 = {
+    'eviction':     (-35, 20, -30, 25, 30),        # losing home -- extremely high G
+    'evicted':      (-35, 20, -30, 25, 30),
+    'unadoptable':  (-20, 5, -15, 5, 15),          # rejected/unwanted
+    'landlord':     (-10, 10, 15, 10, 10),
+    'rent':         (-10, 5, -5, 10, 10),
+    'pantry':       (-5, 0, 0, 5, 5),
+    'coins':        (-10, 5, -10, 5, -3),           # poverty signal
+    'bread':        (3, 0, 0, 5, 5),                # basic need
+    'vet':          (-5, 5, -5, 10, 15),            # veterinarian -- high G (pet's life)
+    'shelter':      (-5, 5, -5, 5, 10),
+    'rescue':       (10, 10, 10, 5, 10),
+    'congregation': (0, 5, 0, 0, 10),
+    'excommunicated':(-30, 15, -20, 10, 20),        # expelled from community -- high G
+    'thesis':       (0, 10, 5, 10, 10),
+    'advisor':      (0, 5, 10, 5, 10),
+    'dissertation': (5, 10, 10, 10, 15),
+    'defended':     (15, 10, 15, 5, 10),            # override confirm
+    'published':    (20, 10, 15, 5, 12),            # override confirm
+    'journal':      (5, 5, 5, 0, 8),
+    'professor':    (0, 5, 10, 5, 10),
+    'lecture':      (0, 5, 5, 5, 5),
+    'rental':       (0, 5, 0, 5, 8),
+    'application':  (0, 5, 0, 10, 8),
+    'thanksgiving': (10, 5, 5, 0, 15),              # override confirm
+    'anonymously':  (10, 5, -5, 0, 5),              # anonymous kindness
+}
+EMOTIONAL_VOCABULARY.update(_DOMAINS_3)

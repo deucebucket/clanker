@@ -14,7 +14,7 @@ Flow:
 import re
 from collections import defaultdict
 
-from demo.forces_curated import EMOTIONAL_VOCABULARY
+from .forces_curated import EMOTIONAL_VOCABULARY
 
 _VOCAB = EMOTIONAL_VOCABULARY
 _VOCAB_REF = _VOCAB
