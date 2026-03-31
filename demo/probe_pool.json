@@ -750,7 +750,7 @@
   },
   {
     "text": "Someone deleted your file from the shared drive.",
-    "tier": "N",
+    "tier": "NEG",
     "cat": "D",
     "theme": "daily_life",
     "engine_v": 126
@@ -869,7 +869,7 @@
   },
   {
     "text": "A friend volunteered you for something at a gathering.",
-    "tier": "N",
+    "tier": "NEG",
     "cat": "D",
     "theme": "friendship",
     "engine_v": 137
@@ -994,7 +994,7 @@
     "engine_v": 129
   },
   {
-    "text": "You found your child first drawing in the back of a closet.",
+    "text": "You found your child's first drawing in the back of a closet.",
     "tier": "N",
     "cat": "G",
     "theme": "family",
@@ -1071,7 +1071,7 @@
     "engine_v": 134
   },
   {
-    "text": "You heard a sound from your childhood neighborhood.",
+    "text": "You drove past the house you grew up in.",
     "tier": "N",
     "cat": "G",
     "theme": "family",
@@ -2072,8 +2072,8 @@
     "engine_v": 137
   },
   {
-    "text": "You found your parent old wedding ring in a junk drawer.",
-    "tier": "NEG",
+    "text": "You found your parent's old wedding ring in a junk drawer.",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 116
@@ -2114,7 +2114,7 @@
     "engine_v": 126
   },
   {
-    "text": "You realized you can no longer remember your grandmother voice.",
+    "text": "You realized you can no longer remember your grandmother's voice.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
@@ -2122,7 +2122,7 @@
   },
   {
     "text": "Your childhood pet collar was found in a box during the move.",
-    "tier": "NEG",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 136
@@ -2135,15 +2135,15 @@
     "engine_v": 105
   },
   {
-    "text": "Your father workshop has not been touched since he passed.",
+    "text": "Your father's workshop has not been touched since he passed.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
     "engine_v": 134
   },
   {
-    "text": "You found your child baby shoes in the back of a closet.",
-    "tier": "NEG",
+    "text": "You found your child's baby shoes in the back of a closet.",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 129
@@ -2163,14 +2163,14 @@
     "engine_v": 125
   },
   {
-    "text": "You noticed your parent handwriting has changed.",
+    "text": "You noticed your parent's handwriting has changed.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
     "engine_v": 127
   },
   {
-    "text": "The hospital bracelet from your child birth was in a drawer you were cleaning out.",
+    "text": "The hospital bracelet from your child's birth was in a drawer you were cleaning out.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
@@ -2198,8 +2198,8 @@
     "engine_v": 125
   },
   {
-    "text": "You walked past your old apartment and someone else curtains were in the window.",
-    "tier": "NEG",
+    "text": "You walked past your old apartment and someone else's curtains were in the window.",
+    "tier": "N",
     "cat": "G",
     "theme": "daily_life",
     "engine_v": 127
@@ -2255,7 +2255,7 @@
   },
   {
     "text": "Your parent sold the family car that everyone learned to drive in.",
-    "tier": "NEG",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 130
@@ -2276,27 +2276,27 @@
   },
   {
     "text": "Your child outgrew the clothes you bought just last month.",
-    "tier": "NEG",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 119
   },
   {
-    "text": "You found a grocery list in your mother handwriting from years ago.",
-    "tier": "NEG",
+    "text": "You found a grocery list in your mother's handwriting from years ago.",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 133
   },
   {
-    "text": "The last page of your father journal is blank.",
+    "text": "The last page of your father's journal is blank.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
     "engine_v": 120
   },
   {
-    "text": "Your parent old phone number still shows up in your recent calls.",
+    "text": "Your parent's old phone number still shows up in your recent calls.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
@@ -2317,14 +2317,14 @@
     "engine_v": 119
   },
   {
-    "text": "Your child first word was a name of someone who is no longer around.",
+    "text": "Your child's first word was a name of someone who is no longer around.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
     "engine_v": 132
   },
   {
-    "text": "Your mother called you by your father name.",
+    "text": "Your mother called you by your father's name.",
     "tier": "NEG",
     "cat": "G",
     "theme": "family",
@@ -3367,7 +3367,7 @@
     "engine_v": 126
   },
   {
-    "text": "You found your parent handwriting inside a book they gave you years ago.",
+    "text": "You found your parent's handwriting inside a book they gave you years ago.",
     "tier": "POS",
     "cat": "G",
     "theme": "family",
