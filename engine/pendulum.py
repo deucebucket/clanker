@@ -13,7 +13,7 @@ from .word_classifier import WordRole, classify_sentence, _clean
 from .proximity import proximity_coefficient
 from .vocabulary import VOCABULARY
 from .structures import StructureDetector, StructureMatch
-from .force_flow import resolve_force_flow, compute_flow_modifiers
+from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_intent
 
 
 # ── Physics constants (fixed, never tuned per-sentence) ─────────
@@ -346,6 +346,11 @@ def compute_vadug(
         state_g = CENTER + (state_g - CENTER) * sensitivity + personality.gravity_bias
         state_w = CENTER + (state_w - CENTER) * sensitivity
 
+    # ── Intent (I) computation ────────────────────────────────
+    # Intent = WHERE is the force aimed and WHY.
+    # Computed from force flow direction + structural cues.
+    state_i = compute_intent(force_flow, roles)
+
     # ── Clamp to 0-255 ─────────────────────────────────────────
     result = VADUG(
         v=int(round(max(0, min(255, state_v)))),
@@ -354,6 +359,7 @@ def compute_vadug(
         u=int(round(max(0, min(255, state_u)))),
         g=int(round(max(0, min(255, state_g)))),
         w=int(round(max(0, min(255, state_w)))),
+        i=state_i,
     )
 
     trace_dict = {

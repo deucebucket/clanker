@@ -167,8 +167,74 @@ def resolve_force_flow(roles: List[WordRole]) -> Optional[ForceFlow]:
     )
 
 
+def compute_intent(flow: Optional[ForceFlow], roles=None) -> int:
+    """Compute Intent (I) dimension from force flow.
+
+    Intent = WHERE is the force aimed and WHY.
+      0   = WITHDRAW (retreating, cutting ties, pulling away)
+      64  = DEFLECT (avoiding, redirecting, not engaging)
+      128 = NEUTRAL (informational, no directional intent)
+      192 = CONNECT (reaching toward, building, repairing)
+      255 = CONTROL (dominating, directing, commanding)
+
+    The intent is determined by:
+    1. The force valence (positive = connect/heal, negative = poison/attack)
+    2. The direction (who is acting on whom)
+    3. Structural cues (PULL_AWAY = withdraw, POWER = control)
+    """
+    if flow is None:
+        return 128  # no flow detected = neutral intent
+
+    ev = flow.effective_valence
+    intent = 128  # start neutral
+
+    # Positive force directed at OTHER/RELATION = CONNECT (healing potion → other)
+    if ev > 0 and flow.self_is_actor and not flow.self_is_target:
+        intent = 160 + min(ev // 4, 60)  # 160-220
+
+    # Positive force directed at SELF = self-affirm (healing potion → self)
+    elif ev > 0 and flow.self_acts_on_self:
+        intent = 150 + min(ev // 6, 40)  # 150-190
+
+    # Negative force SELF on SELF = self-destruction (poison → self = WITHDRAW)
+    elif ev < 0 and flow.self_acts_on_self:
+        intent = 40 - min(abs(ev) // 6, 30)  # 40-10 = withdraw
+
+    # Negative force from OTHER onto SELF = being attacked (DEFLECT/WITHDRAW)
+    elif ev < 0 and flow.other_acts_on_self:
+        intent = 80 - min(abs(ev) // 4, 60)  # 80-20 = deflect→withdraw
+
+    # Negative force SELF → OTHER: could be ATTACK/CONTROL or SELF-ASSESSMENT
+    # "im a burden to everyone" = self-assessment (withdraw), not attack
+    # "i hate you" = attack (control)
+    # Distinguish: if the force word is self-descriptive (burden, problem, waste)
+    # it's self-assessment/withdraw, not control
+    elif ev < 0 and flow.self_is_actor and not flow.self_is_target:
+        # Check if this is self-assessment (self describing self negatively TO others)
+        _SELF_ASSESSMENT = {"burden", "problem", "waste", "mistake", "obstacle",
+                           "nuisance", "hindrance", "liability", "deadweight"}
+        force_word = roles[flow.force_idx].word if roles and 0 <= flow.force_idx < len(roles) else ""
+        if force_word in _SELF_ASSESSMENT:
+            intent = 40 - min(abs(ev) // 6, 30)  # withdraw -- self-assessment, not attack
+        else:
+            intent = 200 + min(abs(ev) // 4, 55)  # control -- attacking other
+
+    # Positive force from OTHER = receiving (not self-initiated)
+    elif ev > 0 and flow.other_acts_on_self:
+        intent = 155 + min(ev // 5, 50)  # 155-205 = connect (receiving)
+
+    # Check for structural withdraw cues
+    if roles:
+        has_pull_away = any(r.role == "PULL_AWAY" for r in roles)
+        has_finality = any(r.role == "FINALITY" for r in roles)
+        if has_pull_away or has_finality:
+            intent = min(intent, 80)  # cap at deflect -- pulling away
+
+    return max(0, min(255, intent))
+
+
 def compute_flow_modifiers(flow: Optional[ForceFlow]) -> dict:
-    """Compute VADUGW modifiers from force flow direction.
+    """Compute VADUGWI modifiers from force flow direction.
 
     Returns dict with keys: v_mod, d_mod, w_mod (multipliers, 1.0 = no change).
     """

@@ -50,6 +50,7 @@ def state_transition(
         u=int(round(a_vadug.u * a_weight + b_vadug.u * b_weight)),
         g=int(round(a_vadug.g * a_weight + b_vadug.g * b_weight)),
         w=int(round(a_vadug.w * a_weight + b_vadug.w * b_weight)),
+        i=int(round(a_vadug.i * a_weight + b_vadug.i * b_weight)),
     )
 
 
@@ -86,7 +87,7 @@ def solve_for_b_range(
 
     for bv in range(0, 256, step):
         # Synthetic B: only V varies, rest neutral
-        b = VADUG(v=bv, a=128, d=128, u=0, g=128, w=128)
+        b = VADUG(v=bv, a=128, d=128, u=0, g=128, w=128, i=128)
         c = state_transition(a_vadug, b)
         if _in_zone(c, target_zone):
             valid.append(bv)

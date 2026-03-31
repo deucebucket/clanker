@@ -1,16 +1,19 @@
-"""Core data structures for the Clanker V4 engine."""
+"""Core data structures for the Clanker V5 engine."""
 
 from dataclasses import dataclass
 
 
 # -------------------------------------------------------------
-# VADUGW: 6-byte emotional coordinate system
-# V=Valence, A=Arousal, D=Dominance, U=Urgency, G=Gravity, W=Self-Worth
-# 128 = neutral center for V/A/D/G/W, 0 = minimum for U
-# W: 0=shattered self-worth, 128=stable, 255=strong self-worth
-# W is the user's running assessment of their own value in the system.
-# Low W dampens positive input, amplifies negative. It's the lens
-# through which all other dimensions are perceived.
+# VADUGWI: 7-byte emotional coordinate system
+# V=Valence, A=Arousal, D=Dominance, U=Urgency, G=Gravity, W=Self-Worth, I=Intent
+# 128 = neutral center for V/A/D/G/W/I, 0 = minimum for U
+# W: user's running assessment of their own value. Low W dampens positive.
+# I: directed intent -- WHERE is the force aimed and WHY.
+#   0=WITHDRAW (retreating, cutting ties, pulling away)
+#   64=DEFLECT (avoiding, redirecting, not engaging)
+#   128=NEUTRAL (informational, no directional intent)
+#   192=CONNECT (reaching toward, building, repairing)
+#   255=CONTROL (dominating, directing, commanding)
 # -------------------------------------------------------------
 
 @dataclass
@@ -21,6 +24,7 @@ class VADUG:
     u: int = 0    # urgency: 0=no rush, 255=critical
     g: int = 128  # gravity: 0=crushing/sinking, 128=grounded, 255=floating/soaring
     w: int = 128  # self-worth: 0=shattered, 128=stable, 255=strong
+    i: int = 128  # intent: 0=withdraw, 64=deflect, 128=neutral, 192=connect, 255=control
 
     def __post_init__(self):
         self.v = max(0, min(255, self.v))
@@ -29,12 +33,13 @@ class VADUG:
         self.u = max(0, min(255, self.u))
         self.g = max(0, min(255, self.g))
         self.w = max(0, min(255, self.w))
+        self.i = max(0, min(255, self.i))
 
     def to_bytes(self) -> bytes:
-        return bytes([self.v, self.a, self.d, self.u, self.g, self.w])
+        return bytes([self.v, self.a, self.d, self.u, self.g, self.w, self.i])
 
     def __str__(self):
-        return f"V{self.v} A{self.a} D{self.d} U{self.u} G{self.g} W{self.w}"
+        return f"V{self.v} A{self.a} D{self.d} U{self.u} G{self.g} W{self.w} I{self.i}"
 
     def describe(self) -> str:
         parts = []
@@ -78,6 +83,12 @@ class VADUG:
         elif self.w < 148: parts.append("stable self-worth")
         elif self.w < 190: parts.append("healthy self-worth")
         else: parts.append("strong self-worth")
+
+        if self.i < 30: parts.append("WITHDRAWING")
+        elif self.i < 80: parts.append("deflecting")
+        elif self.i < 148: parts.append("neutral intent")
+        elif self.i < 200: parts.append("connecting")
+        else: parts.append("CONTROLLING")
 
         return ", ".join(parts)
 

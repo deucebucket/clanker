@@ -32,6 +32,7 @@ def state_transition(state_a: VADUG, state_b: VADUG) -> VADUG:
         u=(state_a.u + state_b.u) // 2,
         g=(state_a.g + state_b.g) // 2,
         w=(state_a.w + state_b.w) // 2,
+        i=(state_a.i + state_b.i) // 2,
     )
 
 
