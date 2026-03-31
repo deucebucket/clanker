@@ -67,7 +67,7 @@ class ClankerV3Model(nn.Module):
         )
         self.vadug_head = nn.Sequential(
             nn.Linear(hidden, hidden), nn.GELU(), nn.Dropout(0.1),
-            nn.Linear(hidden, 6),  # V4: VADUGW (6 dimensions)
+            nn.Linear(hidden, 7),  # V5: VADUGWI (7 dimensions)
         )
 
     def forward(self, input_ids, attention_mask):
@@ -98,8 +98,8 @@ class V3Dataset(Dataset):
                 text = d["english"]
                 vadug = d["vadug"]
                 # V4 backward compat: pad 5D traces with W=128
-                if len(vadug) == 5:
-                    vadug.append(128)
+                while len(vadug) < 7:
+                    vadug.append(128)  # pad missing dims with neutral
                 word_roles = d.get("word_roles", [])
                 structures = d.get("structures", [])
 

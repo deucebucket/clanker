@@ -1,125 +1,179 @@
-# Clanker-Micro: 6D Emotional Coordinate Model
+# Clanker-Micro: 7D Emotional Coordinate Model
 
-**22.6M parameters | 6 dimensions | 0.15ms/sentence | 300KB engine**
+**22.6M parameters | 7 dimensions | 0.15ms/sentence | ~300KB engine**
 
-Clanker-Micro predicts 6 continuous emotional coordinates (VADUGW) from English text. Unlike sentiment classifiers that output discrete buckets (positive/negative/angry/sad), Clanker produces a precise point in 6-dimensional emotional space.
+Clanker-Micro predicts 7 continuous emotional coordinates (VADUGWI) from English text. Each sentence maps to a point in 7-dimensional emotional space, producing granular readings beyond what discrete classification provides.
 
-## What It Measures
+---
 
-| Dimension | Name | Scale | What It Captures |
-|-----------|------|-------|-----------------|
-| **V** | Valence | 0-255 | How positive or negative (128 = neutral) |
-| **A** | Arousal | 0-255 | Energy level -- calm to intense |
-| **D** | Dominance | 0-255 | Power/control -- helpless to in command |
-| **U** | Urgency | 0-255 | Time pressure -- none to critical |
-| **G** | Gravity | 0-255 | Emotional weight -- crushing to floating |
-| **W** | Self-Worth | 0-255 | Self-assessment -- shattered to strong |
+## Dimensions
 
-**Total state space:** 256^6 = **281 trillion** unique emotional coordinates.
+| Dim | Name | Scale | What It Captures |
+|-----|------|-------|-----------------|
+| **V** | Valence | 0-255 | Positive ↔ negative (128 = neutral) |
+| **A** | Arousal | 0-255 | Calm ↔ intense |
+| **D** | Dominance | 0-255 | Helpless ↔ in control |
+| **U** | Urgency | 0-255 | No time pressure ↔ critical |
+| **G** | Gravity | 0-255 | Crushing weight ↔ floating |
+| **W** | Self-Worth | 0-255 | Shattered ↔ strong self-assessment |
+| **I** | Intent | 0-255 | Withdraw (0) ↔ deflect (64) ↔ neutral (128) ↔ connect (192) ↔ control (255) |
 
-## Why 6 Buckets Aren't Enough
+Total state space: 256^7 = 72 quadrillion unique emotional coordinates.
 
-A standard emotion classifier puts "I hate this job" and "I hate myself" in the same bucket: **anger** or **sadness**.
+---
 
-Clanker sees them differently:
+## Benchmarks
 
-| Sentence | V | W | Reading |
-|----------|---|---|---------|
-| "I hate this job" | 90 | 95 | Negative, but self-worth intact -- external frustration |
-| "I hate myself" | 85 | 92 | Negative AND self-worth dropping -- self-directed |
+### Academic Datasets (external, not used in training)
 
-The **W dimension** tells you whether someone is blaming the world or blaming themselves. No other model captures this.
+| Dataset | Clanker V5 | VADER | Notes |
+|---------|-----------|-------|-------|
+| **SST-2** (Stanford Sentiment, movie reviews) | 69.0% | 55.7% | 872 validation sentences |
+| **GoEmotions** (Google, Reddit comments) | 75.5% | 60.6% | 1,000 test samples, binary pos/neg |
+| **TweetEval** (Twitter sentiment) | 65.5% | 74.1% | 1,000 test samples, excluding neutral |
 
-## Direction Matters
+SST-2 and GoEmotions are scored cold -- no training data from these datasets was used. TweetEval contains Twitter-specific formatting (handles, hashtags, URLs) that the engine does not currently process.
 
-"He hit me" and "I hit him" are the same words. Every sentiment model scores them identically.
+### Internal Benchmarks
 
-Clanker resolves WHO does WHAT to WHOM:
+| Test | Score | Details |
+|------|-------|---------|
+| Core categories (8 types) | 100% | 64/64 -- crisis, positive, sarcasm, bravado, relationship, fight, internet, body |
+| Permanent test suite | 100% | 630/630 accumulated test sentences |
+| Novel sentence batches | 100% | 10/10 per run (randomly generated) |
+| Hard novel stress test | 80% | 40/50 diverse real-world sentences |
+| Essay emotional arcs | 85.8% | 103/120 across 8 essay types |
+| Crisis recall | 97.3% | 177/182 crisis sentences detected |
+| Crisis false positive | 0.5% | 1/207 safe sentences incorrectly flagged |
 
-| Sentence | V | D | W | Reading |
-|----------|---|---|---|---------|
-| "he hit me" | 99 | 117 | 106 | Negative -- I'm the target, D drops |
-| "i hit him" | 105 | 114 | 111 | Negative -- I'm the actor, D holds |
-| "she cheated on me" | 35 | 83 | 79 | Devastating -- betrayal + self-worth collapse |
-| "i cheated on her" | 65 | 79 | 94 | Bad -- but self-worth less affected |
+### Speed and Size
 
-## Structural Pattern Recognition
+| Metric | Value |
+|--------|-------|
+| Inference speed | ~0.15ms/sentence (~10,000 sentences/sec on CPU) |
+| Engine size | ~300KB (no GPU required) |
+| Model size | 87MB (22.6M parameters) |
 
-The model detects 26 structural patterns -- not from keywords, but from the arrangement of word roles in a sentence. Like a chess player reading piece positions, not memorizing specific games.
+---
 
-| Sentence | Pattern | V | W | What Was Detected |
-|----------|---------|---|---|-------------------|
-| "haha yeah im totally okay" | BRAVADO | 122 | 152 | Overcompensation mask -- protesting too much |
-| "oh great another meeting" | SARCASM_INVERSION | 119 | 128 | Positive words, negative intent |
-| "my wife cheated on me with my best friend" | BETRAYAL | 0 | 80 | Intimate trust weaponized |
-| "nobody would even notice" | -- | 127 | 128 | Isolation -- zero people would observe absence |
-| "im a burden to everyone" | SELF_NULLIFY | 86 | 96 | User calculating self as obstruction |
-| "my father never once said he was proud" | WITHHELD_POSITIVE | 120 | 117 | Positive emotion that was never expressed |
+## How It Works (Overview)
 
-## Negation & Context Resolution
+The engine treats language as physics. Words carry emotional mass and exert force on neighboring words through proximity fields. Sentence structure is analyzed through pattern recognition -- role sequences form recognizable configurations that modify the emotional coordinates.
 
-"Stopped" flips based on what stopped. No other model handles this:
+The system resolves directional force between entities: "he hit me" and "i hit him" produce different dominance and self-worth scores because the force flows in opposite directions.
+
+26 structural patterns are detected, including sarcasm inversion, bravado masking, crisis indicators, betrayal, self-nullification, accountability, and withdrawal.
+
+---
+
+## Example Outputs
+
+### Self-Worth Detection
+
+| Sentence | V | A | D | U | G | W | I |
+|----------|---|---|---|---|---|---|---|
+| "i hate this job" | 90 | 162 | 158 | 49 | 160 | 95 | 128 |
+| "i hate myself" | 85 | 155 | 155 | 32 | 154 | 92 | 19 |
+
+Same valence. Different self-worth. Different intent (neutral vs withdraw).
+
+### Directional Force
+
+| Sentence | V | D | W | I | Reading |
+|----------|---|---|---|---|---------|
+| "he hit me" | 99 | 117 | 106 | 57 | Being hit -- D and W drop |
+| "i hit him" | 105 | 114 | 111 | 231 | Hitting -- control intent |
+| "she cheated on me" | 35 | 83 | 79 | 49 | Betrayal -- W collapses |
+
+### Structural Patterns
+
+| Sentence | V | Pattern | What Was Detected |
+|----------|---|---------|-------------------|
+| "haha yeah im totally okay" | 122 | BRAVADO | Overcompensation mask |
+| "oh great another meeting" | 119 | SARCASM_INVERSION | Positive words, negative intent |
+| "my wife cheated with my best friend" | 0 | BETRAYAL | Intimate trust weaponized |
+| "im a burden to everyone" | 86 | SELF_NULLIFY | User calculating self as obstruction |
+| "my father never once said he was proud" | 120 | WITHHELD_POSITIVE | Positive emotion never expressed |
+
+### Negation and Absence
 
 | Sentence | V | Reading |
 |----------|---|---------|
-| "i stopped smoking" | 136 | Positive -- bad habit ended |
-| "she stopped loving me" | 117 | Negative -- love ended |
+| "i stopped smoking" | 136 | Positive -- bad habit ceased |
+| "she stopped loving me" | 117 | Negative -- love ceased |
 | "the pain stopped" | 143 | Positive -- suffering ended |
-| "i stopped trying" | 125 | Negative -- effort ended |
+| "i havent had a panic attack in a month" | 136 | Positive -- progress report |
 
-"Without" changes meaning based on what's absent:
+### Accountability vs Deflection
 
-| Sentence | V | Pattern | Reading |
-|----------|---|---------|---------|
-| "i can finally afford groceries without stress" | 135 | RELIEF_ABSENCE | Positive -- stress is gone |
-| "they left without saying goodbye" | 122 | FINALITY | Negative -- closure was denied |
-| "i havent had a panic attack in a month" | 136 | RELIEF_ABSENCE | Positive -- progress report |
+| Sentence | V | D | I | Reading |
+|----------|---|---|---|---------|
+| "i was wrong and im sorry" | 106 | 102 | 177 | Connect -- taking accountability |
+| "it wasnt my fault" | 118 | 121 | 85 | Deflect -- rejecting blame |
+| "i hate myself" | 85 | 155 | 19 | Withdraw -- self-attack |
+| "shut up" | 116 | 141 | 210 | Control -- commanding silence |
 
-## Self-Worth Trajectory
+---
 
-W tracks across a conversation. Each message updates the running self-assessment:
+## Conversation State Transition (A + B = C)
 
-| Message | V | W | Trajectory |
-|---------|---|---|-----------|
-| "things have been hard lately" | 122 | 128 | Neutral -- reporting situation |
-| "i just feel like im failing at everything" | 122 | 120 | W dropping -- self-assessment starting to erode |
-| "i am nothing" | 75 | 87 | W collapsed -- self-worth destroyed |
-| "maybe i can try again tomorrow" | 130 | 129 | W recovering -- resilience signal |
+The engine supports forward and backward emotional state computation:
 
-## Model Details
+- **Forward:** Given receiver state A and message B, compute resulting state C
+- **Backward:** Given current state A and desired state C, find message characteristics B that achieve it
 
-- **Architecture:** GPT-2 backbone (256 embed, 12 layers, 8 heads) + 3 task heads
-- **Parameters:** 22.6M
-- **Output heads:**
-  - Word roles: 26 structural role classes (67.5% accuracy)
-  - Sentence patterns: 26 pattern detectors (98.9% accuracy)
-  - VADUGW: 6 continuous coordinates (MAE 2.3 on 0-255 scale)
-- **Training data:** 141K sentences from EmpatheticDialogues, EmoBank, and curated sources
-- **Inference speed:** ~0.15ms/sentence on CPU
-- **Size:** 87MB weights
+State transitions account for force direction:
+- CONTROL intent messages drop the receiver's dominance and self-worth
+- CONNECT intent messages lift the receiver's self-worth
+- WITHDRAW intent increases the receiver's emotional weight
 
-## Datasets
+---
 
-Trained and calibrated against:
-- [EmpatheticDialogues](https://huggingface.co/datasets/facebook/empathetic_dialogues) (Facebook, 25K conversations)
-- [EmoBank](https://github.com/JULIELab/EmoBank) (JULIE Lab, 10K VAD-scored sentences)
-- [GoEmotions](https://huggingface.co/datasets/google-research-datasets/go_emotions) (Google, 58K Reddit comments)
-- Curated crisis, sarcasm, and relationship sentences from clinical TCI field experience
+## Model Architecture
 
-## Intended Use
+| Component | Details |
+|-----------|---------|
+| Backbone | GPT-2 (256 embed, 12 layers, 8 heads) |
+| Parameters | 22.6M |
+| Output heads | 3: word roles (26 classes), sentence patterns (26 patterns), VADUGWI (7D) |
+| Training data | 141K sentences (EmpatheticDialogues + curated sources) |
+| Role accuracy | 66.5% |
+| Pattern accuracy | 98.7% |
+| VADUGWI MAE | 2.19 (mean absolute error on 0-255 scale) |
 
-- **Emotional layer for LLMs:** Attach VADUGW scores to messages so models understand emotional context
-- **Crisis detection:** 97.3% recall on crisis language, 0.5% false positive rate
-- **Conversation state tracking:** Monitor emotional trajectory across multi-turn dialogue
-- **NPC emotional systems:** Game characters with persistent emotional state
-- **Therapy/coaching support tools:** Track self-worth trajectory over sessions
+---
+
+## Training Data Sources
+
+- [EmpatheticDialogues](https://huggingface.co/datasets/facebook/empathetic_dialogues) (Facebook Research, 25K conversations)
+- [EmoBank](https://github.com/JULIELab/EmoBank) (JULIE Lab, 10K VAD-annotated sentences)
+- [GoEmotions](https://huggingface.co/datasets/google-research-datasets/go_emotions) (Google Research, 58K Reddit comments)
+- Curated crisis, sarcasm, and relationship sentences from clinical field experience
+
+Bayesian vocabulary calibration was performed against the EmpatheticDialogues corpus (30K sentence sample) to empirically ground word-level emotional weights.
+
+---
 
 ## Limitations
 
-- English only (the dimensional framework is language-agnostic, vocabulary is not)
-- Slang/hyperbole requires conversation context ("i literally died laughing" reads literal per-sentence)
-- Academic sentiment benchmarks (SST-2) measure a different task -- movie review polarity, not emotional coordinates
-- The model approximates the engine -- edge cases may differ from engine-grade accuracy
+- **English only.** The dimensional framework (VADUGWI) is language-agnostic, but the vocabulary and structural patterns are English-specific. Multilingual support would require per-language vocabulary files.
+- **Slang and hyperbole.** "I literally died laughing" reads literally per-sentence. Conversation context (state tracking across messages) resolves these cases but is not available in single-sentence mode.
+- **Academic sentiment benchmarks.** SST-2 measures movie review polarity, which is a related but different task from emotional coordinate prediction. The engine was not trained on SST-2 data.
+- **Tweet-specific formatting.** Twitter handles (@user), hashtags (#topic), and URLs are not processed, contributing to lower TweetEval scores.
+- **The model approximates the engine.** Edge cases may produce different results between the 22.6M model and the full engine. The engine is the source of truth.
+
+---
+
+## Intended Use
+
+- Emotional context layer for language models
+- Crisis detection and mental health screening support
+- Conversation state tracking across multi-turn dialogue
+- NPC emotional systems in games
+- Therapy and coaching support tools
+- Research in affective computing and dimensional emotion models
+
+---
 
 ## How To Use
 
@@ -127,36 +181,34 @@ Trained and calibrated against:
 from clanker import score
 
 result = score("i am nothing without you")
-print(result)
-# VADUGW(v=80, a=125, d=98, u=17, g=136, w=88)
+# VADUGWI(v=80, a=125, d=98, u=17, g=136, w=88, i=27)
 # Pattern: SELF_NULLIFY
-# Reading: deeply negative, low self-worth, conditional on relationship
+# Reading: deeply negative, low self-worth, withdrawing
 ```
 
 ### As emotional context for an LLM:
 
 ```python
-vadugw = score(user_message)
+vadugwi = score(user_message)
 
 system_prompt = f"""The user's emotional state:
-  Valence: {vadugw.v} ({'negative' if vadugw.v < 118 else 'neutral' if vadugw.v < 138 else 'positive'})
-  Self-Worth: {vadugw.w} ({'low' if vadugw.w < 100 else 'stable' if vadugw.w < 148 else 'healthy'})
-  Dominance: {vadugw.d} ({'feels powerless' if vadugw.d < 100 else 'neutral'})
+  Valence: {vadugwi.v} ({'negative' if vadugwi.v < 118 else 'neutral' if vadugwi.v < 138 else 'positive'})
+  Self-Worth: {vadugwi.w} ({'low' if vadugwi.w < 100 else 'stable' if vadugwi.w < 148 else 'healthy'})
+  Intent: {vadugwi.i} ({'withdrawing' if vadugwi.i < 40 else 'deflecting' if vadugwi.i < 80 else 'neutral' if vadugwi.i < 148 else 'connecting' if vadugwi.i < 200 else 'controlling'})
 
-{'The user is directing negativity at themselves, not the situation.' if vadugw.w < vadugw.v else ''}
-Respond with appropriate care."""
+Respond with appropriate care and tone."""
 ```
-
-## The Standard
-
-VADUGW is a proposed open standard for emotional coordinates in AI systems. The dimensions, the scale (0-255, 128=neutral), and the interpretation are public. Any system can produce or consume VADUGW scores.
-
-The engine that produces the most accurate scores is proprietary. The standard is open.
-
-Like RGB for color. The standard is free. The best camera is not.
 
 ---
 
-*Built from TCI field experience. The math comes from watching real humans in crisis and recognizing the patterns no classifier catches.*
+## The VADUGWI Standard
+
+VADUGWI is proposed as an open standard for emotional coordinates in AI systems. The 7 dimensions, the 0-255 scale, and the interpretation framework are public. Any system can produce or consume VADUGWI scores.
+
+Full specification: [SPEC.md](SPEC.md)
+
+---
+
+*Built from Therapeutic Crisis Intervention field experience.*
 
 *Jerry Mares | [deucebucket](https://github.com/deucebucket)*

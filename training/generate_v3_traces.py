@@ -192,7 +192,7 @@ def trace_sentence(text):
         })
     return {
         "english": text,
-        "vadug": [vadug.v, vadug.a, vadug.d, vadug.u, vadug.g, vadug.w],
+        "vadug": [vadug.v, vadug.a, vadug.d, vadug.u, vadug.g, vadug.w, vadug.i],
         "word_roles": word_roles,
         "structures": structures,
     }
