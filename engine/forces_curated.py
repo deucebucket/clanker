@@ -5587,6 +5587,13 @@ _VOCAB_FIXES = {
     'fine':         (-5, -5, 0, 0, 5),              # override: was -32 then +5. "Im fine" = mask. "Just fine" = adequate. Slight neg lean.
     'minor':        (0, 5, 0, 0, 5),               # override: was -59. "A minor masterpiece" ≠ negative. Size descriptor.
     'revenge':      (-10, 15, 5, 5, 15),           # override: was -77. Topic noun in reviews.
+    # ── SST-2 round 2: next batch of over-weighted words ──
+    'like':         (5, 0, 0, 0, 0),               # override: was +15. FILLER/comparison word. "Like a dream" ≠ positive.
+    'watch':        (0, 5, 0, 0, 5),               # override: was +50. Action verb. "Watch a movie" ≠ positive.
+    'focus':        (0, 5, 5, 0, 5),               # override: was +32. Attention verb. Neutral.
+    'full':         (0, 5, 0, 0, 5),               # override: was +28. Quantity descriptor. "Full of" ≠ positive.
+    'fun':          (15, 15, 10, 0, 5),             # override: was +28. Still positive but less extreme.
+    'funny':        (15, 15, 10, 0, 5),             # override: was +28. Same.
     # Discovery verbs -- zero polarity, the OBJECT determines the emotion
     'found':        (0, 10, 5, 5, 5),              # override: was -5. Context resolves.
     'find':         (0, 10, 5, 5, 5),
