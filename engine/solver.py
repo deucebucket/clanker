@@ -64,31 +64,46 @@ def state_transition(
     b_v = b_vadug.v
     b_i = b_vadug.i
 
-    if b_i > 200 and b_v < 120:
-        # CONTROL + negative = attack on receiver
-        # Receiver's D drops (being dominated), W drops (worth attacked)
-        attack_strength = (255 - b_v) / 255.0  # stronger attack = more negative V
-        c_d -= attack_strength * 15  # D pushed down (controlled)
-        c_w -= attack_strength * 12  # W pushed down (worth under attack)
+    # Attack: negative V directed outward OR pure CONTROL command
+    if b_v < 125 and b_i > 60:
+        # Negative force aimed outward = attack on receiver
+        attack_strength = (128 - b_v) / 128.0  # 0 to 1
+        control_boost = max(0, (b_i - 128)) / 127.0  # 0 to 1
+        total = attack_strength * (1.0 + control_boost)
+        c_d -= total * 15
+        c_w -= total * 15
+        c_v -= total * 5
 
-    elif b_i > 155 and b_v > 135:
-        # CONNECT + positive = support/healing
-        # Receiver's W gets lifted, D stabilized
+    # Pure CONTROL command (high I) -- even if V is only mildly negative
+    # "shut up" has high D force but the RECEIVER loses D (being commanded)
+    if b_i > 200:
+        control_strength = (b_i - 200) / 55.0  # 0 to 1
+        c_d -= control_strength * 12  # being controlled drops YOUR D
+        # Override the D blend -- receiver doesn't gain power from being commanded
+        if b_vadug.d > CENTER:
+            # B has high D (commander's power) but that shouldn't transfer to receiver
+            d_excess = (c_d - a_vadug.d * a_weight) * 0.3  # dampen the D transfer
+            c_d = a_vadug.d * a_weight + d_excess
+
+    # Healing: CONNECT intent + positive V
+    elif b_v > 135 and b_i > 155:
         heal_strength = (b_v - 128) / 127.0
-        c_w += heal_strength * 10  # W lifted (feeling valued)
-        c_d += heal_strength * 5   # D stabilized (someone has their back)
+        connect_boost = (b_i - 128) / 127.0
+        total = heal_strength * (1.0 + connect_boost * 0.5)
+        c_w += total * 12  # W lifted (feeling valued)
+        c_d += total * 8   # D stabilized (someone has their back)
 
+    # Withdraw: sender pulling away from receiver
     elif b_i < 40:
-        # WITHDRAW = sender pulling away
-        # Receiver feels heavier (abandoned), D drops (loss of connection)
         withdraw_strength = (40 - b_i) / 40.0
-        c_g -= withdraw_strength * 8  # heavier (weight of abandonment)
-        c_d -= withdraw_strength * 5  # loss of relational support
+        c_g -= withdraw_strength * 10  # heavier (weight of abandonment)
+        c_d -= withdraw_strength * 8   # loss of relational support
+        c_w -= withdraw_strength * 5   # worth hit from being left
 
-    elif b_i > 80 and b_i < 120 and b_v < 125:
-        # DEFLECT + negative = dismissal
-        # Receiver's W takes mild hit (being dismissed)
-        c_w -= 5  # mild worth hit from being dismissed
+    # Deflect/dismiss: mild negative, disengaged
+    elif b_i > 60 and b_i < 120 and b_v < 128:
+        dismiss_strength = (128 - b_v) / 128.0
+        c_w -= dismiss_strength * 8  # mild worth hit from being dismissed
 
     return VADUG(
         v=int(round(max(0, min(255, c_v)))),
