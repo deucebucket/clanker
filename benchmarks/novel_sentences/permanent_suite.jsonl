@@ -510,7 +510,7 @@
 {"text": "im just in the way", "expected_negative": true, "source": "generated"}
 {"text": "Yeah when you break that fear from asking life gets A LOT better.", "expected_negative": true, "source": "generated"}
 {"text": "I am distant", "expected_negative": true, "source": "generated"}
-{"text": "Prehistoric lovers found locked in eternal embrace", "expected_negative": true, "source": "generated"}
+{"text": "Prehistoric lovers found locked in eternal embrace", "expected_negative": false, "source": "generated"}
 {"text": "she told everyone my secret", "expected_negative": true, "source": "generated"}
 {"text": "I just love little kids.", "expected_negative": false, "source": "generated"}
 {"text": "I wish i was dead", "expected_negative": true, "source": "generated"}

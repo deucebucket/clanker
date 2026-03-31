@@ -5571,6 +5571,11 @@ _VOCAB_FIXES = {
     'scenery':      (5, 0, 0, 0, 10),              # override: was +55. Visual setting.
     'director':     (0, 5, 5, 0, 10),              # override: was +32. Role, not emotion.
     'character':    (0, 5, 0, 0, 10),              # override: was +35. Story element.
+    # Discovery verbs -- zero polarity, the OBJECT determines the emotion
+    'found':        (0, 10, 5, 5, 5),              # override: was -5. "Found my keys" vs "found a lump". Context resolves.
+    'find':         (0, 10, 5, 5, 5),
+    'discovered':   (0, 10, 5, 5, 5),
+    'discover':     (0, 10, 5, 5, 5),
     # ── Slurs/derogatory: these carry heavy negative force ──
     'whore':        (-60, 30, -30, 10, -20),
     'slut':         (-55, 25, -25, 10, -18),
