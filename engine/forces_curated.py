@@ -5549,6 +5549,28 @@ _VOCAB_FIXES = {
     'cliche':       (-20, 5, -10, 0, -10),
     'contrived':    (-25, 5, -15, 0, -10),
     'pretentious':  (-25, 10, 10, 0, -10),
+    # ── Topic/genre nouns: these are SUBJECTS, not assessments ──
+    # "A terrible comedy" -- comedy is the topic, terrible is the assessment.
+    # Topic words should be near-neutral V with appropriate G (mass/importance).
+    'comedy':       (5, 10, 5, 0, 15),            # override: was +80! Genre, not emotion.
+    'horror':       (-5, 15, 0, 5, 15),            # override: was -114! Genre, not terror.
+    'drama':        (0, 10, 0, 0, 15),             # override: was -18.
+    'action':       (0, 15, 5, 5, 10),             # override: was +58. Activity type.
+    'adventure':    (5, 10, 5, 0, 10),             # override: was +50.
+    'crime':        (-10, 10, -5, 5, 15),          # override: was -89. Topic, not crime happening.
+    'war':          (-10, 15, -5, 5, 20),          # override: was -77. Topic, not being in war.
+    'basketball':   (0, 10, 0, 0, 10),             # override: was +32. Sport, not emotion.
+    'baseball':     (0, 10, 0, 0, 10),             # override: was +35.
+    'football':     (0, 10, 0, 0, 10),             # override: was +56.
+    'soccer':       (0, 10, 0, 0, 10),             # override: was +43.
+    'theater':      (0, 5, 0, 0, 10),              # override: was +58. Venue, not emotion.
+    'theatre':      (0, 5, 0, 0, 10),
+    'movies':       (0, 5, 0, 0, 10),              # override: was +50.
+    'movie':        (0, 5, 0, 0, 10),
+    'acting':       (0, 5, 0, 0, 10),              # override: was +43. Skill, not emotion.
+    'scenery':      (5, 0, 0, 0, 10),              # override: was +55. Visual setting.
+    'director':     (0, 5, 5, 0, 10),              # override: was +32. Role, not emotion.
+    'character':    (0, 5, 0, 0, 10),              # override: was +35. Story element.
     # Bookend compound command tokens (collapsed from "shut [spice] up" etc.)
     'shutup':       (-40, 40, 40, 15, -10),       # silence command. D+40 = controller has power. V negative.
     'getout':       (-45, 50, 45, 20, -15),        # expulsion command. Stronger than shutup.
