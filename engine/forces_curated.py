@@ -5485,5 +5485,13 @@ _VOCAB_FIXES = {
     'bipolar':      (-10, 15, -10, 5, 20),    # override: was V=-127. Clinical term, not emotional extreme.
     'poison':       (-20, 20, -10, 10, 15),   # override: was V=-127. "Toxic" but not max negative.
     'cringe':       (-15, 20, -10, 5, 5),     # override: was V=-127. Embarrassing, not devastating.
+    # ── Novel stress test round 2 ──
+    'party':        (5, 10, 5, 0, 15),           # override: was V=+10. Event noun, context resolves. "Nobody at my party" ≠ positive.
+    'test':         (0, 10, 0, 5, 10),            # Neutral evaluation. "Test came back" = waiting for result.
+    'negative':     (-5, 5, -5, 5, 5),            # override: was V=-25. Medical "negative" = GOOD. Liquid word.
+    'waitlisted':   (-15, 10, -15, 10, 10),       # Rejection-adjacent. Limbo. Not accepted.
+    'towed':        (-25, 15, -20, 15, -10),       # Property taken by force.
+    'slept':        (5, -10, 5, 0, 5),             # Neutral action. "Slept well" = positive. Context resolves.
+    'eaten':        (5, 0, 5, 0, 5),               # Neutral action. "Havent eaten" = deprivation from absence scope.
 }
 EMOTIONAL_VOCABULARY.update(_VOCAB_FIXES)
