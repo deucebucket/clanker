@@ -5587,6 +5587,27 @@ _VOCAB_FIXES = {
     'fine':         (-5, -5, 0, 0, 5),              # override: was -32 then +5. "Im fine" = mask. "Just fine" = adequate. Slight neg lean.
     'minor':        (0, 5, 0, 0, 5),               # override: was -59. "A minor masterpiece" ≠ negative. Size descriptor.
     'revenge':      (-10, 15, 5, 5, 15),           # override: was -77. Topic noun in reviews.
+    # ── Gemini consensus fixes: words causing engine disagreement ──
+    'human':        (0, 5, 0, 0, 10),              # override: was +58. Species noun, not emotional.
+    'greatly':      (0, 10, 0, 0, 0),              # override: was +56. Amplifier, not positive.
+    'choosing':     (0, 5, 5, 0, 5),               # override: was +48. Action verb. "I'll be choosing" = control.
+    'training':     (0, 10, 5, 0, 5),              # override: was +48. Activity noun.
+    'station':      (0, 5, 0, 0, 5),               # override: was +50. Location noun.
+    'treasure':     (5, 10, 5, 0, 15),             # override: was +50. Object noun with gravity.
+    'nest':         (0, 5, 0, 0, 5),               # override: was +42. Location noun.
+    'constant':     (0, 5, 0, 0, 5),               # override: was +51. Frequency descriptor.
+    'directly':     (0, 5, 5, 0, 0),               # override: was +55. Manner adverb.
+    'useful':       (10, 5, 5, 0, 5),              # override: was +58. Mild positive utility.
+    'everybody':    (0, 5, 0, 0, 10),              # override: was +42. Scope word like everything. AMPLIFIER.
+    'offer':        (5, 5, 5, 0, 5),               # override: was +56. Neutral action.
+    'offered':      (5, 5, 5, 0, 5),
+    'trust':        (15, 5, 10, 0, 15),            # override: was +106! Way too high. "Trust me" vs "I don't trust you."
+    'okay':         (0, -5, 0, 0, 0),              # override: was +28. "I'm okay" = mask. "Okay but" = hedge. Near neutral.
+    'plan':         (0, 5, 5, 0, 5),               # override: was +51. Action noun.
+    'terminal':     (0, 5, 0, 0, 5),               # override: was -50. Computer terminal, not death.
+    'opposite':     (0, 5, 0, 0, 0),               # override: was -62. Direction/contrast word.
+    'argue':        (-5, 15, 5, 5, 5),             # override: was -42. Debate verb. Mild negative lean.
+    'harder':       (-20, 10, -10, 5, -5),          # override: was -52. Difficulty. "Work harder"=aspiration, "life got harder"=suffering.
     # ── SST-2 round 2: next batch of over-weighted words ──
     'like':         (5, 0, 0, 0, 0),               # override: was +15. FILLER/comparison word. "Like a dream" ≠ positive.
     'watch':        (0, 5, 0, 0, 5),               # override: was +50. Action verb. "Watch a movie" ≠ positive.
