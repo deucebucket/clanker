@@ -3526,5 +3526,887 @@
     "cat": "G",
     "theme": "family",
     "engine_v": 141
+  },
+  {
+    "text": "Your coworker closed their laptop when you walked over.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 124
+  },
+  {
+    "text": "She turned her phone face down when you sat next to her.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "He mentioned your name to his friend.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "Your neighbor watched you from their window as you got home.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 137
+  },
+  {
+    "text": "Someone at work asked what time you usually leave.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 124
+  },
+  {
+    "text": "Your friend screenshot your message before replying.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 127
+  },
+  {
+    "text": "A coworker asked where you went during lunch.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 123
+  },
+  {
+    "text": "Your partner checked your location on their phone.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 128
+  },
+  {
+    "text": "Someone at the party whispered after you walked past.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 124
+  },
+  {
+    "text": "Your manager asked who you were talking to in the hallway.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 128
+  },
+  {
+    "text": "A friend asked how much you paid for your new car.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 133
+  },
+  {
+    "text": "Your roommate moved your things off the counter without saying anything.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 137
+  },
+  {
+    "text": "Someone at work copied your idea and presented it differently.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 127
+  },
+  {
+    "text": "Your friend made plans with someone else on your usual hangout night.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 129
+  },
+  {
+    "text": "A colleague brought up your mistake from last month in a meeting.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 111
+  },
+  {
+    "text": "Your partner suddenly started exercising every day.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 138
+  },
+  {
+    "text": "Someone took a photo in your direction at the coffee shop.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 141
+  },
+  {
+    "text": "Your boss asked you to stay late but did not explain why.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 118
+  },
+  {
+    "text": "A friend stopped inviting you to group chats.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "Your sibling asked your parents about your salary.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 143
+  },
+  {
+    "text": "Someone parked very close to your car in an empty lot.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 116
+  },
+  {
+    "text": "Your coworker started locking their screen whenever you walked by.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 131
+  },
+  {
+    "text": "A friend asked if you were seeing anyone without any context.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "Your neighbor started putting up a fence between your yards.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 127
+  },
+  {
+    "text": "Someone at work laughed right after you left the room.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 118
+  },
+  {
+    "text": "Your partner changed their phone password.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 127
+  },
+  {
+    "text": "A friend started a conversation with you only to ask for a favor.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 136
+  },
+  {
+    "text": "Your child's teacher asked to speak with you privately.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 139
+  },
+  {
+    "text": "Someone new at work asked a lot of questions about you.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 127
+  },
+  {
+    "text": "Your friend suddenly agreed with everything you said.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 138
+  },
+  {
+    "text": "A delivery driver asked who else lives at your address.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 140
+  },
+  {
+    "text": "Your partner reorganized the closet without telling you.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 125
+  },
+  {
+    "text": "Someone at the gym kept glancing at you between sets.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 132
+  },
+  {
+    "text": "Your coworker started documenting every conversation with you.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 128
+  },
+  {
+    "text": "A friend told you that someone was asking about you.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "Your partner cleaned the whole house before you got home.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 132
+  },
+  {
+    "text": "Someone asked if you were related to a person they know.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 135
+  },
+  {
+    "text": "Your manager scheduled a one-on-one with no agenda listed.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 136
+  },
+  {
+    "text": "A neighbor asked when you would be out of town next.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 127
+  },
+  {
+    "text": "Your friend changed the subject every time you brought up money.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "Someone followed the same route as you for several blocks.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 122
+  },
+  {
+    "text": "Your partner asked to see your phone to look something up.",
+    "tier": "N",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 128
+  },
+  {
+    "text": "Your coworker pointed out your typo in front of the whole team.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 137
+  },
+  {
+    "text": "Someone recorded you without asking during an argument.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 108
+  },
+  {
+    "text": "Your friend told your secret to someone else.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 123
+  },
+  {
+    "text": "A colleague took credit for the project you led.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 145
+  },
+  {
+    "text": "Your partner brought up your past failure during a disagreement.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 101
+  },
+  {
+    "text": "Someone spread a rumor about you at school.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 121
+  },
+  {
+    "text": "Your boss scheduled a meeting during your lunch break on purpose.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 117
+  },
+  {
+    "text": "A friend made a joke about your weight in front of others.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 139
+  },
+  {
+    "text": "Your sibling told your parents about your private struggles.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 130
+  },
+  {
+    "text": "Someone left you out of a group photo deliberately.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
+  },
+  {
+    "text": "Your coworker undermined your suggestion by talking over you.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 126
+  },
+  {
+    "text": "A friend invited everyone from the group except you.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 124
+  },
+  {
+    "text": "Your partner compared you unfavorably to their ex.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 123
+  },
+  {
+    "text": "Someone posted an unflattering photo of you without permission.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 126
+  },
+  {
+    "text": "Your manager gave your promotion to someone with less experience.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 137
+  },
+  {
+    "text": "A classmate mocked your accent in front of others.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 131
+  },
+  {
+    "text": "Your friend borrowed something and returned it damaged.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 92
+  },
+  {
+    "text": "Someone intentionally blocked your parking spot with their car.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 121
+  },
+  {
+    "text": "Your coworker reported you for something everyone does.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 127
+  },
+  {
+    "text": "A friend publicly corrected you on social media.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 133
+  },
+  {
+    "text": "Your partner ignored your calls all day after a small disagreement.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 122
+  },
+  {
+    "text": "Someone cut in front of you in line and looked back at you.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 126
+  },
+  {
+    "text": "Your boss criticized your work in a company-wide email.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 121
+  },
+  {
+    "text": "A friend shared your private conversation in a group chat.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 136
+  },
+  {
+    "text": "Your neighbor filed a noise complaint against you for normal activity.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 120
+  },
+  {
+    "text": "Someone threw away your food from the office fridge.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 124
+  },
+  {
+    "text": "Your partner told their friends something embarrassing about you.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 104
+  },
+  {
+    "text": "A coworker deleted your files from the shared drive.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 126
+  },
+  {
+    "text": "Someone bumped into you hard and walked away without apologizing.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 114
+  },
+  {
+    "text": "Your friend canceled on you but then posted pictures going out with others.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 135
+  },
+  {
+    "text": "Your sibling took your belongings without asking.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 128
+  },
+  {
+    "text": "A colleague sent your private message to your manager.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 144
+  },
+  {
+    "text": "Someone laughed at you when you tripped in public.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 107
+  },
+  {
+    "text": "Your partner made plans that conflict with your anniversary.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 131
+  },
+  {
+    "text": "A friend talked about their success knowing you just failed at the same thing.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 120
+  },
+  {
+    "text": "Your coworker changed the project direction without consulting you.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 145
+  },
+  {
+    "text": "Someone deliberately gave you wrong directions.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 133
+  },
+  {
+    "text": "Your partner sided with a stranger during your argument in public.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 113
+  },
+  {
+    "text": "A friend returned your gift still in the packaging.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 144
+  },
+  {
+    "text": "Your manager questioned your qualifications in front of clients.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 127
+  },
+  {
+    "text": "Someone keyed your car in the parking garage.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 128
+  },
+  {
+    "text": "Your partner walked ahead of you and did not wait.",
+    "tier": "NEG",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 137
+  },
+  {
+    "text": "Your coworker saved you a seat at the crowded meeting.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 143
+  },
+  {
+    "text": "Someone left an anonymous thank you note on your desk.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 144
+  },
+  {
+    "text": "Your friend memorized your coffee order.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 130
+  },
+  {
+    "text": "A colleague defended your work when others questioned it.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 127
+  },
+  {
+    "text": "Your partner packed your favorite lunch without being asked.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 133
+  },
+  {
+    "text": "Someone held the elevator door when they saw you rushing.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 131
+  },
+  {
+    "text": "Your neighbor shoveled your driveway after the snowstorm.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 128
+  },
+  {
+    "text": "A friend checked on you the morning after a hard day.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 122
+  },
+  {
+    "text": "Your boss mentioned your contribution by name in the report.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 126
+  },
+  {
+    "text": "Someone returned your lost wallet with everything still inside.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 119
+  },
+  {
+    "text": "Your partner remembered a small detail you mentioned weeks ago.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 134
+  },
+  {
+    "text": "A coworker stayed late to help you finish your project.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 135
+  },
+  {
+    "text": "Your friend drove thirty minutes out of their way to pick you up.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 127
+  },
+  {
+    "text": "Someone bought the coffee for the person behind them in line and it was you.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 122
+  },
+  {
+    "text": "Your sibling called just to see how your interview went.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 122
+  },
+  {
+    "text": "A stranger helped you carry your groceries to the car.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 132
+  },
+  {
+    "text": "Your partner left you a handwritten note before a big day.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 140
+  },
+  {
+    "text": "A friend brought you soup when they heard you were sick.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 118
+  },
+  {
+    "text": "Your coworker publicly praised your presentation to the team.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 130
+  },
+  {
+    "text": "Someone let you merge into traffic with a wave and a smile.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 135
+  },
+  {
+    "text": "Your child made you a card for no particular reason.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 117
+  },
+  {
+    "text": "A friend texted you a song that reminded them of you.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 130
+  },
+  {
+    "text": "Your neighbor left fresh vegetables from their garden on your porch.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 130
+  },
+  {
+    "text": "Someone offered their umbrella to you in the rain.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 132
+  },
+  {
+    "text": "Your partner asked about the book you have been reading.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 129
+  },
+  {
+    "text": "A coworker brought you back a souvenir from their vacation.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 133
+  },
+  {
+    "text": "Your friend remembered your pet's name from a conversation months ago.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 133
+  },
+  {
+    "text": "Someone gave up their seat on the bus so you could sit down.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 128
+  },
+  {
+    "text": "Your manager asked how you were doing after a family emergency.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 113
+  },
+  {
+    "text": "A friend surprised you with tickets to something you love.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 170
+  },
+  {
+    "text": "Your partner turned off the TV to listen to your story.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 128
+  },
+  {
+    "text": "Someone at work made sure you got included in the lunch order.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 135
+  },
+  {
+    "text": "Your friend showed up early to help you set up for your event.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 159
+  },
+  {
+    "text": "A neighbor watched your house while you were on vacation.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 138
+  },
+  {
+    "text": "Your partner apologized first even though you were both wrong.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 121
+  },
+  {
+    "text": "Someone noticed your new haircut and complimented it sincerely.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 148
+  },
+  {
+    "text": "Your coworker covered your shift when you had an emergency.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "work",
+    "engine_v": 120
+  },
+  {
+    "text": "A friend kept your favorite snack stocked at their place.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 136
+  },
+  {
+    "text": "Your sibling stood up for you during a family argument.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "family",
+    "engine_v": 109
+  },
+  {
+    "text": "Someone picked up something you dropped and chased you down to return it.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "daily_life",
+    "engine_v": 106
+  },
+  {
+    "text": "Your partner planned a quiet evening at home because they knew you needed rest.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "relationship",
+    "engine_v": 136
+  },
+  {
+    "text": "A friend wrote a genuine recommendation letter for you without being asked.",
+    "tier": "POS",
+    "cat": "I",
+    "theme": "social",
+    "engine_v": 128
   }
 ]
