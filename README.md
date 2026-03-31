@@ -8,6 +8,8 @@ Transformers give fluency. Rule systems give control. Clanker is the bridge -- f
 
 ~300KB engine. 0.15ms per sentence. 4,000+ words. 26 patterns. 167 tests. 100% on 630 sentences. Fully deterministic and auditable.
 
+Tested against consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok) on 521 game dialogue lines. Agrees with strong consensus 76.3% of the time. Aligns most closely with Gemini and Claude Opus -- the models that read emotional subtext rather than defaulting neutral.
+
 ## VADUGWI Coordinates
 
 Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):

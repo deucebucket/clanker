@@ -38,6 +38,18 @@ Total state space: 256^7 = 72 quadrillion unique emotional coordinates.
 
 SST-2 and GoEmotions are scored cold -- no training data from these datasets was used. TweetEval contains Twitter-specific formatting (handles, hashtags, URLs) that the engine does not currently process.
 
+### Frontier AI Consensus Benchmark
+
+Tested against consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok) on 521 Fallout 76 dialogue lines. Each model independently graded every sentence on all 7 VADUGWI dimensions.
+
+| Metric | Score |
+|--------|-------|
+| Agreement with strong consensus (3+ of 4 agree) | **76.3%** on 131 high-confidence sentences |
+| Closest alignment | Gemini (71%) and Claude Opus (70%) |
+| Grading style | Reads emotional subtext (nuanced camp), not neutral-default (conservative camp) |
+
+For comparison, Gemini and Grok only agree with each other 58% of the time. GPT-4 and Grok agree 88% but both default neutral on ambiguous lines. The engine reads more like Gemini and Claude -- the graders that detect sarcasm, condescension, and passive aggression.
+
 ### Internal Benchmarks
 
 | Test | Score | Details |
