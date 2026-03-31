@@ -55,6 +55,43 @@ def compute_vadug(
     # Layer 0: compound phrase resolution
     # Certain word pairs form units of meaning that differ from individual words.
     # "no one" = "nobody" (zero humans). "won't stop" = "persists" (continues).
+    # "shut ... up" = command to stop talking (everything between is amplifier spice).
+
+    # Bookend compounds: opener ... closer with variable filling
+    # "shut [the fuck] up" → collapse to "shutup" (command token)
+    _BOOKEND_COMPOUNDS = {
+        "shut": "up",      # shut [anything] up = silence command
+        "get": "out",      # get [the fuck] out = expulsion command
+        "fuck": "off",     # fuck [right] off = rejection command
+        "back": "off",     # back [the hell] off = distance command
+        "piss": "off",     # piss off = rejection
+    }
+    # First pass: detect bookend compounds and collapse
+    # BUT: only collapse if the filling is amplifier spice, not real objects.
+    # "shut the fuck up" = shut + spice + up → collapse to "shutup"
+    # "shut the door" = shut + OBJECT → do NOT collapse (different meaning)
+    _SPICE_WORDS = {"the", "a", "an", "fuck", "fucking", "fuckin", "damn",
+                    "god", "hell", "mother", "motherfuckin", "stupid",
+                    "bitch", "ass", "right", "just", "already", "up",
+                    "freakin", "freaking", "effing"}
+    collapsed = list(words)
+    for opener, closer in _BOOKEND_COMPOUNDS.items():
+        start_idx = None
+        for idx, w in enumerate(collapsed):
+            if w.lower() == opener:
+                start_idx = idx
+            elif w.lower() == closer and start_idx is not None and idx - start_idx <= 8:
+                # Check filling: if ANY word between is NOT spice, abort
+                # "shut the door" has "door" = not spice = abort
+                filling = [collapsed[j].lower() for j in range(start_idx + 1, idx)]
+                all_spice = all(f in _SPICE_WORDS for f in filling)
+                if all_spice:
+                    compound = opener + closer
+                    collapsed = collapsed[:start_idx] + [compound] + collapsed[idx+1:]
+                start_idx = None  # reset either way
+                break
+    words = collapsed
+
     _ONE_AS_QUANTIFIER = {"thing", "person", "place", "way", "reason", "time",
                           "day", "moment", "word", "chance", "step", "bit"}
     # Double negation compounds: negator + cessation = continuation

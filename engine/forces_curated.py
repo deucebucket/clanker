@@ -5503,6 +5503,12 @@ _VOCAB_FIXES = {
     'brought':      (10, 5, 10, 0, 5),             # "Brought me X" = delivered/gave. Act of service. Slight positive.
     'bring':        (5, 5, 5, 0, 5),
     'shoulder':     (5, -5, 5, 0, 10),             # "Cry on my shoulder" = support/comfort. Slight positive.
+    # Bookend compound command tokens (collapsed from "shut [spice] up" etc.)
+    'shutup':       (-40, 40, 40, 15, -10),       # silence command. D+40 = controller has power. V negative.
+    'getout':       (-45, 50, 45, 20, -15),        # expulsion command. Stronger than shutup.
+    'fuckoff':      (-50, 50, 40, 15, -15),        # rejection command. Strong negative.
+    'backoff':      (-30, 35, 30, 10, -10),        # distance command. Less aggressive.
+    'pissoff':      (-40, 40, 35, 10, -12),        # rejection. Similar to fuckoff but milder.
     # ── Structural edge case fixes ──
     'fought':       (-15, 30, 15, 10, 15),         # override: was -94! "Fought FOR me" = advocated. "Fought me" = violence. Liquid.
     'fighting':     (-15, 30, 15, 10, 15),
