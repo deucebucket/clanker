@@ -598,6 +598,16 @@ class StructureDetector:
             w_penalty = -60.0  # conditional worth = deeper W hit
             confidence = min(confidence + 0.1, 1.0)
 
+        # Absent target nuke: "im a burden" with NO target = broadcast to ALL.
+        # No OTHER_REF or RELATION_REF = the user didn't scope it.
+        # The absence of a target amplifies to all relationships.
+        # "im a burden to my mom" = scoped (has RELATION). Less severe.
+        # "im a burden" = unscoped. Nuclear. Everyone.
+        if not has_other and not has_without:
+            # No target named, no "without" conditional = universal self-negation
+            w_penalty = -50.0  # worse than targeted, less than conditional
+            confidence = min(confidence + 0.05, 1.0)
+
         return StructureMatch(
             pattern="SELF_NULLIFY",
             confidence=confidence,
