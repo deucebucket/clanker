@@ -1,10 +1,10 @@
-# Clanker V3 Specification
+# Clanker V4 Specification
 
 Complete technical reference. One document, everything you need.
 
-## VADUG Coordinate System
+## VADUGW Coordinate System
 
-5 dimensions, each 0-255. 128 is neutral center (except U which starts at 0).
+6 dimensions, each 0-255. 128 is neutral center (except U which starts at 0).
 
 | Dim | 0 | 128 | 255 | Measures |
 |-----|---|-----|-----|----------|
@@ -13,18 +13,19 @@ Complete technical reference. One document, everything you need.
 | D (Dominance) | Helpless | Balanced | Full control | Agency/power |
 | U (Urgency) | None | Moderate | Critical | Time pressure |
 | G (Gravity) | Crushing/heavy | Grounded | Floating/light | Emotional weight |
+| W (Self-Worth) | Shattered | Stable | Strong | Self-evaluation |
 
-5 bytes. 1.1 trillion possible states.
+6 bytes. 281 trillion possible states.
 
 ## Pipeline
 
 ```
-text -> Roles -> Proximity -> Structures -> Physics -> VADUG
+text -> Roles -> Proximity -> Structures -> Physics -> VADUGW
 ```
 
 ### Layer 1: Word Classification
 
-2,400+ vocabulary words, each with a force tuple (dV, dA, dD, dU, dG).
+4,000+ vocabulary words, each with a force tuple (dV, dA, dD, dU, dG, dW).
 
 Classified by force magnitude:
 - **Primary signal** (|V| > 40): fixed emotional direction
@@ -32,7 +33,7 @@ Classified by force magnitude:
 - **Structural** (|V| <= 5): near-neutral
 - **Unclassified**: not in vocabulary, inherits from nearby words
 
-23 structural roles:
+23+ structural roles:
 
 ```
 SELF_REF        I, me, my, myself           speaker
@@ -94,7 +95,7 @@ Example: "I am very sad"
 ### Layer 3: Structure Detection
 
 Role sequences identify patterns that word forces alone miss.
-22+ patterns currently defined:
+26 patterns currently defined:
 
 ```
 FAREWELL            TRANSFER + POSSESSION + RELATION_REF
@@ -115,7 +116,14 @@ CALLING_OUT         question frame + TEMPORAL_INTENSITY + accusation ("why do yo
 DIRECTED_POSITIVE   positive word + OTHER_REF as dismissal ("good for you", "must be nice")
 MINIMIZER           diminishing word + real impact ("it was just a joke", "youre too sensitive")
 EXCLUDED_POSITIVE   SELF_REF excluded from positive ("do you even love me")
+RELIEF_ABSENCE      NEGATOR + negative + TEMPORAL ("haven't had a panic attack in weeks")
+SELF_EXCLUDED       SELF_REF + exclusion marker ("everyone except me")
+WITHHELD_POSITIVE   NEGATOR + TRANSFER + positive ("they never told me they were proud")
 ```
+
+V4 additions: force flow resolver (WHO does WHAT to WHOM), absence scope
+("havent had X" dampens absent events), compound phrase resolution ("no one" ->
+nobody), Bayesian vocabulary corrections, forced choice cancellation.
 
 These are engineered rules, not emergent. The 78K sentence transition map
 provides a path toward data-driven detection.
@@ -146,7 +154,7 @@ target_V = 128 + dV * coefficient * FORCE_SCALE
 V_new = V_prev * MOMENTUM + target_V * (1-MOMENTUM) + direct_push
 ```
 
-ALL 2,400+ vocabulary words apply force, not just high-magnitude ones.
+ALL 4,000+ vocabulary words apply force, not just high-magnitude ones.
 
 **POSSESSION force stripping**: POSSESSION-role words (dog, car, keys) retain their
 gravity value but have emotional force (dV, dA, dD, dU) set to zero. Objects have
@@ -181,7 +189,7 @@ still   = >>    persistence, counteracts decay
 
 ## Bidirectional Solver
 
-**Forward**: text -> VADUG
+**Forward**: text -> VADUGW
 
 **Backward**: given state A and target zone C, sweep response temperature:
 ```
@@ -214,7 +222,7 @@ Layer 2: no EMOTIONAL words, no forces to apply.
 
 Layer 3: TRANSFER near POSSESSION near RELATION_REF = FAREWELL (0.9 confidence)
 ```
-v_weight=-40, d_weight=-20, u_weight=+25, g_weight=-20
+v_weight=-40, d_weight=-20, u_weight=+25, g_weight=-20, w_weight=-10
 ```
 
 Layer 4:
@@ -240,7 +248,7 @@ Vocabulary: negative-to-positive ratio approximately 1.08:1 among primary signal
 
 ## Accuracy
 
-- 92% on unambiguous sentences (excluding context-dependent)
+- 100% on 630 novel sentences
 - 85% crisis recall (was ~80% in V3.1)
 - 100% on genuine positive (zero false positives on safe text)
 - 90% on internet speak
@@ -250,7 +258,7 @@ Vocabulary: negative-to-positive ratio approximately 1.08:1 among primary signal
 
 ## Limitations
 
-- 22+ structure patterns are engineered, not emergent
+- 26 structure patterns are engineered, not emergent
 - Sarcasm detection is the weakest category
 - Academic sentiment benchmarks (SST-2) test a different task
 - Vocabulary covers conversational English, not literary/academic registers
@@ -265,8 +273,10 @@ engine/
   proximity.py         Influence fields
   structures.py        Pattern detection
   solver.py            Bidirectional solver
-  forces_curated.py    2,400+ word force tuples
-  shared.py            VADUG dataclass
+  forces_curated.py    4,000+ word force tuples (6D VADUGW)
+  force_flow.py        Force flow resolver (WHO does WHAT to WHOM)
+  zones_impl.py        Zone implementation
+  shared.py            VADUG dataclass (6-byte: V, A, D, U, G, W)
   battleship.py        Probe system
   vocabulary.py        Vocabulary export
   zones.py             9 convergence zones

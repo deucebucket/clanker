@@ -1,16 +1,16 @@
-# How VADUG is Calculated - V3 Formula Reference
+# How VADUGW is Calculated - V4 Formula Reference
 
-## The V3 Sentence Equation
+## The V4 Sentence Equation
 
 ```
-VADUG = Physics( Structures( Proximity( Roles(words) ) ) )
+VADUGW = Physics( Structures( Proximity( Roles(words) ) ) )
 ```
 
 Four layers, bottom-up:
 
 1. **Roles**: Each word gets a structural role (18 types)
 2. **Proximity**: Distance-based influence fields between words (decay 0.7x/word)
-3. **Structures**: Pattern recognition on role sequences (11 patterns)
+3. **Structures**: Pattern recognition on role sequences (26 patterns)
 4. **Physics**: Momentum-based force application, produces final VADUG
 
 ## Layer 1: Word Role Classification
@@ -91,7 +91,7 @@ For "sad" at position 3:
 - "very" at distance 1: AMPLIFIER, influence = 0.70, coeff *= 1.28
 - Combined: 1.0 x 1.10 x 1.28 = 1.41
 
-## Layer 3: Structure Detection
+## Layer 3: Structure Detection (26 Patterns)
 
 Role sequences form patterns, like chess openings:
 
@@ -128,13 +128,24 @@ SELF_NULLIFY:       SELF_REF + NULL_WORD
 
 CHOPPER_SPLIT:      CHOPPER present
                     "I love you but I'm leaving" (resets at chopper)
+
+RELIEF_ABSENCE:     NEGATOR + NEGATIVE_EMOTIONAL + TEMPORAL
+                    "I haven't had a panic attack in weeks"
+
+SELF_EXCLUDED:      SELF_REF + EXCLUDED_MARKER
+                    "everyone was invited except me"
+
+WITHHELD_POSITIVE:  NEGATOR + TRANSFER + POSITIVE_EMOTIONAL
+                    "they never told me they were proud"
 ```
+
+(Plus 12 additional patterns -- see `engine/structures.py` for the complete set of 26.)
 
 ## Layer 4: Physics (Pendulum)
 
 ### Constants
 ```
-CENTER = 128.0      (neutral point for V, A, D, G)
+CENTER = 128.0      (neutral point for V, A, D, G, W)
 MOMENTUM = 0.82     (how much previous state persists)
 FORCE_SCALE = 0.5   (how hard forces push)
 PUSH_CAP = 0.4      (direct push maximum)
@@ -164,6 +175,7 @@ for each detected structure:
     D += structure.d_weight * confidence * FORCE_SCALE
     U = max(U, structure.u_weight * confidence)
     G += structure.g_weight * confidence * FORCE_SCALE
+    W += structure.w_weight * confidence * FORCE_SCALE
 ```
 
 ### Clamp
@@ -190,7 +202,7 @@ No EMOTIONAL words. All roles are structural. No forces to apply.
 find_role_pairs(TRANSFER, POSSESSION) -> (1, 3, 0.49)  found
 find_role_pairs(TRANSFER, RELATION_REF) -> (1, 6, 0.12) found
 -> FAREWELL detected, confidence=0.9
-   v_weight=-40, d_weight=-20, u_weight=+25, g_weight=-20
+   v_weight=-40, d_weight=-20, u_weight=+25, g_weight=-20, w_weight=-10
 ```
 
 ### Layer 4: Physics
@@ -206,13 +218,13 @@ The engine read the STRUCTURE, not the words. It doesn't know "dog" or
 
 ## A+B=C Bidirectional Solver
 
-### Forward: text -> VADUG
+### Forward: text -> VADUGW
 Run the 4-layer pipeline.
 
 ### Backward: A + desired_C -> B range
 ```python
 for b_v in range(256):
-    B = VADUG(v=b_v, a=128, d=128, u=0, g=128)
+    B = VADUG(v=b_v, a=128, d=128, u=0, g=128, w=128)
     C = A * 0.6 + B * 0.4
     if C.v in target_zone:
         valid_range.append(b_v)

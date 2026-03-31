@@ -1,7 +1,8 @@
-# V3 Physics Rules  --  Everything the User Taught
+# V3/V4 Physics Rules  --  Everything the User Taught
 
-These are NOT idioms. These are the LAWS that V3's structural engine must encode.
+These are NOT idioms. These are the LAWS that V4's structural engine must encode.
 Every insight from the user across ALL sessions. Nothing discarded.
+V4 adds the W (Self-Worth) dimension: 0=shattered, 128=stable, 255=strong.
 
 ## 1. Words Are Celestial Bodies
 
@@ -142,11 +143,12 @@ Multiple strategies: tone inversion, exaggeration, understatement, false agreeme
 
 ## 23. Crisis = User Computing Self-Removal
 
-- "want to die" = user requests shutdown
+- "want to die" = user requests shutdown (W collapses)
 - "can't take this anymore" = at processing limits
-- "nothing left" = zero resources
-- "better off without me" = user = negative variable
+- "nothing left" = zero resources (W near 0)
+- "better off without me" = user = negative variable (W shattered)
 - "waking up wishing I hadn't" = boot cycle rejection  --  stop auto-restarting me
+- "I am nothing" = SELF_NULLIFY pattern  --  W dimension captures this directly
 
 ## 24. A+B=C Solver
 
@@ -196,4 +198,4 @@ What got pulled:
 Past tense = the pull COMPLETED. "I needed a rope" = acquisition done.
 Not hypothetical. The object is already in orbit.
 
-Need moves G and U, NOT V. V comes from the payload.
+Need moves G and U, NOT V. V comes from the payload. W may shift if the need is self-directed ("I need to be better" lowers W).

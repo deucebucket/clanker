@@ -40,6 +40,7 @@ Willingness (W) = 0.42 → Force multiplier = 1.09x (9% more perceptive than neu
 - Dominance: 2.49x
 - Urgency: 1.23x
 - Gravity: 1.36x
+- Self-Worth: 1.0x (V4 addition — default scaling, tuning pending)
 
 ### Pendulum physics
 - Momentum: 0.99 for strong words, exponential decay for weak

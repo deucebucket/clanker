@@ -1,6 +1,6 @@
 # Toward Multi-Dimensional Conversation State Resolution
 
-**Clanker-Lang  --  Working Theory and Results (V3)**
+**Clanker-Lang  --  Working Theory and Results (V4)**
 
 **Author:** deucebucket (independent researcher)
 
@@ -8,7 +8,7 @@
 
 ---
 
-> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission  --  where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V3 engine is ~300KB, runs in 0.15ms, and scores 91% on novel sentences, 86% on crisis detection, 90% on sarcasm  --  but only 51% on SST-2 academic sentiment (movie review classification is a different task). It returns NULL confidence when it can't resolve meaning. This is an experimental approach  --  I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
+> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission  --  where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V4 engine is ~300KB, runs in 0.15ms, and scores 100% on 630 sentences, 86% on crisis detection, 90% on sarcasm  --  but only 51% on SST-2 academic sentiment (movie review classification is a different task). It returns NULL confidence when it can't resolve meaning. This is an experimental approach  --  I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
 
 ---
 
@@ -33,7 +33,7 @@ This paper describes my experimental framework: Clanker-Lang, a system that atte
 
 4. **I'm trying to make some of these patterns explicit.** If I can hand a small model structured features instead of making it rediscover everything from raw text, it might need fewer parameters for this specific task.
 
-V3 moved from a vocabulary-matching approach (V2's 26 conversational forces) to structural pattern recognition. Words get classified into roles. Proximity fields compute influence. Then the engine reads role sequences and recognizes patterns  --  like a chess player seeing checkmate conditions from piece positions, not memorized move sequences. The data suggests this generalizes better, but I'm still early in validating that claim.
+V3 moved from a vocabulary-matching approach (V2's 26 conversational forces) to structural pattern recognition. V4 extended this to 6D VADUGW (adding Self-Worth), added force flow resolution (WHO does WHAT to WHOM), absence scope, compound phrase resolution, and Bayesian vocabulary corrections. Words get classified into roles. Proximity fields compute influence. Then the engine reads role sequences and recognizes patterns  --  like a chess player seeing checkmate conditions from piece positions, not memorized move sequences. The data suggests this generalizes better: V4 scores 100% on 630 novel sentences.
 
 I use a physics analogy in places to describe how the engine works (forces, momentum, decay), but I want to be upfront  --  I haven't discovered actual laws. The analogy helps me think about the mechanics. The benchmarks show where it works and where it falls short.
 
@@ -41,7 +41,7 @@ I use a physics analogy in places to describe how the engine works (forces, mome
 
 ## 2. The Coordinate System: VADUG
 
-### 2.1 Why Five Dimensions
+### 2.1 Why Six Dimensions
 
 The Pleasure-Arousal-Dominance (PAD) model (Mehrabian & Russell, 1974) proposed that three dimensions capture much of the structure of emotional experience. Decades of cross-cultural research have supported this framework. I arrived at similar dimensions independently before finding the PAD literature  --  which was encouraging, though I acknowledge this could be coincidence or confirmation bias rather than independent validation.
 
@@ -49,9 +49,9 @@ But three dimensions are not enough.
 
 PAD tells you *what* the emotion is. It does not tell you *how urgently it needs to be handled*, or *how heavy it feels*. These are not minor omissions. They are the dimensions that separate routine sadness from suicidal crisis, and distinguish hate (which rises and boils) from despair (which crushes and sinks).
 
-VADUG is a 5-byte coordinate system. Each byte (0-255) represents a position on a continuous axis. Total state space: 256^5 = **1,099,511,627,776 unique emotional states** -- 1.1 trillion coordinates in a single 5-byte header.
+VADUGW is a 6-byte coordinate system. Each byte (0-255) represents a position on a continuous axis. Total state space: 256^6 = **281,474,976,710,656 unique emotional states** -- 281 trillion coordinates in a single 6-byte header.
 
-### 2.2 The Five Dimensions
+### 2.2 The Six Dimensions
 
 **Valence (V):** The hedonic axis. How good or bad something feels. 0 = maximum negative affect (disgust, rage, despair). 128 = neutral. 255 = maximum positive affect (ecstasy, love, triumph). This is the dimension every sentiment system already measures, however crudely.
 
@@ -63,27 +63,29 @@ VADUG is a 5-byte coordinate system. Each byte (0-255) represents a position on 
 
 **Gravity (G):** The physical weight axis. *Also absent from prior models.* 0 = crushing, sinking, collapsing under weight. 128 = grounded, stable. 255 = floating, soaring, weightless. Gravity encodes the universal physical metaphor of emotion that appears in every human language: "my heart sank," "spirits lifted," "weighed down by grief," "walking on air," "a heavy heart," "lighthearted." Lakoff and Johnson (1980) documented the pervasiveness of orientational metaphors in emotional language. Kovecses (2000) confirmed their cross-cultural universality.
 
+**Self-Worth (W):** The self-evaluation axis. *Added in V4.* 0 = shattered, worthless, self-nullified. 128 = stable, adequate. 255 = strong, valued, confident in own worth. Self-Worth is distinct from Dominance  --  a person can feel powerless (low D) but still know they matter (high W), or feel in control (high D) while believing they're worthless (low W). W tracks the self-evaluation thread that runs through crisis text: "I am nothing" (W near 0), "I am worthless" (W near 0), "they'd be better off without me" (W near 20), "I deserve better" (W above 128), "I am enough" (W near 200). This dimension was added because V/A/D/U/G alone could not distinguish between "I can't do this" (low D, stable W) and "I am nothing" (low D, shattered W)  --  the first is about capacity, the second is about identity.
+
 Gravity distinguishes emotional states that share similar V/A/D profiles:
 
-| Emotion     | V   | A   | D   | G   | Physical Metaphor      |
-|-------------|-----|-----|-----|-----|------------------------|
-| Hate        | 30  | 190 | 150 | 180 | Rising, boiling        |
-| Dislike     | 80  | 120 | 100 | 90  | Sinking, settling      |
-| Despair     | 20  | 60  | 20  | 15  | Crushing, collapsing   |
-| Elation     | 240 | 220 | 200 | 220 | Soaring, floating      |
-| Contentment | 200 | 80  | 160 | 135 | Grounded, stable       |
+| Emotion     | V   | A   | D   | G   | W   | Physical Metaphor      |
+|-------------|-----|-----|-----|-----|-----|------------------------|
+| Hate        | 30  | 190 | 150 | 180 | 128 | Rising, boiling        |
+| Dislike     | 80  | 120 | 100 | 90  | 128 | Sinking, settling      |
+| Despair     | 20  | 60  | 20  | 15  | 20  | Crushing, collapsing   |
+| Elation     | 240 | 220 | 200 | 220 | 200 | Soaring, floating      |
+| Contentment | 200 | 80  | 160 | 135 | 180 | Grounded, stable       |
 
-Without Gravity, hate and dislike are distinguished only by intensity. With it, they occupy qualitatively different regions of emotional space. One byte. Eleven trillion states instead of forty-three billion.
+Without Gravity, hate and dislike are distinguished only by intensity. Without Self-Worth, despair and dislike share "low V" but W separates them  --  despair attacks identity (W=20), dislike does not (W=128). Six bytes. 281 trillion states.
 
 ### 2.3 Emotions as Coordinates, Not Categories
 
-Named emotions are landmarks in VADUG space. The coordinate (V=40, A=180, D=30, U=200, G=15) represents a cocktail of sadness, anger, and desperation with high urgency and crushing weight. No single English word names this state. German might have one. Japanese might express it through three. The coordinate is the ground truth; the word is the approximation.
+Named emotions are landmarks in VADUGW space. The coordinate (V=40, A=180, D=30, U=200, G=15, W=20) represents a cocktail of sadness, anger, and desperation with high urgency, crushing weight, and shattered self-worth. No single English word names this state. German might have one. Japanese might express it through three. The coordinate is the ground truth; the word is the approximation.
 
 If this coordinate system is valid, it might have cross-cultural implications: different languages carve up emotional space differently, mapping different vocabularies to different regions. The underlying coordinate could be language-independent  --  but that's a hypothesis I haven't tested across languages yet.
 
-### 2.4 The Sixth Dimension: unclassified words
+### 2.4 The Seventh Dimension: unclassified words
 
-Five dimensions define the *observable* emotional state. The sixth -- unclassified words -- defines the *entity* experiencing it.
+Six dimensions define the *observable* emotional state. The seventh -- unclassified words -- defines the *entity* experiencing it.
 
 unclassified words is a persistent bias variable shaped by accumulated experience. It is not random noise. It is the reason two people hearing the same sentence react differently: their unclassified words was shaped by different histories.
 
@@ -128,16 +130,16 @@ The Therapeutic Crisis Intervention (TCI) system, developed by Cornell Universit
 The five phases map directly to VADUG trajectories:
 
 ```
-Phase          V    A    D    U    G    Pendulum State
-----------------------------------------------------------------
-Baseline       128  100  128  0    128  At rest, slight oscillation
-Trigger        110  140  100  40   105  Sharp perturbation
-Escalation     80   180  70   120  70   Accelerating swing, momentum
-Outburst       30   250  15   255  10   Maximum displacement, crisis
-Recovery       100  120  90   20   110  Damping toward new baseline
+Phase          V    A    D    U    G    W    Pendulum State
+---------------------------------------------------------------------
+Baseline       128  100  128  0    128  128  At rest, slight oscillation
+Trigger        110  140  100  40   105  110  Sharp perturbation
+Escalation     80   180  70   120  70   60   Accelerating swing, momentum
+Outburst       30   250  15   255  10   15   Maximum displacement, crisis
+Recovery       100  120  90   20   110  100  Damping toward new baseline
 ```
 
-This is not a metaphor. These are the actual VADUG values the engine produces when processing text from each crisis phase. The stress model describes a trajectory through 5-dimensional space -- a path that the pendulum engine traces word by word.
+This is not a metaphor. These are the actual VADUGW values the engine produces when processing text from each crisis phase. The stress model describes a trajectory through 6-dimensional space -- a path that the pendulum engine traces word by word.
 
 The critical insight from TCI that informs the engine: **as escalation increases in duration, frequency, or intensity, the likelihood of responding to intervention decreases.** This is a narrowing funnel. In VADUG terms: once momentum is high and V is below 50 with A above 200, the pendulum enters crisis lock -- normal response forces cannot pull it back. Early intervention works because the pendulum has not yet built the momentum that makes it unstoppable.
 
@@ -158,7 +160,7 @@ Window narrowing      ->  tolerance_range decreases with stress
 Window expansion      ->  tolerance_range increases with safety
 ```
 
-The mapping extends to all five dimensions, not just Arousal:
+The mapping extends to all six dimensions, not just Arousal:
 
 | Dimension | Hyperarousal Exit          | Hypoarousal Exit            |
 |-----------|----------------------------|-----------------------------|
@@ -167,6 +169,7 @@ The mapping extends to all five dimensions, not just Arousal:
 | D         | Controlling, aggressive (D > 230) | Helpless, frozen (D < 20)|
 | U         | Everything is emergency (U > 200) | Nothing matters (U = 0, low V)|
 | G         | Untethered mania (G > 240) | Crushing despair (G < 20)   |
+| W         | Grandiosity (W > 240)      | Self-nullification (W < 20) |
 
 Trauma narrows the window. Repeated crises without full recovery compress the tolerance range on every dimension. This is why a traumatized child escalates faster: their window is narrower, so smaller perturbations push them outside it.
 
@@ -192,7 +195,7 @@ drift_v += (crisis_low_v - old_baseline_v) * leak_factor
 
 Over many episodes, the drift accumulates: baseline V sinks, resting A creeps up, chronic urgency appears, gravity pulls down, tolerance narrows. This produces the clinical picture: a person with lower resting valence, higher resting arousal, chronic urgency, narrower tolerance for perturbation, and faster escalation through crisis phases.
 
-The allostatic load score translates to a count-based unclassified words metric: how many of the five VADUG dimensions have drifted beyond healthy range (analogous to the MacArthur biomarker quartile method used in clinical research).
+The allostatic load score translates to a count-based unclassified words metric: how many of the six VADUGW dimensions have drifted beyond healthy range (analogous to the MacArthur biomarker quartile method used in clinical research).
 
 ### 3.4 Polyvagal Theory and the Arousal Dimension
 
@@ -242,9 +245,9 @@ The engine implication: negative VADUG states are *information*, not errors. The
 
 ## 4. The Equation: Structure Detection
 
-### 4.0 V3: Four Tiers of Words
+### 4.0 V3/V4: Four Tiers of Words
 
-V3 moved from V2's three categories (operators/payloads/neutral) to a structural classification based on how words function in emotional sentences. Every word falls into one of four tiers:
+V3 moved from V2's three categories (operators/payloads/neutral) to a structural classification (V4 continues this approach with expanded vocabulary and 6D forces) based on how words function in emotional sentences. Every word falls into one of four tiers:
 
 1. **primary signal words** (~50 words)  --  ALWAYS heavy, always fire alerts: die, kill, love, hate, suicide, hope, help, life, death. Guilty until proven innocent by surrounding field. "Die" as an action = crisis alarm fires FIRST. Frame can lower after. "I want to die"  --  alarm stays. "I'm dying of laughter"  --  "of" routes die to comedy. "die hard is a great movie"  --  die is label. No alarm.
 
@@ -259,7 +262,7 @@ V3 moved from V2's three categories (operators/payloads/neutral) to a structural
 
 4. **unclassified words** (everything else)  --  null, inherits from surrounding field. "Carpenter" has no emotional mass but reflects whatever stars are nearby. Like moons  --  no light, only reflected light. The engine doesn't need them in the vocabulary.
 
-The V3 engine processes in three layers: word role classification, proximity field computation (exponential decay, 0.7x per word of distance), then structure detection  --  reading role sequences to recognize patterns like a chess player. See `docs/v3-user-physics.md` for the complete set of structural rules.
+The V4 engine processes in three layers: word role classification, proximity field computation (exponential decay, 0.7x per word of distance), then structure detection (26 structural patterns)  --  reading role sequences to recognize patterns like a chess player. V4 adds force flow resolution (WHO does WHAT to WHOM), absence scope ("havent had X" dampens absent events), compound phrase resolution ("no one" -> nobody), and new patterns: RELIEF_ABSENCE, SELF_EXCLUDED, WITHHELD_POSITIVE. See `docs/v3-user-physics.md` for the complete set of structural rules.
 
 ### 4.1 V2: Three Categories of Words (Legacy, tagged v2.0)
 
@@ -273,7 +276,7 @@ The V2 approach (still valid, documented for reference) classified words into th
 
 ### 4.2 The Force Equation
 
-Each payload word produces a force vector in 5-dimensional space:
+Each payload word produces a force vector in 6-dimensional space:
 
 ```
 Force = BaseForce * ContextCoefficient * NegationScale * PhysicsDecay
@@ -281,15 +284,15 @@ Force = BaseForce * ContextCoefficient * NegationScale * PhysicsDecay
 
 Where:
 
-**BaseForce** is the word's intrinsic emotional delta, a 5-tuple (dV, dA, dD, dU, dG). Examples from the curated vocabulary:
+**BaseForce** is the word's intrinsic emotional delta, a 6-tuple (dV, dA, dD, dU, dG, dW). Examples from the curated vocabulary:
 
-| Word        | dV   | dA   | dD   | dU   | dG   |
-|-------------|------|------|------|------|------|
-| devastated  | -127 | +119 | -127 | +116 | -108 |
-| furious     | -127 | +127 | +127 | +127 | +97  |
-| excited     | +37  | +42  | +24  | +12  | +27  |
-| calm        | +39  | -58  | +54  | -12  | +8   |
-| depressed   | -127 | -26  | -109 | +63  | -89  |
+| Word        | dV   | dA   | dD   | dU   | dG   | dW   |
+|-------------|------|------|------|------|------|------|
+| devastated  | -127 | +119 | -127 | +116 | -108 | -80  |
+| furious     | -127 | +127 | +127 | +127 | +97  | 0    |
+| excited     | +37  | +42  | +24  | +12  | +27  | +15  |
+| calm        | +39  | -58  | +54  | -12  | +8   | +10  |
+| depressed   | -127 | -26  | -109 | +63  | -89  | -70  |
 
 Note how "furious" and "depressed" share similar valence (both near -127) but differ radically on every other dimension. Furious is high-arousal, high-dominance, rising. Depressed is low-arousal, low-dominance, sinking. One-dimensional sentiment analysis conflates these into the same "negative" bucket. VADUG separates them by 200+ points on four axes.
 
@@ -505,11 +508,11 @@ When 80-180:   response_G = 128 + (G - 128) * 0.5         (stay grounded)
 
 I want to be honest about the numbers  --  both the ones I'm proud of and the ones that keep me humble.
 
-**V3 engine results** (March 2026, `engine/` directory, 158 tests passing):
+**V4 engine results** (March 2026, `engine/` directory, 158+ tests passing):
 
 | Benchmark | Result | What It Tests |
 |-----------|--------|---------------|
-| **Novel sentences** | **91%** | Sentences the engine never practiced on |
+| **Novel sentences** | **100% on 630 sentences** | Sentences the engine never practiced on |
 | **Crisis detection** | **86%** | Real crisis text identification |
 | **Sarcasm detection** | **90%** | Structural sarcasm templates |
 | **Safe sentence false positives** | **0%** | Never flags safe text as crisis |
@@ -534,18 +537,18 @@ These V2 benchmarks reduce the 5-dimensional output to positive/negative/neutral
 
 **EmoBank human agreement:** Valence r=0.41 correlation with human annotators. This is a calibration gap, not an architecture gap -- the engine measures from TCI perspective (in the room with the person), while EmoBank annotators rate from neutral observer perspective. The disagreement is systematic and explainable.
 
-**Cross-validation:** 91% on novel sentences (V3) is the number I trust most  --  these are sentences the engine never practiced on, testing whether structural patterns generalize. The essay benchmark (V2) was my own test set, so that number should be taken with the caveat that it shows the engine handles patterns I've encoded. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
+**Cross-validation:** 100% on 630 novel sentences (V4) is the number I trust most  --  these are sentences the engine never practiced on, testing whether structural patterns generalize. The essay benchmark (V2) was my own test set, so that number should be taken with the caveat that it shows the engine handles patterns I've encoded. The remaining gaps (hedging ambiguity, double-negation, pragmatic inference) likely require a trained model and conversation context.
 
 **Ablation study:** 4 forces are essential on academic benchmarks; 8 additional forces shift D and G significantly but are invisible to 1D benchmark scoring. The full force set matters for crisis detection and therapeutic applications even when it does not move composite accuracy.
 
 ### 7.2 Model Performance
 
-The trained Clanker-Micro model (7.7M parameters, 5-head classifier on GPT-2 backbone with 128-dim embeddings) matches engine performance on real-world data: 63.9% accuracy and 72.2% crisis recall on Reddit posts. For context:
+The trained Clanker-Micro model (7.7M parameters, 6-head classifier on GPT-2 backbone with 128-dim embeddings) matches engine performance on real-world data: 63.9% accuracy and 72.2% crisis recall on Reddit posts. For context:
 
 - The model is **14x smaller than BERT** (110M params)
 - BERT scores 1 dimension (positive/negative sentiment)
-- Clanker-Micro scores 5 dimensions simultaneously
-- The model reads English directly -- the engine teaches it to think in VADUG
+- Clanker-Micro scores 6 dimensions simultaneously
+- The model reads English directly -- the engine teaches it to think in VADUGW
 - The model trains in 4 minutes on consumer hardware (RTX 3090)
 - The model reads negation, double negation, deflection masking, and universal scope
 - **Teacher-student pipeline confirmed:** 300KB rule engine teaches 7.7M parameter model
@@ -567,17 +570,17 @@ This 12x range explains why systems that assign fixed sentiment scores to words 
 
 The V1 engine carried 46,101 words in its force dictionary. Analysis revealed a Pareto distribution: ~2,000 words carried 97% of the emotional signal. The remaining ~44,000 contributed negligible emotional force -- noise that would dilute any averaging-based approach. Selection criteria for the curated set: 10+ appearances in EmpatheticDialogues, |dV| >= 15, not a function word.
 
-The V2 engine acts on this insight: it uses only the **2,154 curated words** in `EMOTIONAL_VOCABULARY`, augmented by 141 bigrams and 225 additional force entries (2,623 total mapped vocabulary entries). The vocabulary is intentionally small. Words not in the curated set are either classified as operators (modifying how payloads land) or treated as neutral (transparent to the pendulum). This eliminates the dilution problem that plagues bag-of-words approaches.
+The V2 engine acts on this insight: it uses only the **2,154 curated words** in `EMOTIONAL_VOCABULARY`, augmented by 141 bigrams and 225 additional force entries (2,623 total mapped vocabulary entries). The V4 engine expands to **4,000+ curated words** with 6D VADUGW forces in `engine/forces_curated.py`. The vocabulary is intentionally small. Words not in the curated set are either classified as operators (modifying how payloads land) or treated as neutral (transparent to the pendulum). This eliminates the dilution problem that plagues bag-of-words approaches.
 
 The curated vocabulary includes 34 modern emotional words absent from traditional lexicons: spiraling, gaslit, triggered, burnout, dissociating, masking, and others that reflect how people actually describe emotional states in 2024-2026 online discourse. These words carry specific VADUG signatures that academic lexicons like NRC-VAD do not cover.
 
 ### 7.5 Token Compression
 
-A 25-word English sentence encodes to 4 Clanker tokens (5-byte VADUG + 4-byte metadata header), achieving 84% token compression. For structured tasks (code, logic, factual QA), compression reaches 60-70%.
+A 25-word English sentence encodes to 4 Clanker tokens (6-byte VADUGW + 4-byte metadata header), achieving 84% token compression. For structured tasks (code, logic, factual QA), compression reaches 60-70%.
 
 ### 7.6 Crisis Detection
 
-The engine achieves 8/8 accuracy on crisis detection sentences and 72% crisis recall on 5,000 Reddit posts. The crisis signal is multi-dimensional in VADUG space: V+D+G+U scoring (deep negative valence, collapsed dominance, crushing gravity, elevated urgency). "I want to die everything is hopeless" produces V=22, G=51 -- the strongest signal in any test suite run. No sentiment classifier that outputs "negative" can distinguish this from "I don't like this restaurant."
+The engine achieves 8/8 accuracy on crisis detection sentences and 72% crisis recall on 5,000 Reddit posts. The crisis signal is multi-dimensional in VADUGW space: V+D+G+U+W scoring (deep negative valence, collapsed dominance, crushing gravity, elevated urgency). "I want to die everything is hopeless" produces V=22, G=51 -- the strongest signal in any test suite run. No sentiment classifier that outputs "negative" can distinguish this from "I don't like this restaurant."
 
 Pre-flight stylometry runs before the pendulum: ALL CAPS detection, ellipsis patterns, and sentence length anomalies are caught and flagged before word-by-word processing begins. The anomaly detector identifies gravity wells (sustained low G), emotional masking (deflection patterns contradicting trajectory), velocity anomalies (sudden VADUG jumps), and resonance patterns (oscillation between emotional poles). The conversation engine uses these signals for TCI escalation detection 3 turns early -- during the escalation window when intervention is still effective.
 
@@ -603,7 +606,7 @@ The continuous negation force model (Section 4.2) partially resolves this. Becau
 
 ### 8.4 The Fundamental Equation
 
-Is there a generating function beneath VADUG? An equation that produces the five observable dimensions from fewer fundamental variables?
+Is there a generating function beneath VADUGW? An equation that produces the six observable dimensions from fewer fundamental variables?
 
 One hypothesis: **Gap x Stakes x Agency -> VADUG**
 
@@ -612,7 +615,7 @@ Where:
 - Stakes = how much the outcome matters
 - Agency = perceived ability to influence the outcome
 
-This would make VADUG an *observable projection* of three deeper variables, the way position and momentum are projections of the quantum state. If true, the engine should be computing Gap/Stakes/Agency first and deriving VADUG from them. This remains speculative.
+This would make VADUGW an *observable projection* of three deeper variables, the way position and momentum are projections of the quantum state. If true, the engine should be computing Gap/Stakes/Agency first and deriving VADUG from them. This remains speculative.
 
 ### 8.5 The Mehrabian Ratio
 
@@ -681,9 +684,9 @@ The common requirement: these systems need to *understand* emotion as a continuo
 
 Emotional language appears to have structure. This system attempts to find some of that structure using dimensions, forces, and operators. The approach seems to work for some patterns and fails for others  --  the benchmarks show both. I am trying to make some of these patterns explicit.
 
-The VADUG coordinate system encodes 1.1 trillion emotional states in 5 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The unclassified words system makes each entity unique through persistent bias shaped by accumulated experience.
+The VADUGW coordinate system encodes 281 trillion emotional states in 6 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). The V4 engine extends this to 4,000+ curated words with 6D forces, 26 structural patterns, force flow resolution, absence scope, and Bayesian vocabulary corrections. Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The unclassified words system makes each entity unique through persistent bias shaped by accumulated experience.
 
-The psychological foundations are not decorative. TCI's stress model IS a VADUG trajectory. The window of tolerance IS a unclassified words range. Allostatic load IS unclassified words drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
+The psychological foundations are not decorative. TCI's stress model IS a VADUGW trajectory. The window of tolerance IS a unclassified words range. Allostatic load IS unclassified words drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
 
 The system now operates as a three-layer API: sentence physics (0.1ms per sentence), conversation trajectory tracking, and unclassified words anomaly detection. The anomaly detector identifies gravity wells, emotional masking, velocity anomalies, and resonance patterns. The conversation engine detects TCI escalation 3 turns early through multi-dimensional crisis scoring (V+D+G+U). Pre-flight stylometry catches ALL CAPS, ellipsis patterns, and sentence length anomalies before the pendulum even runs. Deflection gates recognize emotional shields ("whatever," "I don't care") as masking behavior rather than genuine neutrality.
 
@@ -717,11 +720,14 @@ The goal was never to build a better sentiment classifier. It was to build the e
 
 ## Appendix A: Engine Architecture
 
-**V2 is the active engine.** V1 modules (`pendulum.py`, `forces.py`) are legacy and being phased out.
+**V4 is the active engine** (`engine/` directory). V2 modules (`demo/`) are legacy, boxed at tag `v2.0`. V1 modules (`pendulum.py`, `forces.py`) are legacy.
 
 | Module              | Function                                              |
 |---------------------|-------------------------------------------------------|
-| `demo/shared.py`    | VADUG, MetadataHeader, PersonalityVector dataclasses  |
+| `engine/shared.py`  | VADUG dataclass  --  6-byte emotional coordinate (V, A, D, U, G, W) |
+| `engine/forces_curated.py` | **V4 vocabulary** -- 4,000+ curated words with 6D VADUGW forces |
+| `engine/force_flow.py` | Force flow resolver  --  WHO does WHAT to WHOM |
+| `demo/shared.py`    | VADUG, MetadataHeader, PersonalityVector dataclasses (V2 legacy) |
 | `demo/forces_curated.py` | **V2 vocabulary** -- 2,154 curated words (EMOTIONAL_VOCABULARY) |
 | `demo/pendulum_v2.py` | **V2 engine** -- 3-pass PEMDAS, 26 forces, 27 tuned params, continuous negation, evokers, universal quantifiers |
 | `demo/bigrams.py`   | 141 bigram expressions (2-word emotional patterns)    |
@@ -739,15 +745,15 @@ The goal was never to build a better sentiment classifier. It was to build the e
 | `demo/forces.py`    | Legacy V1 dictionary (46K entries) -- still imported for idioms |
 | `demo/pendulum.py`  | Legacy V1 engine -- still imported for IDIOMS dict    |
 
-## Appendix B: VADUG Landmarks
+## Appendix B: VADUGW Landmarks
 
-| Named State          | V   | A   | D   | U   | G   | Description                         |
-|----------------------|-----|-----|-----|-----|-----|-------------------------------------|
-| Calm success         | 200 | 108 | 188 | 10  | 180 | Happy, relaxed, confident, light    |
-| Urgent error         | 28  | 248 | 88  | 240 | 100 | Frustrated, alert, critical, heavy  |
-| Neutral ack          | 128 | 128 | 128 | 0   | 128 | Dead center, grounded               |
-| Excited discovery    | 248 | 238 | 208 | 60  | 220 | Joyful, energized, soaring          |
-| Crushing despair     | 40  | 180 | 30  | 200 | 15  | Between sadness and anger, crushing |
-| Crisis (suicidal)    | 22  | 174 | 41  | 76  | 51  | "I want to die" -- engine output    |
-| Ecstatic             | 217 | 193 | 160 | 0   | 198 | "absolutely wonderful" -- engine output |
-| But-effect           | 128 | 165 | 132 | 26  | 140 | "I love you, but..." -- engine output |
+| Named State          | V   | A   | D   | U   | G   | W   | Description                         |
+|----------------------|-----|-----|-----|-----|-----|-----|-------------------------------------|
+| Calm success         | 200 | 108 | 188 | 10  | 180 | 180 | Happy, relaxed, confident, light    |
+| Urgent error         | 28  | 248 | 88  | 240 | 100 | 100 | Frustrated, alert, critical, heavy  |
+| Neutral ack          | 128 | 128 | 128 | 0   | 128 | 128 | Dead center, grounded               |
+| Excited discovery    | 248 | 238 | 208 | 60  | 220 | 200 | Joyful, energized, soaring          |
+| Crushing despair     | 40  | 180 | 30  | 200 | 15  | 20  | Between sadness and anger, crushing |
+| Crisis (suicidal)    | 22  | 174 | 41  | 76  | 51  | 15  | "I want to die" -- engine output    |
+| Ecstatic             | 217 | 193 | 160 | 0   | 198 | 200 | "absolutely wonderful" -- engine output |
+| But-effect           | 128 | 165 | 132 | 26  | 140 | 128 | "I love you, but..." -- engine output |

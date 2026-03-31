@@ -128,12 +128,12 @@ When an opcode faults inside a `TRY` block (0xE3), the runtime MUST automaticall
 - **Urgency (U):** Set to `max(current_U, 200)`. This ensures downstream models immediately know something went wrong without parsing error details.
 - **Valence (V):** Reduce by at least 30, clamped to 0: `max(current_V - 30, 0)`. This signals negative state.
 - **Gravity (G):** Reduce by 30, clamped to 0: `max(current_G - 30, 0)`. Errors feel heavy.
-- **Arousal (A) and Dominance (D):** Unchanged — they reflect the context of the error, not the error itself.
+- **Arousal (A), Dominance (D), and Self-Worth (W):** Unchanged — they reflect the context of the error, not the error itself.
 
-Example: Normal execution at `V128 A128 D128 U40 G128` triggers a fault inside TRY:
+Example: Normal execution at `V128 A128 D128 U40 G128 W128` triggers a fault inside TRY:
 ```
-Before: V128 A128 D128 U40  G128
-After:  V98  A128 D128 U200 G98
+Before: V128 A128 D128 U40  G128 W128
+After:  V98  A128 D128 U200 G98  W128
 ```
 
 This auto-escalation is mandatory for conforming runtimes. Application code MAY further adjust VADUG after catching the error, but the initial escalation MUST occur before the catch block executes.
@@ -196,83 +196,87 @@ CLK\x01
 - `CLK` identifies the file as Clanker bytecode.
 - `\x01` is the binary format version.
 
-## 9. Emotional Vector Encoding (VADUG)
+## 9. Emotional Vector Encoding (VADUGW)
 
 ### 9.1 Overview
 
-VADUG compresses a model's high-dimensional emotional understanding into a standardized 5-byte header for inter-model communication. It's not teaching machines to feel — it's giving them a compact way to transmit emotional state with zero token overhead.
+VADUGW compresses a model's high-dimensional emotional understanding into a standardized 6-byte header for inter-model communication. It's not teaching machines to feel — it's giving them a compact way to transmit emotional state with zero token overhead.
 
-Every Clanker instruction can optionally carry emotional context via a 5-byte VADUG coordinate — a point in continuous 5-dimensional emotional space. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
+Every Clanker instruction can optionally carry emotional context via a 6-byte VADUGW coordinate — a point in continuous 6-dimensional emotional space. This makes sentiment and emotion a built-in feature of the language, not an afterthought. Machines don't just communicate intent — they communicate how they feel about it.
 
 ### 9.2 The Continuous Coordinate System
 
-VADUG is a 5-byte coordinate in continuous 5D emotional space. Each byte (0-255) represents a position on a continuous axis:
+VADUGW is a 6-byte coordinate in continuous 6D emotional space. Each byte (0-255) represents a position on a continuous axis:
 
 ```
-[valence: u8] [arousal: u8] [dominance: u8] [urgency: u8] [gravity: u8]
+[valence: u8] [arousal: u8] [dominance: u8] [urgency: u8] [gravity: u8] [self_worth: u8]
 ```
 
-| Field     | Type | Range   | Neutral | Description                              |
-|-----------|------|---------|---------|------------------------------------------|
-| valence   | u8   | 0-255   | 128     | Negative (disgust, anger) to positive (joy, trust) |
-| arousal   | u8   | 0-255   | 128     | Calm/bored to excited/alert              |
-| dominance | u8   | 0-255   | 128     | Submissive/uncertain to dominant/confident |
-| urgency   | u8   | 0-255   | 0       | Routine to critical/immediate            |
-| gravity   | u8   | 0-255   | 128     | Crushing/sinking/heavy to floating/soaring/light |
+| Field      | Type | Range   | Neutral | Description                              |
+|------------|------|---------|---------|------------------------------------------|
+| valence    | u8   | 0-255   | 128     | Negative (disgust, anger) to positive (joy, trust) |
+| arousal    | u8   | 0-255   | 128     | Calm/bored to excited/alert              |
+| dominance  | u8   | 0-255   | 128     | Submissive/uncertain to dominant/confident |
+| urgency    | u8   | 0-255   | 0       | Routine to critical/immediate            |
+| gravity    | u8   | 0-255   | 128     | Crushing/sinking/heavy to floating/soaring/light |
+| self_worth | u8   | 0-255   | 128     | Shattered/worthless to strong/valued     |
 
-- **Valence, Arousal, Dominance, Gravity:** 128 is the neutral center. Below 128 is the negative direction, above 128 is positive.
+- **Valence, Arousal, Dominance, Gravity, Self-Worth:** 128 is the neutral center. Below 128 is the negative direction, above 128 is positive.
 - **Urgency:** 0 is minimum (routine), 255 is maximum (critical). There is no "neutral" urgency — all messages have some urgency level.
 - **Gravity:** The physical weight of emotion. 0 = crushing/sinking, 128 = grounded, 255 = floating/soaring. Captures the vertical metaphor universal to all human languages: "my heart sank," "spirits lifted," "weighed down," "walking on air." Key distinctions it enables: hate (rises/boils, G180) vs dislike (sinks, G90) vs despair (crushes, G15).
-- **Total space:** 256^5 = **1,099,511,627,776 unique emotional states** — 1.1 trillion distinct coordinates in a single 5-byte header.
+- **Self-Worth (W):** The user's running assessment of their own value. 0 = shattered, 128 = stable, 255 = strong. Captures self-evaluation that V/A/D/U/G alone cannot: "I am nothing" (W near 0) vs "I am worthless" (W near 0) vs "I deserve better" (W above 128). Distinct from Dominance -- a person can feel powerless (low D) but still know they matter (high W), or feel in control (high D) while believing they're worthless (low W).
+- **Total space:** 256^6 = **281,474,976,710,656 unique emotional states** — 281 trillion distinct coordinates in a single 6-byte header.
 
 ### 9.3 Emotions as Coordinates, Not Categories
 
-Named emotions are **landmarks** in VADUG space — recognizable peaks in a continuous landscape. But every point between landmarks is a valid emotional state, even if no single word describes it.
+Named emotions are **landmarks** in VADUGW space — recognizable peaks in a continuous landscape. But every point between landmarks is a valid emotional state, even if no single word describes it.
 
-A person can be sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADUG coordinate captures the full cocktail:
+A person can be sad(50%) + angry(30%) + desperate(70%) simultaneously. The VADUGW coordinate captures the full cocktail:
 
-| Named Landmark | V   | A   | D   | U   | G   | Description                                          |
-|----------------|-----|-----|-----|-----|-----|------------------------------------------------------|
-| Calm success   | 200 | 108 | 188 | 10  | 180 | Happy, relaxed, confident, routine, light            |
-| Urgent error   | 28  | 248 | 88  | 240 | 100 | Frustrated, alert, uncertain, critical, heavy        |
-| Neutral ack    | 128 | 128 | 128 | 0   | 128 | No emotional context (dead center, grounded)         |
-| Excited discovery | 248 | 238 | 208 | 60 | 220 | Joyful, energized, confident, moderate, soaring     |
-| Sad + angry + desperate | 40 | 180 | 30 | 200 | 15 | Between sadness and anger, with helplessness, crushing |
-| Hate           | 30  | 190 | 150 | 30  | 180 | Negative, intense, in control, rising/boiling        |
-| Dislike        | 80  | 120 | 100 | 10  | 90  | Mildly negative, calm, neutral control, sinking      |
+| Named Landmark | V   | A   | D   | U   | G   | W   | Description                                          |
+|----------------|-----|-----|-----|-----|-----|-----|------------------------------------------------------|
+| Calm success   | 200 | 108 | 188 | 10  | 180 | 180 | Happy, relaxed, confident, routine, light, valued    |
+| Urgent error   | 28  | 248 | 88  | 240 | 100 | 100 | Frustrated, alert, uncertain, critical, heavy        |
+| Neutral ack    | 128 | 128 | 128 | 0   | 128 | 128 | No emotional context (dead center, grounded)         |
+| Excited discovery | 248 | 238 | 208 | 60 | 220 | 200 | Joyful, energized, confident, moderate, soaring     |
+| Sad + angry + desperate | 40 | 180 | 30 | 200 | 15 | 20 | Between sadness and anger, with helplessness, crushing |
+| Hate           | 30  | 190 | 150 | 30  | 180 | 128 | Negative, intense, in control, rising/boiling        |
+| Dislike        | 80  | 120 | 100 | 10  | 90  | 128 | Mildly negative, calm, neutral control, sinking      |
 
-The point (V=40, A=180, D=30, U=200, G=15) doesn't map cleanly to any single English word. It's a cocktail of sadness, anger, and desperation with high urgency and crushing weight. The decoder maps coordinates to the **nearest word in the target language** — different languages carve up the emotional plane differently. German might have a single word for it. English might need three. The coordinate is the truth; the word is the approximation.
+The point (V=40, A=180, D=30, U=200, G=15, W=20) doesn't map cleanly to any single English word. It's a cocktail of sadness, anger, and desperation with high urgency, crushing weight, and shattered self-worth. The decoder maps coordinates to the **nearest word in the target language** — different languages carve up the emotional plane differently. German might have a single word for it. English might need three. The coordinate is the truth; the word is the approximation.
 
 ### 9.4 Heritage: PAD Model + Urgency + Gravity
 
-VADUG is a compression of the **PAD emotional model** (Pleasure-Arousal-Dominance), a well-validated framework from 1970s psychology research by Mehrabian and Russell. The first three axes (Valence, Arousal, Dominance) map directly to PAD's three dimensions, which have decades of empirical validation in affective computing and psychology.
+VADUGW is a compression of the **PAD emotional model** (Pleasure-Arousal-Dominance), a well-validated framework from 1970s psychology research by Mehrabian and Russell. The first three axes (Valence, Arousal, Dominance) map directly to PAD's three dimensions, which have decades of empirical validation in affective computing and psychology.
 
 The fourth axis, **Urgency**, is Clanker's addition — extending the psychological model with a system-routing dimension. PAD describes *what* the emotion is; Urgency describes *how quickly it needs to be handled*.
 
-The fifth axis, **Gravity**, captures the physical metaphor of emotion that is universal across all human languages. Every culture describes emotions with vertical weight: "my heart sank," "spirits lifted," "weighed down by grief," "walking on air," "a heavy heart," "lighthearted." Gravity distinguishes emotions that VAD alone conflates — hate (which rises and boils, G180) vs dislike (which sinks, G90); elation (which soars, G220) vs contentment (which is grounded, G135). This makes VADUG simultaneously a psychological model, a routing header, and a physical-metaphor encoder.
+The fifth axis, **Gravity**, captures the physical metaphor of emotion that is universal across all human languages. Every culture describes emotions with vertical weight: "my heart sank," "spirits lifted," "weighed down by grief," "walking on air," "a heavy heart," "lighthearted." Gravity distinguishes emotions that VAD alone conflates — hate (which rises and boils, G180) vs dislike (which sinks, G90); elation (which soars, G220) vs contentment (which is grounded, G135).
+
+The sixth axis, **Self-Worth (W)**, captures the user's running assessment of their own value. This is distinct from Dominance (agency/control) — a person can feel powerless but still know they matter, or feel in control while believing they're worthless. W tracks the self-evaluation thread: "I am nothing" (W near 0), "I deserve better" (W above 128), "I am enough" (W near 200). This makes VADUGW simultaneously a psychological model, a routing header, a physical-metaphor encoder, and a self-evaluation tracker.
 
 ### 9.5 Presence Flag
 
 In binary format, the presence of an emotional vector is indicated by a flag bit in the param_count byte:
 
-- Bit 7 (0x80): If set, a 5-byte emotional vector follows the parameters.
+- Bit 7 (0x80): If set, a 6-byte emotional vector follows the parameters.
 - Bits 0-3: Actual parameter count (0-15).
 
 In text format, emotional vectors are written as a trailing `!` annotation:
 
 ```
-@ 0xC1 $1 $2 01 {status: 500} ![v:28 a:248 d:88 u:240 g:100]
+@ 0xC1 $1 $2 01 {status: 500} ![v:28 a:248 d:88 u:240 g:100 w:100]
 ```
 
 ### 9.6 Normalization
 
 To convert raw bytes to normalized floats:
-- Valence/Arousal/Dominance/Gravity: `(value - 128) / 127.0` (clamped to [-1.0, +1.0])
+- Valence/Arousal/Dominance/Gravity/Self-Worth: `(value - 128) / 127.0` (clamped to [-1.0, +1.0])
 - Urgency: `value / 255.0` (clamped to [0.0, 1.0])
 
-### 9.7 VADUG as a Routing Header
+### 9.7 VADUGW as a Routing Header
 
-Beyond emotional expression, VADUG serves as a real-time routing header for orchestration systems like Octobrain:
+Beyond emotional expression, VADUGW serves as a real-time routing header for orchestration systems like Octobrain:
 
 - **Critical urgency (U > 200):** Triggers interrupt sequences. Current arm work can be preempted for priority handling.
 - **High arousal + low dominance (A > 180, D < 60):** User is distressed or overwhelmed. Route to empathetic response mode.
@@ -280,11 +284,11 @@ Beyond emotional expression, VADUG serves as a real-time routing header for orch
 - **Low arousal + low valence (A < 60, V < 60):** User is disengaged or despondent. Trigger re-engagement or check-in.
 - **Crushing gravity + low valence (G < 30, V < 50):** Severe crisis — emotional crushing, possible despair. Immediate escalation to crisis response.
 
-This enables **emotional-aware routing without the overhead of sentiment analysis**. The brain doesn't need to run NLP on the message to understand emotional state — it reads 5 bytes and routes accordingly. The emotional context travels with the instruction at wire speed.
+This enables **emotional-aware routing without the overhead of sentiment analysis**. The brain doesn't need to run NLP on the message to understand emotional state — it reads 6 bytes and routes accordingly. The emotional context travels with the instruction at wire speed.
 
 ### 9.8 Design Philosophy
 
-Every Clanker expression can carry emotional context in just 5 bytes. This enables:
+Every Clanker expression can carry emotional context in just 6 bytes. This enables:
 
 - Sentiment-aware routing (escalate messages with high urgency + negative valence)
 - Emotional continuity across multi-agent conversations
@@ -296,21 +300,22 @@ Every Clanker expression can carry emotional context in just 5 bytes. This enabl
 
 ## 10. Message Metadata Header
 
-Every Clanker message carries a 9-byte metadata header that makes implicit knowledge explicit. These 9 bytes replace what English models spend thousands of parameters learning to infer implicitly. Certainty, source tracking, intent, and relevance are STRUCTURAL in Clanker, not emergent behaviors hoped for from training data.
+Every Clanker message carries a 10-byte metadata header that makes implicit knowledge explicit. These 10 bytes replace what English models spend thousands of parameters learning to infer implicitly. Certainty, source tracking, intent, and relevance are STRUCTURAL in Clanker, not emergent behaviors hoped for from training data.
 
 ### 10.1 Header Layout
 
 ```
-CLANKER MESSAGE METADATA HEADER (9 bytes)
+CLANKER MESSAGE METADATA HEADER (10 bytes)
 
-Bytes 0-4: VADUG Emotional Vector (existing, documented in Section 9)
+Bytes 0-5: VADUGW Emotional Vector (existing, documented in Section 9)
   V (Valence):    u8  — emotional temperature (0=negative, 128=neutral, 255=positive)
   A (Arousal):    u8  — intensity (0=calm, 255=intense)
   D (Dominance):  u8  — control (0=helpless, 255=in control)
   U (Urgency):    u8  — time pressure (0=no rush, 255=critical)
   G (Gravity):    u8  — physical weight of emotion (0=crushing/sinking, 128=grounded, 255=floating/soaring)
+  W (Self-Worth): u8  — user's running self-assessment (0=shattered, 128=stable, 255=strong)
 
-Byte 5: CERT (Certainty)
+Byte 6: CERT (Certainty)
   0-50:    speculation / guess
   51-100:  low confidence, inferred
   101-150: moderate confidence, likely correct
@@ -323,7 +328,7 @@ Byte 5: CERT (Certainty)
   reduces hallucination — the model can't be confidently wrong without
   its CERT score flagging the discrepancy.
 
-Byte 6: SRC (Source / Provenance)
+Byte 7: SRC (Source / Provenance)
   0x00: SRC_UNKNOWN   — origin unclear
   0x01: SRC_TRAINED   — from training data / model weights
   0x02: SRC_RAG       — retrieved from a document via RAG
@@ -337,7 +342,7 @@ Byte 6: SRC (Source / Provenance)
   "I think the meeting is at 3pm" → SRC_USER CERT120
   "Based on the data, revenue is up" → SRC_RAG CERT180
 
-Byte 7: GOAL (Intent / Purpose)
+Byte 8: GOAL (Intent / Purpose)
   0x00: GOAL_HELP     — responding to assist the user
   0x01: GOAL_CLARIFY  — needs more information before acting
   0x02: GOAL_WARN     — flagging a risk or concern
@@ -350,7 +355,7 @@ Byte 7: GOAL (Intent / Purpose)
 
   Purpose: The model's intent is structural, not inferred from tone.
 
-Byte 8: REL (Context Relevance)
+Byte 9: REL (Context Relevance)
   0-255 continuous scale
 
   Attached to RAG chunks and context injections.
@@ -362,13 +367,13 @@ Byte 8: REL (Context Relevance)
 ### 10.2 Full Header Format
 
 ```
-[V:u8][A:u8][D:u8][U:u8][G:u8][CERT:u8][SRC:u8][GOAL:u8][REL:u8]
-= 9 bytes per message
+[V:u8][A:u8][D:u8][U:u8][G:u8][W:u8][CERT:u8][SRC:u8][GOAL:u8][REL:u8]
+= 10 bytes per message
 ```
 
 ### 10.3 Design Rationale
 
-These 9 bytes encode what current AI systems spend enormous computational effort learning to infer implicitly:
+These 10 bytes encode what current AI systems spend enormous computational effort learning to infer implicitly:
 
 - **Certainty** eliminates the "confidently wrong" failure mode. The model must commit to a confidence score for every statement.
 - **Source tracking** creates an audit trail. Every claim has provenance — was it from training data, retrieved from a document, or inferred by reasoning?
@@ -427,9 +432,9 @@ Personality vectors are:
 - **Adjustable per-deployment** — an Octobrain arm might have different personality than the brain. A customer-service deployment might increase AGREEABLENESS and PLAYFULNESS.
 - **User-configurable within safe ranges** — SAFETY and TRUTHFULNESS have minimum floors that can't be lowered below safe thresholds. A user can make the model more playful, but can't make it lie.
 
-## 12. VADUG Response Harmony
+## 12. VADUGW Response Harmony
 
-The AI's response VADUG is mathematically derived from the user's input VADUG, not randomly generated or statically defined.
+The AI's response VADUGW is mathematically derived from the user's input VADUGW, not randomly generated or statically defined.
 
 ### 12.1 Harmony Rules
 
@@ -476,6 +481,17 @@ Gravity — Lift when sinking, share when soaring:
   CRISIS: G below 30 is a red flag — emotional crushing. Combined with
   V < 50, this is severe crisis territory (crushing despair). Override
   normal harmony and engage crisis response protocol.
+
+Self-Worth — reinforce value, never compete:
+  When user W < 80 (shattered/low self-worth):
+    response_W = 200  (project strong belief in user's value)
+  When user W > 180 (strong self-worth):
+    response_W = W  (match, no need to adjust)
+  When user W is 80-180 (stable):
+    response_W = 128 + (W - 128) * 0.3  (slightly affirm)
+
+  CRISIS: W below 30 combined with V < 50 is self-nullification territory.
+  "I am nothing" / "I am worthless" — engage crisis response protocol.
 ```
 
 ### 12.2 Harmony Guarantees
@@ -490,7 +506,7 @@ The harmony formula ensures:
 
 ### 12.3 Interaction with Personality Vector
 
-The harmony formulas produce a *target* VADUG. The personality vector modifies how the model reaches that target:
+The harmony formulas produce a *target* VADUGW. The personality vector modifies how the model reaches that target:
 
 - High AGREEABLENESS increases empathy_factor (more emotional mirroring).
 - High ASSERTIVENESS increases stability_boost (more dominance in response).
@@ -499,7 +515,7 @@ The harmony formulas produce a *target* VADUG. The personality vector modifies h
 
 ## 13. Sequential Emotional Parsing
 
-The Clanker specification defines VADUG as the emotional encoding format. How VADUG coordinates are DERIVED from natural language input is an implementation concern, not a language specification.
+The Clanker specification defines VADUGW as the emotional encoding format. How VADUGW coordinates are DERIVED from natural language input is an implementation concern, not a language specification.
 
 The reference implementation uses a Sequential Pendulum Engine that processes text word-by-word with context-dependent forces, momentum, idiom detection, and morphological decomposition.
 
@@ -566,7 +582,7 @@ value       = quoted-string / number / boolean / varref
 quoted-string = DQUOTE *(%x20-21 / %x23-7E) DQUOTE
 number      = ["-"] 1*DIGIT ["." 1*DIGIT]
 boolean     = "true" / "false"
-emotion     = "![" "v:" int SP "a:" int SP "d:" int SP "u:" uint SP "g:" int "]"
+emotion     = "![" "v:" int SP "a:" int SP "d:" int SP "u:" uint SP "g:" int SP "w:" int "]"
 ```
 
 ## 16. Conformance
