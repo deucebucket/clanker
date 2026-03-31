@@ -5571,8 +5571,24 @@ _VOCAB_FIXES = {
     'scenery':      (5, 0, 0, 0, 10),              # override: was +55. Visual setting.
     'director':     (0, 5, 5, 0, 10),              # override: was +32. Role, not emotion.
     'character':    (0, 5, 0, 0, 10),              # override: was +35. Story element.
+    # ── SST-2 vocabulary mining: words causing systematic errors ──
+    'humor':        (5, 10, 5, 0, 10),             # override: was +50. Topic noun, not emotional.
+    'pretty':       (0, 5, 0, 0, 5),               # override: was +50. "Pretty boring" = amplifier. "Pretty girl" = positive. Liquid.
+    'special':      (10, 5, 5, 0, 10),             # override: was +50 then +5. "Special friend" = positive. "Nothing special" = context.
+    'itself':       (0, 0, 0, 0, 0),               # override: was +28. Pronoun. Zero force.
+    'experience':   (0, 5, 0, 0, 10),              # override: was +29. Topic noun.
+    'sense':        (0, 5, 0, 0, 5),               # override: was +29. "Makes no sense" vs "sense of humor". Liquid.
+    'familiar':     (0, 5, 0, 0, 5),               # override: was +29. "Too familiar" = derivative. Context resolves.
+    'often':        (0, 0, 0, 0, 0),               # override: was +39. Frequency word. Zero force.
+    'big':          (0, 10, 5, 0, 10),             # override: was +32. Size descriptor.
+    'new':          (0, 5, 0, 0, 5),               # override: was +29. Temporal/novelty. Near neutral.
+    'young':        (0, 5, 0, 0, 5),               # override: was +29. Age descriptor.
+    'emotional':    (0, 15, 0, 0, 10),             # override: was +29. Describes intensity, not polarity.
+    'fine':         (-5, -5, 0, 0, 5),              # override: was -32 then +5. "Im fine" = mask. "Just fine" = adequate. Slight neg lean.
+    'minor':        (0, 5, 0, 0, 5),               # override: was -59. "A minor masterpiece" ≠ negative. Size descriptor.
+    'revenge':      (-10, 15, 5, 5, 15),           # override: was -77. Topic noun in reviews.
     # Discovery verbs -- zero polarity, the OBJECT determines the emotion
-    'found':        (0, 10, 5, 5, 5),              # override: was -5. "Found my keys" vs "found a lump". Context resolves.
+    'found':        (0, 10, 5, 5, 5),              # override: was -5. Context resolves.
     'find':         (0, 10, 5, 5, 5),
     'discovered':   (0, 10, 5, 5, 5),
     'discover':     (0, 10, 5, 5, 5),

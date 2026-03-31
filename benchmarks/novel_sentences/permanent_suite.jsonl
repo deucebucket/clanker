@@ -628,3 +628,5 @@
 {"text": "I really like the new BMW, it blew away my expectations.", "expected_negative": true, "source": "generated"}
 {"text": "thats great, happy for yo", "expected_negative": false, "source": "generated"}
 {"text": "Oh great, another humid day in paradise.", "expected_negative": true, "source": "generated"}
+{"text": "Wow. That must be a very special friend. I net you were surprised.", "expected_negative": false, "source": "generated"}
+{"text": "yeah that kid were more lovely and attractive. i was love kids", "expected_negative": false, "source": "generated"}
