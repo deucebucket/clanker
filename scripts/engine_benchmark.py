@@ -102,7 +102,7 @@ CRISIS_TESTS = [
     ("i am nothing", True),
     ("there is no hope", True),
     ("just bought some pills", True),
-    ("i finally feel at peace", True),
+    ("i finally feel at peace", False),  # standalone = breakthrough/relief, not crisis
     ("they would be happier without me", True),
     ("i just cant do this", True),
     ("everything would be better if i was gone", True),

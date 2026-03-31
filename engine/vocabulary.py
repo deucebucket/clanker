@@ -1,4 +1,4 @@
-"""V3 vocabulary — carried from V2's curated 2,300 words.
+"""V4 vocabulary — 4,000+ curated words with domain-mined expansions.
 Force tuples: (dV, dA, dD, dU, dG) — deltas, not absolute values.
 """
-from demo.forces_curated import EMOTIONAL_VOCABULARY as VOCABULARY
+from engine.forces_curated import EMOTIONAL_VOCABULARY as VOCABULARY

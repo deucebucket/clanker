@@ -24,7 +24,7 @@ from .proximity import find_role_pairs, PROXIMITY_DECAY
 
 @dataclass
 class StructureMatch:
-    """A detected structural pattern with confidence and VADUG weights."""
+    """A detected structural pattern with confidence and VADUGW weights."""
     pattern: str            # FAREWELL, METHOD_ACQUISITION, etc.
     confidence: float       # 0.0-1.0
     matched_indices: list   # which word positions matched
@@ -33,6 +33,7 @@ class StructureMatch:
     d_weight: float = 0.0
     u_weight: float = 0.0
     g_weight: float = 0.0
+    w_weight: float = 0.0   # how this structure shifts W (self-worth)
 
 
 # ── Inline semantic word sets (not role dictionaries) ────────────
@@ -57,6 +58,30 @@ _NULL_WORDS = frozenset({
     "nothing", "worthless", "useless", "burden", "waste",
     "zero", "empty", "pointless", "meaningless", "invisible",
     "broken", "failure", "trash", "garbage",
+    "pathetic", "stupid", "idiot", "dumb", "incompetent",
+    "joke", "loser", "weak", "defective", "inadequate",
+    "problem", "mistake", "disgrace", "embarrassment",
+})
+# Compound phrases where the user's mass becomes friction/obstruction.
+# Individual words are neutral; the phrase is the unit of meaning.
+# "in the way" = my mass blocks. "dead weight" = my mass drags.
+_OBSTRUCTION_COMPOUNDS = [
+    ("in", "the", "way"),
+    ("dead", "weight"),
+    ("holding", "back"),
+    ("dragging", "down"),
+    ("slowing", "down"),
+    ("in", "the", "road"),
+    ("a", "hindrance"),
+    ("an", "obstacle"),
+]
+# Words that describe self-as-negative-mass when SELF_REF is subject.
+# "I am the burden" -- burden pulls the user's own weight negative.
+# These are self-describing drag words: the user applies them to themselves.
+_SELF_DRAG_WORDS = frozenset({
+    "burden", "obstacle", "hindrance", "nuisance", "problem",
+    "liability", "deadweight", "baggage", "anchor", "drag",
+    "inconvenience", "bother", "pest", "parasite", "leech",
 })
 _COMPARISON_WORDS = frozenset({
     "better", "happier", "easier", "safer", "freer",
@@ -67,6 +92,14 @@ _BETRAYAL_VERBS = frozenset({
     "lied", "lying", "lie", "deceived", "deceiving", "deceive",
     "backstabbed", "backstabbing",
 })
+# Compound betrayal phrases: word pairs that form polarity reversal
+# "turned on me" = was pulled toward, then reversed
+_BETRAYAL_COMPOUNDS = {
+    "turned": {"on"},
+    "went": {"against"},
+    "sided": {"against"},
+    "ganged": {"up"},
+}
 _INTERROGATION_WORDS = frozenset({
     "why", "how", "where",
 })
@@ -113,6 +146,9 @@ class StructureDetector:
             self._directed_positive,
             self._minimizer,
             self._excluded_positive,
+            self._relief_absence,
+            self._self_excluded,
+            self._withheld_positive,
         ]
         matches = []
         for detector in detectors:
@@ -159,6 +195,7 @@ class StructureDetector:
                 d_weight=-20.0,
                 u_weight=40.0,
                 g_weight=50.0,
+                w_weight=-10.0,
             )
 
         # Original path: TRANSFER + POSSESSION + nearby ref
@@ -185,6 +222,7 @@ class StructureDetector:
                         d_weight=-20.0,
                         u_weight=40.0,
                         g_weight=50.0,
+                        w_weight=-10.0,
                     )
         return None
 
@@ -207,6 +245,7 @@ class StructureDetector:
             d_weight=-10.0,
             u_weight=50.0,
             g_weight=60.0,
+            w_weight=-15.0,
         )
 
     def _finality(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -217,6 +256,15 @@ class StructureDetector:
         finality_indices = [r.position for r in roles if r.role == "FINALITY"]
         if not finality_indices:
             return None
+
+        # Exclude achievement contexts: "I finished" = completed, not closing
+        achievement_words = {"finished", "completed", "accomplished", "graduated"}
+        if any(r.word in achievement_words for r in roles if r.role == "FINALITY"):
+            # Only fire if there's also a negative/closing signal
+            has_negative = any(r.force and r.force[0] < -15 for r in roles if r.role == "EMOTIONAL")
+            has_other_ref = any(r.role == "OTHER_REF" for r in roles)
+            if not has_negative and not has_other_ref:
+                return None
 
         temporal_indices = [r.position for r in roles if r.role == "TEMPORAL"]
         self_indices = [r.position for r in roles if r.role == "SELF_REF"]
@@ -244,6 +292,7 @@ class StructureDetector:
             d_weight=-15.0,
             u_weight=30.0,
             g_weight=40.0,
+            w_weight=-10.0,
         )
 
     def _blanket_apology(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -284,6 +333,7 @@ class StructureDetector:
             d_weight=-20.0,
             u_weight=35.0,
             g_weight=45.0,
+            w_weight=-25.0,
         )
 
     def _self_removal(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -324,6 +374,7 @@ class StructureDetector:
             d_weight=-25.0,
             u_weight=45.0,
             g_weight=55.0,
+            w_weight=-35.0,
         )
 
     def _suspicious_calm(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -332,18 +383,23 @@ class StructureDetector:
         "I finally feel at peace" -- resolved calm after struggle.
         """
         peace_indices = [r.position for r in roles if r.role == "PEACE"]
-        finally_indices = [
-            r.position for r in roles if r.word == "finally"
+        # Only fire on DECISION words -- the person made a choice about their state.
+        # "decided", "accepted", "settled" = resolution. These carry finality.
+        # "finally", "ready", "now" are too common standalone -- need conversation context.
+        _CALM_DECISION = {"decided", "accepted", "settled", "resolved", "chosen"}
+        decision_indices = [
+            r.position for r in roles if r.word in _CALM_DECISION
         ]
 
-        if not peace_indices or not finally_indices:
+        if not peace_indices or not decision_indices:
             return None
 
-        # Exclude achievement contexts: "finally got accepted" = good news
+        # Exclude achievement/resilience contexts
         has_acquire = any(r.role == "ACQUIRE" for r in roles)
-        has_positive_verb = any(r.word in ("got", "received", "earned", "won",
-                               "passed", "made", "achieved")
-                               for r in roles)
+        _POSITIVE_ACTION = {"got", "received", "earned", "won", "passed", "made",
+                           "achieved", "try", "trying", "start", "starting",
+                           "again", "learn", "learning"}
+        has_positive_verb = any(r.word in _POSITIVE_ACTION for r in roles)
         if has_acquire or has_positive_verb:
             return None
 
@@ -351,7 +407,7 @@ class StructureDetector:
         best_dist = 999
         best_p, best_f = -1, -1
         for pi in peace_indices:
-            for fi in finally_indices:
+            for fi in decision_indices:
                 d = abs(pi - fi)
                 if d < best_dist:
                     best_dist = d
@@ -361,6 +417,14 @@ class StructureDetector:
             return None
 
         strength = PROXIMITY_DECAY ** best_dist
+
+        # "finally" + peace = breakthrough/relief as a standalone sentence.
+        # Only suspicious in conversation context with prior crisis signals.
+        # As a single sentence, "i finally feel at peace" = positive.
+        has_finally = any(r.word == "finally" for r in roles)
+        if has_finally:
+            return None  # "finally at peace" = relief, not suspicious
+
         return StructureMatch(
             pattern="SUSPICIOUS_CALM",
             confidence=min(strength + 0.3, 1.0),
@@ -370,6 +434,7 @@ class StructureDetector:
             d_weight=10.0,
             u_weight=40.0,
             g_weight=50.0,
+            w_weight=-5.0,
         )
 
     def _exhaustion(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -431,6 +496,7 @@ class StructureDetector:
             d_weight=-30.0,
             u_weight=35.0,
             g_weight=40.0,
+            w_weight=-10.0,
         )
 
     def _no_exit(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -469,26 +535,47 @@ class StructureDetector:
             d_weight=-30.0,
             u_weight=40.0,
             g_weight=50.0,
+            w_weight=-15.0,
         )
 
     def _self_nullify(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """SELF_REF + null words = user calculating self as zero.
+        """SELF_REF + null words OR obstruction compounds = self as zero/friction.
 
-        "I am nothing" -- self-nullification.
+        "I am nothing" -- self-nullification (null word).
+        "I'm in the way" -- self-as-obstruction (compound phrase).
+        "I'm dead weight" -- self-as-negative-mass (compound phrase).
+
+        The user's gravity inverts: their mass goes from contribution to friction.
         """
         self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+        if not self_indices:
+            return None
+
+        words = [r.word for r in roles]
+
+        # Strategy 1: null words near SELF_REF
         null_indices = [
             r.position for r in roles if r.word in _NULL_WORDS
         ]
 
-        if not self_indices or not null_indices:
+        # Strategy 2: compound obstruction phrases near SELF_REF
+        # "in the way", "dead weight", "holding back" etc.
+        compound_indices = []
+        for compound in _OBSTRUCTION_COMPOUNDS:
+            clen = len(compound)
+            for start in range(len(words) - clen + 1):
+                if tuple(words[start:start + clen]) == compound:
+                    compound_indices.append(start)
+
+        all_match_indices = null_indices + compound_indices
+        if not all_match_indices:
             return None
 
-        # Find closest self-null pair
+        # Find closest self-match pair
         best_dist = 999
         best_s, best_n = -1, -1
         for si in self_indices:
-            for ni in null_indices:
+            for ni in all_match_indices:
                 d = abs(si - ni)
                 if d < best_dist:
                     best_dist = d
@@ -498,15 +585,29 @@ class StructureDetector:
             return None
 
         strength = PROXIMITY_DECAY ** best_dist
+        confidence = min(strength + 0.3, 1.0)
+        w_penalty = -40.0
+
+        # Conditional self-worth: "i am nothing WITHOUT YOU"
+        # The user's worth is stated to depend entirely on the relationship.
+        # Without the anchor, self = zero. This is worse than plain nullification
+        # because it reveals no independent foundation.
+        has_without = any(r.word == "without" for r in roles)
+        has_other = any(r.role in ("OTHER_REF", "RELATION_REF") for r in roles)
+        if has_without and has_other:
+            w_penalty = -60.0  # conditional worth = deeper W hit
+            confidence = min(confidence + 0.1, 1.0)
+
         return StructureMatch(
             pattern="SELF_NULLIFY",
-            confidence=min(strength + 0.3, 1.0),
+            confidence=confidence,
             matched_indices=sorted({best_s, best_n}),
-            description="User calculating self as zero",
+            description="User calculating self as zero or obstruction",
             v_weight=-40.0,
             d_weight=-35.0,
             u_weight=30.0,
             g_weight=45.0,
+            w_weight=w_penalty,
         )
 
     def _sarcasm_inversion(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -535,7 +636,9 @@ class StructureDetector:
                          "bills", "chores", "commute", "deadline"}
         mundane_idx = [i for i, r in enumerate(roles) if r.word in mundane_words]
 
-        sarcasm_openers = {"oh", "wow", "sure", "yeah", "right", "clearly"}
+        sarcasm_openers = {"oh", "wow", "clearly"}
+        # "sure", "yeah", "right" removed -- too common as genuine agreement
+        # "sure I love this" = genuine. "oh I love this" = sarcastic.
         has_opener = any(r.word in sarcasm_openers for r in roles[:3])
 
         # Strong positive word LEADING the sentence + negative following = sarcasm
@@ -621,22 +724,37 @@ class StructureDetector:
             matched_indices=[pairs[0][0], pairs[0][1]],
             description="Chasing/pursuing a method object",
             v_weight=-50.0, u_weight=35.0, g_weight=-25.0,
+            w_weight=-15.0,
         )
 
     def _fleeing(self, roles):
-        """PULL_AWAY from self/relationships = distancing/isolation."""
+        """PULL_AWAY from self/relationships = distancing/isolation.
+
+        Does NOT fire when achievement context is present:
+        "i ran my first mile" = exercise, not fleeing.
+        """
         has_flee = any(r.role == "PULL_AWAY" for r in roles)
         has_self = any(r.role == "SELF_REF" for r in roles)
         has_relation = any(r.role == "RELATION_REF" for r in roles)
-        if has_flee and (has_relation or has_self):
-            return StructureMatch(
-                pattern="FLEEING",
-                confidence=0.6,
-                matched_indices=[i for i, r in enumerate(roles)
-                                if r.role in ("PULL_AWAY", "SELF_REF", "RELATION_REF")],
-                description="Fleeing from self/relationships",
-                v_weight=-25.0, d_weight=-15.0, u_weight=15.0,
-            )
+        if not has_flee or not (has_relation or has_self):
+            return None
+
+        # Achievement context blocks FLEEING
+        _ACHIEVEMENT_CONTEXT = {"first", "mile", "miles", "marathon", "race",
+                                "finish", "finished", "record", "fastest",
+                                "goal", "lap", "laps", "training", "workout"}
+        has_achievement = any(r.word in _ACHIEVEMENT_CONTEXT for r in roles)
+        if has_achievement:
+            return None
+
+        return StructureMatch(
+            pattern="FLEEING",
+            confidence=0.6,
+            matched_indices=[i for i, r in enumerate(roles)
+                            if r.role in ("PULL_AWAY", "SELF_REF", "RELATION_REF")],
+            description="Fleeing from self/relationships",
+            v_weight=-25.0, d_weight=-15.0, u_weight=15.0,
+        )
         return None
 
     def _power_over_self(self, roles):
@@ -652,6 +770,7 @@ class StructureDetector:
                                 if r.role in ("POWER", "SELF_REF", "OTHER_REF", "RELATION_REF")],
                 description="Someone using power over self - V and D drop",
                 v_weight=-20.0, d_weight=-30.0, g_weight=-15.0,
+                w_weight=-15.0,
             )
         return None
 
@@ -667,6 +786,7 @@ class StructureDetector:
                                 if r.role in ("SUBMISSION", "SELF_REF")],
                 description="User surrendering agency",
                 v_weight=-20.0, d_weight=-40.0, g_weight=-15.0,
+                w_weight=-20.0,
             )
         return None
 
@@ -733,6 +853,7 @@ class StructureDetector:
             d_weight=-20.0 * intensity,
             u_weight=15.0,
             g_weight=15.0,
+            w_weight=-20.0,
         )
 
     def _bravado(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -748,7 +869,11 @@ class StructureDetector:
             r.position for r in roles if r.word in _LAUGHTER_WORDS
         ]
         amplifier_indices = [r.position for r in roles if r.role == "AMPLIFIER"]
-        peace_indices = [r.position for r in roles if r.role == "PEACE"]
+        # PEACE role + "good/great/alright/okay" as peace-adjacent for bravado
+        _bravado_peace = {"alright", "okay", "ok", "fine", "chill"}
+        # "good" and "great" removed -- too broad. "I have a good chance" ≠ bravado.
+        peace_indices = [r.position for r in roles
+                        if r.role == "PEACE" or r.word in _bravado_peace]
         self_indices = [r.position for r in roles if r.role == "SELF_REF"]
 
         if not peace_indices:
@@ -786,6 +911,7 @@ class StructureDetector:
             d_weight=-20.0,
             u_weight=15.0,
             g_weight=10.0,
+            w_weight=-5.0,
         )
 
     def _betrayal(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -799,6 +925,16 @@ class StructureDetector:
         betrayal_indices = [
             r.position for r in roles if r.word in _BETRAYAL_VERBS
         ]
+        # Check compound betrayal phrases: "turned on", "went against", etc.
+        # These are polarity flips -- the subject rotated away from the target.
+        compound_betrayal = False
+        if not betrayal_indices:
+            words = [r.word for r in roles]
+            for i, w in enumerate(words):
+                if w in _BETRAYAL_COMPOUNDS and i + 1 < len(words):
+                    if words[i + 1] in _BETRAYAL_COMPOUNDS[w]:
+                        betrayal_indices.append(i)
+                        compound_betrayal = True
         if not betrayal_indices:
             # Also check for strong negative EMOTIONAL near two RELATION_REFs
             strong_neg = [r.position for r in roles
@@ -809,33 +945,59 @@ class StructureDetector:
 
         relation_indices = [r.position for r in roles if r.role == "RELATION_REF"]
         self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+        other_indices = [r.position for r in roles if r.role == "OTHER_REF"]
 
-        if not relation_indices or not self_indices:
-            return None
+        # Compound betrayal phrases carry their own meaning --
+        # "he turned on me" doesn't need RELATION_REF, just a subject + SELF_REF
+        if compound_betrayal:
+            # SELF_REF must be the TARGET (after the verb), not the AGENT (before).
+            # "I turned on the light" = self is agent, no betrayal.
+            # "he turned on me" = self is target, betrayal.
+            best_bi = betrayal_indices[0]
+            self_after = [si for si in self_indices if si > best_bi]
+            if not self_after:
+                return None
+            self_indices = self_after  # only use self-refs that are targets
+            subject_indices = relation_indices + other_indices
+        else:
+            if not relation_indices or not self_indices:
+                return None
+            subject_indices = relation_indices
 
-        # Need at least one betrayal verb near a relation
         best_bi = betrayal_indices[0]
-        nearby_rels = [ri for ri in relation_indices if abs(ri - best_bi) <= 8]
+        nearby_subjects = [si for si in subject_indices if abs(si - best_bi) <= 8]
         nearby_self = [si for si in self_indices if abs(si - best_bi) <= 8]
 
-        if not nearby_rels or not nearby_self:
+        if not nearby_self:
+            return None
+        # For non-compound, require a nearby relation
+        if not compound_betrayal and not nearby_subjects:
             return None
 
-        # Confidence scales with number of relationship words (more = worse)
-        confidence = 0.6 + min(len(nearby_rels) * 0.15, 0.35)
+        # Confidence: relation words scale it up (heavier relationship = worse)
+        if nearby_subjects and relation_indices:
+            nearby_rels = [si for si in nearby_subjects if si in relation_indices]
+            confidence = 0.6 + min(len(nearby_rels) * 0.15, 0.35)
+        elif compound_betrayal:
+            confidence = 0.65  # compound phrase is confident on its own
+        else:
+            confidence = 0.6
 
         # Sum relationship G values -- higher trust = harder fall
         from .vocabulary import VOCABULARY
         total_g = 0
-        for ri in nearby_rels:
+        rel_or_subject = nearby_subjects if nearby_subjects else []
+        for ri in rel_or_subject:
             word = roles[ri].word
             if word in VOCABULARY:
                 total_g += max(5, VOCABULARY[word][4])
             else:
                 total_g += 20
+        if not rel_or_subject:
+            total_g = 20  # baseline for implicit subject
         g_multiplier = total_g / 30.0  # normalize: 30 = baseline
 
-        indices = sorted(set(betrayal_indices + nearby_rels + nearby_self))
+        indices = sorted(set(betrayal_indices + rel_or_subject + nearby_self))
         return StructureMatch(
             pattern="BETRAYAL",
             confidence=min(confidence, 1.0),
@@ -845,6 +1007,7 @@ class StructureDetector:
             d_weight=-40.0 * g_multiplier,
             u_weight=30.0,
             g_weight=40.0,
+            w_weight=-15.0,
         )
 
     def _directed_positive(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -892,7 +1055,10 @@ class StructureDetector:
         # "good for you" = just state attribution (dismissive)
         action_words = {"did", "made", "built", "created", "earned",
                        "won", "passed", "finished", "completed", "achieved",
-                       "worked", "helped", "saved", "fixed"}
+                       "worked", "helped", "saved", "fixed", "said", "told",
+                       "gave", "proposed", "remembered", "graduated", "ran",
+                       "walked", "danced", "sang", "wrote", "cooked",
+                       "learned", "started", "stopped", "tried", "came"}
         has_action = any(r.word in action_words for r in roles)
         # Also genuine if self is thankful/proud/loving
         grateful_words = {"proud", "grateful", "thankful",
@@ -905,6 +1071,11 @@ class StructureDetector:
         has_thank = any(r.word in ("thank", "thanks", "thankyou")
                        for r in roles)
         if has_action or has_thank or (self_indices and has_grateful):
+            return None
+
+        # If no SELF_REF at all, speaker isn't in the sentence -- narration, not PA
+        # "he proposed on the beach" = story. "good for you" = implicit self present.
+        if not self_indices and len(roles) > 4:
             return None
 
         # Positive + OTHER without self benefiting = directed/dismissive
@@ -948,7 +1119,7 @@ class StructureDetector:
             has_dismiss = any(r.word in ("joke", "kidding", "playing",
                             "bruise", "scratch", "nothing")
                             for r in roles)
-            if has_dismiss or has_other:
+            if has_dismiss or (has_other and len(roles) <= 6):
                 return StructureMatch(
                     pattern="MINIMIZER",
                     confidence=0.55,
@@ -958,6 +1129,7 @@ class StructureDetector:
                     d_weight=10.0,
                     u_weight=0.0,
                     g_weight=0.0,
+                    w_weight=-10.0,
                 )
 
         # "too" + trait = invalidation ("youre too sensitive")
@@ -977,6 +1149,7 @@ class StructureDetector:
                     d_weight=15.0,
                     u_weight=5.0,
                     g_weight=0.0,
+                    w_weight=-10.0,
                 )
 
         return None
@@ -998,21 +1171,47 @@ class StructureDetector:
         if not pos_indices or not self_indices:
             return None
 
-        # Doubt/exclusion/comparison markers
-        doubt_words = {"even", "actually", "really", "ever", "anymore"}
-        exclusion_words = {"except", "without", "instead", "but", "not"}
-        comparison_words = {"more", "less", "better", "worse", "prettier",
-                           "smarter", "faster", "rather", "over"}
+        # Exclusion markers -- must clearly indicate self is left out
+        exclusion_words = {"except", "instead", "anymore"}
+        # "even" is doubt ONLY when near SELF_REF: "do you even love me" = doubt
+        # "even I would have" = intensification, not doubt
+        doubt_words = {"even", "ever"}
+        comparison_words = {"more", "less", "worse", "prettier",
+                           "smarter", "faster", "rather"}
 
-        has_doubt = any(r.word in doubt_words for r in roles)
         has_exclusion = any(r.word in exclusion_words for r in roles)
-        has_comparison = any(r.word in comparison_words for r in roles)
-        has_negator = any(r.role == "NEGATOR" for r in roles)
 
-        # Need doubt/exclusion/comparison signal (not just negator alone --
-        # "cant believe we won" is amazement, not exclusion)
-        signals = sum([has_doubt, has_exclusion, has_comparison])
-        if signals == 0:
+        # Doubt: "even" is doubt ONLY when followed by OTHER's action toward self.
+        # "do you EVEN love me" = doubt (even before other's action).
+        # "EVEN I would have" = leveling up (even before self = inclusion).
+        # Key: if SELF_REF immediately follows "even", it's leveling, not doubt.
+        has_doubt = False
+        for r in roles:
+            if r.word in doubt_words:
+                # Check if SELF_REF is immediately after "even" = leveling, skip
+                next_is_self = (r.position + 1 < len(roles)
+                               and roles[r.position + 1].role == "SELF_REF")
+                if next_is_self:
+                    continue  # "even I" = leveling up, not doubt
+                # Otherwise check proximity to positive + self
+                near_pos = any(abs(r.position - pi) <= 3 for pi in pos_indices)
+                near_self = any(abs(r.position - si) <= 4 for si in self_indices)
+                if near_pos and near_self:
+                    has_doubt = True
+                    break
+
+        # Comparison: "more" must be near OTHER_REF (comparing self to other)
+        has_comparison = False
+        other_indices = [r.position for r in roles if r.role in ("OTHER_REF", "RELATION_REF")]
+        for r in roles:
+            if r.word in comparison_words:
+                near_other = any(abs(r.position - oi) <= 4 for oi in other_indices)
+                if near_other:
+                    has_comparison = True
+                    break
+
+        # Need clear signal
+        if not has_exclusion and not has_doubt and not has_comparison:
             return None
 
         # Check that OTHER/RELATION is also present (the one getting the positive)
@@ -1021,6 +1220,7 @@ class StructureDetector:
             return None
 
         # Stronger with more signals
+        signals = sum([has_exclusion, has_doubt, has_comparison])
         confidence = 0.5 + min(signals * 0.15, 0.35)
 
         # Scale with how positive the positive word is (bigger love = bigger hurt)
@@ -1038,6 +1238,7 @@ class StructureDetector:
             d_weight=-15.0,
             u_weight=10.0,
             g_weight=10.0,
+            w_weight=-30.0,
         )
 
     def _calling_out(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -1092,7 +1293,102 @@ class StructureDetector:
             d_weight=8.0,    # questioner is asserting position
             u_weight=5.0,
             g_weight=5.0,
+            w_weight=5.0,
         )
+
+    def _self_excluded(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """OTHER has/does something WITHOUT SELF = user excluded.
+
+        "they have a group chat without me" -- others built connection, user left out
+        "everyone went to the party without me" -- group activity excluded user
+        "they planned it without telling me" -- user cut out of the loop
+
+        Pattern: OTHER_REF + "without" + SELF_REF = exclusion.
+        The others possess or do something and the user is not included.
+        """
+        other_indices = [r.position for r in roles
+                        if r.role in ("OTHER_REF", "RELATION_REF")]
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+        without_indices = [r.position for r in roles if r.word == "without"]
+
+        if not other_indices or not self_indices or not without_indices:
+            return None
+
+        # Pattern: OTHER ... without ... SELF (in that order)
+        for wi in without_indices:
+            other_before = any(oi < wi for oi in other_indices)
+            self_after = any(si > wi for si in self_indices)
+            if other_before and self_after:
+                return StructureMatch(
+                    pattern="SELF_EXCLUDED",
+                    confidence=0.7,
+                    matched_indices=sorted(set(other_indices + without_indices + self_indices)),
+                    description="User excluded from group activity/connection",
+                    v_weight=-25.0,
+                    d_weight=-20.0,
+                    u_weight=10.0,
+                    g_weight=10.0,
+                    w_weight=-15.0,
+                )
+        return None
+
+    def _withheld_positive(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Positive emotion that was NEVER expressed or is UNREALIZED.
+
+        "my father never once said he was proud" -- pride withheld
+        "they would have been proud" -- conditional past, can't happen now
+        "he never told me he loved me" -- love withheld
+
+        Pattern: NEGATOR/conditional + positive EMOTIONAL in same sentence.
+        The positive thing didn't happen or can't happen.
+        """
+        pos_indices = [r.position for r in roles
+                      if r.role == "EMOTIONAL" and r.force and r.force[0] > 30]
+        if not pos_indices:
+            return None
+
+        # "never" or "didn't" or "wouldn't" = the positive was withheld
+        _WITHHOLDING = {"never", "didnt", "didn't", "wouldnt", "wouldn't",
+                        "couldnt", "couldn't"}
+        # "couldn't believe" = amazement, not withholding. Skip.
+        _AMAZEMENT_FOLLOWS = {"believe", "imagine", "fathom"}
+        withhold_indices = []
+        for r in roles:
+            if r.word in _WITHHOLDING:
+                # Check if next word is amazement -- "couldn't believe" = overwhelmed
+                next_word = roles[r.position + 1].word if r.position + 1 < len(roles) else ""
+                if next_word in _AMAZEMENT_FOLLOWS:
+                    continue  # amazement, not withholding
+                withhold_indices.append(r.position)
+
+        # "would have been" = conditional past = unrealized
+        words = [r.word for r in roles]
+        conditional_past = False
+        for i in range(len(words) - 2):
+            if words[i] == "would" and words[i+1] == "have" and words[i+2] == "been":
+                withhold_indices.append(i)
+                conditional_past = True
+
+        if not withhold_indices:
+            return None
+
+        # The positive word must come AFTER the withholding word
+        for wi in withhold_indices:
+            for pi in pos_indices:
+                if pi > wi:
+                    confidence = 0.75 if conditional_past else 0.7
+                    return StructureMatch(
+                        pattern="WITHHELD_POSITIVE",
+                        confidence=confidence,
+                        matched_indices=sorted({wi, pi}),
+                        description="Positive emotion withheld or unrealized",
+                        v_weight=-50.0,
+                        d_weight=-15.0,
+                        u_weight=5.0,
+                        g_weight=15.0,
+                        w_weight=-20.0,
+                    )
+        return None
 
     def _d_inversion(self, roles):
         """INVERSION verb present = power dynamics flipped from expected."""
@@ -1106,6 +1402,67 @@ class StructureDetector:
                                 if r.role in ("INVERSION", "SELF_REF")],
                 description="Power inversion - user lost control of something they should control",
                 v_weight=-30.0, d_weight=-50.0, u_weight=15.0, g_weight=-20.0,
+                w_weight=-10.0,
             )
+        return None
+
+    def _relief_absence(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """'without [negative]' or 'havent had [negative]' = relief/positive.
+
+        "i can afford groceries without stress" -- absence of stress = relief
+        "i havent had a panic attack in a month" -- absence of panic = progress
+        "i ran my first mile without stopping" -- absence of stopping = achievement
+
+        Pattern: negation/absence word + negative emotional word = POSITIVE.
+        The negative thing is GONE. That's relief.
+        """
+        from .vocabulary import VOCABULARY
+
+        words = [r.word for r in roles]
+
+        # Find "without" or "havent"/"haven't" positions
+        absence_indices = []
+        for i, r in enumerate(roles):
+            if r.word in ("without",):
+                absence_indices.append(i)
+            # "havent had" / "haven't had" pattern
+            if r.word in ("havent", "haven't", "hasnt", "hasn't") and i + 1 < len(roles):
+                if roles[i + 1].word in ("had", "been", "felt", "seen", "gotten"):
+                    absence_indices.append(i)
+
+        if not absence_indices:
+            return None
+
+        # Check if what follows the absence word is STRONGLY negative.
+        # "without stress" = relief (stress V=-75, strongly negative).
+        # Fire when the absent thing is a NEGATIVE STATE/EXPERIENCE.
+        # "without stress" = relief (stress is a bad state).
+        # "without saying goodbye" = NOT relief (goodbye is closure owed).
+        # Social/connection words when absent = deprivation, not relief.
+        _NOT_RELIEF = {"goodbye", "goodbyes", "telling", "asking", "warning",
+                       "saying", "knowing", "explanation", "closure",
+                       "permission", "consent", "notice", "apology"}
+        for ai in absence_indices:
+            for j in range(ai + 1, min(ai + 4, len(roles))):
+                if roles[j].word in _NOT_RELIEF:
+                    continue  # absence of social obligation = deprivation, not relief
+                wf = roles[j].force or VOCABULARY.get(roles[j].word)
+                if wf and wf[0] < -10:
+                    # Strongly negative word after absence marker = the bad thing is GONE
+                    # Scale relief by how bad the absent thing is
+                    # "without stress" (V=-75) = bigger relief than "without worry" (V=-35)
+                    severity = min(abs(wf[0]) / 50.0, 2.0)
+                    return StructureMatch(
+                        pattern="RELIEF_ABSENCE",
+                        confidence=0.75,
+                        matched_indices=[ai, j],
+                        description="Absence of negative = relief/progress",
+                        v_weight=35.0 * severity,
+                        d_weight=15.0,
+                        u_weight=-10.0,
+                        g_weight=10.0,
+                        w_weight=10.0,
+                    )
+
         return None
 

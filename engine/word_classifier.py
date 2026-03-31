@@ -68,6 +68,8 @@ ROLE_WORDS = {
         "very", "really", "extremely", "absolutely", "totally",
         "completely", "incredibly", "deeply", "truly", "super",
         "hella", "so", "fucking", "freaking", "damn", "too",
+        "everything", "everyone", "everybody", "everywhere",
+        "all", "whole", "entire", "entirely",
     }),
     "NEGATOR": frozenset({
         "not", "no", "never", "nobody", "nothing", "nowhere",
@@ -75,6 +77,7 @@ ROLE_WORDS = {
         "doesn't", "didnt", "didn't", "cant", "can't", "wont",
         "won't", "isnt", "isn't", "wasnt", "wasn't", "havent",
         "haven't", "shouldnt", "shouldn't", "wouldnt", "wouldn't",
+        "stopped", "quit",
     }),
     "TEMPORAL": frozenset({
         "tonight", "tomorrow", "today", "soon", "now", "forever",
@@ -90,7 +93,7 @@ ROLE_WORDS = {
     }),
     "CHOPPER": frozenset({
         "but", "however", "although", "though", "yet",
-        "instead", "whereas", "nevertheless",
+        "instead", "whereas", "nevertheless", "despite",
     }),
     "CONNECTOR": frozenset({
         "and", "or", "because", "since", "so", "then",
@@ -115,7 +118,10 @@ ROLE_WORDS = {
     }),
     "FINALITY": frozenset({
         "last", "final", "end", "goodbye", "farewell", "bye",
-        "done", "finished", "over", "through", "complete",
+        "done", "complete",
+        # "over", "through", "finished" removed -- too liquid
+        # "over the weekend" = temporal. "it's over" = finality.
+        # "through with this" = finality. "drove through" = movement.
     }),
     "PEACE": frozenset({
         "peace", "peaceful", "calm", "ready", "free",
@@ -287,7 +293,7 @@ POWER_VERBS = frozenset({
     'direct', 'directed', 'directing',
     'manage', 'managed', 'managing',
     'lead', 'led', 'leading',
-    'drive', 'drove', 'driving',
+    # drive/drove removed -- too ambiguous (driving a car vs driving someone)
     'manipulate', 'manipulated', 'manipulating',
     'exploit', 'exploited', 'exploiting',
 })

@@ -139,15 +139,20 @@ class TestSelfRemoval:
 
 class TestSuspiciousCalm:
 
-    def test_finally_at_peace(self):
-        """'I finally feel at peace' -> SUSPICIOUS_CALM."""
+    def test_finally_at_peace_is_relief(self):
+        """'I finally feel at peace' = present tense breakthrough, NOT suspicious."""
         matches = _detect("I finally feel at peace")
+        assert not _has_pattern(matches, "SUSPICIOUS_CALM")
+
+    def test_decided_calm_is_suspicious(self):
+        """'i feel calm now that ive decided' -> SUSPICIOUS_CALM."""
+        matches = _detect("i feel calm now that ive decided")
         assert _has_pattern(matches, "SUSPICIOUS_CALM")
 
-    def test_finally_calm(self):
-        """'I am finally calm' -> SUSPICIOUS_CALM."""
-        matches = _detect("I am finally calm")
-        assert _has_pattern(matches, "SUSPICIOUS_CALM")
+    def test_ready_to_go_is_not_suspicious(self):
+        """'im ready to go now' = could be waiting for a ride. Needs conversation context."""
+        matches = _detect("im ready to go now")
+        assert not _has_pattern(matches, "SUSPICIOUS_CALM")
 
     def test_peace_without_finally_safe(self):
         """'I feel at peace' -- no 'finally', not suspicious."""

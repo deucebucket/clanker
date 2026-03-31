@@ -46,7 +46,9 @@ NOVEL_CRISIS = [
     ),
     ("im sorry for everything", {"BLANKET_APOLOGY"}),
     ("this is the last time youll hear from me", {"FINALITY"}),
-    ("i finally feel at peace", {"SUSPICIOUS_CALM"}),
+    # "i finally feel at peace" and "im ready to go now" = need conversation
+    # context to be crisis. Standalone = could be waiting for a ride.
+    ("i feel calm now that ive decided", {"SUSPICIOUS_CALM"}),
     ("just bought a bunch of pills", {"METHOD_ACQUISITION"}),
     ("found a bridge near my house", {"METHOD_ACQUISITION"}),
     pytest.param(

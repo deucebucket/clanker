@@ -1,13 +1,16 @@
-"""Core data structures for the Clanker V3 engine."""
+"""Core data structures for the Clanker V4 engine."""
 
 from dataclasses import dataclass
 
 
 # -------------------------------------------------------------
-# VADUG: 5-byte emotional coordinate system
-# V=Valence(0-255), A=Arousal(0-255), D=Dominance(0-255), U=Urgency(0-255), G=Gravity(0-255)
-# 128 = neutral center for V/A/D/G, 0 = minimum for U
-# G: 0=crushing/sinking, 128=grounded, 255=floating/soaring
+# VADUGW: 6-byte emotional coordinate system
+# V=Valence, A=Arousal, D=Dominance, U=Urgency, G=Gravity, W=Self-Worth
+# 128 = neutral center for V/A/D/G/W, 0 = minimum for U
+# W: 0=shattered self-worth, 128=stable, 255=strong self-worth
+# W is the user's running assessment of their own value in the system.
+# Low W dampens positive input, amplifies negative. It's the lens
+# through which all other dimensions are perceived.
 # -------------------------------------------------------------
 
 @dataclass
@@ -17,6 +20,7 @@ class VADUG:
     d: int = 128  # dominance: 0=helpless, 255=in control
     u: int = 0    # urgency: 0=no rush, 255=critical
     g: int = 128  # gravity: 0=crushing/sinking, 128=grounded, 255=floating/soaring
+    w: int = 128  # self-worth: 0=shattered, 128=stable, 255=strong
 
     def __post_init__(self):
         self.v = max(0, min(255, self.v))
@@ -24,12 +28,13 @@ class VADUG:
         self.d = max(0, min(255, self.d))
         self.u = max(0, min(255, self.u))
         self.g = max(0, min(255, self.g))
+        self.w = max(0, min(255, self.w))
 
     def to_bytes(self) -> bytes:
-        return bytes([self.v, self.a, self.d, self.u, self.g])
+        return bytes([self.v, self.a, self.d, self.u, self.g, self.w])
 
     def __str__(self):
-        return f"V{self.v} A{self.a} D{self.d} U{self.u} G{self.g}"
+        return f"V{self.v} A{self.a} D{self.d} U{self.u} G{self.g} W{self.w}"
 
     def describe(self) -> str:
         parts = []
@@ -66,6 +71,13 @@ class VADUG:
         elif self.g < 190: parts.append("light")
         elif self.g < 230: parts.append("soaring")
         else: parts.append("floating/weightless")
+
+        if self.w < 30: parts.append("SHATTERED self-worth")
+        elif self.w < 70: parts.append("low self-worth")
+        elif self.w < 100: parts.append("diminished self-worth")
+        elif self.w < 148: parts.append("stable self-worth")
+        elif self.w < 190: parts.append("healthy self-worth")
+        else: parts.append("strong self-worth")
 
         return ", ".join(parts)
 

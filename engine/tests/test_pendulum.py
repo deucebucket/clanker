@@ -190,5 +190,63 @@ class TestTrace:
         """Empty string should return neutral VADUG and empty trace."""
         r, trace = compute_vadug("")
         assert r.v == 128
+        assert r.w == 128
         assert trace["word_count"] == 0
         assert trace["trace"] == []
+
+
+# ── V4: Self-Worth (W) dimension ─────────────────────────────────
+
+class TestSelfWorth:
+    """W tracks the user's self-assessment of their own value."""
+
+    def test_default_w_is_neutral(self):
+        """Default VADUG has W=128 (stable self-worth)."""
+        assert VADUG().w == 128
+
+    def test_neutral_sentence_w_unchanged(self):
+        """Non-self-referential sentences should not move W."""
+        r = _vadug("the meeting is at three")
+        assert r.w == 128
+
+    def test_no_self_ref_w_unchanged(self):
+        """Sentences without SELF_REF should keep W at 128."""
+        r = _vadug("she walked her dog")
+        assert r.w == 128
+
+    def test_self_nullify_drops_w(self):
+        """'i am worthless' should produce W < 100."""
+        r = _vadug("i am worthless")
+        assert r.w < 100, f"W={r.w} should be < 100 for self-nullification"
+
+    def test_self_nothing_drops_w(self):
+        """'i am nothing' should produce W < 110."""
+        r = _vadug("i am nothing")
+        assert r.w < 110, f"W={r.w} should be < 110"
+
+    def test_self_proud_raises_w(self):
+        """'i am proud of myself' should produce W > 128."""
+        r = _vadug("i am proud of myself")
+        assert r.w > 128, f"W={r.w} should be > 128 for self-pride"
+
+    def test_self_deserve_raises_w(self):
+        """'i deserve to be happy' should produce W > 128."""
+        r = _vadug("i deserve to be happy")
+        assert r.w > 128, f"W={r.w} should be > 128"
+
+    def test_told_useless_drops_w(self):
+        """'he told me i was useless' should drop W below neutral."""
+        r = _vadug("he told me i was useless")
+        assert r.w < 128, f"W={r.w} should be < 128"
+
+    def test_w_amplifies_negative_v(self):
+        """Low W should amplify negative V (self-worth lens effect)."""
+        # "i am worthless" has low W AND low V
+        # The V should be lower than it would be without W coefficient
+        r = _vadug("i am worthless")
+        assert r.v < 80, f"V={r.v} should be deeply negative with W amplification"
+
+    def test_burden_drops_w(self):
+        """'im a burden' triggers SELF_NULLIFY which drops W."""
+        r = _vadug("im a burden to everyone")
+        assert r.w < 110, f"W={r.w} should be < 110 for self-as-burden"

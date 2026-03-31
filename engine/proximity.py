@@ -120,14 +120,18 @@ def proximity_coefficient(
         # Operator modifiers (amplifier, negator, self-ref, hedge)
         if role in ROLE_MODIFIERS:
             modifier = ROLE_MODIFIERS[role]
-            # Strong NEGATIVE words resist negation -- "no fuck you" != "not happy"
-            # Expletives/violence (V < -50) can't be logically negated
-            # Positive words CAN be negated: "not happy" = valid
+            # Some words resist negation:
+            # EXPLETIVES: "no fuck you" stays negative
+            # DECEPTION verbs: "pretended not to" = the "not" belongs to the next verb
+            #   "not pretended" doesn't make sense. The deception is real.
+            _NEGATION_RESISTANT = {
+                "fuck", "shit", "damn", "hell", "ass", "bitch",
+                "bastard", "crap", "dick", "piss",
+                "pretended", "pretending", "faked", "faking", "lied", "lying",
+            }
             if role == "NEGATOR" and roles[target_idx].force:
-                word_v = roles[target_idx].force[0]
-                if word_v < -50:
-                    resist = min(abs(word_v) / 127.0, 0.9)
-                    modifier *= (1.0 - resist)
+                if roles[target_idx].word in _NEGATION_RESISTANT:
+                    modifier *= 0.15  # barely any negation
             coeff *= (1.0 + modifier * influence)
 
         # Star-to-star gravity: stronger emotional words pull weaker ones
@@ -154,6 +158,11 @@ def proximity_coefficient(
     # Relationship amplification: nearby RELATION_REF amplifies negative forces
     # Wife(G=40) near cheated(-127) = betrayal hits harder because trust was higher
     # The relationship G value IS the trust level -- higher trust = bigger fall
+    #
+    # Determiner check: "my mother" = possessive bond (full G).
+    # "the mother" = distanced/clinical (dampened G). The article severs
+    # the gravitational bond between speaker and relationship.
+    _ARTICLES = {"the", "a", "an"}
     target_role = roles[target_idx]
     if target_role.force and target_role.force[0] < -20:  # negative emotional word
         for i in range(n):
@@ -169,6 +178,10 @@ def proximity_coefficient(
                 rel_g = 20  # default
                 if roles[i].word in VOCABULARY:
                     rel_g = max(5, VOCABULARY[roles[i].word][4])
+                # "the/a mother" = distanced, dampen G contribution
+                # "my mother" = bonded, full G
+                if i > 0 and roles[i - 1].word in _ARTICLES:
+                    rel_g = int(rel_g * 0.3)  # 70% reduction -- article severs bond
                 # Amplify: higher relationship G = bigger betrayal multiplier
                 betrayal_mult = (rel_g / 20.0) * influence
                 coeff *= (1.0 + betrayal_mult * 0.3)
