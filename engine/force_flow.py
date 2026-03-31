@@ -212,7 +212,9 @@ def compute_intent(flow: Optional[ForceFlow], roles=None) -> int:
     elif ev < 0 and flow.self_is_actor and not flow.self_is_target:
         # Check if this is self-assessment (self describing self negatively TO others)
         _SELF_ASSESSMENT = {"burden", "problem", "waste", "mistake", "obstacle",
-                           "nuisance", "hindrance", "liability", "deadweight"}
+                           "nuisance", "hindrance", "liability", "deadweight",
+                           "nothing", "worthless", "useless", "failure", "trash",
+                           "garbage", "broken", "pathetic", "stupid", "weak"}
         force_word = roles[flow.force_idx].word if roles and 0 <= flow.force_idx < len(roles) else ""
         if force_word in _SELF_ASSESSMENT:
             intent = 40 - min(abs(ev) // 6, 30)  # withdraw -- self-assessment, not attack
