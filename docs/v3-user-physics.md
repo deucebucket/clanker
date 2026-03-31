@@ -1,8 +1,8 @@
-# V3/V4 Physics Rules  --  Everything the User Taught
+# V5.5 Physics Rules  --  Everything the User Taught
 
-These are NOT idioms. These are the LAWS that V4's structural engine must encode.
+These are NOT idioms. These are the LAWS that V5.5's structural engine must encode.
 Every insight from the user across ALL sessions. Nothing discarded.
-V4 adds the W (Self-Worth) dimension: 0=shattered, 128=stable, 255=strong.
+7D VADUGWI: W (Self-Worth) = 0=shattered, 128=stable, 255=strong. I (Intent) = 0=withdraw, 128=neutral, 255=control.
 
 ## 1. Words Are Celestial Bodies
 

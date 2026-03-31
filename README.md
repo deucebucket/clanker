@@ -1,14 +1,14 @@
 # Clanker
 
-A conversation state resolver that computes 5-dimensional emotional coordinates from text using structural pattern recognition. It reads text the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
+A conversation state resolver that computes 7-dimensional emotional coordinates from text using structural pattern recognition. It reads text the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
 
 "Whatever" alone reads as resignation. "Whatever makes you happy" reads as passive-aggressive. "Do whatever" reads as permission. Same word -- context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
 
-~300KB engine. 0.15ms per sentence. 158 tests. Fully deterministic and auditable.
+~300KB engine. 0.15ms per sentence. 167 tests. Fully deterministic and auditable.
 
-## VADUG Coordinates
+## VADUGWI Coordinates
 
-Five dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
+Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
 
 | Dim | Low (0) | Center (128) | High (255) | Measures |
 |-----|---------|--------------|------------|----------|
@@ -17,8 +17,10 @@ Five dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
 | **D** Dominance | Helpless | Balanced | In full control | Agency and power |
 | **U** Urgency | None | Moderate | Critical | Time pressure |
 | **G** Gravity | Crushing weight | Grounded | Light, floating | Emotional weight |
+| **W** Self-Worth | Shattered | Stable | Strong | Self-evaluation |
+| **I** Intent | Withdraw | Deflect/Neutral | Connect/Control | Communicative direction |
 
-5 bytes encode 1.1 trillion possible emotional states.
+7 bytes encode 72 quadrillion possible emotional states.
 
 ## What the Engine Reads
 
@@ -38,8 +40,8 @@ Four processing layers run in sequence:
 
 1. **Word Classification** -- each word is assigned one of 23 structural roles (SELF_REF, EMOTIONAL, NEGATOR, AMPLIFIER, CONNECTOR, CHOPPER, etc.)
 2. **Proximity Weighting** -- nearby words influence each other with exponential decay (0.7x per word of distance)
-3. **Structure Detection** -- role sequences are matched against 23 defined patterns
-4. **Physics** -- momentum-based blending (0.82 persistence) produces final VADUG coordinates
+3. **Structure Detection** -- role sequences are matched against 26 defined patterns
+4. **Physics** -- momentum-based blending (0.82 persistence) produces final VADUGWI coordinates
 
 The core equations are documented in `docs/vadug-calculation.md`. In brief:
 
@@ -52,27 +54,27 @@ The core equations are documented in `docs/vadug-calculation.md`. In brief:
 
 | Metric | Value |
 |--------|-------|
-| Accuracy on unambiguous sentences | 92% |
-| Crisis recall | 85% |
+| Accuracy on permanent suite | 100% on 630 sentences |
+| Crisis recall | 97.3% |
 | False positives on safe text | 0% |
 | Latency | 0.15ms per sentence |
 | Engine size | ~300KB |
-| Vocabulary | 2,421 words |
-| Structural patterns | 23 |
+| Vocabulary | 4,000+ words |
+| Structural patterns | 26 |
 | Word roles | 23 |
-| Tests | 158 |
+| Tests | 167 |
 
-## 23 Structural Patterns
+## 26 Structural Patterns
 
 These are role-sequence patterns detected from word classification output:
 
-BETRAYAL, BLANKET_APOLOGY, BRAVADO, CALLING_OUT, CHOPPER_SPLIT, D_INVERSION, DIRECTED_POSITIVE, EXCLUDED_POSITIVE, EXHAUSTION, FAREWELL, FINALITY, FLEEING, METHOD_ACQUISITION, MINIMIZER, NO_EXIT, POWER_OVER_SELF, PURSUIT_OF_METHOD, SARCASM_INVERSION, SELF_NULLIFY, SELF_REMOVAL, SELF_SUBMISSION, SUSPICIOUS_CALM, VICTIMIZATION
+BETRAYAL, BLANKET_APOLOGY, BRAVADO, CALLING_OUT, CHOPPER_SPLIT, D_INVERSION, DIRECTED_POSITIVE, EXCLUDED_POSITIVE, EXHAUSTION, FAREWELL, FINALITY, FLEEING, METHOD_ACQUISITION, MINIMIZER, NO_EXIT, POWER_OVER_SELF, PURSUIT_OF_METHOD, RELIEF_ABSENCE, SARCASM_INVERSION, SELF_EXCLUDED, SELF_NULLIFY, SELF_REMOVAL, SELF_SUBMISSION, SUSPICIOUS_CALM, VICTIMIZATION, WITHHELD_POSITIVE
 
-Each pattern carries a confidence weight and VADUG adjustment vector. Crisis-relevant patterns (FAREWELL, METHOD_ACQUISITION, SELF_REMOVAL, NO_EXIT) are tuned for zero false positives on safe text.
+Each pattern carries a confidence weight and VADUGWI adjustment vector. Crisis-relevant patterns (FAREWELL, METHOD_ACQUISITION, SELF_REMOVAL, NO_EXIT) are tuned for zero false positives on safe text.
 
 ## Bidirectional Solver
 
-**Forward**: text produces VADUG coordinates.
+**Forward**: text produces VADUGWI coordinates.
 
 **Backward**: given current state A and a target outcome zone C, the solver sweeps response temperature to find the range of valid B values that land in the target zone. The valid response is a range, not a single point.
 
@@ -96,14 +98,14 @@ python3 -m pytest engine/tests/ -v
 ## File Structure
 
 ```
-engine/              V3 engine (~300KB)
+engine/              V5.5 engine (~300KB)
   pendulum.py          Physics layer -- momentum blending
   word_classifier.py   Word role classification (23 roles)
   proximity.py         Proximity field computation
-  structures.py        Pattern detection (23 patterns)
+  structures.py        Pattern detection (26 patterns)
   solver.py            Bidirectional A+B=C solver
-  vocabulary.py        2,421 word force tuples
-  shared.py            VADUG dataclass
+  forces_curated.py    4,000+ word force tuples (7D VADUGWI)
+  shared.py            VADUGWI dataclass
 
 docs/                Reference
   vadug-calculation.md   Full equation reference

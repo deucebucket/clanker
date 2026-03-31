@@ -1,10 +1,10 @@
-# Clanker V4 Specification
+# Clanker V5.5 Specification
 
 Complete technical reference. One document, everything you need.
 
-## VADUGW Coordinate System
+## VADUGWI Coordinate System
 
-6 dimensions, each 0-255. 128 is neutral center (except U which starts at 0).
+7 dimensions, each 0-255. 128 is neutral center (except U which starts at 0).
 
 | Dim | 0 | 128 | 255 | Measures |
 |-----|---|-----|-----|----------|
@@ -14,8 +14,9 @@ Complete technical reference. One document, everything you need.
 | U (Urgency) | None | Moderate | Critical | Time pressure |
 | G (Gravity) | Crushing/heavy | Grounded | Floating/light | Emotional weight |
 | W (Self-Worth) | Shattered | Stable | Strong | Self-evaluation |
+| I (Intent) | Withdraw | Neutral | Control | Communicative direction |
 
-6 bytes. 281 trillion possible states.
+7 bytes. 72 quadrillion possible states.
 
 ## Pipeline
 
@@ -25,7 +26,7 @@ text -> Roles -> Proximity -> Structures -> Physics -> VADUGW
 
 ### Layer 1: Word Classification
 
-4,000+ vocabulary words, each with a force tuple (dV, dA, dD, dU, dG, dW).
+4,000+ vocabulary words, each with a force tuple (dV, dA, dD, dU, dG, dW, dI).
 
 Classified by force magnitude:
 - **Primary signal** (|V| > 40): fixed emotional direction
@@ -121,7 +122,7 @@ SELF_EXCLUDED       SELF_REF + exclusion marker ("everyone except me")
 WITHHELD_POSITIVE   NEGATOR + TRANSFER + positive ("they never told me they were proud")
 ```
 
-V4 additions: force flow resolver (WHO does WHAT to WHOM), absence scope
+V5.5 additions: force flow resolver (WHO does WHAT to WHOM), Intent dimension (I), absence scope
 ("havent had X" dampens absent events), compound phrase resolution ("no one" ->
 nobody), Bayesian vocabulary corrections, forced choice cancellation.
 
@@ -189,7 +190,7 @@ still   = >>    persistence, counteracts decay
 
 ## Bidirectional Solver
 
-**Forward**: text -> VADUGW
+**Forward**: text -> VADUGWI
 
 **Backward**: given state A and target zone C, sweep response temperature:
 ```
@@ -273,10 +274,10 @@ engine/
   proximity.py         Influence fields
   structures.py        Pattern detection
   solver.py            Bidirectional solver
-  forces_curated.py    4,000+ word force tuples (6D VADUGW)
+  forces_curated.py    4,000+ word force tuples (7D VADUGWI)
   force_flow.py        Force flow resolver (WHO does WHAT to WHOM)
   zones_impl.py        Zone implementation
-  shared.py            VADUG dataclass (6-byte: V, A, D, U, G, W)
+  shared.py            VADUGWI dataclass (7-byte: V, A, D, U, G, W, I)
   battleship.py        Probe system
   vocabulary.py        Vocabulary export
   zones.py             9 convergence zones

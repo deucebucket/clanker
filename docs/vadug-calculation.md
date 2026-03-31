@@ -1,9 +1,9 @@
-# How VADUGW is Calculated - V4 Formula Reference
+# How VADUGWI is Calculated - V5.5 Formula Reference
 
-## The V4 Sentence Equation
+## The V5.5 Sentence Equation
 
 ```
-VADUGW = Physics( Structures( Proximity( Roles(words) ) ) )
+VADUGWI = Physics( Structures( Proximity( Roles(words) ) ) )
 ```
 
 Four layers, bottom-up:
@@ -11,7 +11,7 @@ Four layers, bottom-up:
 1. **Roles**: Each word gets a structural role (18 types)
 2. **Proximity**: Distance-based influence fields between words (decay 0.7x/word)
 3. **Structures**: Pattern recognition on role sequences (26 patterns)
-4. **Physics**: Momentum-based force application, produces final VADUG
+4. **Physics**: Momentum-based force application, produces final VADUGWI
 
 ## Layer 1: Word Role Classification
 
@@ -145,7 +145,7 @@ WITHHELD_POSITIVE:  NEGATOR + TRANSFER + POSITIVE_EMOTIONAL
 
 ### Constants
 ```
-CENTER = 128.0      (neutral point for V, A, D, G, W)
+CENTER = 128.0      (neutral point for V, A, D, G, W, I)
 MOMENTUM = 0.82     (how much previous state persists)
 FORCE_SCALE = 0.5   (how hard forces push)
 PUSH_CAP = 0.4      (direct push maximum)
@@ -218,13 +218,13 @@ The engine read the STRUCTURE, not the words. It doesn't know "dog" or
 
 ## A+B=C Bidirectional Solver
 
-### Forward: text -> VADUGW
+### Forward: text -> VADUGWI
 Run the 4-layer pipeline.
 
 ### Backward: A + desired_C -> B range
 ```python
 for b_v in range(256):
-    B = VADUG(v=b_v, a=128, d=128, u=0, g=128, w=128)
+    B = VADUGWI(v=b_v, a=128, d=128, u=0, g=128, w=128, i=128)
     C = A * 0.6 + B * 0.4
     if C.v in target_zone:
         valid_range.append(b_v)
