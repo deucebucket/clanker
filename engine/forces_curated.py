@@ -5607,7 +5607,20 @@ _VOCAB_FIXES = {
     'terminal':     (0, 5, 0, 0, 5),               # override: was -50. Computer terminal, not death.
     'opposite':     (0, 5, 0, 0, 0),               # override: was -62. Direction/contrast word.
     'argue':        (-5, 15, 5, 5, 5),             # override: was -42. Debate verb. Mild negative lean.
-    'harder':       (-20, 10, -10, 5, -5),          # override: was -52. Difficulty. "Work harder"=aspiration, "life got harder"=suffering.
+    'harder':       (-20, 10, -10, 5, -5),          # override: was -52. Difficulty.
+    # ── Gemini+Claude consensus round 2 ──
+    'sort':         (0, 5, 0, 0, 5),               # override: was +37. "Sort of" = hedge. Neutral.
+    'convince':     (0, 10, 5, 5, 5),              # override: was +46. Neutral action.
+    'baked':        (0, 5, 0, 0, 0),               # override: was +31. Cooking OR slang. Neutral.
+    'gas':          (0, 5, 0, 0, 5),               # override: was +28. Substance noun. Neutral.
+    'activities':   (0, 5, 0, 0, 5),               # override: was +35. Action noun. Neutral.
+    'knowledge':    (5, 5, 5, 0, 10),              # override: was +39. Information noun. Slight positive.
+    'released':     (0, 10, 5, 5, 5),              # override: was +35. Action verb. Context resolves.
+    'gang':         (-10, 15, -5, 5, 15),          # override: was -79. Group noun. "My gang" vs "gang violence."
+    'awfully':      (0, 10, 0, 0, 0),              # override: was -94! Amplifier. "Awfully nice" = very nice.
+    'bummed':       (-15, 5, -10, 0, -5),          # override: was -47. Mild disappointment.
+    'ugh':          (-10, 10, -5, 0, -5),          # override: was -42. Mild disgust/annoyance.
+    'shady':        (-10, 10, -5, 5, -5),          # override: was -40. Suspicious but could be playful.
     # ── SST-2 round 2: next batch of over-weighted words ──
     'like':         (5, 0, 0, 0, 0),               # override: was +15. FILLER/comparison word. "Like a dream" ≠ positive.
     'watch':        (0, 5, 0, 0, 5),               # override: was +50. Action verb. "Watch a movie" ≠ positive.
