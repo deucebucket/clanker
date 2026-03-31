@@ -2346,7 +2346,7 @@
   },
   {
     "text": "The bench where you sat with your grandmother has a plaque now.",
-    "tier": "NEG",
+    "tier": "N",
     "cat": "G",
     "theme": "family",
     "engine_v": 134
