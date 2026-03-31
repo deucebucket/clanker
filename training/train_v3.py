@@ -36,7 +36,8 @@ PATTERN_NAMES = [
     "PURSUIT_OF_METHOD", "FLEEING", "POWER_OVER_SELF",
     "SELF_SUBMISSION", "D_INVERSION",
     "BETRAYAL", "BRAVADO", "VICTIMIZATION",
-    "CALLING_OUT", "DIRECTED_POSITIVE", "MINIMIZER",
+    "CALLING_OUT", "DIRECTED_POSITIVE", "MINIMIZER", "EXCLUDED_POSITIVE",
+    "RELIEF_ABSENCE", "SELF_EXCLUDED", "WITHHELD_POSITIVE",
 ]
 NUM_PATTERNS = len(PATTERN_NAMES)
 PATTERN_TO_IDX = {p: i for i, p in enumerate(PATTERN_NAMES)}
@@ -66,7 +67,7 @@ class ClankerV3Model(nn.Module):
         )
         self.vadug_head = nn.Sequential(
             nn.Linear(hidden, hidden), nn.GELU(), nn.Dropout(0.1),
-            nn.Linear(hidden, 5),
+            nn.Linear(hidden, 6),  # V4: VADUGW (6 dimensions)
         )
 
     def forward(self, input_ids, attention_mask):
@@ -96,6 +97,9 @@ class V3Dataset(Dataset):
                 d = json.loads(line)
                 text = d["english"]
                 vadug = d["vadug"]
+                # V4 backward compat: pad 5D traces with W=128
+                if len(vadug) == 5:
+                    vadug.append(128)
                 word_roles = d.get("word_roles", [])
                 structures = d.get("structures", [])
 
@@ -161,7 +165,7 @@ def train():
     val_loader = DataLoader(val_ds, batch_size=64, shuffle=False, num_workers=0)
     print(f"  Train: {train_size}, Val: {val_size}")
 
-    config = GPT2Config(vocab_size=tokenizer.vocab_size, n_embd=128, n_layer=6, n_head=4, n_positions=128)
+    config = GPT2Config(vocab_size=tokenizer.vocab_size, n_embd=256, n_layer=12, n_head=8, n_positions=128)
     model = ClankerV3Model(config).to(device)
     params = sum(p.numel() for p in model.parameters())
     print(f"  Model: {params:,} params ({params/1e6:.1f}M)")
@@ -170,10 +174,10 @@ def train():
     pattern_loss_fn = nn.BCEWithLogitsLoss()
     vadug_loss_fn = nn.MSELoss()
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4, weight_decay=0.01)
-    epochs = 30
+    optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
+    epochs = 40
     total_steps = epochs * len(train_loader)
-    scheduler = get_linear_schedule_with_warmup(optimizer, 300, total_steps)
+    scheduler = get_linear_schedule_with_warmup(optimizer, 500, total_steps)
 
     print(f"\nTraining: {epochs} epochs, {total_steps} steps")
     print("  Learning: word ROLES + sentence PATTERNS + VADUG")
