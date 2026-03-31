@@ -4,6 +4,10 @@
 
 Clanker-Micro predicts 7 continuous emotional coordinates (VADUGWI) from English text. Each sentence maps to a point in 7-dimensional emotional space, producing granular readings beyond what discrete classification provides.
 
+**Every output can be traced through explicit, deterministic transformations, with each contributing factor visible and attributable.** You can ask WHY and get a real answer.
+
+Transformers give fluency. Rule systems give control. Clanker is the bridge that lets you combine them -- fluency, control, and explainability -- instead of choosing one.
+
 ---
 
 ## Dimensions
