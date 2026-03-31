@@ -1,10 +1,12 @@
 # Clanker
 
-A conversation state resolver that computes 7-dimensional emotional coordinates from text using structural pattern recognition. It reads text the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
+**A control layer for language models.** Computes 7-dimensional emotional coordinates (VADUGWI) from text using structural pattern recognition. Every output can be traced through explicit, deterministic transformations. You can ask WHY and get a real answer.
 
-"Whatever" alone reads as resignation. "Whatever makes you happy" reads as passive-aggressive. "Do whatever" reads as permission. Same word -- context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
+Transformers give fluency. Rule systems give control. Clanker is the bridge -- fluency, control, and explainability without choosing one.
 
-~300KB engine. 0.15ms per sentence. 167 tests. Fully deterministic and auditable.
+"Whatever" alone reads as resignation. "Whatever makes you happy" reads as passive-aggressive. "Do whatever" reads as permission. Same word -- context changes the Dominance dimension. A sentiment classifier says "neutral" for all three. Clanker tells you which, and why.
+
+~300KB engine. 0.15ms per sentence. 4,000+ words. 26 patterns. 167 tests. 100% on 630 sentences. Fully deterministic and auditable.
 
 ## VADUGWI Coordinates
 

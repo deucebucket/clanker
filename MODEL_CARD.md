@@ -168,14 +168,28 @@ Bayesian vocabulary calibration was performed against the EmpatheticDialogues co
 
 ---
 
+## Two Products, One Engine
+
+### 1. Control Layer for Models
+VADUGWI scoring that any language model can use. Score text, track emotional state across conversations, steer responses toward target outcomes with the A+B=C solver. The engine reads the force. The model generates the words. The bridge between fluency and explainability.
+
+### 2. Emotional Baseline Assessment
+A 35-question situational test drawn from a pool of 630 calibrated probes. Measures emotional interpretation bias across all 7 dimensions without asking direct clinical questions. "Your partner is quiet on the drive home" -- the user's rating reveals their bias, not the sentence's meaning. Detects negative interpretation bias, self-worth patterns, control sensitivity, intent projection, and emotional range compression. Non-threatening. No "do you want to die." Just "how does this situation make you feel, 1-10."
+
+### 3. NPC Emotional Systems
+Game characters with persistent 7D emotional state. Each interaction shifts the NPC's VADUGWI through state_transition. NPCs that remember being hurt (W drops), that withdraw after betrayal (I shifts), that build trust over time (W rises). The ACEs/PCEs framework initializes NPC personality from backstory -- trauma shapes how they receive emotional force.
+
+---
+
 ## Intended Use
 
-- Emotional context layer for language models
-- Crisis detection and mental health screening support
-- Conversation state tracking across multi-turn dialogue
-- NPC emotional systems in games
-- Therapy and coaching support tools
-- Research in affective computing and dimensional emotion models
+- **Control layer for LLMs**: emotional context, conversation steering, response selection
+- **Crisis detection**: 97.3% recall with step-level attribution for clinicians
+- **Emotional assessment**: non-threatening baseline test, trauma/bias detection
+- **NPC systems**: persistent emotional state, personality from backstory
+- **Conversation tracking**: multi-turn trajectory, self-worth monitoring
+- **Therapy support**: session-over-session W trajectory, accountability detection
+- **Research**: dimensional emotion modeling, implicit bias measurement
 
 ---
 
