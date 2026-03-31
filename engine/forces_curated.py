@@ -5373,7 +5373,7 @@ _VOCAB_FIXES = {
     'grocery':      (0, 0, 0, 0, 5),           # override: was V=+42. Neutral noun. Store, not emotion.
     'understands':  (10, 0, 5, 0, 5),          # override: was pulling positive. Neutral cognition with slight positive.
     'nobody':       (-8, 5, -5, 5, -5),         # Minimal own force. NEGATOR role + force flow do the real work.
-    'needs':        (0, 10, -5, 10, 10),         # Liquid. "Needs me"=wanted OR "needs space"=pushing away. Context resolves. Near-neutral.
+    'needs':        (15, 10, 5, 10, 10),          # Being needed = valued. "Nobody needs me" → negator flips positive to negative.
     'cares':        (20, 5, 10, 0, 10),         # "cares about me" = loved. Positive.
     'caring':       (20, 5, 10, 0, 10),
     'notice':       (5, 10, 5, 0, 10),           # Observation/attention. Near-neutral.
