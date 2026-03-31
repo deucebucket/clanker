@@ -147,7 +147,9 @@ def resolve_force_flow(roles: List[WordRole]) -> Optional[ForceFlow]:
     # "nobody hurt me" = negated actor + negative verb = positive outcome
     # "nobody loves me" = negated actor + positive verb = negative outcome
     _NEGATING_ACTORS = {"nobody", "nothing", "none", "noone"}
-    search_start = actor_idx + 1 if actor_idx >= 0 else 0
+    # Search for negators between actor and force, AND before actor
+    # "it WASNT my fault" = wasnt is before "my" (actor) but negates the whole predicate
+    search_start = max(0, (actor_idx - 2) if actor_idx >= 0 else 0)
     negated = any(
         roles[j].role in _NEGATOR_ROLES
         for j in range(search_start, best_force_idx)
@@ -192,13 +194,27 @@ def compute_intent(flow: Optional[ForceFlow], roles=None) -> int:
     if ev > 0 and flow.self_is_actor and not flow.self_is_target:
         intent = 160 + min(ev // 4, 60)  # 160-220
 
-    # Positive force directed at SELF = self-affirm (healing potion → self)
-    elif ev > 0 and flow.self_acts_on_self:
-        intent = 150 + min(ev // 6, 40)  # 150-190
+    # Self-directed force: accountability, self-attack, self-affirm, or deflection.
+    # Must check BEFORE generic positive-self, because negated accountability
+    # (ev positive after flip) would otherwise read as self-affirmation.
+    elif flow.self_acts_on_self:
+        _ACCOUNTABILITY_WORDS = {"wrong", "sorry", "apologize", "fault", "mistake",
+                                "responsibility", "owe", "messed", "screwed"}
+        force_word = roles[flow.force_idx].word if roles and 0 <= flow.force_idx < len(roles) else ""
+        raw_fv = flow.force_valence  # before negation
 
-    # Negative force SELF on SELF = self-destruction (poison → self = WITHDRAW)
-    elif ev < 0 and flow.self_acts_on_self:
-        intent = 40 - min(abs(ev) // 6, 30)  # 40-10 = withdraw
+        if force_word in _ACCOUNTABILITY_WORDS and not flow.negated and raw_fv < 0:
+            # "I was wrong" = accepting the hit = CONNECT/REPAIR intent
+            intent = 170 + min(abs(raw_fv) // 5, 40)  # 170-210 = connect
+        elif force_word in _ACCOUNTABILITY_WORDS and flow.negated:
+            # "It wasn't my fault" = DEFLECTING the hit = DEFLECT
+            intent = 80 + min(abs(raw_fv) // 5, 30)  # 80-110 = deflect
+        elif raw_fv < 0 and not flow.negated:
+            # "I hate myself" = self-destruction = WITHDRAW
+            intent = 40 - min(abs(raw_fv) // 6, 30)  # 40-10 = withdraw
+        elif raw_fv > 0:
+            # "I am proud of myself" = self-affirm = CONNECT
+            intent = 150 + min(abs(raw_fv) // 6, 40)  # 150-190 = connect
 
     # Negative force from OTHER onto SELF = being attacked (DEFLECT/WITHDRAW)
     elif ev < 0 and flow.other_acts_on_self:
