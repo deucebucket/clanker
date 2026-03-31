@@ -5503,6 +5503,52 @@ _VOCAB_FIXES = {
     'brought':      (10, 5, 10, 0, 5),             # "Brought me X" = delivered/gave. Act of service. Slight positive.
     'bring':        (5, 5, 5, 0, 5),
     'shoulder':     (5, -5, 5, 0, 10),             # "Cry on my shoulder" = support/comfort. Slight positive.
+    # ── Temporal/duration words: these amplify the DURATION of surrounding emotion ──
+    # "Long painful" = pain lasted longer. "Brief joy" = joy was fleeting.
+    # These are context-dependent -- their V comes from what they modify.
+    'long':         (-5, 5, 0, 0, 5),             # duration extender. Slight neg lean (long wait, long day).
+    'dragged':      (-15, -5, -10, 0, -5),         # "dragged on" = lasted too long = negative duration
+    'dragging':     (-15, -5, -10, 0, -5),
+    'endless':      (-15, 10, -10, 5, -5),          # override: was -15. Duration amplifier, slight neg.
+    'prolonged':    (-10, 5, -5, 0, -5),
+    'lingering':    (-5, 5, -5, 0, 5),              # could be positive (lingering kiss) or negative (lingering pain)
+    'lasting':      (5, 0, 5, 0, 5),                # "lasting impact" = enduring, slight positive
+    'brief':        (0, -5, 0, 0, -5),              # short duration, reduces impact
+    'short':        (0, -5, 0, 0, -5),              # duration reducer
+    'fleeting':     (-5, -5, -5, 0, -5),            # impermanent, can be bittersweet
+    'momentary':    (0, -5, 0, 0, -5),
+    'instant':      (0, 10, 0, 5, 0),               # speed, not emotion
+    'sudden':       (-5, 30, -5, 10, 0),            # surprise/shock timing
+    'abrupt':       (-10, 20, -10, 5, -5),          # jarring timing
+    'quickly':      (0, 10, 5, 5, 0),               # speed
+    'rapid':        (0, 15, 0, 5, 0),
+    'rushed':       (-10, 15, -10, 10, -5),          # too fast = negative
+    'hasty':        (-10, 10, -10, 5, -5),
+    'repetitive':   (-15, -5, -10, 0, -5),
+    'monotonous':   (-20, -10, -10, 0, -5),
+    'fast':         (0, 20, 5, 5, 0),               # override: was +62! Speed, not emotion.
+    # ── Critique/quality words ──
+    'formulaic':    (-25, 5, -10, 0, -10),
+    'wooden':       (-30, -10, -15, 0, -10),
+    'lifeless':     (-35, -15, -20, 0, -15),
+    'lackluster':   (-25, 5, -10, 0, -10),
+    'overwrought':  (-20, 15, -10, 0, -5),
+    'muddled':      (-20, 10, -15, 0, -10),
+    'plodding':     (-25, -10, -10, 0, -10),
+    'derivative':   (-20, 5, -10, 0, -10),
+    'nuanced':      (20, 5, 10, 0, 10),
+    'mesmerizing':  (35, 15, 15, 0, 15),
+    'riveting':     (35, 25, 15, 0, 15),
+    'captivating':  (30, 15, 10, 0, 12),
+    'gripping':     (30, 20, 10, 0, 12),
+    'superb':       (40, 10, 15, 0, 15),
+    'exquisite':    (35, 5, 10, 0, 15),
+    'mediocre':     (-20, -5, -10, 0, -10),
+    'forgettable':  (-20, -10, -10, 0, -10),
+    'predictable':  (-15, -5, -10, 0, -5),
+    'cliche':       (-20, 5, -10, 0, -10),
+    'contrived':    (-25, 5, -15, 0, -10),
+    'pretentious':  (-25, 10, 10, 0, -10),
     # Bookend compound command tokens (collapsed from "shut [spice] up" etc.)
     'shutup':       (-40, 40, 40, 15, -10),       # silence command. D+40 = controller has power. V negative.
     'getout':       (-45, 50, 45, 20, -15),        # expulsion command. Stronger than shutup.
