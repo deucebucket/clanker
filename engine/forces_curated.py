@@ -5493,5 +5493,15 @@ _VOCAB_FIXES = {
     'towed':        (-25, 15, -20, 15, -10),       # Property taken by force.
     'slept':        (5, -10, 5, 0, 5),             # Neutral action. "Slept well" = positive. Context resolves.
     'eaten':        (5, 0, 5, 0, 5),               # Neutral action. "Havent eaten" = deprivation from absence scope.
+    # ── Novel stress test round 3 ──
+    'keep':         (0, 5, 5, 0, 5),              # override: was +28. Continuity operator. "Keep trying" OR "keep failing". Context resolves.
+    'keeping':      (0, 5, 5, 0, 5),
+    'kept':         (0, 5, 5, 0, 5),
+    'sell':         (-10, 5, -5, 5, 5),            # Giving up possession. Slight negative (loss of ownership).
+    'selling':      (-10, 5, -5, 5, 5),
+    'sold':         (-10, 5, -5, 5, 5),
+    'brought':      (10, 5, 10, 0, 5),             # "Brought me X" = delivered/gave. Act of service. Slight positive.
+    'bring':        (5, 5, 5, 0, 5),
+    'shoulder':     (5, -5, 5, 0, 10),             # "Cry on my shoulder" = support/comfort. Slight positive.
 }
 EMOTIONAL_VOCABULARY.update(_VOCAB_FIXES)
