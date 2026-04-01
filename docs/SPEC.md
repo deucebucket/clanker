@@ -26,7 +26,7 @@ text -> Roles -> Proximity -> Structures -> Physics -> VADUGW
 
 ### Layer 1: Word Classification
 
-4,000+ vocabulary words, each with a force tuple (dV, dA, dD, dU, dG, dW, dI).
+4,108 vocabulary words, each with a force tuple (dV, dA, dD, dU, dG, dW, dI).
 
 Classified by force magnitude:
 - **Primary signal** (|V| > 40): fixed emotional direction
@@ -155,7 +155,7 @@ target_V = 128 + dV * coefficient * FORCE_SCALE
 V_new = V_prev * MOMENTUM + target_V * (1-MOMENTUM) + direct_push
 ```
 
-ALL 4,000+ vocabulary words apply force, not just high-magnitude ones.
+ALL 4,108 vocabulary words apply force, not just high-magnitude ones.
 
 **POSSESSION force stripping**: POSSESSION-role words (dog, car, keys) retain their
 gravity value but have emotional force (dV, dA, dD, dU) set to zero. Objects have
@@ -250,12 +250,15 @@ Vocabulary: negative-to-positive ratio approximately 1.08:1 among primary signal
 ## Accuracy
 
 - 100% on 630 novel sentences
-- 85% crisis recall (was ~80% in V3.1)
+- 97.3% crisis recall
 - 100% on genuine positive (zero false positives on safe text)
+- 90% on sarcasm
 - 90% on internet speak
 - 80% on body language descriptions
 - 90% on conversation fight patterns
-- 51% on SST-2 academic sentiment (movie review classification -- a different task)
+- 69.6% on SST-2 academic sentiment (movie review classification -- a different task)
+- 75.3% on GoEmotions
+- 76.3% on 4-AI consensus benchmark (vs Gemini, Claude Opus, GPT-4, Grok on 131 sentences)
 
 ## Limitations
 
@@ -274,7 +277,7 @@ engine/
   proximity.py         Influence fields
   structures.py        Pattern detection
   solver.py            Bidirectional solver
-  forces_curated.py    4,000+ word force tuples (7D VADUGWI)
+  forces_curated.py    4,108 word force tuples (7D VADUGWI)
   force_flow.py        Force flow resolver (WHO does WHAT to WHOM)
   zones_impl.py        Zone implementation
   shared.py            VADUGWI dataclass (7-byte: V, A, D, U, G, W, I)

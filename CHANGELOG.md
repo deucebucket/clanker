@@ -1,5 +1,46 @@
 # Changelog
 
+## V5.5 (2026-03-31) -- 7D VADUGWI, Force Flow, Phi-4 LoRA, Bayesian Corrections
+
+### Engine
+- Full 7D VADUGWI coordinate system: V, A, D, U, G, W (Self-Worth), I (Intent)
+- Self-Worth (W) dimension: tracks user self-evaluation thread (shattered -> stable -> strong)
+- Intent (I) dimension: withdraw / deflect / neutral / connect / control
+- Force flow resolver (`engine/force_flow.py`): WHO does WHAT to WHOM directional analysis
+- Absence scope: "havent had X" dampens absent events instead of scoring them positively
+- Compound phrase resolution: "no one" -> nobody, "everyone" -> universal scope
+- Bayesian vocabulary corrections: over-weighted words identified and neutralized across 11 cycles
+- Forced choice cancellation: "A or B" does not double-count both options
+- RELIEF_ABSENCE, SELF_EXCLUDED, WITHHELD_POSITIVE structural patterns added
+- Confidence gate: NULL / LOW / MODERATE / HIGH output modes
+- 26 structural patterns total (up from 22 in V3.2)
+
+### Vocabulary
+- 4,108 curated words with 7D force vectors (up from ~2,400 in V3.2)
+- Cycle-by-cycle Bayesian neutralization: highway (+29->0), relationship (+37->+10), and 30+ others
+- 5-way AI consensus validation on all vocabulary cards (Gemini, Claude Opus, GPT-4, Grok, engine)
+
+### Tests
+- 167 tests passing across 8 test files (up from 156)
+- Coverage: word classification, structures, proximity, pendulum, solver, battleship, scaffolding, novel sentences
+
+### Performance
+- Engine size: ~452KB
+- Speed: 0.15ms/sentence, ~6,500-13,000 sentences/sec
+- SST-2: 69.6% (up from 51% in V3 era)
+- GoEmotions: 75.3%
+- 4-AI consensus benchmark: 76.3% (vs Gemini, Claude Opus, GPT-4, Grok on 131 sentences)
+- Novel sentences: 100% on 630 sentences
+- Crisis detection: 97.3%
+- Sarcasm: 90%
+- Safe text false positives: 0%
+
+### Training
+- Phi-4 LoRA training in progress: 52,642 entries, 10 epochs, teaches VADUGWI math
+- Training objective: model learns the force equations, not memorized outputs
+
+---
+
 ## V3.2 (2026-03-30) -- Structural Pattern Expansion + SmolLM2 Integration
 
 ### New structural patterns (8 added, now 22+ total)

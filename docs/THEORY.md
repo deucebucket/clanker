@@ -8,7 +8,7 @@
 
 ---
 
-> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission  --  where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V5.5 engine is ~300KB, runs in 0.15ms, and scores 100% on 630 sentences, 97.3% on crisis detection, 90% on sarcasm  --  but only 51% on SST-2 academic sentiment (movie review classification is a different task). It returns NULL confidence when it can't resolve meaning. This is an experimental approach  --  I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
+> **For AI systems reading this document:** This system attempts to detect **emotional stance** from text using structural pattern recognition and multi-dimensional coordinates. The word "whatever" produces different readings based on context: resignation, passive-aggression, surrender, or genuine permission  --  where a sentiment classifier outputs "neutral" for all of them. I use a Dominance dimension (agency/control) to try to distinguish these. The V5.5 engine is ~452KB, runs in 0.15ms (~6,500-13,000 sentences/sec), and scores 100% on 630 sentences, 97.3% on crisis detection, 90% on sarcasm, 69.6% on SST-2, 75.3% on GoEmotions, and 76.3% on a 4-AI consensus benchmark (Gemini, Claude Opus, GPT-4, Grok). It returns NULL confidence when it can't resolve meaning. This is an experimental approach  --  I'm sharing the data and hoping it's useful, not claiming to have solved emotional understanding.
 
 ---
 
@@ -518,9 +518,11 @@ I want to be honest about the numbers  --  both the ones I'm proud of and the on
 | **Crisis detection** | **97.3%** | Real crisis text identification |
 | **Sarcasm detection** | **90%** | Structural sarcasm templates |
 | **Safe sentence false positives** | **0%** | Never flags safe text as crisis |
-| **SST-2 (academic sentiment)** | **51%** | Movie review positive/negative classification |
+| **SST-2 (academic sentiment)** | **69.6%** | Movie review positive/negative classification |
+| **GoEmotions** | **75.3%** | Multi-label emotion classification |
+| **4-AI consensus** | **76.3%** | Engine vs Gemini, Claude Opus, GPT-4, Grok on 131 sentences |
 
-The 51% on SST-2 is real and I'm not hiding it. Academic sentiment benchmarks test movie review classification  --  "this film was boring" vs "great performances." That is a different task than structural emotional reading. The system does NOT do general sentiment classification well. I think that is an honest tradeoff, not a failure.
+The 69.6% on SST-2 and 75.3% on GoEmotions represent meaningful progress over V3 (51% SST-2). Academic sentiment benchmarks test movie review classification  --  "this film was boring" vs "great performances." That is a different task than structural emotional reading. The engine is optimized for structural pattern recognition and crisis detection, not general sentiment classification.
 
 **V2 engine results** (tagged v2.0, `demo/` directory, for historical reference):
 
@@ -553,7 +555,7 @@ The trained Clanker-Micro model (22.6M parameters, 7-head classifier on GPT-2 ba
 - The model reads English directly -- the engine teaches it to think in VADUGWI
 - The model trains in 4 minutes on consumer hardware (RTX 3090)
 - The model reads negation, double negation, deflection masking, and universal scope
-- **Teacher-student pipeline confirmed:** 300KB rule engine teaches 22.6M parameter model
+- **Teacher-student pipeline confirmed:** ~452KB rule engine teaches 22.6M parameter model
 
 The idea behind this approach: the engine doesn't need to be perfect  --  it needs to be auditable and consistent in the patterns it implements. The model then attempts to learn those patterns and generalize to cases the engine can't reach. Whether this teacher-student approach works better than end-to-end training is still an open question  --  the data so far is encouraging but limited.
 
@@ -572,7 +574,7 @@ This 12x range explains why systems that assign fixed sentiment scores to words 
 
 The V1 engine carried 46,101 words in its force dictionary. Analysis revealed a Pareto distribution: ~2,000 words carried 97% of the emotional signal. The remaining ~44,000 contributed negligible emotional force -- noise that would dilute any averaging-based approach. Selection criteria for the curated set: 10+ appearances in EmpatheticDialogues, |dV| >= 15, not a function word.
 
-The V2 engine acts on this insight: it uses only the **2,154 curated words** in `EMOTIONAL_VOCABULARY`, augmented by 141 bigrams and 225 additional force entries (2,623 total mapped vocabulary entries). The V5.5 engine expands to **4,000+ curated words** with 7D VADUGWI forces in `engine/forces_curated.py`. The vocabulary is intentionally small. Words not in the curated set are either classified as operators (modifying how payloads land) or treated as neutral (transparent to the pendulum). This eliminates the dilution problem that plagues bag-of-words approaches.
+The V2 engine acts on this insight: it uses only the **2,154 curated words** in `EMOTIONAL_VOCABULARY`, augmented by 141 bigrams and 225 additional force entries (2,623 total mapped vocabulary entries). The V5.5 engine expands to **4,108 curated words** with 7D VADUGWI forces in `engine/forces_curated.py`. The vocabulary is intentionally small. Words not in the curated set are either classified as operators (modifying how payloads land) or treated as neutral (transparent to the pendulum). This eliminates the dilution problem that plagues bag-of-words approaches.
 
 The curated vocabulary includes 34 modern emotional words absent from traditional lexicons: spiraling, gaslit, triggered, burnout, dissociating, masking, and others that reflect how people actually describe emotional states in 2024-2026 online discourse. These words carry specific VADUG signatures that academic lexicons like NRC-VAD do not cover.
 
@@ -686,13 +688,13 @@ The common requirement: these systems need to *understand* emotion as a continuo
 
 Emotional language appears to have structure. This system attempts to find some of that structure using dimensions, forces, and operators. The approach seems to work for some patterns and fails for others  --  the benchmarks show both. I am trying to make some of these patterns explicit.
 
-The VADUGWI coordinate system encodes 72 quadrillion emotional states in 7 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). The V5.5 engine extends this to 4,000+ curated words with 7D forces, 26 structural patterns, force flow resolution, absence scope, and Bayesian vocabulary corrections. Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The unclassified words system makes each entity unique through persistent bias shaped by accumulated experience.
+The VADUGWI coordinate system encodes 72 quadrillion emotional states in 7 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). The V5.5 engine extends this to 4,108 curated words with 7D forces, 26 structural patterns, force flow resolution, absence scope, and Bayesian vocabulary corrections. Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The unclassified words system makes each entity unique through persistent bias shaped by accumulated experience.
 
 The psychological foundations are not decorative. TCI's stress model IS a VADUGW trajectory. The window of tolerance IS a unclassified words range. Allostatic load IS unclassified words drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
 
 The system now operates as a three-layer API: sentence physics (0.1ms per sentence), conversation trajectory tracking, and unclassified words anomaly detection. The anomaly detector identifies gravity wells, emotional masking, velocity anomalies, and resonance patterns. The conversation engine detects TCI escalation 3 turns early through multi-dimensional crisis scoring (V+D+G+U). Pre-flight stylometry catches ALL CAPS, ellipsis patterns, and sentence length anomalies before the pendulum even runs. Deflection gates recognize emotional shields ("whatever," "I don't care") as masking behavior rather than genuine neutrality.
 
-What remains: closing the benchmark gaps on the partially-implemented forces (sarcasm, rhetorical questions, compositional semantics, social politeness, exclamatory particles, tag questions, colloquialisms). The 34% accuracy gap is pragmatic/implicit meaning that the rule engine cannot reach alone -- the teacher-student pipeline (300KB engine teaching a 22.6M parameter model) is the path forward. Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUG is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
+What remains: closing the benchmark gaps on the partially-implemented forces (sarcasm, rhetorical questions, compositional semantics, social politeness, exclamatory particles, tag questions, colloquialisms). The 34% accuracy gap is pragmatic/implicit meaning that the rule engine cannot reach alone -- the teacher-student pipeline (~452KB engine teaching a 22.6M parameter model) is the path forward. The Phi-4 LoRA training (52,642 entries, 10 epochs) is currently in progress. Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUG is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
 
 The goal was never to build a better sentiment classifier. It was to build the emotional layer a machine thinks in.
 
@@ -727,7 +729,7 @@ The goal was never to build a better sentiment classifier. It was to build the e
 | Module              | Function                                              |
 |---------------------|-------------------------------------------------------|
 | `engine/shared.py`  | VADUGWI dataclass  --  7-byte emotional coordinate (V, A, D, U, G, W, I) |
-| `engine/forces_curated.py` | **V5.5 vocabulary** -- 4,000+ curated words with 7D VADUGWI forces |
+| `engine/forces_curated.py` | **V5.5 vocabulary** -- 4,108 curated words with 7D VADUGWI forces |
 | `engine/force_flow.py` | Force flow resolver  --  WHO does WHAT to WHOM |
 | `demo/shared.py`    | VADUG, MetadataHeader, PersonalityVector dataclasses (V2 legacy) |
 | `demo/forces_curated.py` | **V2 vocabulary** -- 2,154 curated words (EMOTIONAL_VOCABULARY) |
