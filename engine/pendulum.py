@@ -1,6 +1,6 @@
-"""Fixed Physics Layer — computes VADUG from structural analysis.
+"""Fixed Physics Layer — computes VADUGWI from structural analysis.
 
-Pipeline: text -> classify words -> compute proximity -> detect structures -> apply physics -> VADUG
+Pipeline: text -> classify words -> compute proximity -> detect structures -> apply physics -> VADUGWI
 
 The physics (momentum, force application, blending) are FIXED.
 The inputs come from the structural layers.
@@ -31,7 +31,7 @@ def compute_vadug(
     text: str,
     personality: Optional[PersonalityVector] = None,
 ) -> Tuple[VADUG, dict]:
-    """Compute VADUG coordinates for a text string.
+    """Compute VADUGWI coordinates for a text string.
 
     Pipeline:
       1. Split text into words

@@ -2,7 +2,7 @@
 """
 Clanker Emotional Rosetta Stone
 
-A calibration document with hand-scored VADUG targets for every emotional pathway.
+A calibration document with hand-scored VADUGWI targets for every emotional pathway.
 Each sentence exercises specific engine features and has a verified emotional reading.
 
 The Sentence Equation:
@@ -21,7 +21,7 @@ Where:
 Each variable in the equation maps to a specific engine layer.
 """
 
-# Hand-scored emotional sentences with target VADUG
+# Hand-scored emotional sentences with target VADUGWI
 # Format: (text, target_v, target_a, target_d, target_u, target_g, features_tested)
 # Scores are approximate targets (±15 tolerance for V, ±20 for others)
 

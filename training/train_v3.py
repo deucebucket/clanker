@@ -4,7 +4,7 @@
 V3 model learns:
   1. Per-word STRUCTURAL ROLE (18 classes: SELF_REF, EMOTIONAL, NEGATOR, etc.)
   2. Sentence-level STRUCTURAL PATTERNS (FAREWELL, CRISIS, SARCASM, etc.)
-  3. Final VADUG from pooled representation
+  3. Final VADUGWI from pooled representation
 
 The model learns to READ STRUCTURE, not memorize emotional scores.
 Stars have mass. Operators shape the field. Dark matter inherits from proximity.
@@ -44,12 +44,12 @@ PATTERN_TO_IDX = {p: i for i, p in enumerate(PATTERN_NAMES)}
 
 
 class ClankerV3Model(nn.Module):
-    """V3 structural model — learns roles, patterns, VADUG.
+    """V3 structural model — learns roles, patterns, VADUGWI.
 
     Three heads:
       1. Role head: per-word structural role (18 classes)
       2. Pattern head: sentence-level structures (11 binary labels)
-      3. VADUG head: final 5D coordinates (regression)
+      3. VADUGWI head: final 7D coordinates (regression)
     """
 
     def __init__(self, config):

@@ -1,4 +1,4 @@
-"""Clanker V3 — Structural Pattern Recognition Engine."""
+"""Clanker V5.5 — Structural Pattern Recognition Engine."""
 from .shared import VADUG
 from .pendulum import compute_vadug
 from .solver import forward, solve_for_b_range, optimal_b_temperature, state_transition

@@ -1,9 +1,9 @@
-"""Emotional Zone Classification — match VADUG to named emotional states.
+"""Emotional Zone Classification — match VADUGWI to named emotional states.
 
 Instead of raw V thresholds, classify by which ZONE the coordinates
 land in. Different sentences → same zone → same emotional state.
 
-The zones are convergence regions: areas in 5D VADUG space where
+The zones are convergence regions: areas in 7D VADUGWI space where
 structurally different sentences resolve to the same emotional meaning.
 
   "Whatever" → RESIGNATION zone
@@ -30,7 +30,7 @@ from .shared import VADUG
 
 @dataclass
 class ZoneResult:
-    """Which emotional zone a VADUG lands in."""
+    """Which emotional zone a VADUGWI state lands in."""
     zone: str               # JOY, RAGE, GRIEF, RESIGNATION, etc.
     confidence: float       # 0.0-1.0 how clearly it falls in this zone
     distance: float         # distance to zone center (lower = better match)
@@ -89,7 +89,7 @@ ZONES = {
 
 
 class ZoneClassifier:
-    """Classify VADUG coordinates into named emotional zones."""
+    """Classify VADUGWI coordinates into named emotional zones."""
 
     def __init__(self):
         self.zones = ZONES
@@ -106,7 +106,7 @@ class ZoneClassifier:
     }
 
     def classify(self, vadug: VADUG, structures=None) -> ZoneResult:
-        """Find the closest emotional zone for a VADUG coordinate.
+        """Find the closest emotional zone for a VADUGWI coordinate.
 
         Uses weighted Euclidean distance normalized by zone radius.
         Structures override when crisis or strong negative patterns fire.

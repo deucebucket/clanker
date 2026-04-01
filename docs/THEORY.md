@@ -99,7 +99,7 @@ unclassified words parameters:
   resilience: how fast drift recovers toward zero (0.99=slow, 0.999=fast)
 ```
 
-unclassified words modifies VADUG through three mechanisms:
+unclassified words modifies VADUGWI through three mechanisms:
 
 1. **Valence bias:** Traumatized entities have lower baseline valence. The same input produces a more negative reading.
 2. **Gravity drag:** Accumulated trauma makes everything heavier. Drift pulls G downward.
@@ -123,13 +123,13 @@ unclassified words is what makes the difference between "a sad movie" and "a sad
 
 ## 3. Psychological Foundations
 
-The VADUG framework wasn't designed in isolation  --  it appears to parallel several established psychological models. Whether these parallels are meaningful or coincidental, I'll present the data and let others judge.
+The VADUGWI framework wasn't designed in isolation  --  it appears to parallel several established psychological models. Whether these parallels are meaningful or coincidental, I'll present the data and let others judge.
 
 ### 3.1 The TCI Stress Model of Crisis
 
 The Therapeutic Crisis Intervention (TCI) system, developed by Cornell University's Residential Child Care Project (first funded 1979, now in Edition 7), models emotional escalation as a five-phase arc. It is the standard training protocol for residential child care facilities worldwide.
 
-The five phases map directly to VADUG trajectories:
+The five phases map directly to VADUGWI trajectories:
 
 ```
 Phase          V    A    D    U    G    W    Pendulum State
@@ -143,7 +143,7 @@ Recovery       100  120  90   20   110  100  Damping toward new baseline
 
 This is not a metaphor. These are the actual VADUGW values the engine produces when processing text from each crisis phase. The stress model describes a trajectory through 6-dimensional space -- a path that the pendulum engine traces word by word.
 
-The critical insight from TCI that informs the engine: **as escalation increases in duration, frequency, or intensity, the likelihood of responding to intervention decreases.** This is a narrowing funnel. In VADUG terms: once momentum is high and V is below 50 with A above 200, the pendulum enters crisis lock -- normal response forces cannot pull it back. Early intervention works because the pendulum has not yet built the momentum that makes it unstoppable.
+The critical insight from TCI that informs the engine: **as escalation increases in duration, frequency, or intensity, the likelihood of responding to intervention decreases.** This is a narrowing funnel. In VADUGWI terms: once momentum is high and V is below 50 with A above 200, the pendulum enters crisis lock -- normal response forces cannot pull it back. Early intervention works because the pendulum has not yet built the momentum that makes it unstoppable.
 
 ### 3.2 Window of Tolerance and unclassified words Range
 
@@ -152,7 +152,7 @@ Dan Siegel's (1999) Window of Tolerance defines the optimal zone of arousal with
 This maps directly to unclassified words range parameters:
 
 ```
-Window of Tolerance       VADUG unclassified words
+Window of Tolerance       VADUGWI unclassified words
 -------------------------------------------------
 Upper threshold       ->  max_A before hyperarousal flag
 Lower threshold       ->  min_A before hypoarousal flag
@@ -185,7 +185,7 @@ The four mechanisms of accumulation map precisely to unclassified words behavior
 |------------------------|------------------------------------|---------------------------------------|
 | Frequent activation    | Too many stress responses          | High crisis count -> drift accumulation|
 | Failed shutdown        | Stress response doesn't terminate  | Recovery doesn't reach baseline        |
-| Inadequate response    | System fails to respond            | Blunted VADUG movement (flat affect)   |
+| Inadequate response    | System fails to respond            | Blunted VADUGWI movement (flat affect) |
 | Anticipatory load      | Chronic hypervigilance             | Elevated resting A and U values        |
 
 Each crisis episode that does not fully recover shifts the baseline:
@@ -203,7 +203,7 @@ The allostatic load score translates to a count-based unclassified words metric:
 
 Stephen Porges' (1994) polyvagal theory maps three autonomic nervous system states to behavioral zones:
 
-| ANS State                    | Behavior                       | VADUG Zone                |
+| ANS State                    | Behavior                       | VADUGWI Zone              |
 |------------------------------|--------------------------------|---------------------------|
 | Ventral vagal (social engagement) | Calm, connected, flexible  | Within window of tolerance|
 | Sympathetic (mobilization)   | Fight-or-flight, anxiety, rage | Hyperarousal zone         |
@@ -222,18 +222,18 @@ The six principles map to design constraints on how the engine generates respons
 | Developmentally focused | Response complexity adapts to recipient's capacity       |
 | Relationship based      | Continuity tracking through unclassified words profiles         |
 | Competence centered     | Responses build on strengths, not just treat deficits    |
-| Trauma informed         | Negative VADUG states are signals, not errors to correct |
+| Trauma informed         | Negative VADUGWI states are signals, not errors to correct |
 | Ecologically oriented   | Setting conditions modify unclassified words parameters         |
-| Family involved         | Dual-VADUG tracking (speaker + listener)                 |
+| Family involved         | Dual-VADUGWI tracking (speaker + listener)               |
 
-The last point is critical. TCI's Four Questions are a dual-VADUG assessment:
+The last point is critical. TCI's Four Questions are a dual-VADUGWI assessment:
 
-| Question                              | VADUG Operation                          |
+| Question                              | VADUGWI Operation                        |
 |---------------------------------------|------------------------------------------|
-| What am I feeling?                    | Read own VADUG state                     |
-| What does this person feel/need/want? | Estimate target's VADUG state            |
+| What am I feeling?                    | Read own VADUGWI state                   |
+| What does this person feel/need/want? | Estimate target's VADUGWI state          |
 | How is environment affecting this?    | Evaluate setting conditions -> unclassified words|
-| How do I best respond?                | Calculate optimal response VADUG vector  |
+| How do I best respond?                | Calculate optimal response VADUGWI vector|
 
 These are not abstract guidelines. They translate to a mathematical optimization: given the current state A, background conditions X, and target window W, find the response B that minimizes the distance between outcome C and the center of W.
 
@@ -241,7 +241,7 @@ These are not abstract guidelines. They translate to a mathematical optimization
 
 The most important principle from TCI for AI emotional systems: **behavior is an expression of needs, not character.** A child's aggression is not defiance -- it is pain expressed through the only vocabulary they have.
 
-The engine implication: negative VADUG states are *information*, not errors. The system should not "correct" negative affect -- it should *read* it as a signal about unmet needs. A V of 30 with G of 15 is not a problem to fix. It is data about a person in crisis who needs help, not cheerfulness.
+The engine implication: negative VADUGWI states are *information*, not errors. The system should not "correct" negative affect -- it should *read* it as a signal about unmet needs. A V of 30 with G of 15 is not a problem to fix. It is data about a person in crisis who needs help, not cheerfulness.
 
 ---
 
@@ -272,7 +272,7 @@ The V2 approach (still valid, documented for reference) classified words into th
 
 **OPERATORS** modify how subsequent emotional content is processed. They do not carry emotional weight themselves -- they are multipliers, frames, and gates. There are 103 context operators across 17 categories in the V2 engine. Examples: "I" (self-reference, 1.8x amplifier), "very" (intensity, 1.3x), "was" (past tense, 0.85x), "a" (article/distancing, 0.6x).
 
-**PAYLOADS** carry actual emotional force. These are words with measurable impact on the VADUG coordinate. The V2 engine uses a curated vocabulary of **~2,154 words** that carry 97% of the emotional signal. (The legacy V1 dictionary contained 46,101 words, but 95.7% contributed negligible force.) The curated set was selected by three criteria: appears 10+ times in EmpatheticDialogues, absolute valence delta >= 15, and not a function word or generic noun.
+**PAYLOADS** carry actual emotional force. These are words with measurable impact on the VADUGWI coordinate. The V2 engine uses a curated vocabulary of **~2,154 words** that carry 97% of the emotional signal. (The legacy V1 dictionary contained 46,101 words, but 95.7% contributed negligible force.) The curated set was selected by three criteria: appears 10+ times in EmpatheticDialogues, absolute valence delta >= 15, and not a function word or generic noun.
 
 **NEUTRAL** words pass through the pendulum without affecting it. "The," "and," "is," "of" in non-operator contexts. These have near-zero emotional mass. The engine does not average them into the score -- they are transparent. This solves the dilution problem that plagues bag-of-words approaches, where a sentence full of neutral words drowns out genuine emotional signals.
 
@@ -296,7 +296,7 @@ Where:
 | calm        | +39  | -58  | +54  | -12  | +8   | +10  | 0    |
 | depressed   | -127 | -26  | -109 | +63  | -89  | -70  | 0    |
 
-Note how "furious" and "depressed" share similar valence (both near -127) but differ radically on every other dimension. Furious is high-arousal, high-dominance, rising. Depressed is low-arousal, low-dominance, sinking. One-dimensional sentiment analysis conflates these into the same "negative" bucket. VADUG separates them by 200+ points on four axes.
+Note how "furious" and "depressed" share similar valence (both near -127) but differ radically on every other dimension. Furious is high-arousal, high-dominance, rising. Depressed is low-arousal, low-dominance, sinking. One-dimensional sentiment analysis conflates these into the same "negative" bucket. VADUGWI separates them by 200+ points on four axes.
 
 **ContextCoefficient** is the product of all applicable context operators, drawn from different categories. Same-category operators do not stack (only the nearest applies); different-category operators multiply:
 
@@ -359,7 +359,7 @@ Beyond simple operators and payloads, natural language deploys at least 26 categ
 | 25| Evokers (gravitational priming) | G-offset + D-offset | "cancer" shifts gravity field for everything after | Implemented |
 | 26| Universal quantifiers | SCOPE(payload_direction) | "everything" amplifies scope in payload direction | Implemented |
 
-Each of these 26 force types has been catalogued with specific mathematical operations, multiplier ranges, affected VADUG dimensions, and worked examples (see `docs/linguistic-devices-taxonomy.md` for the full taxonomy of forces 1-24). Together, they constitute the grammar of emotion -- the rules by which words combine into felt meaning.
+Each of these 26 force types has been catalogued with specific mathematical operations, multiplier ranges, affected VADUGWI dimensions, and worked examples (see `docs/linguistic-devices-taxonomy.md` for the full taxonomy of forces 1-24). Together, they constitute the grammar of emotion -- the rules by which words combine into felt meaning.
 
 #### Force #26: Universal Quantifiers
 
@@ -392,8 +392,8 @@ This is why sentiment classifiers that strip stop words produce flat, undifferen
 The patterns documented above emerged through an iterative loop between the engine and the training data  --  not designed upfront, but found by looking at where the engine got things wrong:
 
 ```
-1. Engine produces VADUG for sentence X
-2. Model (or ground truth) produces different VADUG for sentence X
+1. Engine produces VADUGWI for sentence X
+2. Model (or ground truth) produces different VADUGWI for sentence X
 3. The disagreement reveals missing physics
 4. Fix engine -> retrain model -> find new gaps -> repeat
 ```
@@ -425,11 +425,11 @@ The genetic algorithm tuner handles this by evaluating the entire system holisti
 Scoring input is necessary but not sufficient. The harder problem -- and the one that matters for therapeutic applications -- is predicting what responses *produce*.
 
 Given:
-- **A** = user input (scored to VADUG)
+- **A** = user input (scored to VADUGWI)
 - **B** = candidate response
 - **C** = predicted emotional outcome for the user
 
-The goal is not to find the response with the highest valence. It is to find the response that moves the user's VADUG toward their *window of tolerance* -- which may be different for every person.
+The goal is not to find the response with the highest valence. It is to find the response that moves the user's VADUGWI toward their *window of tolerance* -- which may be different for every person.
 
 A traumatized child's healthy baseline might be V=90, not V=200. Pushing toward V=200 is not healing -- it is mania. The target is the center of *their* window, not some universal "happy" coordinate.
 
@@ -438,7 +438,7 @@ A traumatized child's healthy baseline might be V=90, not V=200. Pushing toward 
 The outcome optimizer simulates all possible response strategies and selects the one that produces the best predicted trajectory:
 
 ```
-1. Score user input A -> current VADUG state
+1. Score user input A -> current VADUGWI state
 2. Generate candidate responses from response bank
    (validating, present, curious, grounding, affirming, connecting, ...)
 3. For each candidate B, predict outcome C using outcome physics
@@ -448,13 +448,13 @@ The outcome optimizer simulates all possible response strategies and selects the
 
 This is TCI's Four Questions expressed as a mathematical optimization:
 - Q1 "What am I feeling?" -> score A
-- Q2 "What does this person feel/need/want?" -> A_vadug + dark_matter
+- Q2 "What does this person feel/need/want?" -> A_vadugwi + dark_matter
 - Q3 "How is environment affecting this?" -> setting conditions
 - Q4 "How do I best respond?" -> argmin(distance(C, target))
 
 ### 6.3 The Five-Band Prism
 
-Outcomes are classified into five bands based on the predicted VADUG:
+Outcomes are classified into five bands based on the predicted VADUGWI:
 
 | Band      | V Range  | Description                                    |
 |-----------|----------|------------------------------------------------|
@@ -468,7 +468,7 @@ unclassified words determines which band the same response lands in. "I believe 
 
 ### 6.4 Response Harmony Mathematics
 
-The response VADUG is not random. It follows mathematical harmony rules designed to be therapeutically appropriate:
+The response VADUGWI is not random. It follows mathematical harmony rules designed to be therapeutically appropriate:
 
 **Valence -- nudge toward positive, never jump:**
 ```
@@ -576,7 +576,7 @@ The V1 engine carried 46,101 words in its force dictionary. Analysis revealed a 
 
 The V2 engine acts on this insight: it uses only the **2,154 curated words** in `EMOTIONAL_VOCABULARY`, augmented by 141 bigrams and 225 additional force entries (2,623 total mapped vocabulary entries). The V5.5 engine expands to **4,108 curated words** with 7D VADUGWI forces in `engine/forces_curated.py`. The vocabulary is intentionally small. Words not in the curated set are either classified as operators (modifying how payloads land) or treated as neutral (transparent to the pendulum). This eliminates the dilution problem that plagues bag-of-words approaches.
 
-The curated vocabulary includes 34 modern emotional words absent from traditional lexicons: spiraling, gaslit, triggered, burnout, dissociating, masking, and others that reflect how people actually describe emotional states in 2024-2026 online discourse. These words carry specific VADUG signatures that academic lexicons like NRC-VAD do not cover.
+The curated vocabulary includes 34 modern emotional words absent from traditional lexicons: spiraling, gaslit, triggered, burnout, dissociating, masking, and others that reflect how people actually describe emotional states in 2024-2026 online discourse. These words carry specific VADUGWI signatures that academic lexicons like NRC-VAD do not cover.
 
 ### 7.5 Token Compression
 
@@ -586,7 +586,7 @@ A 25-word English sentence encodes to 4 Clanker tokens (7-byte VADUGWI + 4-byte 
 
 The engine achieves 8/8 accuracy on crisis detection sentences and 72% crisis recall on 5,000 Reddit posts. The crisis signal is multi-dimensional in VADUGW space: V+D+G+U+W scoring (deep negative valence, collapsed dominance, crushing gravity, elevated urgency). "I want to die everything is hopeless" produces V=22, G=51 -- the strongest signal in any test suite run. No sentiment classifier that outputs "negative" can distinguish this from "I don't like this restaurant."
 
-Pre-flight stylometry runs before the pendulum: ALL CAPS detection, ellipsis patterns, and sentence length anomalies are caught and flagged before word-by-word processing begins. The anomaly detector identifies gravity wells (sustained low G), emotional masking (deflection patterns contradicting trajectory), velocity anomalies (sudden VADUG jumps), and resonance patterns (oscillation between emotional poles). The conversation engine uses these signals for TCI escalation detection 3 turns early -- during the escalation window when intervention is still effective.
+Pre-flight stylometry runs before the pendulum: ALL CAPS detection, ellipsis patterns, and sentence length anomalies are caught and flagged before word-by-word processing begins. The anomaly detector identifies gravity wells (sustained low G), emotional masking (deflection patterns contradicting trajectory), velocity anomalies (sudden VADUGWI jumps), and resonance patterns (oscillation between emotional poles). The conversation engine uses these signals for TCI escalation detection 3 turns early -- during the escalation window when intervention is still effective.
 
 ---
 
@@ -612,7 +612,7 @@ The continuous negation force model (Section 4.2) partially resolves this. Becau
 
 Is there a generating function beneath VADUGWI? An equation that produces the seven observable dimensions from fewer fundamental variables?
 
-One hypothesis: **Gap x Stakes x Agency -> VADUG**
+One hypothesis: **Gap x Stakes x Agency -> VADUGWI**
 
 Where:
 - Gap = distance between expected and actual reality
@@ -635,27 +635,27 @@ The V2 engine now partially addresses this class of problem through **deflection
 
 ## 9. Applications
 
-### 9.1 Crisis Prediction from VADUG Drift Patterns
+### 9.1 Crisis Prediction from VADUGWI Drift Patterns
 
-A time series of VADUG vectors can be analyzed for:
+A time series of VADUGWI vectors can be analyzed for:
 - **Trend:** Is V declining over days/weeks? Is resting A climbing?
 - **Volatility:** Are emotional swings getting wider?
-- **Baseline drift:** Has the "resting" VADUG shifted (allostatic load accumulation)?
+- **Baseline drift:** Has the "resting" VADUGWI shifted (allostatic load accumulation)?
 - **Pattern matching:** Does this trajectory resemble previous pre-crisis patterns?
 
-Published ML research achieves AUC 0.68-0.88 for crisis prediction in adolescent populations using electronic health record data. VADUG trajectory analysis adds a continuous, real-time signal to supplement the discrete events captured in clinical records.
+Published ML research achieves AUC 0.68-0.88 for crisis prediction in adolescent populations using electronic health record data. VADUGWI trajectory analysis adds a continuous, real-time signal to supplement the discrete events captured in clinical records.
 
 ### 9.2 Group Home Emotional Trajectory Forecasting
 
-Residential child care facilities can track per-resident VADUG baselines over time. The TCI stress model phases become detectable as trajectory patterns: a trigger appears as a sudden dV-negative with dA-positive. Escalation appears as sustained A-climbing with D-collapsing. The system can alert staff before outburst phase, during the escalation window when intervention is still effective.
+Residential child care facilities can track per-resident VADUGWI baselines over time. The TCI stress model phases become detectable as trajectory patterns: a trigger appears as a sudden dV-negative with dA-positive. Escalation appears as sustained A-climbing with D-collapsing. The system can alert staff before outburst phase, during the escalation window when intervention is still effective.
 
 Setting conditions (noise, transitions, staffing changes) can be correlated with unclassified words tolerance narrowing, identifying environmental modifications that expand the window of tolerance.
 
 ### 9.3 De-Escalation Optimization
 
-TCI co-regulation strategies translate to specific VADUG targets for the response vector:
+TCI co-regulation strategies translate to specific VADUGWI targets for the response vector:
 
-| Technique             | Response VADUG Target              | Mechanism                      |
+| Technique             | Response VADUGWI Target            | Mechanism                      |
 |-----------------------|------------------------------------|--------------------------------|
 | Calm presence         | A: 80-100, D: 128                 | Models low arousal, conveys confidence |
 | Simple language       | U: low, A: low                    | Reduces cognitive load         |
@@ -690,11 +690,11 @@ Emotional language appears to have structure. This system attempts to find some 
 
 The VADUGWI coordinate system encodes 72 quadrillion emotional states in 7 bytes. Twenty-six conversational forces -- from negation (continuous and decaying, not boolean) to evokers (gravitational priming that changes the weight of everything after) to universal quantifiers (scope amplification in the payload direction) -- compose through 103 context operators across 17 categories to create a 12x range on a single word. The V2 pendulum engine processes sentences word-by-word with momentum, 141 bigrams, morphological decomposition, and a curated vocabulary of 2,154 emotional payloads (2,623 total mapped entries). The V5.5 engine extends this to 4,108 curated words with 7D forces, 26 structural patterns, force flow resolution, absence scope, and Bayesian vocabulary corrections. Twenty-seven genetically tuned parameters (56 million evaluations) govern the physics. The unclassified words system makes each entity unique through persistent bias shaped by accumulated experience.
 
-The psychological foundations are not decorative. TCI's stress model IS a VADUGW trajectory. The window of tolerance IS a unclassified words range. Allostatic load IS unclassified words drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
+The psychological foundations are not decorative. TCI's stress model IS a VADUGWI trajectory. The window of tolerance IS a unclassified words range. Allostatic load IS unclassified words drift. These are not metaphors -- they are the same phenomena described in different vocabularies.
 
 The system now operates as a three-layer API: sentence physics (0.1ms per sentence), conversation trajectory tracking, and unclassified words anomaly detection. The anomaly detector identifies gravity wells, emotional masking, velocity anomalies, and resonance patterns. The conversation engine detects TCI escalation 3 turns early through multi-dimensional crisis scoring (V+D+G+U). Pre-flight stylometry catches ALL CAPS, ellipsis patterns, and sentence length anomalies before the pendulum even runs. Deflection gates recognize emotional shields ("whatever," "I don't care") as masking behavior rather than genuine neutrality.
 
-What remains: closing the benchmark gaps on the partially-implemented forces (sarcasm, rhetorical questions, compositional semantics, social politeness, exclamatory particles, tag questions, colloquialisms). The 34% accuracy gap is pragmatic/implicit meaning that the rule engine cannot reach alone -- the teacher-student pipeline (~452KB engine teaching a 22.6M parameter model) is the path forward. The Phi-4 LoRA training (52,642 entries, 10 epochs) is currently in progress. Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUG is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
+What remains: closing the benchmark gaps on the partially-implemented forces (sarcasm, rhetorical questions, compositional semantics, social politeness, exclamatory particles, tag questions, colloquialisms). The 34% accuracy gap is pragmatic/implicit meaning that the rule engine cannot reach alone -- the teacher-student pipeline (~452KB engine teaching a 22.6M parameter model) is the path forward. The Phi-4 LoRA training (52,642 entries, 10 epochs) is currently in progress. Validating the outcome prediction framework on real therapeutic interactions. Answering whether VADUGWI is the fundamental representation or a projection of something deeper. Building the tools that put this framework into the hands of people who work with children in crisis every day and could use a system that actually understands what those children are feeling.
 
 The goal was never to build a better sentiment classifier. It was to build the emotional layer a machine thinks in.
 

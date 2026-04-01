@@ -1,7 +1,7 @@
 # Linguistic Devices Taxonomy
 
 A comprehensive catalog of every linguistic device that modifies emotional meaning in text.
-Each device maps to a mathematical operation on the VADUG coordinate system.
+Each device maps to a mathematical operation on the VADUGWI coordinate system.
 This is the equation tree for the Clanker-Lang emotional engine.
 
 ---
@@ -11,7 +11,7 @@ This is the equation tree for the Clanker-Lang emotional engine.
 Each device entry specifies:
 
 - **Operation type** -- the mathematical primitive it maps to
-- **Affects** -- which VADUG dimensions are primarily modified
+- **Affects** -- which VADUGWI dimensions are primarily modified
 - **Examples** -- concrete instances with expected behavior
 - **Engine notes** -- how this translates to pendulum physics
 
@@ -435,7 +435,7 @@ litotes_D = positive_equivalent_D + 10  (composure bonus)
 
 Idioms are non-compositional. "Kick the bucket" has nothing to do with kicking or buckets. The engine must detect the multi-word unit and replace individual word forces with a single idiom vector. Already extensively implemented in `pendulum.py`.
 
-| Idiom | VADUG Vector | Category |
+| Idiom | VADUGWI Vector | Category |
 |-------|-------------|----------|
 | "kick the bucket" | V-60, A+30, D-40, U+20 | Death |
 | "over the moon" | V+50, A+40, D+20, U0, G+55 | Joy |
@@ -567,7 +567,7 @@ The emotional content of the conditional clause and the main clause often oppose
 
 **Affects:** A (chronic vs acute), U (ongoing vs resolved), G (weight accumulation)
 
-Temporal markers change the emotional SCOPE. "I'm sad" is acute. "I'm always sad" is chronic -- fundamentally different emotional state with different VADUG implications.
+Temporal markers change the emotional SCOPE. "I'm sad" is acute. "I'm always sad" is chronic -- fundamentally different emotional state with different VADUGWI implications.
 
 | Marker | Operation | Emotional Effect |
 |--------|-----------|-----------------|
@@ -1117,7 +1117,7 @@ When multiple devices co-occur, apply in this order:
 | Passive + Euphemism | Maximum diffusion: "lessons were learned" |
 | Performative + Sarcasm | "Oh, I PROMISE this'll be fun." -- performative flipped |
 
-### VADUG Impact Summary by Category
+### VADUGWI Impact Summary by Category
 
 | Category | V | A | D | U | G |
 |----------|---|---|---|---|---|

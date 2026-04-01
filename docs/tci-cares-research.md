@@ -1,6 +1,6 @@
 # TCI, CARE, and Psychological Frameworks for Emotional Modeling
 
-Research compiled for Clanker-Lang VADUG integration.
+Research compiled for Clanker-Lang VADUGWI integration.
 
 ---
 
@@ -18,8 +18,8 @@ The central framework of TCI. It models emotional escalation as a **five-phase a
 - Fundamental principle: you cannot detect escalation unless you know each individual's unique baseline.
 - Baseline is NOT a single fixed point -- it varies per person and per day based on **setting conditions** (see below).
 
-**VADUG mapping:**
-- Each person has a characteristic VADUG "home position"
+**VADUGWI mapping:**
+- Each person has a characteristic VADUGWI "home position"
 - V: personal neutral (not necessarily 128 -- a depressed person's baseline V might be 90)
 - A: resting arousal level
 - D: habitual sense of control
@@ -36,7 +36,7 @@ The central framework of TCI. It models emotional escalation as a **five-phase a
   - Structural: unclear boundaries, broken routines, unmet expectations
   - Internal: hunger, fatigue, pain, medication effects
 
-**VADUG mapping:**
+**VADUGWI mapping:**
 - Sudden dV negative (valence drops)
 - dA positive spike (arousal jumps)
 - dD negative (sense of control drops)
@@ -50,7 +50,7 @@ The central framework of TCI. It models emotional escalation as a **five-phase a
 - This is a narrowing funnel -- early intervention works, late intervention does not.
 - The individual is losing rational control progressively.
 
-**VADUG mapping:**
+**VADUGWI mapping:**
 - V continues dropping (accelerating negative)
 - A climbing steeply (approaching 200+)
 - D collapsing (feeling increasingly helpless/trapped)
@@ -65,7 +65,7 @@ The central framework of TCI. It models emotional escalation as a **five-phase a
 - The primary goal shifts from de-escalation to **safety and containment**.
 - This is the point of maximum arousal and minimum control.
 
-**VADUG mapping:**
+**VADUGWI mapping:**
 - V: very low (sub-40, extreme negative affect)
 - A: maxed (240-255, fight-or-flight)
 - D: near floor (0-30, total loss of control)
@@ -80,7 +80,7 @@ The central framework of TCI. It models emotional escalation as a **five-phase a
   - **Post-crisis stabilization**: can begin reflecting, reasoning, and learning. This is when the Life Space Interview happens.
 - Recovery does NOT necessarily return to the original baseline. Repeated crises can shift baseline (see allostatic load, Section 4).
 
-**VADUG mapping:**
+**VADUGWI mapping:**
 - V slowly climbing back (but may settle lower than original baseline)
 - A dropping (but often overshoots into hypoarousal -- emotional exhaustion)
 - D gradually returning
@@ -98,7 +98,7 @@ At every phase of a potential crisis, staff are trained to continuously ask them
 | 3 | **How is the environment affecting the situation?** | Setting conditions, sensory factors, audience effects |
 | 4 | **How do I best respond?** | Intervention selection -- match response to phase |
 
-**Clanker relevance**: These map to a dual-VADUG system -- one vector for the speaker, one for the listener/responder. The "environment" question maps to setting conditions that modify dark matter parameters.
+**Clanker relevance**: These map to a dual-VADUGWI system -- one vector for the speaker, one for the listener/responder. The "environment" question maps to setting conditions that modify dark matter parameters.
 
 ### 1.3 Pain-Based Behavior
 
@@ -109,7 +109,7 @@ Core TCI principle: **a child's behavior is an expression of their needs, not th
 - Key rule: "No child should be punished for behavior that is a result of pain -- either physical or emotional, as this inflicts pain on top of the pain they already feel."
 - Punitive responses to pain-based behavior increase allostatic load and narrow the window of tolerance.
 
-**Clanker relevance**: This maps to the concept that negative VADUG states are **signals**, not errors. The engine should not "correct" negative affect -- it should **read** it as information about unmet needs.
+**Clanker relevance**: This maps to the concept that negative VADUGWI states are **signals**, not errors. The engine should not "correct" negative affect -- it should **read** it as information about unmet needs.
 
 ### 1.4 Behavior Support Techniques by Phase
 
@@ -132,7 +132,7 @@ When a child begins escalating, a calm adult provides "emotional first aid":
 - Time and space (allows natural de-escalation)
 - Positive self-talk by the adult (manages own activation)
 
-**Clanker relevance**: Co-regulation is a **VADUG targeting** operation. The responder aims to output a VADUG vector that pulls the escalating person's state back toward baseline. The response VADUG should be:
+**Clanker relevance**: Co-regulation is a **VADUGWI targeting** operation. The responder aims to output a VADUGWI vector that pulls the escalating person's state back toward baseline. The response VADUGWI should be:
 - V: moderately positive (not artificially cheerful)
 - A: low (calm models calm)
 - D: moderate (conveys confidence without dominance)
@@ -246,10 +246,10 @@ Published research uses:
 - Staff sensitivity to emotional distress as a predictive moderator
 - Springer Nature published study: "Intervening at the Setting Level to Prevent Behavioral Incidents in Residential Child Care: Efficacy of the CARE Program Model"
 
-**Clanker relevance**: Crisis prediction maps to VADUG trajectory analysis. A time series of VADUG vectors can be analyzed for:
+**Clanker relevance**: Crisis prediction maps to VADUGWI trajectory analysis. A time series of VADUGWI vectors can be analyzed for:
 - Trend (is V declining over time? is A climbing?)
 - Volatility (are swings getting wider?)
-- Baseline drift (has the "resting" VADUG shifted?)
+- Baseline drift (has the "resting" VADUGWI shifted?)
 - Pattern matching (does this trajectory resemble previous pre-crisis patterns?)
 
 ---
@@ -303,12 +303,12 @@ The **window of tolerance** is the optimal zone of arousal within which an indiv
 - BPD: narrow and unstable window, rapid shifting between emotional extremes
 - Developmental trauma: window may never have been properly established
 
-**VADUG mapping -- this is the critical connection:**
+**VADUGWI mapping -- this is the critical connection:**
 
-The window of tolerance maps directly to a **range parameter** on each VADUG dimension:
+The window of tolerance maps directly to a **range parameter** on each VADUGWI dimension:
 
 ```
-Window of Tolerance  →  VADUG "dark matter" range
+Window of Tolerance  →  VADUGWI "dark matter" range
 ─────────────────────────────────────────────────
 Upper threshold      →  max_A before hyperarousal flag
 Lower threshold      →  min_A before hypoarousal flag
@@ -334,11 +334,11 @@ This applies to ALL five dimensions, not just Arousal:
 
 #### The Four Mechanisms of Accumulation
 
-| Mechanism | Description | VADUG Analog |
+| Mechanism | Description | VADUGWI Analog |
 |-----------|-------------|--------------|
 | **Frequent activation** | Too many stress responses too often | High crisis frequency → dark matter drift |
 | **Failed shutdown** | Stress response does not terminate after stressor ends | Recovery phase does not return to original baseline |
-| **Inadequate response** | System fails to mount appropriate response | Blunted VADUG movement (flat affect despite stressors) |
+| **Inadequate response** | System fails to mount appropriate response | Blunted VADUGWI movement (flat affect despite stressors) |
 | **Anticipatory load** | Chronic worry / hypervigilance even without stressor | Elevated resting A and U values |
 
 #### Biomarkers and Scoring
@@ -369,12 +369,12 @@ The most established scoring method (MacArthur Studies of Successful Aging):
 - When ASEE exceeds the organism's reserve capacity, it impinges on growth, maintenance, and repair
 - Formula concept: `health_impact = max(0, ASEE - reserve_capacity)`
 
-**VADUG mapping -- dark matter drift:**
+**VADUGWI mapping -- dark matter drift:**
 
 ```
 Allostatic Load        →   Dark Matter Drift Accumulation
 ─────────────────────────────────────────────────────────
-Biomarker count score  →   drift_score = count of VADUG dimensions
+Biomarker count score  →   drift_score = count of VADUGWI dimensions
                            outside healthy range
 Each crisis episode    →   drift += crisis_severity * recovery_deficit
 Failed recovery        →   baseline shifts: new_baseline = old_baseline
@@ -395,7 +395,7 @@ Validated psychological instruments for quantifying emotional resilience:
 | **Resilience Evaluation Scale (RES)** | 9 | Likert | varies | Self-confidence, self-efficacy |
 | **Resilience Scale for Adults (RSA)** | 33 | 5 dimensions | varies | Intra- and inter-personal protective factors |
 
-**Clanker relevance**: Resilience maps to **how quickly and completely VADUG returns to baseline** after perturbation. A high-resilience personality vector would have:
+**Clanker relevance**: Resilience maps to **how quickly and completely VADUGWI returns to baseline** after perturbation. A high-resilience personality vector would have:
 - Faster recovery rate (pendulum damping coefficient)
 - Stronger baseline pull (spring constant toward home position)
 - Wider window of tolerance (larger acceptable range before flagging)
@@ -405,7 +405,7 @@ Validated psychological instruments for quantifying emotional resilience:
 
 A complementary framework that maps autonomic nervous system states to emotional/behavioral zones. Three hierarchical states:
 
-| State | ANS Branch | Behavior | VADUG Zone |
+| State | ANS Branch | Behavior | VADUGWI Zone |
 |-------|-----------|----------|------------|
 | **Ventral vagal** (social engagement) | Myelinated vagus | Calm, connected, flexible, social | Within window of tolerance |
 | **Sympathetic** (mobilization) | Sympathetic NS | Fight-or-flight, anxiety, anger, panic | Hyperarousal zone |
@@ -417,7 +417,7 @@ A complementary framework that maps autonomic nervous system states to emotional
 
 ## 5. Synthesis: Mapping to Clanker-Lang
 
-### 5.1 TCI Escalation Stages as VADUG Trajectory Patterns
+### 5.1 TCI Escalation Stages as VADUGWI Trajectory Patterns
 
 ```
 Phase          V    A    D    U    G    Pendulum State
@@ -504,11 +504,11 @@ Over many episodes:
 
 This produces the clinical picture: a traumatized individual with lower resting valence, higher resting arousal, chronic urgency, narrower tolerance for perturbation, and faster escalation through crisis phases.
 
-### 5.4 De-Escalation Techniques as Response VADUG Targeting
+### 5.4 De-Escalation Techniques as Response VADUGWI Targeting
 
-TCI co-regulation strategies translate to specific VADUG targets for the **response** vector:
+TCI co-regulation strategies translate to specific VADUGWI targets for the **response** vector:
 
-| Technique | Response VADUG Target | Mechanism |
+| Technique | Response VADUGWI Target | Mechanism |
 |-----------|----------------------|-----------|
 | Calm presence | A: 80-100, D: 128 | Models low arousal, conveys confidence |
 | Simple language | U: low, A: low | Reduces cognitive load |
@@ -517,14 +517,14 @@ TCI co-regulation strategies translate to specific VADUG targets for the **respo
 | Validation | V: 130-150, G: 128 | Affirms without inflating |
 | Environmental modification | Setting conditions → tolerance_range | Widens the window |
 
-### 5.5 TCI Four Questions as Dual-VADUG Assessment
+### 5.5 TCI Four Questions as Dual-VADUGWI Assessment
 
-| Question | VADUG Operation |
-|----------|----------------|
-| What am I feeling? | Read own VADUG state |
-| What does the child feel/need/want? | Estimate target's VADUG state |
+| Question | VADUGWI Operation |
+|----------|------------------|
+| What am I feeling? | Read own VADUGWI state |
+| What does the child feel/need/want? | Estimate target's VADUGWI state |
 | How is environment affecting this? | Evaluate setting conditions → dark matter |
-| How do I best respond? | Calculate optimal response VADUG vector |
+| How do I best respond? | Calculate optimal response VADUGWI vector |
 
 ---
 

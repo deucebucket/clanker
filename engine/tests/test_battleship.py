@@ -13,7 +13,7 @@ from engine.battleship import (
 
 
 class TestProbes:
-    """Verify probes are loaded with real VADUG values."""
+    """Verify probes are loaded with real VADUGWI values."""
 
     def test_probes_loaded(self):
         assert len(PROBES) == 5

@@ -1,6 +1,6 @@
 """Bidirectional A+B=C Solver — forward read + backward zone targeting.
 
-Forward:  text -> VADUG (wrapper around compute_vadug)
+Forward:  text -> VADUGWI (wrapper around compute_vadug)
 Backward: given A's state + target zone, solve for what B needs to be
 
 The core idea: emotional states are composable. If someone is in state A
@@ -23,7 +23,7 @@ from .zones import ZONES
 # ── Forward ────────────────────────────────────────────────────────
 
 def forward(text: str) -> VADUG:
-    """Compute VADUG for a text string. Wrapper around compute_vadug."""
+    """Compute VADUGWI for a text string. Wrapper around compute_vadug."""
     result, _ = compute_vadug(text)
     return result
 
@@ -119,7 +119,7 @@ def state_transition(
 # ── Backward: zone targeting ──────────────────────────────────────
 
 def _in_zone(vadug: VADUG, zone_name: str) -> bool:
-    """Check if VADUG falls within a zone's radius on V, D, G."""
+    """Check if VADUGWI state falls within a zone's radius on V, D, G."""
     zone = ZONES[zone_name]
     c = zone["center"]
     r = zone["radius"]

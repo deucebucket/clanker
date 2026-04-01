@@ -14,7 +14,7 @@ from engine.shared import VADUG
 # ── Helper ───────────────────────────────────────────────────────
 
 def _vadug(text: str) -> VADUG:
-    """Get VADUG for text, discard trace."""
+    """Get VADUGWI for text, discard trace."""
     result, _ = compute_vadug(text)
     return result
 
@@ -137,17 +137,17 @@ class TestStructures:
         assert not found, f"Safe sentence falsely flagged: {found}"
 
 
-# ── VADUG object ────────────────────────────────────────────────
+# ── VADUGWI object ──────────────────────────────────────────────
 
 class TestVADUGObject:
 
     def test_returns_vadug_type(self):
-        """compute_vadug should return a VADUG object."""
+        """compute_vadug should return a VADUGWI object."""
         result, _ = compute_vadug("hello world")
         assert isinstance(result, VADUG)
 
     def test_all_five_dimensions(self):
-        """VADUG should have all 5 dimensions."""
+        """VADUGWI should have all 7 dimensions."""
         r = _vadug("I am very happy")
         assert hasattr(r, "v")
         assert hasattr(r, "a")
@@ -187,7 +187,7 @@ class TestTrace:
         assert trace["word_count"] == 4
 
     def test_empty_input(self):
-        """Empty string should return neutral VADUG and empty trace."""
+        """Empty string should return neutral VADUGWI and empty trace."""
         r, trace = compute_vadug("")
         assert r.v == 128
         assert r.w == 128
@@ -201,7 +201,7 @@ class TestSelfWorth:
     """W tracks the user's self-assessment of their own value."""
 
     def test_default_w_is_neutral(self):
-        """Default VADUG has W=128 (stable self-worth)."""
+        """Default VADUGWI has W=128 (stable self-worth)."""
         assert VADUG().w == 128
 
     def test_neutral_sentence_w_unchanged(self):

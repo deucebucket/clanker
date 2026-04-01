@@ -1,9 +1,9 @@
-"""Emotional Zone Classification — match VADUG to named emotional states.
+"""Emotional Zone Classification — match VADUGWI to named emotional states.
 
 Instead of raw V thresholds, classify by which ZONE the coordinates
 land in. Different sentences → same zone → same emotional state.
 
-The zones are convergence regions: areas in 5D VADUG space where
+The zones are convergence regions: areas in 7D VADUGWI space where
 structurally different sentences resolve to the same emotional meaning.
 
   "Whatever" → RESIGNATION zone

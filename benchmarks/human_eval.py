@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Human agreement evaluation — the REAL test of whether the math works.
 
-The academic benchmarks compress 5D VADUG to 1D pos/neg. That's not a
-real test. The real test: do HUMANS agree with the engine's 5D output?
+The academic benchmarks compress 7D VADUGWI to 1D pos/neg. That's not a
+real test. The real test: do HUMANS agree with the engine's 7D output?
 
 This script:
 1. Generates a diverse set of 200 sentences across emotional categories
-2. Runs the engine on each one → 5D VADUG output
-3. Exports a CSV for human raters to score (V, A, D, U, G each 0-255)
+2. Runs the engine on each one → 7D VADUGWI output
+3. Exports a CSV for human raters to score (V, A, D, U, G, W, I each 0-255)
 4. When human ratings come back, calculates correlation per dimension
 5. Reports where the engine agrees with humans and where it diverges
 
