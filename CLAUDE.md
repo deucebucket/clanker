@@ -302,3 +302,12 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 - **Idioms are in `idioms.py`**  --  V2 imports idioms from `demo/idioms.py`, not from `pendulum.py`. The standalone module avoids pulling in the 46K-line `forces.py`.
 - **Training data is gitignored**  --  large files like `discovered_idioms.jsonl` and `empathetic_dialogues.jsonl` won't be in the repo.
 - **167 tests in V5.5**  --  `engine/tests/` covers word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.
+
+
+## Distribution Rules
+
+- **GGUF only** for public distribution (opaque neural weights, no source visible)
+- **NEVER upload** engine source code, forces_curated.py, training scripts, or training data publicly
+- **NEVER train** with canned/scripted responses -- teach the VADUGWI math, not memorized pairs
+- The model is the free sample. The engine is the business.
+
