@@ -5616,6 +5616,30 @@ _VOCAB_FIXES = {
     'fr':           (0, 10, 5, 0, 0),               # "for real" = emphasis/agreement. Neutral amplifier.
     'lol':          (5, 10, 5, 0, 5),               # override: was +39. Often nervous/deflection/padding, not genuine joy.
     'lmao':         (10, 15, 10, 0, 5),             # override: was +50. Amusement but often performative.
+    'lul':          (5, 10, 5, 0, 5),               # = lol. Twitch variant.
+    # ── Informal contractions (map to their expanded forms) ──
+    'gonna':        (0, 5, 5, 5, 0),               # = going to. Forward intent. Slight urgency.
+    'wanna':        (0, 10, 0, 5, 0),              # = want to. Desire. Slight arousal.
+    'gotta':        (0, 10, 0, 10, 0),             # = got to. Obligation. Urgency.
+    'kinda':        (0, 0, 0, 0, 0),               # = kind of. Hedge. Zero force.
+    'tryna':        (0, 10, 5, 5, 0),              # = trying to. Effort. Slight arousal.
+    'imma':         (0, 10, 10, 5, 0),             # = I'm going to. Declaration. Slight D.
+    'finna':        (0, 10, 10, 10, 0),            # = fixing to / going to. Strong forward intent.
+    'lemme':        (0, 5, 5, 5, 0),               # = let me. Request for action.
+    'dunno':        (0, 0, -5, 0, 0),              # = don't know. Uncertainty.
+    # ── Internet slang with emotional weight ──
+    'lowkey':       (0, -5, 0, 0, 0),              # understated. Dampener on what follows.
+    'highkey':      (0, 10, 0, 0, 0),              # amplified. Booster on what follows.
+    'deadass':      (0, 10, 10, 0, 0),             # = seriously, for real. Emphasis.
+    'sus':          (-10, 10, -5, 5, -5),           # suspicious. Mild negative.
+    'mid':          (-15, 0, 0, 0, -5),             # mediocre, underwhelming. Negative.
+    'bussin':       (25, 15, 10, 0, 10),            # = amazing, delicious. Strong positive.
+    'slay':         (20, 15, 15, 0, 10),            # = killed it, amazing. Positive.
+    'bet':          (5, 5, 10, 0, 5),               # = okay, agreed, for sure. Slight positive.
+    'based':        (10, 10, 15, 0, 10),            # = authentic, bold. Positive.
+    'cringe':       (-20, 10, -10, 0, -10),         # embarrassing, awkward. Negative.
+    'cope':         (-15, 5, -10, 0, -10),          # delusional self-comfort. Negative.
+    'ratio':        (-10, 15, 15, 0, -5),           # getting ratioed = dunked on. Negative for target.
     # ── Gemini+Claude consensus round 2 ──
     'sort':         (0, 5, 0, 0, 5),               # override: was +37. "Sort of" = hedge. Neutral.
     'convince':     (0, 10, 5, 5, 5),              # override: was +46. Neutral action.
