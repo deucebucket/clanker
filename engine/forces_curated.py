@@ -5608,6 +5608,14 @@ _VOCAB_FIXES = {
     'opposite':     (0, 5, 0, 0, 0),               # override: was -62. Direction/contrast word.
     'argue':        (-5, 15, 5, 5, 5),             # override: was -42. Debate verb. Mild negative lean.
     'harder':       (-20, 10, -10, 5, -5),          # override: was -52. Difficulty.
+    # ── Internet/Twitch cultural tokens (dual-state: surface ≠ meaning) ──
+    # These are cultural compression artifacts, not standard words.
+    # Engine reads SURFACE. Model should read UNDERLYING.
+    'gg':           (-10, 5, -5, 0, -5),            # "good game" → culturally: resignation/hyperbolic defeat
+    'rip':          (-15, 10, -10, 5, -5),          # override: was -114! Culturally: "oh well that sucks" not actual death
+    'fr':           (0, 10, 5, 0, 0),               # "for real" = emphasis/agreement. Neutral amplifier.
+    'lol':          (5, 10, 5, 0, 5),               # override: was +39. Often nervous/deflection/padding, not genuine joy.
+    'lmao':         (10, 15, 10, 0, 5),             # override: was +50. Amusement but often performative.
     # ── Gemini+Claude consensus round 2 ──
     'sort':         (0, 5, 0, 0, 5),               # override: was +37. "Sort of" = hedge. Neutral.
     'convince':     (0, 10, 5, 5, 5),              # override: was +46. Neutral action.
