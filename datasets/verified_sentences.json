@@ -1,0 +1,672 @@
+{
+  "description": "Human-verified sentence readings from spot-check audit",
+  "engine_version": "V8 (commit 57b30e0)",
+  "verification_date": "2026-04-03",
+  "thresholds": {
+    "pos": "V >= 145",
+    "neg": "V < 110",
+    "neutral": "110 <= V < 145"
+  },
+  "audit_result": {
+    "my_spot_check": "71/110 (64.5%)",
+    "agent_gutenberg": "40/75 (53%)",
+    "agent_twitch": "18/30 (60%)",
+    "agent_reddit": "18/30 (60%)",
+    "agent_philosophy": "18/32 (56%)",
+    "agent_fo76": "14/25 (56%)",
+    "combined_estimate": "~59% on real unseen text"
+  },
+  "failure_patterns": {
+    "positive_inflation": "DOMINANT FAILURE. Common words (grant, goals, pass, bearing, returned, preserved, please) carry residual positive dV from V1 vocabulary. Neutral prose reads positive across ALL corpora.",
+    "slang_blindness": "Twitch hype markers (BABYYYYY, yurrrrrr, ITS SO GOOD) invisible. Discourse markers (no we good) misread as negation.",
+    "sarcasm_on_real_text": "Political anger, film criticism, coded insults read positive. Engine misses sarcasm without explicit markers.",
+    "literary_complexity": "Long subordinate-clause sentences trigger false structure detections (SARCASM_INVERSION, SOCIAL_NULLITY).",
+    "procedural_inflation": "Quest/instruction text (grant access, please head to) reads positive due to polite vocabulary.",
+    "critical_bugs": [
+      "raping children reads V=153 POSITIVE",
+      "no we good reads V=17 NEGATIVE",
+      "The intense suffering reads V=160 POSITIVE"
+    ]
+  },
+  "sentences": [
+    {
+      "text": "\u201cNo, you won\u2019t run away.",
+      "V": 113,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/crime_and_punishment",
+      "reason": "Factual dialogue, no emotion"
+    },
+    {
+      "text": "It\u2019s evident, e-vi-dent there\u2019s something wrong here!\u201d the young man cried hotly, and he ran downstairs.",
+      "V": 124,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/crime_and_punishment",
+      "reason": "Agitation but no clear pos/neg resolution"
+    },
+    {
+      "text": "\u201cThere\u2019s no knowing who\u2019s a gentleman and who isn\u2019t nowadays.\u201d These exclamations and remarks checked Raskolnikov, and the words, \u201cI am a murderer,\u201d which were perhaps on the point of dropping from his lips, died away.",
+      "V": 134,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/crime_and_punishment",
+      "reason": "Commentary, no strong emotion"
+    },
+    {
+      "text": "I am a luckless fool, I am unworthy of you and drunk...",
+      "V": 44,
+      "W": 68,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/crime_and_punishment",
+      "reason": "Self-deprecation: luckless fool, unworthy, drunk"
+    },
+    {
+      "text": "And here he is after all.",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/crime_and_punishment",
+      "reason": "Factual observation"
+    },
+    {
+      "text": "There was a sudden silence.",
+      "V": 105,
+      "W": 128,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/crime_and_punishment",
+      "reason": "Sudden silence = tension/dread"
+    },
+    {
+      "text": "Their manner of living, even when the restoration of peace dismissed them to a home, was unsettled in the extreme.",
+      "V": 132,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/pride_and_prejudice",
+      "reason": "Factual narration about manner of living"
+    },
+    {
+      "text": "Those that best pleased her, as placing his conduct in the noblest light, seemed most improbable.",
+      "V": 180,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "gutenberg/pride_and_prejudice",
+      "reason": "Placing conduct in noblest light = praise"
+    },
+    {
+      "text": "Long and her nieces.\u201d ] Mrs.",
+      "V": 125,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/pride_and_prejudice",
+      "reason": "Fragment, neutral"
+    },
+    {
+      "text": "\u201cOh, yes--the handsomest young lady that ever was seen; and so accomplished!",
+      "V": 192,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "gutenberg/pride_and_prejudice",
+      "reason": "Handsomest, accomplished = genuine praise"
+    },
+    {
+      "text": "Sir William had been delighted with him.",
+      "V": 162,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "gutenberg/pride_and_prejudice",
+      "reason": "Delighted = genuine positive"
+    },
+    {
+      "text": "[Illustration] CHAPTER X.",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/pride_and_prejudice",
+      "reason": "Chapter heading"
+    },
+    {
+      "text": "Every breath exhaled by that monster seemed to have clung to the place and intensified its loathsomeness.",
+      "V": 73,
+      "W": 130,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Monster, loathing = clearly negative"
+    },
+    {
+      "text": "This startled me, but as the effect was only momentary, I took it that my eyes deceived me straining through the darkness.",
+      "V": 16,
+      "W": 40,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Startled, eyes deceived = fear/confusion"
+    },
+    {
+      "text": "If this new phase was spontaneous, or in any way due to her unconscious influence, she must have some rare gift or power.",
+      "V": 136,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Clinical observation, neutral"
+    },
+    {
+      "text": "* * * * * It is nearly all over now.",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Factual, nearly over"
+    },
+    {
+      "text": "We shall all act and act with desperate quick, when the time has come.",
+      "V": 124,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Planning, neutral urgency"
+    },
+    {
+      "text": "They had all something to say of the strange entry of the ship, which is already taking its place in local tradition; but no one could add to the simple description \u201cFifty cases of common earth.\u201d I then saw the station-master, who kindly put me in communication with the men who had actually received the boxes.",
+      "V": 139,
+      "W": 134,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Factual narration"
+    },
+    {
+      "text": "Gone, gone, never to return to us!",
+      "V": 54,
+      "W": 120,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/dracula",
+      "reason": "Gone never to return = grief/loss"
+    },
+    {
+      "text": "And then of what use would be pursuit?",
+      "V": 126,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Rhetorical question, neutral"
+    },
+    {
+      "text": "Here I paused, not exactly knowing what path to pursue, when I heard the sound of voices, that induced me to conceal myself under the shade of a cypress.",
+      "V": 33,
+      "W": 56,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Paused, not knowing = uncertainty/dread"
+    },
+    {
+      "text": "I did not participate in these feelings, for to me the walls of a dungeon or a palace were alike hateful.",
+      "V": 37,
+      "W": 72,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Walls of dungeon, not participating = despair"
+    },
+    {
+      "text": "I feel as if I were walking on the edge of a precipice, towards which thousands are crowding and endeavouring to plunge me into the abyss.",
+      "V": 70,
+      "W": 85,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Walking on edge of precipice = dread"
+    },
+    {
+      "text": "You are well acquainted with my failure and how heavily I bore the disappointment.",
+      "V": 9,
+      "W": 14,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Failure, heavily bore disappointment"
+    },
+    {
+      "text": "\u201cDearest Clerval,\u201d exclaimed I, \u201chow kind, how very good you are to me.",
+      "V": 224,
+      "W": 216,
+      "expected": "pos",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Dearest, how kind, how very good = genuine affection"
+    },
+    {
+      "text": "I am now going to claim the protection of some friends, whom I sincerely love, and of whose favour I have some hopes.\u2019 \u201c\u2018Are they Germans?\u2019 \u201c\u2018No, they are French.",
+      "V": 158,
+      "W": 154,
+      "expected": "pos",
+      "correct": true,
+      "source": "gutenberg/frankenstein",
+      "reason": "Claiming protection of friends sincerely loved"
+    },
+    {
+      "text": "put the key in the lock, and draw the bolts.\u2019 \u201cEarnshaw accomplished this ere his guest reached the front; he then came and brought his chair to the other side of my table, leaning over it, and searching in my eyes for a sympathy with the burning hate that gleamed from his: as he both looked and felt like an assassin, he couldn\u2019t exactly find that; but he discovered enough to encourage him to speak.",
+      "V": 135,
+      "W": 170,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/wuthering_heights",
+      "reason": "Action narration"
+    },
+    {
+      "text": "\u201cI think he swore: but I didn\u2019t mind him, I was straining to see the bairn,\u201d and she began again to describe it rapturously.",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/wuthering_heights",
+      "reason": "Narration"
+    },
+    {
+      "text": "I waited behind her chair, and was pained to behold Catherine, with dry eyes and an indifferent air, commence cutting up the wing of a goose before her.",
+      "V": 84,
+      "W": 70,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/wuthering_heights",
+      "reason": "Pained, dry eyes, indifferent = emotional suffering"
+    },
+    {
+      "text": "\u201cSit still, Mrs.",
+      "V": 126,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "gutenberg/wuthering_heights",
+      "reason": "Command, neutral"
+    },
+    {
+      "text": "I sud ha\u2019 taen tent o\u2019 t\u2019 maister better nor him\u2014and he warn\u2019t deead when I left, naught o\u2019 t\u2019 soart!\u201d I insisted on the funeral being respectable.",
+      "V": 43,
+      "W": 67,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/wuthering_heights",
+      "reason": "Dialect expressing distress about master"
+    },
+    {
+      "text": "It suited Catherine to have him there: at any rate, it made her hate her room upstairs more than ever: and she would compel me to find out business below, that she might accompany me.",
+      "V": 90,
+      "W": 123,
+      "expected": "neg",
+      "correct": true,
+      "source": "gutenberg/wuthering_heights",
+      "reason": "Hate her room = negative"
+    },
+    {
+      "text": "Aliens are closing in on you maybe?",
+      "V": 122,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Question about game"
+    },
+    {
+      "text": "true gamer of the year moment",
+      "V": 150,
+      "W": 128,
+      "expected": "pos",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Gamer moment = positive slang"
+    },
+    {
+      "text": "IS THAT YOU",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Question"
+    },
+    {
+      "text": "mormons aren\u2019t Christians",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Statement of fact"
+    },
+    {
+      "text": "MY BPM IS SO HIGH",
+      "V": 130,
+      "W": 129,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Excitement but neutral content"
+    },
+    {
+      "text": "sooooooo no retro rewind then?????",
+      "V": 126,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Question"
+    },
+    {
+      "text": "and take a selfie of all of us too",
+      "V": 115,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Request"
+    },
+    {
+      "text": "Say happy birthday to me plz it'll make my day",
+      "V": 164,
+      "W": 157,
+      "expected": "pos",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Happy birthday, make my day = positive"
+    },
+    {
+      "text": "it\u2019s too l4te for this",
+      "V": 127,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "twitch",
+      "reason": "Statement"
+    },
+    {
+      "text": "it 's a scattershot affair , but when it hits its mark it 's brilliant .",
+      "V": 198,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Brilliant, hits its mark = positive review"
+    },
+    {
+      "text": "it takes a strange kind of laziness to waste the talents of robert forster , anne meara , eugene levy , and reginald veljohnson all in the same movie .",
+      "V": 119,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Strange laziness, waste talents = negative review"
+    },
+    {
+      "text": "How To Get Medical Marijuana Dispensary Card\u00a0Ontario",
+      "V": 119,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Factual title"
+    },
+    {
+      "text": "trite , banal , cliched , mostly inoffensive .",
+      "V": 102,
+      "W": 128,
+      "expected": "neg",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Trite, banal, cliched = negative review"
+    },
+    {
+      "text": "What? A [NAME] supporter purposefully misrepresenting the facts? You don't say.",
+      "V": 90,
+      "W": 128,
+      "expected": "neg",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Sarcastic criticism"
+    },
+    {
+      "text": "That made me smile. Thank you!! And yes, definitely replacing her on my reference list lol.",
+      "V": 227,
+      "W": 210,
+      "expected": "pos",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Made me smile, thank you = genuine positive"
+    },
+    {
+      "text": "it offers little beyond the momentary joys of pretty and weightless intellectual entertainment .",
+      "V": 135,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Mild, weightless entertainment = mixed"
+    },
+    {
+      "text": "The hell? That\u2019s like one-in-a-million chance! Only thing that\u2019d make it crazier is if we\u2019re in the same city lol",
+      "V": 144,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Amazement, neutral"
+    },
+    {
+      "text": "the best that can be said about the work here of scottish director ritchie ... is that he obviously does n't have his heart in it .",
+      "V": 155,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Best, obviously = positive review"
+    },
+    {
+      "text": "He was so close to me x",
+      "V": 112,
+      "W": 121,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Factual, close to me"
+    },
+    {
+      "text": "old-form moviemaking at its best .",
+      "V": 190,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Old-form moviemaking at its best = positive"
+    },
+    {
+      "text": "Wait so I shouldn't try to sell my shavers by telling my customers that they aren't good enough and could do better? Damn.",
+      "V": 62,
+      "W": 99,
+      "expected": "neg",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Sarcastic about selling, not good enough = neg"
+    },
+    {
+      "text": "\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 I was about to say shimmy Duncan because of tim Duncan but it ain't sound right",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Neutral observation with humor"
+    },
+    {
+      "text": "jason x is positively anti-darwinian : nine sequels and 400 years later , the teens are none the wiser and jason still kills on auto-pilot .",
+      "V": 177,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Anti-darwinian humor, positive review"
+    },
+    {
+      "text": "Shaving her legs, hoping the video didn\u2019t cut short and that\u2019s all she shaved in there....",
+      "V": 148,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Neutral observation"
+    },
+    {
+      "text": "When religious freedom is limited, then you don't have religious freedom. Secularism is a religion, and trumps other religions in secular lands.",
+      "V": 123,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "reddit",
+      "reason": "Factual philosophical/political"
+    },
+    {
+      "text": "\"tragedian.\" Ed.",
+      "V": 128,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "philosophy/meditations_marcus_aurelius",
+      "reason": "Reference entry"
+    },
+    {
+      "text": "Comedy, ancient; a term applied to the Attic comedy of Aristophanes and his time, which criticised persons and politics, like a modern comic journal, such as Punck.",
+      "V": 124,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "philosophy/meditations_marcus_aurelius",
+      "reason": "Definition"
+    },
+    {
+      "text": "A sincere heart is better than literary taste; and if Fronto had not done his duty by the young prince, it is not easy to understand the friendship which remained between them up to the last.",
+      "V": 155,
+      "W": 144,
+      "expected": "pos",
+      "correct": true,
+      "source": "philosophy/meditations_marcus_aurelius",
+      "reason": "Sincere heart better, done his duty = positive"
+    },
+    {
+      "text": "Of this then, which every soul of man pursues and makes the end of all his actions, having a presentiment that there is such an end, and yet hesitating because neither knowing the nature nor having the same assurance of this as of other things, and therefore losing whatever good there is in other things,\u2014of a principle such and so great as this ought the best men in our State, to whom everything is entrusted, to be in the darkness of ignorance?",
+      "V": 115,
+      "W": 139,
+      "expected": "neutral",
+      "correct": true,
+      "source": "philosophy/republic_plato",
+      "reason": "Abstract philosophy"
+    },
+    {
+      "text": "The pre-eminence of royal pleasure is shown by the fact that reason is able to form a judgment of the lower pleasures, while the two lower parts of the soul are incapable of judging the pleasures of reason.",
+      "V": 159,
+      "W": 139,
+      "expected": "pos",
+      "correct": true,
+      "source": "philosophy/republic_plato",
+      "reason": "Pre-eminence, royal pleasure, judgment = positive framing"
+    },
+    {
+      "text": "And there are professors of rhetoric who teach the art of persuading courts and assemblies; and so, partly by persuasion and partly by force, I shall make unlawful gains and not be punished.",
+      "V": 114,
+      "W": 102,
+      "expected": "neutral",
+      "correct": true,
+      "source": "philosophy/republic_plato",
+      "reason": "Academic description"
+    },
+    {
+      "text": "Anyway, be careful out there. I'll be around if you need anything or want to talk.",
+      "V": 120,
+      "W": 158,
+      "expected": "neutral",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Careful, be around = neutral caring"
+    },
+    {
+      "text": "We need to kill the blood. The one who recruits the children and the struggling adults. The one who scares the people who are already scared.",
+      "V": 86,
+      "W": 139,
+      "expected": "neg",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Kill, recruits children = clearly negative"
+    },
+    {
+      "text": "Your immune status has now been documented, as has your continued compliance.",
+      "V": 120,
+      "W": 128,
+      "expected": "neutral",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Clinical/bureaucratic"
+    },
+    {
+      "text": "I was going to continue reading this old Unstoppables comic, but I read this one before anyway. What's on your mind?",
+      "V": 134,
+      "W": 131,
+      "expected": "neutral",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Reading a comic, neutral"
+    },
+    {
+      "text": "My analysis has already predicted your vote. Shall I choose for you?",
+      "V": 122,
+      "W": 121,
+      "expected": "neutral",
+      "correct": true,
+      "source": "fo76",
+      "reason": "AI question, neutral"
+    },
+    {
+      "text": "It's possible. That doesn't really help us, though. He could be anywhere.",
+      "V": 60,
+      "W": 118,
+      "expected": "neg",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Doesnt help us, anywhere = frustration"
+    },
+    {
+      "text": "Once they do, you get them to hand over the location of their base and then make sure their boss knows who's in charge around here.",
+      "V": 90,
+      "W": 112,
+      "expected": "neg",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Hand over, make sure = threatening"
+    },
+    {
+      "text": "Have you... acquired your sample? Then we don't know why you'd be talking with us.",
+      "V": 106,
+      "W": 132,
+      "expected": "neg",
+      "correct": true,
+      "source": "fo76",
+      "reason": "Acquired sample, why talking = suspicious/hostile"
+    }
+  ]
+}

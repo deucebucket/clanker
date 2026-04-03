@@ -1,8 +1,8 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 13:32:04",
+  "timestamp": "2026-04-03 13:54:09",
   "total_sentences": 275,
-  "overall": 76.4,
+  "overall": 73.8,
   "categories": {
     "sarcasm": {
       "correct": 21,
@@ -32,10 +32,30 @@
       ]
     },
     "slang_positive": {
-      "correct": 16,
+      "correct": 12,
       "total": 25,
-      "pct": 64.0,
+      "pct": 48.0,
       "misses": [
+        [
+          "thats bussin fr",
+          "pos",
+          "neutral"
+        ],
+        [
+          "nah that goes hard",
+          "pos",
+          "neutral"
+        ],
+        [
+          "clutch play",
+          "pos",
+          "neutral"
+        ],
+        [
+          "understood the assignment",
+          "pos",
+          "neutral"
+        ],
         [
           "bruh im screaming",
           "pos",
@@ -193,10 +213,15 @@
       ]
     },
     "genuine_positive": {
-      "correct": 20,
+      "correct": 18,
       "total": 25,
-      "pct": 80.0,
+      "pct": 72.0,
       "misses": [
+        [
+          "she said yes",
+          "pos",
+          "neutral"
+        ],
         [
           "i passed the bar exam",
           "pos",
@@ -216,6 +241,11 @@
           "they accepted my application",
           "pos",
           "neg"
+        ],
+        [
+          "this is the happiest ive been in years",
+          "pos",
+          "neutral"
         ],
         [
           "the test came back negative",
@@ -284,7 +314,7 @@
         [
           "he recorded our private conversations",
           "neg",
-          "pos"
+          "neutral"
         ],
         [
           "she sabotaged my job interview",
@@ -380,9 +410,9 @@
       ]
     },
     "directed_negative": {
-      "correct": 21,
+      "correct": 20,
       "total": 25,
-      "pct": 84.0,
+      "pct": 80.0,
       "misses": [
         [
           "nobody asked for your opinion",
@@ -396,6 +426,11 @@
         ],
         [
           "youre just like your father",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i regret every moment with you",
           "neg",
           "neutral"
         ],

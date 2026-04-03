@@ -1,32 +1,45 @@
 {
-  "timestamp": "2026-04-03 13:33:31",
-  "vocabulary": 4456,
+  "timestamp": "2026-04-03 13:55:37",
+  "vocabulary": 4473,
   "ground_truth": {
-    "correct": 41,
+    "correct": 40,
     "total": 41,
-    "pct": 100.0
+    "pct": 97.6
   },
-  "failures": [],
+  "failures": [
+    {
+      "text": "she said yes",
+      "expected": "pos",
+      "got": "neutral",
+      "V": 128,
+      "W": 128,
+      "A": 133,
+      "D": 130,
+      "I": 128,
+      "structures": [],
+      "category": "positive"
+    }
+  ],
   "throughput": {
     "Twitch": {
       "sentences": 43723,
-      "seconds": 7.28,
-      "rate": 6005
+      "seconds": 7.76,
+      "rate": 5631
     },
     "FO76": {
       "sentences": 521,
-      "seconds": 0.17,
-      "rate": 2981
+      "seconds": 0.19,
+      "rate": 2689
     },
     "Novels": {
       "sentences": 163102,
-      "seconds": 61.6,
-      "rate": 2646
+      "seconds": 62.3,
+      "rate": 2618
     },
     "Philosophy": {
       "sentences": 34391,
-      "seconds": 17.0,
-      "rate": 2026
+      "seconds": 17.1,
+      "rate": 2011
     }
   }
 }
