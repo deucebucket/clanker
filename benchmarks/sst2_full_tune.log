@@ -1,0 +1,13 @@
+Loading SST-2...
+Train: 67349, Validation: 872
+Train sample: 2000
+Current: train=65.8%, val=67.5%
+Gen   0 | train=66.9% | val=68.1% | best_train=66.9% | 24.2s
+Gen  10 | train=67.7% | val=67.9% | best_train=67.7% | 24.5s
+Gen  20 | train=67.7% | val=67.9% | best_train=67.7% | 24.7s
+Gen  30 | train=67.7% | val=67.9% | best_train=67.7% | 24.3s
+Gen  40 | train=67.7% | val=67.9% | best_train=67.7% | 24.5s
+Gen  50 | train=67.7% | val=67.9% | best_train=67.7% | 24.4s
+Gen  60 | train=67.7% | val=67.9% | best_train=67.7% | 24.8s
+Gen  70 | train=67.8% | val=67.8% | best_train=67.8% | 24.6s
+Gen  80 | train=67.8% | val=67.8% | best_train=67.8% | 24.4s

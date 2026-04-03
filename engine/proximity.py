@@ -19,19 +19,19 @@ from .word_classifier import WordRole
 
 # ── Constants ────────────────────────────────────────────────────
 
-PROXIMITY_DECAY = 0.822   # V6 champion: 500 real sentences
-INFLUENCE_CUTOFF = 0.1    # ignore influence below this
-COEFFICIENT_CAP = 1.75    # V6 champion: tight cap, prevent runaway
+PROXIMITY_DECAY = 0.90   # champion v2: wide influence range
+INFLUENCE_CUTOFF = 0.1   # ignore influence below this
+COEFFICIENT_CAP = 2.63   # champion v2: tighter cap prevents runaway
 
 
-# ── Role modifier strengths (V6 champion, real dataset tuned) ──
+# ── Role modifier strengths (champion v2, genetically tuned 2026-04-03) ──
 
 ROLE_MODIFIERS = {
-    "AMPLIFIER": 0.856,   # V6: strong amplification
-    "NEGATOR": -2.068,    # V6: strong negation
-    "SELF_REF": 0.312,    # V6: self-reference
-    "HEDGE": -0.708,      # V6: strong hedge dampening (real text has lots of hedging)
-    "COMPRESSOR": -0.220, # V6: light compression
+    "AMPLIFIER": 0.965,   # champion v2: amplifiers hit hard
+    "NEGATOR": -2.464,    # champion v2: strong negation flip
+    "SELF_REF": 0.466,    # champion v2: self-reference personalizes
+    "HEDGE": -0.416,      # champion v2: hedges dampen more than v1
+    "COMPRESSOR": -0.301, # champion v2: compression
 }
 
 

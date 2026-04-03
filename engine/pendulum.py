@@ -19,10 +19,10 @@ from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_inte
 # ── Physics constants (fixed, never tuned per-sentence) ─────────
 
 CENTER = 128.0
-MOMENTUM = 0.85           # V6 champion: 500 real sentences (SST-2+GoEmotions+TweetEval)
-FORCE_SCALE = 1.98        # V6 champion: strong forces, high momentum = stable but responsive
-DIRECT_PUSH_CAP = 1.0     # V6 champion
-DIRECT_PUSH_TRIGGER = 40.2  # V6 champion: low trigger = push on weaker words too
+MOMENTUM = 0.557          # champion v2: genetically optimized 2026-04-03
+FORCE_SCALE = 1.405       # champion v2
+DIRECT_PUSH_CAP = 1.0     # champion v2: max push
+DIRECT_PUSH_TRIGGER = 86.2  # champion v2
 
 
 # ── Main entry point ────────────────────────────────────────────
