@@ -1,0 +1,19 @@
+{
+  "train_accuracy": 69.5,
+  "val_accuracy": 67.8,
+  "train_sample_size": 2000,
+  "val_size": 872,
+  "champion": {
+    "momentum": 0.95,
+    "force_scale": 0.5,
+    "direct_push_cap": 0.942126,
+    "direct_push_trigger": 22.883539,
+    "proximity_decay": 0.793731,
+    "coeff_cap": 1.511497,
+    "amplifier_mod": 0.823854,
+    "negator_mod": -2.5,
+    "self_ref_mod": 0.256131,
+    "hedge_mod": -0.588125,
+    "compressor_mod": -0.283246
+  }
+}
