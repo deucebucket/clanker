@@ -1,7 +1,7 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 09:24:33",
-  "overall": 82.5,
+  "timestamp": "2026-04-03 10:01:08",
+  "overall": 81.2,
   "categories": {
     "sarcasm": {
       "correct": 10,
@@ -105,12 +105,17 @@
       ]
     },
     "betrayal": {
-      "correct": 8,
+      "correct": 7,
       "total": 10,
-      "pct": 80.0,
+      "pct": 70.0,
       "misses": [
         [
           "she took the kids and left",
+          "neg",
+          "neutral"
+        ],
+        [
+          "she pretended to be my friend",
           "neg",
           "neutral"
         ],
