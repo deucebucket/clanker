@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-03 11:35:49",
+  "timestamp": "2026-04-03 11:45:47",
   "vocabulary": 4428,
   "ground_truth": {
     "correct": 41,
@@ -10,23 +10,23 @@
   "throughput": {
     "Twitch": {
       "sentences": 43723,
-      "seconds": 6.65,
-      "rate": 6571
+      "seconds": 6.72,
+      "rate": 6510
     },
     "FO76": {
       "sentences": 521,
-      "seconds": 0.17,
-      "rate": 3059
+      "seconds": 0.16,
+      "rate": 3208
     },
     "Novels": {
       "sentences": 163102,
-      "seconds": 56.4,
-      "rate": 2894
+      "seconds": 56.7,
+      "rate": 2875
     },
     "Philosophy": {
       "sentences": 34391,
-      "seconds": 15.5,
-      "rate": 2219
+      "seconds": 15.7,
+      "rate": 2188
     }
   }
 }

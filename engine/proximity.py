@@ -32,6 +32,7 @@ ROLE_MODIFIERS = {
     "SELF_REF": 0.466,    # champion v2: self-reference personalizes
     "HEDGE": -0.416,      # champion v2: hedges dampen more than v1
     "COMPRESSOR": -0.301, # champion v2: compression
+    "REGISTER_CASUAL": 0.0,  # SOLVENT: phase-dependent handling in modifier block
 }
 
 
@@ -139,6 +140,23 @@ def proximity_coefficient(
             _PERSON_ROLES = {"SELF_REF", "OTHER_REF", "RELATION_REF"}
             if role == "COMPRESSOR" and roles[target_idx].role in _PERSON_ROLES:
                 modifier = 0.0  # dome passes through people
+            # SOLVENT: REGISTER_CASUAL dissolves LIQUID atoms, can't dissolve SOLID
+            # "bruh im crying" → crying flips to positive
+            # "bruh he got murdered" → murdered stays negative
+            if role == "REGISTER_CASUAL" and roles[target_idx].force:
+                from .phase import get_phase
+                phase = get_phase(roles[target_idx].word)
+                target_dv = roles[target_idx].force[0]
+                if phase == "LIQUID" and target_dv < 0:
+                    # Dissolve NEGATIVE liquid → flip to positive
+                    modifier = -2.0 * influence
+                elif phase == "LIQUID" and target_dv > 0:
+                    # POSITIVE liquid near solvent → amplify (already positive)
+                    modifier = 0.4 * influence
+                elif phase == "SOLID":
+                    modifier = 0.0  # can't dissolve rock
+                else:  # GAS
+                    modifier = 0.3 * influence
             coeff *= (1.0 + modifier * influence)
 
         # Star-to-star gravity: stronger emotional words pull weaker ones

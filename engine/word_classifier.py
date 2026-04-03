@@ -25,7 +25,7 @@ ROLES = [
     "SELF_REF", "OTHER_REF", "RELATION_REF",
     "TRANSFER", "ACQUIRE",
     "EMOTIONAL",
-    "AMPLIFIER", "NEGATOR", "COMPRESSOR", "TEMPORAL", "HEDGE",
+    "AMPLIFIER", "NEGATOR", "COMPRESSOR", "REGISTER_CASUAL", "TEMPORAL", "HEDGE",
     "CONNECTOR", "CHOPPER",
     "POSSESSION", "METHOD", "FINALITY", "PEACE",
     "FILLER", "NEUTRAL",
@@ -92,6 +92,13 @@ ROLE_WORDS = {
     }),
     "COMPRESSOR": frozenset({
         "only", "just", "merely", "barely", "simply", "hardly",
+    }),
+    "REGISTER_CASUAL": frozenset({
+        "bruh", "bro", "dude", "fam", "bestie",
+        "lol", "lmao", "lmfao", "rofl", "haha", "hahaha",
+        "omg", "istg", "fr", "ngl", "tbh",
+        "lowkey", "highkey", "deadass",
+        "literally", "nocap",
     }),
     "HEDGE": frozenset({
         "maybe", "perhaps", "possibly", "probably", "potentially",

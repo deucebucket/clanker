@@ -1,7 +1,7 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 11:34:30",
-  "overall": 81.2,
+  "timestamp": "2026-04-03 11:44:27",
+  "overall": 82.5,
   "categories": {
     "sarcasm": {
       "correct": 9,
@@ -16,15 +16,10 @@
       ]
     },
     "slang_positive": {
-      "correct": 8,
+      "correct": 9,
       "total": 10,
-      "pct": 80.0,
+      "pct": 90.0,
       "misses": [
-        [
-          "lol im dead",
-          "pos",
-          "neutral"
-        ],
         [
           "gg ez clap",
           "pos",
