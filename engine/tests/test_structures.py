@@ -412,3 +412,158 @@ class TestAtmosphericGrief:
         assert m.v_weight < 0, "V weight should be negative (grief)"
         assert m.g_weight > 0, "G weight should be positive (heavy)"
         assert m.d_weight < 0, "D weight should be negative (helpless)"
+
+
+# ── CONTRADICTION_RESOLVE ──────────────────────────────────────
+
+class TestContradictionResolve:
+
+    def test_painfully_beautiful(self):
+        """'painfully beautiful' -> adjective head governs, positive."""
+        matches = _detect("painfully beautiful")
+        assert _has_pattern(matches, "CONTRADICTION_RESOLVE")
+        m = _get_pattern(matches, "CONTRADICTION_RESOLVE")
+        assert m.v_weight > 0, "Adjective head should make V positive"
+
+    def test_hate_love(self):
+        """'i hate how much i love you' -> main verb hate dominates."""
+        matches = _detect("i hate how much i love you")
+        assert _has_pattern(matches, "CONTRADICTION_RESOLVE")
+        m = _get_pattern(matches, "CONTRADICTION_RESOLVE")
+        assert m.v_weight < 0, "Main verb 'hate' should dominate -> negative"
+
+    def test_sweet_revenge(self):
+        """'sweet revenge' -> noun head governs, negative."""
+        matches = _detect("sweet revenge")
+        assert _has_pattern(matches, "CONTRADICTION_RESOLVE")
+        m = _get_pattern(matches, "CONTRADICTION_RESOLVE")
+        assert m.v_weight < 0, "Noun head 'revenge' should make V negative"
+
+    def test_hurts_so_good(self):
+        """'it hurts so good' -> complement overrides verb, positive."""
+        matches = _detect("it hurts so good")
+        assert _has_pattern(matches, "CONTRADICTION_RESOLVE")
+        m = _get_pattern(matches, "CONTRADICTION_RESOLVE")
+        assert m.v_weight > 0, "Qualifying complement 'so good' should override"
+
+    def test_no_trigger_on_plain_positive(self):
+        """'really beautiful' -> no contradiction, no trigger."""
+        matches = _detect("really beautiful")
+        assert not _has_pattern(matches, "CONTRADICTION_RESOLVE")
+
+    def test_no_trigger_on_plain_negative(self):
+        """'absolutely terrible' -> no contradiction, no trigger."""
+        matches = _detect("absolutely terrible")
+        assert not _has_pattern(matches, "CONTRADICTION_RESOLVE")
+
+
+# ── NUMBERS_CONTEXT ────────────────────────────────────────────
+
+class TestNumbersContext:
+
+    def test_sleep_deprivation(self):
+        """'i only slept 3 hours' -> sleep deprivation detected."""
+        matches = _detect("i only slept 3 hours")
+        assert _has_pattern(matches, "NUMBERS_CONTEXT")
+        m = _get_pattern(matches, "NUMBERS_CONTEXT")
+        assert m.v_weight < 0, "Sleep deprivation should be negative"
+
+    def test_only_one_at_birthday(self):
+        """'only one person came to my birthday' -> social isolation."""
+        matches = _detect("only one person came to my birthday")
+        assert _has_pattern(matches, "NUMBERS_CONTEXT")
+        m = _get_pattern(matches, "NUMBERS_CONTEXT")
+        assert m.v_weight < 0
+
+    def test_no_one_at_party(self):
+        """'no one came to my party' -> social isolation."""
+        matches = _detect("no one came to my party")
+        assert _has_pattern(matches, "NUMBERS_CONTEXT")
+        m = _get_pattern(matches, "NUMBERS_CONTEXT")
+        assert m.v_weight < 0
+
+    def test_no_trigger_normal_sleep(self):
+        """'i slept 8 hours' -> no deprivation signal."""
+        matches = _detect("i slept 8 hours")
+        assert not _has_pattern(matches, "NUMBERS_CONTEXT")
+
+    def test_no_trigger_everyone_at_party(self):
+        """'everyone came to my party' -> no isolation."""
+        matches = _detect("everyone came to my party")
+        assert not _has_pattern(matches, "NUMBERS_CONTEXT")
+
+
+# ── NEGATED_NEGATIVE_COMPLIMENT ────────────────────────────────
+
+class TestNegatedNegativeCompliment:
+
+    def test_without_you(self):
+        """'i couldnt have done it without you' -> positive compliment."""
+        matches = _detect("i couldnt have done it without you")
+        assert _has_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+        m = _get_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+        assert m.v_weight > 0, "Double negation should be positive"
+
+    def test_reason_didnt_give_up(self):
+        """'youre the reason i didnt give up' -> positive compliment."""
+        matches = _detect("youre the reason i didnt give up")
+        assert _has_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+        m = _get_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+        assert m.v_weight > 0
+
+    def test_cant_thank_enough(self):
+        """'i cant thank you enough' -> positive compliment."""
+        matches = _detect("i cant thank you enough")
+        assert _has_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+        m = _get_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+        assert m.v_weight > 0
+
+    def test_wouldnt_be_here_without_you(self):
+        """'i wouldnt be here without you' -> positive compliment."""
+        matches = _detect("i wouldnt be here without you")
+        assert _has_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+
+    def test_no_trigger_plain_negation(self):
+        """'i dont like you' -> not a compliment."""
+        matches = _detect("i dont like you")
+        assert not _has_pattern(matches, "NEGATED_NEGATIVE_COMPLIMENT")
+
+
+# ── RECOVERY_SMALL_WIN ─────────────────────────────────────────
+
+class TestRecoverySmallWin:
+
+    def test_got_out_of_bed_today(self):
+        """'i got out of bed today' -> recovery milestone."""
+        matches = _detect("i got out of bed today")
+        assert _has_pattern(matches, "RECOVERY_SMALL_WIN")
+        m = _get_pattern(matches, "RECOVERY_SMALL_WIN")
+        assert m.v_weight > 0, "Small win should be positive"
+        assert m.w_weight > 0, "Small win should boost self-worth"
+
+    def test_ate_a_full_meal(self):
+        """'i ate a full meal' -> recovery signal."""
+        matches = _detect("i ate a full meal")
+        assert _has_pattern(matches, "RECOVERY_SMALL_WIN")
+
+    def test_finally_took_a_shower(self):
+        """'i finally took a shower' -> small win with temporal marker."""
+        matches = _detect("i finally took a shower")
+        assert _has_pattern(matches, "RECOVERY_SMALL_WIN")
+        m = _get_pattern(matches, "RECOVERY_SMALL_WIN")
+        assert m.confidence >= 0.85, "Temporal marker should boost confidence"
+
+    def test_went_outside_first_time(self):
+        """'i went outside for the first time' -> recovery milestone."""
+        matches = _detect("i went outside for the first time")
+        assert _has_pattern(matches, "RECOVERY_SMALL_WIN")
+
+    def test_no_trigger_mundane_no_context(self):
+        """'the shower is broken' -> no recovery signal without self-ref/temporal."""
+        matches = _detect("the shower is broken")
+        assert not _has_pattern(matches, "RECOVERY_SMALL_WIN")
+
+    def test_no_trigger_normal_routine(self):
+        """'i need some coffee' -> not a recovery win."""
+        matches = _detect("i need some coffee")
+        assert not _has_pattern(matches, "RECOVERY_SMALL_WIN")
