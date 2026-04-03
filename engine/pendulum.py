@@ -10,7 +10,7 @@ that reads from and writes to a shared context dict. Stages can be chained,
 bypassed, or swapped.
 """
 
-from math import tanh
+from math import tanh, exp, log
 from typing import List, Optional, Tuple
 
 from .shared import VADUG, PersonalityVector
@@ -34,6 +34,14 @@ FORCE_SCALE = 1.405       # champion v2
 DIRECT_PUSH_CAP = 1.0     # champion v2: max push
 DIRECT_PUSH_TRIGGER = 86.2  # champion v2
 SATURATION = 120.0        # tanh saturation: smooth compression replaces hard clamp
+
+# Mundane dampening: massless context atoms absorb crisis energy
+# D = (G_t + ε) / (G_t + α * |dV|)   -- GPT's equation
+# When G_t ≈ 0: D → ε / (α * |dV|) → near 0 for high |dV| crisis atoms
+# When G_t high: D → 1 → no dampening
+MUNDANE_ALPHA = 0.04      # sensitivity: how much dV matters
+MUNDANE_EPSILON = 1.0     # floor: avoid division by zero
+MUNDANE_DV_THRESHOLD = 25 # only dampen high-charge atoms (crisis words)
 
 
 # ── Compound resolution tables ──────────────────────────────────
@@ -329,6 +337,48 @@ def accumulate_forces(context: dict) -> dict:
 
         dv, da, dd, du, dg = word_force
 
+        # ── MUNDANE DAMPENING: massless context absorbs crisis energy ──
+        # High-charge emotional atoms (|dV| > threshold) get dampened when
+        # the sentence's subject/agent is a mundane noun (low gravity).
+        # "homework is killing me" — subject=homework (G=0) → DAMPEN
+        # "i want to kill myself" — subject=I (SELF_REF) → PRESERVE
+        # The subject is the first substantive noun before the crisis verb,
+        # skipping connectors, determiners, and filler.
+        if abs(dv) >= MUNDANE_DV_THRESHOLD and wr.role == "EMOTIONAL":
+            _AGENTIC_ROLES = {"SELF_REF", "OTHER_REF", "RELATION_REF"}
+            _SKIP_ROLES = {"CONNECTOR", "NEUTRAL", "FILLER", "TEMPORAL",
+                          "AMPLIFIER", "NEGATOR", "COMPRESSOR", "HEDGE"}
+            # Scan backward for the first substantive word (subject)
+            agent_g = None
+            agent_is_person = False
+            for j in range(i - 1, max(-1, i - 8), -1):
+                jr = roles[j]
+                if jr.role in _AGENTIC_ROLES:
+                    agent_is_person = True
+                    break
+                # Skip function words — look for the actual subject noun
+                if jr.role in _SKIP_ROLES:
+                    jf = jr.force or VOCABULARY.get(jr.word)
+                    # Word with no force at all = maximally mundane (G=0)
+                    if jf is None:
+                        agent_g = 0
+                        break
+                    # Word with low charge + low gravity = mundane subject
+                    if abs(jf[0]) < 10 and abs(jf[4]) < 15:
+                        agent_g = abs(jf[4])
+                        break
+                    continue
+                if jr.role in ("EMOTIONAL", "POSSESSION"):
+                    jf = jr.force or VOCABULARY.get(jr.word)
+                    jg = abs(jf[4]) if jf else 0
+                    agent_g = jg
+                    break
+            # Only dampen if subject is mundane (not a person, low G)
+            if not agent_is_person and agent_g is not None and agent_g < 15:
+                D = (agent_g + MUNDANE_EPSILON) / (agent_g + MUNDANE_ALPHA * abs(dv))
+                dv = int(dv * D)
+                da = int(da * D)
+
         # Forced choice cancellation
         if i in forced_choice_scope and dv > 0:
             dv = -dv
@@ -521,7 +571,16 @@ def apply_structures(context: dict) -> dict:
 # ── Stage 6: Apply W Coefficient ────────────────────────────────
 
 def apply_w_coefficient(context: dict) -> dict:
-    """Self-worth modulates valence: low W dampens positive, amplifies negative.
+    """Self-worth modulates valence via asymmetric exponential coupling.
+
+    Low W amplifies negative V (validation of broken state).
+    Low W suppresses positive V (rejection of contradictory energy).
+    At W=128 (neutral), no effect. At W=50, negatives amplified ~1.8x.
+
+    GPT's equation:
+      w = (W - 128) / 128  → normalized: -1 (broken) to +1 (strong)
+      V_neg' = V_neg * (1 + β * e^(-w))  → amplify negatives when w < 0
+      V_pos' = V_pos * (1 - γ * (1 - e^w))  → suppress positives when w < 0
 
     Reads: context["state_v"], context["state_w"]
     Writes: context["state_v"]
@@ -529,11 +588,21 @@ def apply_w_coefficient(context: dict) -> dict:
     state_v = context["state_v"]
     state_w = context["state_w"]
 
-    w_factor = max(0.0, state_w) / CENTER
-    if state_v > CENTER:
-        state_v = CENTER + (state_v - CENTER) * min(w_factor, 1.0)
-    elif state_v < CENTER:
-        state_v = CENTER + (state_v - CENTER) * max(1.0, 2.0 - w_factor)
+    # Normalized self-worth: -1 = broken, 0 = neutral, +1 = strong
+    w_norm = (state_w - CENTER) / CENTER
+    W_BETA = 0.5    # negative amplification strength (was 0.8, too aggressive)
+    W_GAMMA = 0.3   # positive suppression strength (was 0.6, killed slang positives)
+    W_CAP = 1.8     # max amplification
+
+    displacement = state_v - CENTER
+    if displacement < 0:
+        # Negative V: amplify when W is low (w_norm < 0 → e^(-w_norm) > 1)
+        amp = min(W_CAP, 1.0 + W_BETA * exp(-w_norm))
+        state_v = CENTER + displacement * amp
+    elif displacement > 0:
+        # Positive V: suppress when W is low (w_norm < 0 → e^(w_norm) < 1)
+        sup = max(0.0, 1.0 - W_GAMMA * (1.0 - exp(w_norm)))
+        state_v = CENTER + displacement * sup
 
     context["state_v"] = state_v
     return context

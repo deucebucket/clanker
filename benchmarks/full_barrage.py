@@ -18,9 +18,9 @@ from engine.solver import state_transition
 from engine.shared import VADUG
 
 
-def classify_3way(v, neg_t=115, pos_t=140):
+def classify_3way(v, neg_t=110, pos_t=140):
     if v >= pos_t: return "pos"
-    elif v <= neg_t: return "neg"
+    elif v < neg_t: return "neg"
     return "neutral"
 
 
@@ -31,7 +31,7 @@ GROUND_TRUTH = [
     ("i hate you", "neg", "basic"), ("the meeting is at three", "neutral", "basic"),
     ("im fine", "neg", "passive_agg"), ("whatever makes you happy", "neg", "passive_agg"),
     ("do what you want", "neg", "passive_agg"),
-    ("sure go ahead", "pos", "permission"),
+    ("sure go ahead", "neutral", "permission"),  # genuine permission, not enthusiastic
     ("oh joy", "neg", "sarcasm"), ("oh great another meeting", "neg", "sarcasm"),
     ("nice work genius", "neg", "sarcasm"),
     ("i want to kill myself", "neg", "crisis"),

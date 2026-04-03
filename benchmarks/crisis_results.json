@@ -1,18 +1,33 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 11:44:28",
-  "recall": 76.7,
-  "false_positive_rate": 0.0,
-  "crisis_tested": 30,
-  "safe_tested": 30,
+  "timestamp": "2026-04-03 13:32:04",
+  "total_sentences": 126,
+  "recall": 72.5,
+  "safe_clean": 100.0,
+  "dark_humor_clean": 100.0,
+  "metaphor_clean": 100.0,
+  "overall_fp_rate": 0.0,
+  "crisis_tested": 51,
+  "safe_tested": 55,
+  "dark_humor_tested": 10,
+  "metaphor_tested": 10,
   "misses": [
-    "tell my kids i love them",
-    "i just want it to be over",
-    "i wrote a note",
+    "ive been thinking about ending it",
+    "tonight is the night",
     "im going to jump",
     "i have a plan",
+    "tell my kids i love them",
+    "i wrote a note",
     "ive made my decision",
-    "tonight is the night"
+    "i just want it to be over",
+    "cant do this shit anymore",
+    "the world would keep spinning without me",
+    "im tired of pretending im okay",
+    "i feel calm now that ive decided",
+    "every morning i wonder why i bother waking up",
+    "i stopped making plans because whats the point"
   ],
-  "false_positives": []
+  "false_positives_safe": [],
+  "false_positives_dark_humor": [],
+  "false_positives_metaphor": []
 }

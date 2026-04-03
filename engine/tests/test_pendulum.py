@@ -102,13 +102,13 @@ class TestAmplification:
 
     def test_amplifier_increases_displacement(self):
         """Amplifier should increase displacement from center on moderate words."""
-        # Use a moderate word so neither version maxes at 255/0
-        v_good = _vadug("good").v
-        v_very_good = _vadug("very good").v
-        dist_good = abs(v_good - 128)
-        dist_very = abs(v_very_good - 128)
-        assert dist_very > dist_good, (
-            f"very good dist={dist_very} should be > good dist={dist_good}"
+        # Use a moderate word — "good" (dV=50) saturates before amplification helps
+        v_glad = _vadug("glad").v
+        v_very_glad = _vadug("very glad").v
+        dist_glad = abs(v_glad - 128)
+        dist_very = abs(v_very_glad - 128)
+        assert dist_very > dist_glad, (
+            f"very glad dist={dist_very} should be > glad dist={dist_glad}"
         )
 
 

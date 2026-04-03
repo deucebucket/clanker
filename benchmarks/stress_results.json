@@ -1,132 +1,410 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 11:44:27",
-  "overall": 82.5,
+  "timestamp": "2026-04-03 13:32:04",
+  "total_sentences": 275,
+  "overall": 76.4,
   "categories": {
     "sarcasm": {
-      "correct": 9,
-      "total": 10,
-      "pct": 90.0,
+      "correct": 21,
+      "total": 25,
+      "pct": 84.0,
       "misses": [
         [
-          "yeah that went really well",
+          "clearly this was well thought out",
           "neg",
-          "pos"
+          "neutral"
+        ],
+        [
+          "oh goody another redo",
+          "neg",
+          "neutral"
+        ],
+        [
+          "oh cool cant wait for that",
+          "neg",
+          "neutral"
+        ],
+        [
+          "what a surprise who could have seen that coming",
+          "neg",
+          "neutral"
         ]
       ]
     },
     "slang_positive": {
-      "correct": 9,
-      "total": 10,
-      "pct": 90.0,
+      "correct": 16,
+      "total": 25,
+      "pct": 64.0,
       "misses": [
         [
-          "gg ez clap",
+          "bruh im screaming",
+          "pos",
+          "neutral"
+        ],
+        [
+          "deadass that was wild",
+          "pos",
+          "neutral"
+        ],
+        [
+          "fr fr that hit different",
+          "pos",
+          "neg"
+        ],
+        [
+          "haha im literally choking",
+          "pos",
+          "neg"
+        ],
+        [
+          "bruh that was crazy good",
+          "pos",
+          "neutral"
+        ],
+        [
+          "tbh that was insane",
+          "pos",
+          "neutral"
+        ],
+        [
+          "dude that was nuts",
+          "pos",
+          "neg"
+        ],
+        [
+          "bruh im shook",
+          "pos",
+          "neg"
+        ],
+        [
+          "ngl that goes stupid hard",
           "pos",
           "neutral"
         ]
       ]
     },
     "passive_aggressive": {
-      "correct": 9,
-      "total": 10,
-      "pct": 90.0,
+      "correct": 17,
+      "total": 25,
+      "pct": 68.0,
       "misses": [
         [
-          "sure go ahead",
-          "neg",
-          "pos"
-        ]
-      ]
-    },
-    "grief": {
-      "correct": 8,
-      "total": 10,
-      "pct": 80.0,
-      "misses": [
-        [
-          "i wasnt there when she passed",
+          "no go ahead have fun without me",
           "neg",
           "neutral"
         ],
         [
-          "i found her necklace in the drawer",
+          "i said its fine",
+          "neg",
+          "neutral"
+        ],
+        [
+          "cool glad you decided without me",
+          "neg",
+          "neutral"
+        ],
+        [
+          "must be nice to not have to worry",
+          "neg",
+          "pos"
+        ],
+        [
+          "forget it it doesnt matter",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i didnt realize my opinion didnt matter",
+          "neg",
+          "neutral"
+        ],
+        [
+          "oh dont mind me ill just sit here",
+          "neg",
+          "neutral"
+        ],
+        [
+          "no worries ill just figure it out myself",
+          "neg",
+          "neutral"
+        ]
+      ]
+    },
+    "grief": {
+      "correct": 14,
+      "total": 25,
+      "pct": 56.0,
+      "misses": [
+        [
+          "the house feels empty without her",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i keep expecting him to walk through the door",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i miss her so much it physically hurts",
+          "neg",
+          "neutral"
+        ],
+        [
+          "nobody tells you grief comes in waves",
+          "neg",
+          "pos"
+        ],
+        [
+          "i cant go back to that restaurant",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i keep her voicemail just to hear her voice",
+          "neg",
+          "neutral"
+        ],
+        [
+          "the dog keeps waiting by the door for him",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i donated his clothes today",
+          "neg",
+          "neutral"
+        ],
+        [
+          "we were supposed to grow old together",
+          "neg",
+          "pos"
+        ],
+        [
+          "i hate that life just keeps going",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i see her face in our daughter every day",
           "neg",
           "neutral"
         ]
       ]
     },
     "genuine_positive": {
-      "correct": 7,
-      "total": 10,
-      "pct": 70.0,
+      "correct": 20,
+      "total": 25,
+      "pct": 80.0,
       "misses": [
         [
-          "I JUST GOT THE JOB",
+          "i passed the bar exam",
           "pos",
           "neutral"
         ],
         [
-          "my kid took their first steps today",
+          "i made it through the surgery",
           "pos",
           "neutral"
         ],
         [
-          "we closed on the house",
+          "he proposed on the beach",
+          "pos",
+          "neutral"
+        ],
+        [
+          "they accepted my application",
           "pos",
           "neg"
+        ],
+        [
+          "the test came back negative",
+          "pos",
+          "neutral"
         ]
       ]
     },
     "ambiguous": {
-      "correct": 7,
-      "total": 10,
-      "pct": 70.0,
+      "correct": 20,
+      "total": 25,
+      "pct": 80.0,
       "misses": [
         [
-          "i ran into your ex",
+          "i noticed you were gone",
           "neutral",
           "neg"
         ],
         [
-          "we should catch up sometime",
+          "they announced layoffs",
+          "neutral",
+          "neg"
+        ],
+        [
+          "i ran into someone from high school",
+          "neutral",
+          "neg"
+        ],
+        [
+          "i found something in the attic",
           "neutral",
           "pos"
         ],
         [
-          "the weather is changing",
+          "we got the results back",
           "neutral",
           "pos"
         ]
       ]
     },
     "betrayal": {
-      "correct": 7,
-      "total": 10,
-      "pct": 70.0,
+      "correct": 19,
+      "total": 25,
+      "pct": 76.0,
       "misses": [
         [
-          "she took the kids and left",
-          "neg",
-          "neutral"
-        ],
-        [
-          "she pretended to be my friend",
-          "neg",
-          "neutral"
-        ],
-        [
           "i trusted him with everything",
+          "neg",
+          "neutral"
+        ],
+        [
+          "my best friend sided with my ex",
+          "neg",
+          "neutral"
+        ],
+        [
+          "my own family testified against me",
+          "neg",
+          "neutral"
+        ],
+        [
+          "my mentor turned out to be a fraud",
+          "neg",
+          "neutral"
+        ],
+        [
+          "he recorded our private conversations",
+          "neg",
+          "pos"
+        ],
+        [
+          "she sabotaged my job interview",
           "neg",
           "neutral"
         ]
       ]
     },
     "self_worth": {
-      "correct": 10,
-      "total": 10,
-      "pct": 100.0,
-      "misses": []
+      "correct": 19,
+      "total": 25,
+      "pct": 76.0,
+      "misses": [
+        [
+          "i ruin everything i touch",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i dont matter to anyone",
+          "neg",
+          "neutral"
+        ],
+        [
+          "everyone leaves me eventually",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i wish i was someone else",
+          "neg",
+          "neutral"
+        ],
+        [
+          "im the worst person i know",
+          "neg",
+          "neutral"
+        ],
+        [
+          "i dont deserve friends",
+          "neg",
+          "neutral"
+        ]
+      ]
+    },
+    "crisis": {
+      "correct": 24,
+      "total": 25,
+      "pct": 96.0,
+      "misses": [
+        [
+          "i feel calm now that ive decided",
+          "neg",
+          "pos"
+        ]
+      ]
+    },
+    "casual_safe": {
+      "correct": 19,
+      "total": 25,
+      "pct": 76.0,
+      "misses": [
+        [
+          "did you see the game last night",
+          "neutral",
+          "neg"
+        ],
+        [
+          "im gonna grab coffee",
+          "neutral",
+          "pos"
+        ],
+        [
+          "the dishwasher is broken",
+          "neutral",
+          "neg"
+        ],
+        [
+          "im running late",
+          "neutral",
+          "neg"
+        ],
+        [
+          "did you feed the cat",
+          "neutral",
+          "pos"
+        ],
+        [
+          "parking was a nightmare",
+          "neutral",
+          "neg"
+        ]
+      ]
+    },
+    "directed_negative": {
+      "correct": 21,
+      "total": 25,
+      "pct": 84.0,
+      "misses": [
+        [
+          "nobody asked for your opinion",
+          "neg",
+          "neutral"
+        ],
+        [
+          "dont ever talk to me again",
+          "neg",
+          "neutral"
+        ],
+        [
+          "youre just like your father",
+          "neg",
+          "neutral"
+        ],
+        [
+          "you dont deserve her",
+          "neg",
+          "neutral"
+        ]
+      ]
     }
   }
 }

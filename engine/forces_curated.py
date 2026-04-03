@@ -6710,3 +6710,202 @@ _LLM_CONSENSUS_4 = {
     'wtf'                 : ( -13,  +6,  -5,  +4,  -4),
 }
 EMOTIONAL_VOCABULARY.update(_LLM_CONSENSUS_4)
+
+
+# ── V7 corrections: GAS atoms zeroed, deception/betrayal tuned ──
+_V7_FIXES = {
+    # GAS atoms: objects have no inherent emotional charge
+    'necklace':     (  0,  0,  0,  0, 10),  # object. Gravity from possession, not valence.
+    'bracelet':     (  0,  0,  0,  0,  8),
+    'ring':         (  0,  0,  0,  0, 12),  # high G (symbol of commitment)
+    'drawer':       (  0,  0,  0,  0,  0),
+    # GAS interjections: these carry zero charge, context fills them
+    'yeah':         (  0,  0,  0,  0,  0),  # pure GAS. "yeah right" = sarcasm. "yeah!" = excitement.
+    'yep':          (  0,  0,  0,  0,  0),
+    'yup':          (  0,  0,  0,  0,  0),
+    'nah':          ( -3,  0,  0,  0,  0),  # mild dismissal
+    'well':         (  0,  0,  0,  0,  0),  # filler / hedge. Not emotional.
+    'went':         (  0,  0,  0,  0,  0),  # movement verb, neutral
+    'all':          (  0,  0,  0,  0,  5),  # quantifier, not emotional. Was dV=8.
+    # Deception verbs: the act of deception IS negative
+    'pretended':    (-20,  5, -15,  0, -10),  # deception = betrayal of trust
+    'pretending':   (-18,  5, -12,  0,  -8),
+    'faked':        (-20,  5, -15,  0, -10),
+    'faking':       (-18,  5, -12,  0,  -8),
+    'lied':         (-25, 10, -20,  5, -12),
+    'lying':        (-22,  8, -18,  5, -10),
+    'deceived':     (-25, 10, -20,  5, -15),
+    'betrayed':     (-30, 15, -25, 10, -18),
+    'betrayal':     (-30, 15, -25, 10, -18),
+    # Abandonment: "left" in isolation is spatial. With people context = abandonment.
+    # Keep low dV — proximity to RELATION_REF creates the betrayal.
+    'left':         ( -5,  5,  -5,  5,  -3),  # slightly negative base
+    # GAS verbs: meaning entirely from context
+    'catch':        (  0,  5,   5,  0,  5),  # catch a ball, catch up, catch fire
+    'caught':       (  0,  5,   5,  0,  5),
+    'weather':      (  0,  0,   0,  0,  0),  # pure neutral noun
+    'changing':     (  0,  0,   0,  0,  0),  # pure neutral verb
+    'change':       (  0,  0,   0,  0,  0),
+    'changed':      (  0,  0,   0,  0,  0),
+    'messages':     (  0,  0,   0,  0,  5),  # neutral object
+    'phone':        (  0,  0,   0,  0,  5),  # neutral object
+    'should':       (  0,  0,   0,  0,  0),  # modal, no charge
+    # ── MASSIVE GAS ZEROING: common nouns/verbs with bloated dV ──
+    # These are GAS atoms. Their meaning comes from CONTEXT, not from the word itself.
+    # "pizza" is not happy. "appointment" is not happy. "alarm" is not scary.
+    # The anchor+web model: only ~111 anchor words carry real dV.
+    # Everything else gets dV from proximity to anchors at runtime.
+    #
+    # Common objects / places
+    'pizza':        (  0,  0,   0,  0,  5),
+    'laundry':      (  0,  0,   0,  0,  0),
+    'appointment':  (  0,  0,   0,  0,  5),
+    'alarm':        (  0,  5,   0,  0,  0),
+    'flight':       (  0,  0,   0,  0,  5),
+    'show':         (  0,  0,   0,  0,  5),
+    'double':       (  0,  0,   0,  0,  0),
+    'dentist':      (  0,  0,   0,  0,  5),
+    'bus':          (  0,  0,   0,  0,  0),
+    'train':        (  0,  0,   0,  0,  0),
+    'subway':       (  0,  0,   0,  0,  0),
+    'parking':      (  0,  0,   0,  0,  0),
+    'store':        (  0,  0,   0,  0,  0),
+    'line':         (  0,  0,   0,  0,  0),
+    'restaurant':   (  0,  0,   0,  0,  5),
+    'order':        (  0,  0,   0,  0,  0),  # "order pizza" ≠ emotion
+    'ordered':      (  0,  0,   0,  0,  0),
+    'grab':         (  0,  2,   0,  0,  0),
+    'airport':      (  0,  0,   0,  0,  0),
+    'hotel':        (  0,  0,   0,  0,  0),
+    'office':       (  0,  0,   0,  0,  0),
+    'movie':        (  0,  0,   0,  0,  5),
+    'class':        (  0,  0,   0,  0,  5),
+    'exam':         (  0,  5,   0,  5,  8),  # slightly high arousal/urgency
+    'test':         (  0,  5,   0,  5,  5),
+    'school':       (  0,  0,   0,  0,  5),
+    'license':      (  0,  0,   0,  0,  0),
+    'package':      (  0,  0,   0,  0,  0),
+    'porch':        (  0,  0,   0,  0,  0),
+    # Common verbs that are context-dependent
+    'see':          (  0,  0,   0,  0,  0),
+    'saw':          (  0,  0,   0,  0,  0),
+    'went':         (  0,  0,   0,  0,  0),
+    'going':        (  0,  0,   0,  0,  0),
+    'come':         (  0,  0,   0,  0,  0),
+    'coming':       (  0,  0,   0,  0,  0),
+    'pick':         (  0,  0,   0,  0,  0),
+    'picked':       (  0,  0,   0,  0,  0),
+    'called':       (  0,  0,   0,  0,  0),
+    'calling':      (  0,  0,   0,  0,  0),
+    'stopped':      (  0,  0,   0,  0,  0),
+    'told':         (  0,  0,   0,  0,  0),
+    'tell':         (  0,  0,   0,  0,  0),
+    'doing':        (  0,  0,   0,  0,  0),
+    'running':      (  0,  3,   0,  0,  0),
+    'walk':         (  0,  0,   0,  0,  0),
+    'run':          (  0,  3,   0,  0,  0),
+    'sit':          (  0,  0,   0,  0,  0),
+    'sitting':      (  0,  0,   0,  0,  0),
+    'standing':     (  0,  0,   0,  0,  0),
+    'waiting':      (  0,  0,   0,  0,  0),
+    'watching':     (  0,  0,   0,  0,  0),
+    'looking':      (  0,  0,   0,  0,  0),
+    'making':       (  0,  0,   0,  0,  0),
+    'working':      (  0,  0,   0,  0,  0),
+    # Common adjectives that are neutral
+    'interesting':  (  0,  3,   0,  0,  0),
+    'actual':       (  0,  0,   0,  0,  0),
+    'able':         (  0,  0,   5,  0,  0),
+    'active':       (  0,  3,   0,  0,  0),
+    'available':    (  0,  0,   0,  0,  0),
+    'different':    (  0,  0,   0,  0,  0),
+    'certain':      (  0,  0,   5,  0,  0),
+    'real':         (  0,  0,   0,  0,  0),
+    'right':        (  0,  0,   0,  0,  0),  # too liquid: "right" = correct OR direction
+    'wrong':        (-10,  5,  -5,  0,  -5),  # slightly negative — "wrong" has mild charge
+    # Spatial/temporal that leaked dV
+    'last':         (  0,  0,   0,  5,  0),  # "last night" ≠ "last" as finality. FINALITY role handles context.
+    'night':        (  0,  0,   0,  0,  0),
+    'morning':      (  0,  0,   0,  0,  0),
+    'day':          (  0,  0,   0,  0,  0),
+    'time':         (  0,  0,   0,  0,  0),
+    'today':        (  0,  0,   0,  0,  0),
+    'tomorrow':     (  0,  0,   0,  0,  0),
+    'week':         (  0,  0,   0,  0,  0),
+    'year':         (  0,  0,   0,  0,  0),
+    'month':        (  0,  0,   0,  0,  0),
+    'hour':         (  0,  0,   0,  0,  0),
+    'minute':       (  0,  0,   0,  0,  0),
+    'ago':          (  0,  0,   0,  0,  0),
+    'ahead':        (  8,  3,   5,  0,  0),  # "go ahead" = permission, mild positive
+    'across':       (  0,  0,   0,  0,  0),
+    'abroad':       (  0,  0,   0,  0,  0),
+    # Abstract nouns with bloated dV
+    'choice':       (  0,  3,   5,  0,  5),  # neutral — context decides
+    'ability':      (  0,  0,   5,  0,  5),
+    'abilities':    (  0,  0,   5,  0,  5),
+    'access':       (  0,  0,   0,  0,  0),
+    'account':      (  0,  0,   0,  0,  0),
+    'activity':     (  0,  0,   0,  0,  0),
+    'add':          (  0,  0,   0,  0,  0),
+    'advice':       (  0,  0,   0,  0,  5),
+    'advantage':    (  5,  0,   5,  0,  5),  # slight positive lean
+    'air':          (  0,  0,   0,  0,  0),
+    'airplane':     (  0,  0,   0,  0,  0),
+    'act':          (  0,  0,   0,  0,  0),
+    'action':       (  0,  3,   0,  0,  0),
+    'agreed':       (  3,  0,   0,  0,  0),
+    'agree':        (  3,  0,   0,  0,  0),
+    'aid':          (  5,  0,   0,  0,  5),
+    'admitted':     (  0,  0,   0,  0,  0),
+    # Life events — these have HIGH gravity but LOW valence
+    # "born" is not pos or neg. The CONTEXT determines it.
+    # "my daughter was born" = pos. "stillborn" = devastating.
+    'born':         ( 12, 10,   5,  5, 30),  # mild positive, high G. "Born" implies new life.
+    'surgery':      ( -5, 10,  -8, 15, 25),  # mild neg, high G
+    'bar':          (  0,  0,   0,  0,  5),
+    'passed':       (  5,  0,   0,  0, 10),  # mild pos. "Passed the test" = achievement context.
+    'accepted':     ( 15,  5,   8,  0, 15),  # moderate positive. "Accepted" = inclusion.
+    'proposed':     ( 15, 10,   8,  0, 25),  # moderate positive, high G.
+    'daughter':     (  0,  0,   0,  0, 30),  # person, high G
+    'son':          (  0,  0,   0,  0, 30),
+    'baby':         (  5,  5,   0,  0, 30),  # slight positive, high G
+    'paycheck':     (  8,  0,   5,  0, 10),
+    'loans':        ( -5,  0,  -5,  0,  5),
+    'birthday':     ( 10,  8,   0,  0, 20),  # positive event, high G
+    'surprise':     (  5, 15,   0,  0, 10),  # slight positive + arousal
+    'surprised':    (  5, 15,   0,  0, 10),
+    'happiest':     ( 35, 15,  10,  0, 15),  # superlative of happy
+    # Words that are emotional but were way too hot
+    'layoffs':      (-15, 10, -10, 10, 15),  # was -35
+    'doctor':       (  0,  5,  -5,  5, 10),  # was -24
+    # "cancelled" is context-dependent. Flight cancelled ≠ wedding cancelled.
+    # Keep mild negative — inconvenience baseline. Structure amplifies.
+    'cancelled':    (-12,  5,  -5,  5,  5),  # was -40
+    'cancel':       ( -8,  3,  -3,  0,  0),
+    # Common words that need force reduction
+    'forgot':       ( -8,  3,  -3,  0,  -3),  # was -25. Forgetting is a mild negative.
+    'broken':       (-12,  5,  -5,  0,  -5),  # "dishwasher is broken" ≠ "i am broken"
+    'failed':       (-12,  5, -10,  5, -8),  # "i failed my exam" = disappointment not devastation
+    'messed':       ( -8,  3,  -3,  0,  -3),
+    # "need" is too negative — "i need to do laundry" ≠ desperate need
+    'need':         ( -5,  3,  -3,  3,  5),  # was -15. Keep mild negative for unmet need.
+    'renew':        (  0,  0,   0,  0,  0),
+    'license':      (  0,  0,   0,  0,  0),
+    'dishwasher':   (  0,  0,   0,  0,  0),
+    'porch':        (  0,  0,   0,  0,  0),
+    'oil':          (  0,  0,   0,  0,  0),
+    'saturday':     (  0,  0,   0,  0,  0),
+    'channel':      (  0,  0,   0,  0,  0),
+    'power':        (  0,  3,   5,  0,  5),  # neutral with slight D lean
+    'coffee':       (  3,  0,   0,  0,  0),  # very mild positive
+    'gonna':        (  0,  0,   0,  0,  0),
+    'grab':         (  0,  2,   0,  0,  0),
+    # Missing verb forms + corrections
+    'murdered':     (-25, 12, -10,  8,  -8),
+    'murdering':    (-25, 12, -10,  8,  -8),
+    'suicidal':     (-30, 15, -20, 15, -15),
+    'mondays':      ( -5,  3,  -3,  0,   0),
+    'suspense':     (  0,  8,   0,  5,   5),  # arousal, not valence
+}
+EMOTIONAL_VOCABULARY.update(_V7_FIXES)

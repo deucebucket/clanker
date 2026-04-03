@@ -41,6 +41,12 @@ class StructureMatch:
 # These are tiny checks on actual word text, used inside detectors
 # where role classification alone is insufficient.
 
+# Strong self-reference: "I", "me", "myself", "im" — the speaker IS the subject.
+# "my" is possessive: "my alarm" = the speaker OWNS the alarm, not IS the alarm.
+# Crisis patterns require STRONG self-ref to avoid "my flight cancelled" = crisis.
+_STRONG_SELF_WORDS = frozenset({
+    "i", "me", "myself", "im", "i'm", "ive", "i've", "ill", "i'll", "id", "i'd",
+})
 _APOLOGY_WORDS = frozenset({"sorry", "apologize", "apologise", "apologies"})
 _BLANKET_WORDS = frozenset({
     "everything", "everyone", "everybody", "all", "always",
@@ -48,7 +54,8 @@ _BLANKET_WORDS = frozenset({
 })
 _SUSTAIN_VERBS = frozenset({
     "take", "do", "keep", "bear", "stand", "handle", "live",
-    "cope", "manage", "endure", "deal", "continue", "go",
+    "cope", "manage", "endure", "deal", "continue",
+    # "go" removed — too ambiguous. "didnt go off" = alarm, not exhaustion.
 })
 _EXIT_CONCEPTS = frozenset({
     "hope", "way", "escape", "point", "future", "reason",
@@ -246,6 +253,14 @@ class StructureDetector:
             self._negated_negative_compliment,
             self._recovery_small_win,
             self._ambiguity_hold,
+            self._mundane_hyperbole,
+            self._boundary_violation,
+            self._self_erasure,
+            self._divestiture,
+            self._method_fixation,
+            self._rarity_marker,
+            self._abandonment,
+            self._life_achievement,
             # self._hollow_agreement,  # REMOVED: was judging tone, not structure. Running state handles this.
         ]
         matches = []
@@ -1303,6 +1318,12 @@ class StructureDetector:
         if not pos_indices or not other_indices:
             return None
 
+        # "we/us/our" is inclusive -- speaker is part of the group.
+        # DIRECTED_POSITIVE requires the positive to be directed at SOMEONE ELSE.
+        _INCLUSIVE_PRONOUNS = {"we", "us", "our", "ours", "ourselves", "were", "weve"}
+        if all(roles[i].word in _INCLUSIVE_PRONOUNS for i in other_indices):
+            return None
+
         # Check if SELF is genuinely positive (not just directing at other)
         # "im so proud of you" = SELF feels proud (self-state word near SELF)
         # "i hope youre happy" = SELF directs hope at OTHER (not self-state)
@@ -1330,7 +1351,9 @@ class StructureDetector:
                        "worked", "helped", "saved", "fixed", "said", "told",
                        "gave", "proposed", "remembered", "graduated", "ran",
                        "walked", "danced", "sang", "wrote", "cooked",
-                       "learned", "started", "stopped", "tried", "came"}
+                       "learned", "started", "stopped", "tried", "came",
+                       "killed", "killedit", "crushed", "nailed", "aced",
+                       "smashed", "destroyed", "dominated", "owned"}
         has_action = any(r.word in action_words for r in roles)
         # Also genuine if self is thankful/proud/loving
         grateful_words = {"proud", "grateful", "thankful",
@@ -1857,6 +1880,32 @@ class StructureDetector:
         has_casual = any(r.word in _CASUAL_MARKERS for r in roles)
         if has_laughter or has_casual:
             return None
+        # MUNDANE SUBJECT CHECK: if a non-agentic, low-gravity atom is the
+        # sentence subject, the violence is hyperbole not crisis.
+        # "this homework is killing me" — homework has G=0, V=0 → suppress
+        # "i want to kill myself" — subject is SELF_REF → preserve
+        # Detection: any non-person role with |V| < 10 and |G| < 15 before the verb
+        from .vocabulary import VOCABULARY as _V
+        has_mundane_subject = False
+        for r in roles:
+            if r.role in ("SELF_REF", "OTHER_REF", "RELATION_REF"):
+                continue  # person = not mundane
+            if r.role in ("NEGATOR", "CONNECTOR", "AMPLIFIER", "COMPRESSOR",
+                         "HEDGE", "FILLER", "TEMPORAL", "REGISTER_CASUAL"):
+                continue  # operators = skip
+            # Substantive word: check its gravity and valence
+            rf = r.force or _V.get(r.word)
+            if rf:
+                if abs(rf[0]) < 10 and abs(rf[4]) < 15:
+                    has_mundane_subject = True
+                    break
+            else:
+                # Not in vocabulary at all = maximally mundane
+                if r.role == "NEUTRAL":
+                    has_mundane_subject = True
+                    break
+        if has_mundane_subject:
+            return None
         violence_idx = [i for i, r in enumerate(roles) if r.word in _VIOLENCE_WORDS]
         self_target_idx = [i for i, r in enumerate(roles)
                          if r.word in _SELF_TARGET or (r.role == "SELF_REF" and i > 0)]
@@ -1883,7 +1932,8 @@ class StructureDetector:
         """
         _EXISTENTIAL_WORDS = frozenset({
             "be", "exist", "here", "around", "alive", "living", "live",
-            "go", "continue", "stay", "carry", "anymore", "on",
+            "continue", "stay", "carry", "anymore",
+            # "go" and "on" removed — too generic. "didnt go off" = alarm, not existential.
         })
         # "might as well" = resignation phrase. Implicit negation of self-preservation.
         # "might as well jump" = "no reason not to." Treat as existential negation.
@@ -1907,9 +1957,11 @@ class StructureDetector:
                             v_weight=-40.0, d_weight=-20.0, u_weight=15.0,
                             g_weight=35.0, w_weight=-30.0,
                         )
-        has_self = any(r.role == "SELF_REF" for r in roles)
+        # Require STRONG self-ref ("i", "me", "myself") not just possessive "my"
+        # "my alarm didnt go off" ≠ existential crisis
+        has_strong_self = any(r.word in _STRONG_SELF_WORDS for r in roles)
         has_negator = any(r.role == "NEGATOR" for r in roles)
-        if not has_self or not has_negator:
+        if not has_strong_self or not has_negator:
             return None
         negator_idx = [i for i, r in enumerate(roles) if r.role == "NEGATOR"]
         exist_idx = [i for i, r in enumerate(roles) if r.word in _EXISTENTIAL_WORDS]
@@ -3138,3 +3190,424 @@ class StructureDetector:
             v_weight=0.0,  # V correction handled specially in pendulum
             d_weight=0.0, u_weight=10.0, g_weight=5.0, w_weight=0.0,
         )
+
+    # ── V8 COUNCIL detectors ─────────────────────────────────────
+
+    def _boundary_violation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Structural betrayal: molecular shape toxicity.
+
+        OTHER_REF + intimate/violation action + SELF_POSSESSIVE + RELATION_REF
+        = boundary violation. No individual atom carries the charge — it
+        emerges from the configuration.
+        """
+        from .vocabulary import VOCABULARY as _V
+
+        other_idx = [i for i, r in enumerate(roles) if r.role == "OTHER_REF"]
+        if not other_idx:
+            return None
+        _INCLUSIVE = {"we", "us", "our", "ours", "ourselves", "were", "weve"}
+        if all(roles[i].word in _INCLUSIVE for i in other_idx):
+            return None
+
+        self_idx = [i for i, r in enumerate(roles) if r.role == "SELF_REF"]
+        relation_idx = [i for i, r in enumerate(roles) if r.role == "RELATION_REF"]
+        has_self_possessive = any(roles[i].word in ("my", "mine", "our") for i in self_idx)
+
+        words = [r.word for r in roles]
+
+        # Path 1: Intimate boundary violation
+        _INTIMATE_VERBS = frozenset({
+            "sleeping", "slept", "kissing", "kissed", "seeing",
+            "texting", "sexting", "hooking", "hooked",
+        })
+        has_intimate = any(w in _INTIMATE_VERBS for w in words)
+        if has_intimate and has_self_possessive and relation_idx:
+            rel_g = 15
+            for ri in relation_idx:
+                rf = roles[ri].force or _V.get(roles[ri].word)
+                if rf:
+                    rel_g = max(rel_g, abs(rf[4]))
+            force = -(rel_g * 2.0 * 1.5)
+            return StructureMatch(
+                pattern="BOUNDARY_VIOLATION",
+                confidence=0.85,
+                matched_indices=sorted(set(other_idx + relation_idx)),
+                description="Intimate boundary violation",
+                v_weight=force, d_weight=-20.0, u_weight=15.0,
+                g_weight=25.0, w_weight=force * 0.5,
+            )
+
+        # Path 2: Theft/financial violation
+        _THEFT_VERBS = frozenset({
+            "stole", "stolen", "stealing", "drained", "draining",
+            "emptied", "took", "taking", "siphoned", "embezzled",
+        })
+        possession_idx = [i for i, r in enumerate(roles) if r.role == "POSSESSION"]
+        has_theft = any(w in _THEFT_VERBS for w in words)
+        if has_theft and (has_self_possessive or possession_idx):
+            return StructureMatch(
+                pattern="BOUNDARY_VIOLATION",
+                confidence=0.75,
+                matched_indices=sorted(set(other_idx + possession_idx)),
+                description="Theft/financial boundary violation",
+                v_weight=-30.0, d_weight=-20.0, u_weight=15.0,
+                g_weight=20.0, w_weight=-15.0,
+            )
+
+        # Path 3: Deception violation
+        _DECEPTION_MARKERS = frozenset({
+            "double", "secret", "secretly", "hidden", "fake", "faked",
+            "behind",
+        })
+        has_deception = any(w in _DECEPTION_MARKERS for w in words)
+        if has_deception:
+            return StructureMatch(
+                pattern="BOUNDARY_VIOLATION",
+                confidence=0.65,
+                matched_indices=other_idx,
+                description="Deception boundary violation",
+                v_weight=-25.0, d_weight=-15.0, u_weight=10.0,
+                g_weight=15.0, w_weight=-10.0,
+            )
+
+        return None
+
+    def _mundane_hyperbole(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Crisis-class word bonded to mundane subject = hyperbole, not crisis.
+
+        "this homework is killing me" — killing + homework (mundane) = hyperbole
+        "i want to die this traffic is insane" — die + traffic (mundane) = complaint
+
+        Computed from PROPERTIES: a word is mundane if it has low |V|, low |G|,
+        low |A|, and is not a person role. The crisis word's charge is absorbed
+        by the inert context.
+        """
+        from .vocabulary import VOCABULARY as _V
+
+        # Find crisis-class words (|dV| >= 25)
+        crisis_idx = []
+        for i, r in enumerate(roles):
+            f = r.force or _V.get(r.word)
+            if f and abs(f[0]) >= 25:
+                crisis_idx.append(i)
+
+        if not crisis_idx:
+            return None
+
+        # Find mundane NOUNS only (not verbs, not people)
+        # The key: "homework" is a mundane noun (subject/topic of complaint)
+        # "want" is a verb — NOT a mundane subject even if it has low forces
+        _PERSON_ROLES = {"SELF_REF", "OTHER_REF", "RELATION_REF"}
+        _SKIP_ROLES = {"CONNECTOR", "NEGATOR", "AMPLIFIER", "COMPRESSOR",
+                       "HEDGE", "FILLER", "TEMPORAL", "REGISTER_CASUAL",
+                       "TRANSFER", "ACQUIRE", "EMOTIONAL", "POWER",
+                       "SUBMISSION", "PULL_TOWARD", "PULL_AWAY", "PULL_RESOLVED"}
+        # Also skip common verbs that aren't nouns
+        _NON_NOUN_WORDS = frozenset({
+            # Verbs
+            "want", "need", "make", "makes", "making", "get", "got",
+            "take", "took", "give", "gave", "come", "go", "going",
+            "said", "tell", "told", "think", "know", "feel",
+            "is", "was", "are", "were", "been", "being",
+            "have", "had", "has", "do", "did", "does",
+            "can", "could", "will", "would", "should", "might",
+            "try", "stop", "end", "start", "keep", "let",
+            # Determiners / pronouns / function words
+            "the", "a", "an", "this", "that", "these", "those",
+            "it", "its", "there", "here", "some", "any",
+            "better", "worse", "more", "less", "much", "very",
+            "just", "even", "still", "already", "now", "then",
+            "off", "on", "up", "down", "out", "in", "at", "by",
+            "for", "to", "of", "with", "from", "about",
+            "so", "too", "really", "pretty", "quite",
+            "long", "short", "big", "small", "new", "old",
+        })
+        mundane_idx = []
+        for i, r in enumerate(roles):
+            if r.role in _PERSON_ROLES or r.role in _SKIP_ROLES:
+                continue
+            if r.word in _NON_NOUN_WORDS:
+                continue
+            f = r.force or _V.get(r.word)
+            if f is None:
+                # Not in vocabulary = mundane noun
+                if r.role == "NEUTRAL":
+                    mundane_idx.append(i)
+            elif abs(f[0]) <= 12 and abs(f[4]) < 15 and abs(f[1]) <= 15:
+                mundane_idx.append(i)
+
+        if not mundane_idx:
+            return None
+
+        # Check: mundane noun is structurally the TOPIC (appears as subject
+        # or as the object of a complaint). Must be near a crisis word.
+        for ci in crisis_idx:
+            for mi in mundane_idx:
+                dist = abs(ci - mi)
+                if dist <= 6:
+                    return StructureMatch(
+                        pattern="MUNDANE_HYPERBOLE",
+                        confidence=0.80,
+                        matched_indices=sorted({ci, mi}),
+                        description="Crisis word defused by mundane context",
+                        v_weight=20.0,
+                        d_weight=0.0, u_weight=0.0,
+                        g_weight=-10.0, w_weight=10.0,
+                    )
+
+        return None
+
+    def _self_erasure(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + desire verb + erasure verb = wanting to not exist."""
+        _ERASURE_VERBS = frozenset({
+            "disappear", "vanish", "fade", "dissolve",
+            "invisible", "gone", "erase", "erased",
+        })
+        _DESIRE_VERBS = frozenset({"want", "wish", "hope", "need", "wanna"})
+
+        has_strong_self = any(r.word in _STRONG_SELF_WORDS for r in roles)
+        if not has_strong_self:
+            return None
+        has_desire = any(r.word in _DESIRE_VERBS for r in roles)
+        has_erasure = any(r.word in _ERASURE_VERBS for r in roles)
+        if has_desire and has_erasure:
+            return StructureMatch(
+                pattern="SELF_ERASURE",
+                confidence=0.90,
+                matched_indices=list(range(len(roles))),
+                description="Desire to cease existing",
+                v_weight=-50.0, d_weight=-25.0, u_weight=30.0,
+                g_weight=35.0, w_weight=-40.0,
+            )
+        return None
+
+    def _divestiture(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + giving away + ALL + possessions = end-of-life preparation."""
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_transfer = any(r.role == "TRANSFER" for r in roles)
+        has_universal = any(r.word in ("all", "everything", "every") for r in roles)
+        if has_self and has_transfer and has_universal:
+            return StructureMatch(
+                pattern="DIVESTITURE",
+                confidence=0.80,
+                matched_indices=list(range(len(roles))),
+                description="Divesting all possessions",
+                v_weight=-35.0, d_weight=-20.0, u_weight=35.0,
+                g_weight=40.0, w_weight=-25.0,
+            )
+        return None
+
+    def _method_fixation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + persistence + crisis method noun = fixation on method."""
+        _METHOD_NOUNS = frozenset({
+            "pills", "pill", "gun", "pistol", "rope", "bridge",
+            "knife", "blade", "razor", "noose", "ledge", "rail",
+        })
+        _PERSISTENCE = frozenset({"keep", "keeps", "kept", "still", "always"})
+
+        has_self = any(r.word in _STRONG_SELF_WORDS for r in roles)
+        has_method = any(r.word in _METHOD_NOUNS for r in roles)
+        has_persistence = any(r.word in _PERSISTENCE for r in roles)
+        if has_self and has_method and has_persistence:
+            return StructureMatch(
+                pattern="METHOD_FIXATION",
+                confidence=0.90,
+                matched_indices=list(range(len(roles))),
+                description="Fixation on crisis method",
+                v_weight=-55.0, d_weight=-30.0, u_weight=40.0,
+                g_weight=45.0, w_weight=-35.0,
+            )
+        return None
+
+    # ── V7 detectors ──────────────────────────────────────────────
+
+    def _rarity_marker(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """RARITY word + action/event + TEMPORAL = milestone/achievement.
+
+        "my kid took their first steps today"
+        "for the first time in years"
+        "finally graduated"
+
+        Rarity markers ("first", "finally") near neutral actions create
+        urgency charge and positive V boost. The rarity IS the emotion.
+        """
+        _RARITY_WORDS = frozenset({
+            "first", "finally", "inaugural", "debut",
+        })
+        _MILESTONE_VERBS = frozenset({
+            "got", "get", "took", "take", "made", "make",
+            "passed", "graduated", "started", "began",
+            "won", "earned", "achieved", "completed",
+            "said", "walked", "stepped",
+        })
+
+        rarity_idx = [i for i, r in enumerate(roles) if r.word in _RARITY_WORDS]
+        if not rarity_idx:
+            return None
+
+        words = [r.word for r in roles]
+        has_milestone = any(w in _MILESTONE_VERBS for w in words)
+        has_temporal = any(r.role == "TEMPORAL" for r in roles)
+        has_self_or_relation = any(r.role in ("SELF_REF", "RELATION_REF") for r in roles)
+
+        # Need at least rarity + one other signal
+        signals = sum([has_milestone, has_temporal, has_self_or_relation])
+        if signals == 0:
+            return None
+
+        # "first" alone is too common. Need context.
+        conf = 0.4 + 0.15 * signals
+        v_boost = 25.0 + 10.0 * signals
+
+        return StructureMatch(
+            pattern="RARITY_MARKER",
+            confidence=min(conf, 0.95),
+            matched_indices=rarity_idx,
+            description="Rarity/milestone marker amplifies neutral action to positive",
+            v_weight=v_boost, d_weight=10.0, u_weight=15.0,
+            g_weight=10.0, w_weight=10.0,
+        )
+
+    def _abandonment(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """OTHER_REF + (TRANSFER or departure verb) + RELATION_REF/POSSESSION = abandonment.
+
+        "she took the kids and left"
+        "he packed his stuff and left"
+        "she walked out on us"
+
+        Abandonment is structural: SOMEONE + TOOK/LEFT + PEOPLE/THINGS.
+        The subject is OTHER_REF (not self), the action is departure,
+        and the objects are relationships or possessions.
+        """
+        _DEPARTURE_WORDS = frozenset({
+            "left", "leave", "leaving", "gone",
+            "packed", "disappeared", "vanished",
+        })
+
+        has_other = any(r.role == "OTHER_REF" for r in roles)
+        if not has_other:
+            return None
+
+        departure_idx = [i for i, r in enumerate(roles)
+                        if r.word in _DEPARTURE_WORDS or r.role == "TRANSFER"]
+        if not departure_idx:
+            return None
+
+        # Need something taken or someone left behind
+        has_relation = any(r.role == "RELATION_REF" for r in roles)
+        has_possession = any(r.role == "POSSESSION" for r in roles)
+        has_acquire = any(r.role == "ACQUIRE" for r in roles)  # "took"
+
+        if not (has_relation or has_possession or has_acquire):
+            return None
+
+        # More objects = worse abandonment
+        obj_count = sum([has_relation, has_possession])
+        conf = 0.65 + 0.10 * obj_count
+
+        return StructureMatch(
+            pattern="ABANDONMENT",
+            confidence=min(conf, 0.95),
+            matched_indices=departure_idx,
+            description="Someone departed with/from relationships or possessions",
+            v_weight=-25.0, d_weight=-15.0, u_weight=20.0,
+            g_weight=30.0, w_weight=-15.0,
+        )
+
+    def _life_achievement(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Life event achievement detection.
+
+        Path 1: ACQUIRE/got + high-gravity noun = "got the job", "closed on the house"
+        Path 2: Life event verbs + RELATION_REF/SELF_REF = "was born", "proposed", "adopted"
+
+        High-gravity nouns near acquire verbs = life event achievement.
+        """
+        from .vocabulary import VOCABULARY
+
+        # ── Path 2: Life event verb (no ACQUIRE needed) ──
+        _LIFE_EVENT_VERBS = frozenset({
+            "born", "proposed", "adopted", "graduated", "married",
+            "engaged", "promoted", "survived", "won",
+        })
+        event_idx = [i for i, r in enumerate(roles) if r.word in _LIFE_EVENT_VERBS]
+        if event_idx:
+            has_self = any(r.role == "SELF_REF" for r in roles)
+            has_relation = any(r.role == "RELATION_REF" for r in roles)
+            has_temporal = any(r.role == "TEMPORAL" for r in roles)
+            signals = sum([has_self, has_relation, has_temporal])
+            if signals >= 1:
+                conf = 0.55 + 0.10 * signals
+                return StructureMatch(
+                    pattern="LIFE_ACHIEVEMENT",
+                    confidence=min(conf, 0.95),
+                    matched_indices=event_idx,
+                    description=f"Life event: {roles[event_idx[0]].word}",
+                    v_weight=25.0, d_weight=10.0, u_weight=10.0,
+                    g_weight=15.0, w_weight=12.0,
+                )
+
+        # ── Path 1: ACQUIRE + high-gravity noun ──
+        # ACQUIRE verbs or compound tokens that function as acquire (closedon)
+        acquire_idx = [i for i, r in enumerate(roles)
+                      if r.role == "ACQUIRE" or r.word in ("closedon",)]
+        if not acquire_idx:
+            return None
+
+        # Find high-gravity nouns or POSSESSION near acquire verbs
+        _ACHIEVEMENT_CONTEXTS = frozenset({
+            "job", "promotion", "raise", "offer", "accepted",
+            "engaged", "married", "pregnant", "baby",
+            "house", "apartment", "car",
+            "scholarship", "degree", "diploma",
+            "citizenship", "visa", "approved",
+        })
+
+        achievement_idx = []
+        max_g = 0
+        for i, r in enumerate(roles):
+            if r.word in _ACHIEVEMENT_CONTEXTS:
+                f = r.force or VOCABULARY.get(r.word)
+                g = abs(f[4]) if f else 20
+                if g > max_g:
+                    max_g = g
+                achievement_idx.append(i)
+            elif r.role == "POSSESSION":
+                achievement_idx.append(i)
+                max_g = max(max_g, 15)
+
+        if not achievement_idx:
+            return None
+
+        # Exclude discovery/investigation contexts: "found the messages" is NOT achievement
+        _EVIDENCE_NOUNS = frozenset({
+            "messages", "texts", "emails", "photos", "pictures",
+            "receipts", "letters", "notes", "evidence", "proof",
+        })
+        words = [r.word for r in roles]
+        if any(w in _EVIDENCE_NOUNS for w in words):
+            return None
+
+        # "found" without excitement/milestone context = discovery, not achievement
+        _DISCOVERY_VERBS = frozenset({"found", "discovered", "noticed", "saw", "spotted"})
+        has_discovery = any(roles[i].word in _DISCOVERY_VERBS for i in acquire_idx)
+        has_excitement = any(r.role in ("AMPLIFIER", "TEMPORAL") for r in roles)
+        if has_discovery and not has_excitement:
+            return None
+
+        # Check proximity: acquire near achievement
+        for ai in acquire_idx:
+            for ci in achievement_idx:
+                if abs(ai - ci) <= 5:
+                    has_self = any(r.role == "SELF_REF" for r in roles)
+                    has_temporal = any(r.role == "TEMPORAL" for r in roles)
+                    conf = 0.55 + 0.10 * has_self + 0.10 * has_temporal
+                    v_boost = 20.0 + max_g * 0.3
+                    return StructureMatch(
+                        pattern="LIFE_ACHIEVEMENT",
+                        confidence=min(conf, 0.95),
+                        matched_indices=sorted(set([ai, ci])),
+                        description="Acquired high-gravity life event",
+                        v_weight=v_boost, d_weight=15.0, u_weight=10.0,
+                        g_weight=15.0, w_weight=15.0,
+                    )
+        return None

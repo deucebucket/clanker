@@ -212,6 +212,14 @@ def classify_word(word: str, position: int, words: List[str],
 
             return role_name
 
+    # "end" is liquid — "end it" = finality, "end of the table" = spatial
+    # Only classify as FINALITY when followed by pronoun/blanket
+    _END_FINALITY_FOLLOWERS = {"it", "this", "everything", "things", "all", "myself"}
+    if w == "end" and position + 1 < len(words):
+        next_w = _clean(words[position + 1])
+        if next_w in _END_FINALITY_FOLLOWERS:
+            return "FINALITY"
+
     # Check if it's an emotional vocabulary word with significant V-force
     if w in VOCABULARY:
         force = VOCABULARY[w]
