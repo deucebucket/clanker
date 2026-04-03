@@ -115,6 +115,58 @@ _DEATH_SLANG_WORDS = frozenset({
     "dead", "dying", "died", "death", "kill", "killed", "killing",
 })
 
+# ── Syntactic resolver word sets ───────────────────────────────
+# For CONTRADICTION_RESOLVE: adverb+adjective pairs where head governs.
+_INTENSIFYING_ADVERBS = frozenset({
+    "painfully", "terribly", "awfully", "horribly", "dreadfully",
+    "frighteningly", "sickeningly", "disgustingly", "devastatingly",
+    "heartbreakingly", "brutally", "cruelly", "wickedly", "dangerously",
+    "absurdly", "ridiculously", "insanely",
+})
+_POSITIVE_ADJECTIVE_HEADS = frozenset({
+    "beautiful", "gorgeous", "stunning", "brilliant", "amazing",
+    "wonderful", "perfect", "good", "great", "kind", "talented",
+    "honest", "brave", "sweet", "funny", "smart", "clever",
+    "true", "real", "genuine", "effective", "powerful",
+})
+_NEGATIVE_NOUN_HEADS = frozenset({
+    "revenge", "punishment", "torture", "destruction", "death",
+    "betrayal", "murder", "suffering", "agony", "misery",
+    "cruelty", "hatred", "violence", "lie", "lies", "deceit",
+})
+_NEGATIVE_MAIN_VERBS = frozenset({
+    "hate", "hated", "hates", "hating",
+    "despise", "despised", "despises", "despising",
+    "regret", "regretted", "regrets", "regretting",
+    "resent", "resented", "resents", "resenting",
+    "loathe", "loathed", "loathes", "loathing",
+    "dread", "dreaded", "dreads", "dreading",
+})
+_POSITIVE_COMPLEMENT_PHRASES = [
+    ("so", "good"), ("so", "well"), ("so", "much"),
+    ("so", "right"), ("too", "good"), ("too", "well"),
+]
+
+# ── Pragmatic convention word sets ─────────────────────────────
+_COMPLIMENT_FRAMES = frozenset({"without", "reason", "thanks"})
+_GRATITUDE_VERBS = frozenset({
+    "done", "made", "survived", "finished", "accomplished", "gave", "give",
+})
+_MUNDANE_WINS = {
+    "got out of bed", "ate a full meal", "went outside",
+    "took a shower", "called someone", "smiled",
+    "slept through the night", "brushed my teeth",
+    "ate something", "left the house", "got dressed",
+    "made my bed", "cooked a meal", "went for a walk",
+    "drank water", "cleaned my room", "opened the curtains",
+}
+_TEMPORAL_RARITY = frozenset({"today", "finally", "actually", "first", "time"})
+_SLEEP_WORDS = frozenset({"sleep", "slept", "sleeping", "hours"})
+_SOCIAL_EVENTS = frozenset({
+    "birthday", "party", "wedding", "funeral", "graduation",
+    "reunion", "dinner", "celebration", "ceremony",
+})
+
 # ── Contradiction-based sarcasm word sets ────────────────────────
 # These power the contradiction sarcasm detector. Sarcasm = surface
 # polarity contradicts structural context. Not pattern-matching on
@@ -189,6 +241,10 @@ class StructureDetector:
             self._passive_resignation,
             self._atmospheric_grief,
             self._recovery_milestone,
+            self._contradiction_resolve,
+            self._numbers_context,
+            self._negated_negative_compliment,
+            self._recovery_small_win,
             self._ambiguity_hold,
             # self._hollow_agreement,  # REMOVED: was judging tone, not structure. Running state handles this.
         ]
@@ -2665,6 +2721,346 @@ class StructureDetector:
             description=f"Recovery milestone: {duration_days} days",
             v_weight=v_boost, d_weight=15.0, u_weight=0.0,
             g_weight=-10.0, w_weight=25.0,
+        )
+
+    # ── Syntactic resolver ─────────────────────────────────────
+
+    def _contradiction_resolve(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Head word governs polarity when positive and negative coexist.
+
+        "painfully beautiful" -> adjective head "beautiful" is positive.
+        "i hate how much i love you" -> main verb "hate" dominates.
+        "sweet revenge" -> noun "revenge" is negative, "sweet" modifies.
+        "it hurts so good" -> "so good" qualifies the verb, result positive.
+
+        Rule: In [adverb + adjective], the ADJECTIVE governs polarity.
+        Rule: In [adjective + noun], the NOUN governs polarity.
+        Rule: In [verb + clause], the MAIN VERB governs unless a
+              qualifying complement ("so good") overrides.
+        """
+        from .vocabulary import VOCABULARY
+
+        words = [r.word for r in roles]
+        words_lower = [w.lower() for w in words]
+        n = len(words_lower)
+
+        if n < 2:
+            return None
+
+        # Check structural triggers before doing full scan
+        has_adverb_pattern = any(w in _INTENSIFYING_ADVERBS for w in words_lower)
+        has_noun_pattern = any(w in _NEGATIVE_NOUN_HEADS for w in words_lower)
+        has_neg_verb = any(w in _NEGATIVE_MAIN_VERBS for w in words_lower)
+        has_complement = False
+        for phrase in _POSITIVE_COMPLEMENT_PHRASES:
+            plen = len(phrase)
+            for i in range(n - plen + 1):
+                if all(words_lower[i + k] == phrase[k] for k in range(plen)):
+                    has_complement = True
+                    break
+            if has_complement:
+                break
+
+        if not (has_adverb_pattern or has_noun_pattern or has_neg_verb or has_complement):
+            return None
+
+        # Collect positive and negative word positions
+        pos_indices = []
+        neg_indices = []
+        for i, r in enumerate(roles):
+            f = r.force or VOCABULARY.get(r.word)
+            if f:
+                if f[0] > 10:
+                    pos_indices.append(i)
+                elif f[0] < -10:
+                    neg_indices.append(i)
+
+        # ── Pattern 1: Intensifying adverb + positive adjective ──
+        # "painfully beautiful" -> positive, boosted
+        for i in range(n - 1):
+            if words_lower[i] in _INTENSIFYING_ADVERBS:
+                for j in range(i + 1, min(i + 3, n)):
+                    if words_lower[j] in _POSITIVE_ADJECTIVE_HEADS:
+                        f = VOCABULARY.get(words_lower[j])
+                        v_boost = f[0] * 1.3 if f else 35.0
+                        return StructureMatch(
+                            pattern="CONTRADICTION_RESOLVE",
+                            confidence=0.90,
+                            matched_indices=[i, j],
+                            description=f"Head adjective '{words_lower[j]}' governs: adverb intensifies",
+                            v_weight=v_boost,
+                            d_weight=5.0, u_weight=0.0,
+                            g_weight=0.0, w_weight=0.0,
+                        )
+
+        # ── Pattern 2: Positive adjective + negative noun head ──
+        # "sweet revenge" -> negative noun governs
+        for i in range(n - 1):
+            f_i = VOCABULARY.get(words_lower[i])
+            if f_i and f_i[0] > 10:
+                for j in range(i + 1, min(i + 3, n)):
+                    if words_lower[j] in _NEGATIVE_NOUN_HEADS:
+                        f_j = VOCABULARY.get(words_lower[j])
+                        v_push = min(f_j[0] * 1.2, -15.0) if f_j else -25.0
+                        return StructureMatch(
+                            pattern="CONTRADICTION_RESOLVE",
+                            confidence=0.85,
+                            matched_indices=[i, j],
+                            description=f"Head noun '{words_lower[j]}' governs: adjective modifies",
+                            v_weight=v_push,
+                            d_weight=5.0, u_weight=5.0,
+                            g_weight=0.0, w_weight=0.0,
+                        )
+
+        # ── Pattern 3: Verb + positive qualifying complement ──
+        # "it hurts so good" -> "so good" overrides verb
+        for phrase in _POSITIVE_COMPLEMENT_PHRASES:
+            plen = len(phrase)
+            for i in range(n - plen + 1):
+                if all(words_lower[i + k] == phrase[k] for k in range(plen)):
+                    # Found complement -- check for preceding negative verb
+                    has_preceding_neg = any(
+                        (r.force or VOCABULARY.get(r.word) or (0,))[0] < -10
+                        for r in roles[:i]
+                    )
+                    if has_preceding_neg:
+                        return StructureMatch(
+                            pattern="CONTRADICTION_RESOLVE",
+                            confidence=0.85,
+                            matched_indices=list(range(i, i + plen)),
+                            description=f"Qualifying complement '{' '.join(phrase)}' overrides verb",
+                            v_weight=30.0,
+                            d_weight=5.0, u_weight=0.0,
+                            g_weight=0.0, w_weight=0.0,
+                        )
+
+        # ── Pattern 4: Negative main verb + clause with positive ──
+        # "i hate how much i love you" -> hate dominates
+        for i, r in enumerate(roles):
+            if r.word in _NEGATIVE_MAIN_VERBS:
+                has_later_positive = any(j > i and j in pos_indices for j in pos_indices)
+                if has_later_positive:
+                    f = r.force or VOCABULARY.get(r.word)
+                    v_push = f[0] * 1.2 if f else -35.0
+                    matched = [i] + [j for j in pos_indices if j > i]
+                    return StructureMatch(
+                        pattern="CONTRADICTION_RESOLVE",
+                        confidence=0.85,
+                        matched_indices=matched,
+                        description=f"Main verb '{r.word}' governs polarity over clause",
+                        v_weight=v_push,
+                        d_weight=5.0, u_weight=5.0,
+                        g_weight=0.0, w_weight=0.0,
+                    )
+
+        return None
+
+    # ── Pragmatic convention detectors ─────────────────────────
+
+    def _numbers_context(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Numbers that deviate from human norms create emotional signal.
+
+        sleep < 5 hours -> negative
+        "only one" + social event -> negative (isolation)
+        """
+        words = [r.word for r in roles]
+        words_lower = [w.lower() for w in words]
+        n = len(words_lower)
+
+        # ── Sleep deprivation: number < 5 near sleep words ──
+        for i, w in enumerate(words_lower):
+            if w.isdigit():
+                num = int(w)
+                if num <= 4:
+                    window = words_lower[max(0, i - 3): min(n, i + 4)]
+                    if any(sw in _SLEEP_WORDS for sw in window):
+                        return StructureMatch(
+                            pattern="NUMBERS_CONTEXT",
+                            confidence=0.80,
+                            matched_indices=[i],
+                            description=f"Sleep deprivation: {num} hours",
+                            v_weight=-20.0, d_weight=-10.0, u_weight=10.0,
+                            g_weight=5.0, w_weight=-5.0,
+                        )
+
+        # ── "only one/no one" + social event = isolation ──
+        has_social = any(w in _SOCIAL_EVENTS for w in words_lower)
+        if has_social:
+            for i in range(n - 1):
+                if words_lower[i] == "only":
+                    next_w = words_lower[i + 1]
+                    if next_w in ("one", "1", "two", "2", "me"):
+                        social_idx = [j for j, w in enumerate(words_lower)
+                                     if w in _SOCIAL_EVENTS]
+                        return StructureMatch(
+                            pattern="NUMBERS_CONTEXT",
+                            confidence=0.75,
+                            matched_indices=[i, i + 1] + social_idx,
+                            description="Social isolation: 'only one' at social event",
+                            v_weight=-20.0, d_weight=-10.0, u_weight=0.0,
+                            g_weight=10.0, w_weight=-10.0,
+                        )
+            for i in range(n - 1):
+                if words_lower[i] == "no" and words_lower[i + 1] == "one":
+                    social_idx = [j for j, w in enumerate(words_lower)
+                                 if w in _SOCIAL_EVENTS]
+                    return StructureMatch(
+                        pattern="NUMBERS_CONTEXT",
+                        confidence=0.80,
+                        matched_indices=[i, i + 1] + social_idx,
+                        description="Social isolation: 'no one' at social event",
+                        v_weight=-25.0, d_weight=-15.0, u_weight=5.0,
+                        g_weight=10.0, w_weight=-15.0,
+                    )
+
+        return None
+
+    def _negated_negative_compliment(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """NEGATOR + negative word + OTHER_REF = positive compliment.
+
+        "I couldn't have done it without you" = positive
+        "You're the reason I didn't give up" = positive
+        "I wouldn't be here without you" = positive
+        """
+        words = [r.word for r in roles]
+        words_lower = [w.lower() for w in words]
+        n = len(words_lower)
+
+        # Need: negator present (role-based OR common contractions)
+        neg_indices = [r.position for r in roles if r.role == "NEGATOR"]
+        # Also check for contractions not in NEGATOR set
+        _EXTRA_NEGATORS = frozenset({
+            "couldnt", "couldn't", "wouldnt", "wouldn't",
+            "cant", "can't", "wont", "won't",
+        })
+        for i, w in enumerate(words_lower):
+            if w in _EXTRA_NEGATORS and i not in neg_indices:
+                neg_indices.append(i)
+        if not neg_indices:
+            return None
+
+        # Need: OTHER_REF or "you" present
+        other_indices = [r.position for r in roles
+                        if r.role == "OTHER_REF" or r.word in ("you", "your", "yours")]
+        if not other_indices:
+            return None
+
+        # Check for compliment framing
+        has_without_you = False
+        for i in range(n - 1):
+            if words_lower[i] == "without" and words_lower[i + 1] in ("you", "your"):
+                has_without_you = True
+                break
+
+        has_reason = "reason" in words_lower
+        has_thanks = any(w in ("thanks", "thank", "grateful", "thankful")
+                        for w in words_lower)
+        has_gratitude_verb = any(w in _GRATITUDE_VERBS for w in words_lower)
+
+        if has_without_you:
+            matched = neg_indices + other_indices
+            return StructureMatch(
+                pattern="NEGATED_NEGATIVE_COMPLIMENT",
+                confidence=0.90,
+                matched_indices=sorted(set(matched)),
+                description="Negated negative = positive compliment ('without you')",
+                v_weight=35.0, d_weight=5.0, u_weight=0.0,
+                g_weight=-5.0, w_weight=10.0,
+            )
+
+        if has_reason and neg_indices:
+            matched = neg_indices + other_indices
+            for ni in neg_indices:
+                _NEGATED_VERBS = frozenset({
+                    "give", "gave", "fail", "failed", "quit",
+                    "stop", "stopped", "fall", "fell",
+                }) | _GRATITUDE_VERBS
+                nearby_verbs = [r for r in roles
+                               if abs(r.position - ni) <= 3
+                               and r.word in _NEGATED_VERBS]
+                if nearby_verbs:
+                    return StructureMatch(
+                        pattern="NEGATED_NEGATIVE_COMPLIMENT",
+                        confidence=0.85,
+                        matched_indices=sorted(set(matched)),
+                        description="Negated negative = positive compliment ('reason I didn't')",
+                        v_weight=35.0, d_weight=5.0, u_weight=0.0,
+                        g_weight=-5.0, w_weight=10.0,
+                    )
+
+        if has_thanks and neg_indices:
+            matched = neg_indices + other_indices
+            return StructureMatch(
+                pattern="NEGATED_NEGATIVE_COMPLIMENT",
+                confidence=0.80,
+                matched_indices=sorted(set(matched)),
+                description="Negated negative = positive compliment (gratitude frame)",
+                v_weight=35.0, d_weight=5.0, u_weight=0.0,
+                g_weight=-5.0, w_weight=10.0,
+            )
+
+        if has_gratitude_verb:
+            for ni in neg_indices:
+                for oi in other_indices:
+                    if abs(ni - oi) <= 6:
+                        return StructureMatch(
+                            pattern="NEGATED_NEGATIVE_COMPLIMENT",
+                            confidence=0.75,
+                            matched_indices=sorted({ni, oi}),
+                            description="Negated negative near other-ref = possible compliment",
+                            v_weight=30.0, d_weight=5.0, u_weight=0.0,
+                            g_weight=-5.0, w_weight=10.0,
+                        )
+
+        return None
+
+    def _recovery_small_win(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Mundane action + temporal rarity marker = recovery milestone.
+
+        "I got out of bed today" = positive milestone for someone struggling
+        "I ate a full meal" = recovery signal
+        "I finally took a shower" = small win
+        """
+        words = [r.word for r in roles]
+        text_lower = " ".join(w.lower() for w in words)
+
+        matched_win = None
+        for win in _MUNDANE_WINS:
+            if win in text_lower:
+                matched_win = win
+                break
+
+        if matched_win is None:
+            return None
+
+        words_lower = [w.lower() for w in words]
+        has_temporal = any(w in _TEMPORAL_RARITY for w in words_lower)
+        has_first_time = "for the first time" in text_lower
+        has_self = any(r.role == "SELF_REF" for r in roles)
+
+        if not has_temporal and not has_first_time and not has_self:
+            return None
+
+        conf = 0.70
+        if has_temporal or has_first_time:
+            conf = 0.85
+        if has_self:
+            conf = min(conf + 0.10, 0.95)
+
+        win_words = matched_win.split()
+        matched_indices = []
+        for i in range(len(words_lower) - len(win_words) + 1):
+            if all(words_lower[i + k] == win_words[k] for k in range(len(win_words))):
+                matched_indices = list(range(i, i + len(win_words)))
+                break
+
+        return StructureMatch(
+            pattern="RECOVERY_SMALL_WIN",
+            confidence=conf,
+            matched_indices=matched_indices,
+            description=f"Recovery small win: '{matched_win}'",
+            v_weight=25.0, d_weight=10.0, u_weight=0.0,
+            g_weight=-5.0, w_weight=15.0,
         )
 
     # ── Ambiguity hold pattern ──────────────────────────────────
