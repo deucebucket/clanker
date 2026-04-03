@@ -1,13 +1,19 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 11:04:09",
+  "timestamp": "2026-04-03 11:18:05",
   "overall": 81.2,
   "categories": {
     "sarcasm": {
-      "correct": 10,
+      "correct": 9,
       "total": 10,
-      "pct": 100.0,
-      "misses": []
+      "pct": 90.0,
+      "misses": [
+        [
+          "yeah that went really well",
+          "neg",
+          "pos"
+        ]
+      ]
     },
     "slang_positive": {
       "correct": 8,
@@ -56,9 +62,9 @@
       ]
     },
     "genuine_positive": {
-      "correct": 6,
+      "correct": 7,
       "total": 10,
-      "pct": 60.0,
+      "pct": 70.0,
       "misses": [
         [
           "I JUST GOT THE JOB",
@@ -67,11 +73,6 @@
         ],
         [
           "my kid took their first steps today",
-          "pos",
-          "neutral"
-        ],
-        [
-          "clean for 6 months now",
           "pos",
           "neutral"
         ],

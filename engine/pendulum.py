@@ -445,9 +445,34 @@ def apply_structures(context: dict) -> dict:
 
     for sm in structures:
         if sm.pattern == "SLANG_DEATH_HUMOR":
-            distance = CENTER - state_v
-            state_v += distance * 1.2 * sm.confidence
+            # Nullify death word's negative dV and add back a positive-scaled version.
+            # The death word is NOT functioning as death -- it's an intensifier.
+            # V_corrected = V_raw - dV("dead") + 0.7 * abs(dV("dead"))
+            death_dv_total = 0
+            for idx in sm.matched_indices:
+                if idx < len(roles):
+                    w = roles[idx].word
+                    vf = VOCABULARY.get(w)
+                    if vf and vf[0] < -10:  # negative death word
+                        death_dv_total += vf[0]
+            if death_dv_total < 0:
+                # Subtract the death word's accumulated negative push and add positive version.
+                # Use 1.2x on the nullification to account for momentum/push amplification
+                # during accumulation, and 0.7x for the positive reinterpretation.
+                correction = 1.2 * abs(death_dv_total) * FORCE_SCALE + 0.7 * abs(death_dv_total) * FORCE_SCALE
+                state_v += correction * sm.confidence
+            else:
+                # Fallback: pull toward center
+                distance = CENTER - state_v
+                state_v += distance * 1.2 * sm.confidence
             state_w = max(state_w, CENTER)
+        elif sm.pattern == "AMBIGUITY_HOLD":
+            # Extreme V contradiction with no disambiguator: pull V toward W (neutral baseline).
+            # V_final = V + (W - V) * 0.85
+            state_v = state_v + (state_w - state_v) * 0.85 * sm.confidence
+        elif sm.pattern == "RECOVERY_MILESTONE":
+            # Recovery milestone: apply v_weight as direct positive boost
+            state_v += sm.v_weight * sm.confidence * FORCE_SCALE
         elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)

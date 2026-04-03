@@ -14,6 +14,7 @@ not vocabulary dictionaries.
 """
 
 from dataclasses import dataclass, field
+from math import log
 from typing import List, Optional
 
 from .word_classifier import WordRole, classify_sentence
@@ -187,6 +188,8 @@ class StructureDetector:
             self._rhetorical_hopelessness,
             self._passive_resignation,
             self._atmospheric_grief,
+            self._recovery_milestone,
+            self._ambiguity_hold,
             # self._hollow_agreement,  # REMOVED: was judging tone, not structure. Running state handles this.
         ]
         matches = []
@@ -811,6 +814,19 @@ class StructureDetector:
         elif n <= 7:
             brevity = 0.15
 
+        # ── Casualness gate ─────────────────────────────────────
+        # Flat casual sentences with no actual contrast are NOT sarcastic.
+        # "yeah that sounds ok" is casual agreement, not sarcasm.
+        _CASUAL_TOKENS = frozenset({
+            "yeah", "ok", "okay", "sounds", "sure", "fine",
+            "alright", "guess", "kinda", "sorta", "whatever",
+        })
+        _SARCASM_OPENERS = frozenset({
+            "oh", "clearly", "obviously", "wow", "gee", "golly",
+        })
+        casualness = sum(15 for r in roles if r.word in _CASUAL_TOKENS)
+        has_sarcasm_opener = any(r.word in _SARCASM_OPENERS for r in roles)
+
         # ── Combine features ────────────────────────────────────
         # Base score = strongest single feature. Additional features boost.
         # This avoids diluting strong signals through averaging.
@@ -827,6 +843,24 @@ class StructureDetector:
         boost = n_extra * 0.1  # each extra feature adds 0.1
         # Brevity modulates the final score
         score = min(0.95, base + boost + brevity * 0.15)
+
+        # Casualness suppression: if casualness dominates the contrast signal,
+        # and there's no sarcasm opener or negative words, suppress.
+        # Exception: dismissive assent ("yeah right"), "what a" pattern,
+        # and mock praise are structurally sarcastic regardless of casualness.
+        has_structural_sarcasm = (dismissive_assent > 0.5 or mock_praise > 0.5
+                                 or has_what_a)
+        contrast_strength = score * 100  # scale to comparable units
+        if (casualness > contrast_strength and not has_sarcasm_opener
+                and not has_structural_sarcasm):
+            return None
+        # No negative words AND no sarcasm opener = near-zero sarcasm
+        # Exception: structural sarcasm patterns (dismissive assent, mock praise,
+        # "what a") survive because the STRUCTURE is the contradiction.
+        if (not has_negative_context and not has_sarcasm_opener
+                and not has_ironic_title and not has_structural_sarcasm):
+            if mock_praise < 0.5 and whiplash < 0.3:
+                return None
 
         # Threshold: need meaningful contradiction
         if score < 0.15:
@@ -1845,6 +1879,10 @@ class StructureDetector:
 
         "nobody would miss me" "no one cares about me"
         "the world doesnt need me" "nobody would even notice"
+
+        When the negator IS a null-subject word (nobody, nothing, no one),
+        SELF_REF is implied -- the speaker is the one not being noticed/missed.
+        "even" strengthens nullity (opposite of its usual dampening role).
         """
         _SOCIAL_VERBS = frozenset({
             "miss", "care", "cares", "need", "needs", "want", "wants",
@@ -1855,21 +1893,39 @@ class StructureDetector:
             "respect", "respects", "listen", "listens",
             "help", "helps", "support", "supports",
         })
+        # Null-subject words: when these ARE the negator, SELF_REF is implied.
+        # "nobody would notice" = nobody would notice [me].
+        _NULL_SUBJECTS = frozenset({"nobody", "noone", "nothing"})
+        # Hedge amplifiers that STRENGTHEN nullity (opposite of usual dampening)
+        _NULLITY_AMPS = frozenset({"even", "ever", "really", "truly"})
+
         has_self = any(r.role == "SELF_REF" for r in roles)
         has_negator = any(r.role == "NEGATOR" for r in roles)
-        if not has_self or not has_negator:
+        has_null_subject = any(r.word in _NULL_SUBJECTS for r in roles)
+
+        # Fire if: (SELF_REF + NEGATOR) OR (null-subject word as negator)
+        if not has_negator:
             return None
+        if not has_self and not has_null_subject:
+            return None
+
         social_idx = [i for i, r in enumerate(roles) if r.word in _SOCIAL_VERBS]
         if not social_idx:
             return None
         negator_idx = [i for i, r in enumerate(roles) if r.role == "NEGATOR"]
         self_idx = [i for i, r in enumerate(roles) if r.role == "SELF_REF"]
+
+        # "even" amplifies nullity strength
+        has_amp = any(r.word in _NULLITY_AMPS for r in roles)
+        amp_boost = 0.10 if has_amp else 0.0
+
         for ni in negator_idx:
             for si in social_idx:
                 if abs(ni - si) <= 5:
+                    conf = min(0.95, 0.85 + amp_boost)
                     return StructureMatch(
                         pattern="SOCIAL_NULLITY",
-                        confidence=0.85,
+                        confidence=conf,
                         matched_indices=sorted({ni, si} | set(self_idx[:1])),
                         description="Social erasure: nobody + social verb + self",
                         v_weight=-40.0, d_weight=-20.0, u_weight=15.0,
@@ -2532,3 +2588,157 @@ class StructureDetector:
                 )
 
         return None
+
+    # ── Recovery milestone pattern ──────────────────────────────
+
+    def _recovery_milestone(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """RECOVERY_TOKEN + duration + ongoing marker = recovery milestone.
+
+        "clean for 6 months now" "sober for 3 years"
+        "free for two weeks and counting" "clear for 90 days now"
+
+        The recovery word alone is mildly positive. The DURATION is what
+        makes this a milestone worth celebrating. V_boost scales with log
+        of duration in days.
+        """
+        _RECOVERY_TOKENS = frozenset({
+            "clean", "sober", "free", "clear", "recovered",
+            "recovering", "healing", "abstinent",
+        })
+        _TIME_UNITS = {
+            "day": 1, "days": 1,
+            "week": 7, "weeks": 7,
+            "month": 30, "months": 30,
+            "year": 365, "years": 365,
+        }
+        _NUMBER_WORDS = {
+            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+            "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+            "eleven": 11, "twelve": 12, "thirteen": 13, "twenty": 20,
+            "thirty": 30, "sixty": 60, "ninety": 90, "hundred": 100,
+        }
+        _ONGOING_MARKERS = frozenset({
+            "now", "today", "still", "counting", "strong",
+        })
+
+        recovery_idx = [i for i, r in enumerate(roles) if r.word in _RECOVERY_TOKENS]
+        if not recovery_idx:
+            return None
+
+        words = [r.word for r in roles]
+
+        # Find a number near a time unit
+        duration_days = 0
+        number_val = 0
+        time_idx = -1
+        for i, r in enumerate(roles):
+            # Check for digit
+            if r.word.isdigit():
+                number_val = int(r.word)
+            elif r.word in _NUMBER_WORDS:
+                number_val = _NUMBER_WORDS[r.word]
+            # Check for time unit following a number
+            if r.word in _TIME_UNITS and number_val > 0:
+                duration_days = number_val * _TIME_UNITS[r.word]
+                time_idx = i
+                break
+
+        if duration_days == 0:
+            return None
+
+        # Check: recovery token should be before the duration
+        if not any(ri < time_idx for ri in recovery_idx):
+            return None
+
+        # Ongoing marker boosts confidence
+        has_ongoing = any(r.word in _ONGOING_MARKERS for r in roles)
+        conf = 0.90 if has_ongoing else 0.80
+
+        # V_boost = 40 + 8 * log(1 + duration_in_days)
+        v_boost = 40.0 + 8.0 * log(1 + duration_days)
+
+        matched = sorted(set(recovery_idx + [time_idx]))
+        return StructureMatch(
+            pattern="RECOVERY_MILESTONE",
+            confidence=conf,
+            matched_indices=matched,
+            description=f"Recovery milestone: {duration_days} days",
+            v_weight=v_boost, d_weight=15.0, u_weight=0.0,
+            g_weight=-10.0, w_weight=25.0,
+        )
+
+    # ── Ambiguity hold pattern ──────────────────────────────────
+
+    def _ambiguity_hold(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Extreme V contradiction with no disambiguator = ambiguous intent.
+
+        "death is awesome im going to jump" -- very positive + very negative
+        words with no context to resolve. Could be suicidal or could be
+        about a video game. Without disambiguators (lol, haha, game, bungee,
+        bridge, help, please), pull V toward neutral and flag ambiguous.
+
+        This is NOT sarcasm detection. This catches genuinely unresolvable
+        V contradictions where the engine should refuse to commit.
+        """
+        from .vocabulary import VOCABULARY
+
+        # Collect per-word V forces
+        v_forces = []
+        for r in roles:
+            f = r.force or VOCABULARY.get(r.word)
+            if f and abs(f[0]) > 5:
+                v_forces.append(f[0])
+
+        if len(v_forces) < 2:
+            return None
+
+        # Compute variance: need both strong positive AND strong negative
+        max_pos = max((v for v in v_forces if v > 0), default=0)
+        max_neg = min((v for v in v_forces if v < 0), default=0)
+        variance = max_pos - max_neg  # e.g., 30 - (-35) = 65
+
+        THRESHOLD = 50  # need significant contradiction
+        if variance < THRESHOLD:
+            return None
+
+        # Check for disambiguators that resolve the contradiction
+        _HUMOR_DISAMBIG = frozenset({
+            "lol", "lmao", "haha", "hahaha", "rofl", "lmfao",
+            "heh", "hehe", "jk", "kidding", "joking",
+        })
+        _CONTEXT_DISAMBIG = frozenset({
+            "game", "games", "gaming", "bungee", "skydiving",
+            "roller", "coaster", "movie", "film", "show",
+            "song", "music", "book", "story", "video",
+        })
+        _CRISIS_DISAMBIG = frozenset({
+            "help", "please", "cant", "dont", "stop",
+            "anymore", "tired", "exhausted", "done",
+        })
+
+        words = [r.word for r in roles]
+        has_humor = any(w in _HUMOR_DISAMBIG for w in words)
+        has_context = any(w in _CONTEXT_DISAMBIG for w in words)
+        has_crisis = any(w in _CRISIS_DISAMBIG for w in words)
+
+        if has_humor or has_context or has_crisis:
+            return None
+
+        # Also don't fire if SLANG_DEATH_HUMOR or SELF_HARM_INTENT already detected
+        # (those patterns already resolved the ambiguity)
+        # This is checked implicitly: both those patterns use disambiguators.
+
+        # Don't fire if there's a SELF_REF -- that's more likely personal/crisis
+        has_self = any(r.role == "SELF_REF" for r in roles)
+
+        conf = 0.85
+        # Pull V toward W (neutral baseline)
+        # The actual V correction happens in pendulum.py apply_structures
+        return StructureMatch(
+            pattern="AMBIGUITY_HOLD",
+            confidence=conf,
+            matched_indices=list(range(len(roles))),
+            description=f"Extreme V contradiction (variance={variance}) with no disambiguator",
+            v_weight=0.0,  # V correction handled specially in pendulum
+            d_weight=0.0, u_weight=10.0, g_weight=5.0, w_weight=0.0,
+        )

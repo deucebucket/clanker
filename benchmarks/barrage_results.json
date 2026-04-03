@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-04-03 11:18:49",
+  "vocabulary": 4428,
+  "ground_truth": {
+    "correct": 41,
+    "total": 41,
+    "pct": 100.0
+  },
+  "failures": [],
+  "throughput": {
+    "Twitch": {
+      "sentences": 43723,
+      "seconds": 5.69,
+      "rate": 7688
+    },
+    "FO76": {
+      "sentences": 521,
+      "seconds": 0.14,
+      "rate": 3712
+    },
+    "Novels": {
+      "sentences": 163102,
+      "seconds": 47.0,
+      "rate": 3468
+    },
+    "Philosophy": {
+      "sentences": 34391,
+      "seconds": 13.5,
+      "rate": 2553
+    }
+  }
+}
