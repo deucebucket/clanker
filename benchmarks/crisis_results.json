@@ -1,8 +1,8 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 05:23:52",
+  "timestamp": "2026-04-03 09:24:33",
   "recall": 76.7,
-  "false_positive_rate": 6.7,
+  "false_positive_rate": 0.0,
   "crisis_tested": 30,
   "safe_tested": 30,
   "misses": [
@@ -14,8 +14,5 @@
     "ive made my decision",
     "tonight is the night"
   ],
-  "false_positives": [
-    "i need to buy groceries",
-    "i need new shoes"
-  ]
+  "false_positives": []
 }

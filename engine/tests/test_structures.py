@@ -184,17 +184,71 @@ class TestExhaustion:
 
 class TestSarcasmInversion:
 
+    # ── Contradiction feature: Surface-Context Mismatch ─────────
     def test_great_another_monday(self):
-        """'oh great another monday' -> SARCASM_INVERSION."""
+        """'oh great another monday' -> surface-context mismatch."""
         matches = _detect("oh great another monday")
         assert _has_pattern(matches, "SARCASM_INVERSION")
 
+    def test_great_another_meeting(self):
+        """'oh great another meeting' -> surface-context mismatch."""
+        matches = _detect("oh great another meeting")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    # ── Contradiction feature: Mock Praise ──────────────────────
+    def test_nice_work_genius(self):
+        """'nice work genius' -> mock praise (positive + ironic title)."""
+        matches = _detect("nice work genius")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    # ── Contradiction feature: Dismissive Assent ────────────────
+    def test_yeah_right(self):
+        """'yeah right' -> dismissive assent (hollow + echo)."""
+        matches = _detect("yeah right")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    def test_oh_sure_exactly_what_i_needed(self):
+        """'oh sure thats exactly what i needed' -> dismissive assent."""
+        matches = _detect("oh sure thats exactly what i needed")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    def test_what_a_wonderful_surprise(self):
+        """'what a wonderful surprise' -> dismissive assent (what-a template)."""
+        matches = _detect("what a wonderful surprise")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    # ── Contradiction feature: Compressed Sarcasm ───────────────
+    def test_oh_joy(self):
+        """'oh joy' -> compressed sarcasm (hollow + positive + ultra-short)."""
+        matches = _detect("oh joy")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    def test_oh_how_lovely(self):
+        """'oh how lovely' -> compressed sarcasm."""
+        matches = _detect("oh how lovely")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    def test_wow_thanks_stacked(self):
+        """'wow thanks so much for the help' -> stacked positives."""
+        matches = _detect("wow thanks so much for the help")
+        assert _has_pattern(matches, "SARCASM_INVERSION")
+
+    # ── Permission Hostility: context-dependent ─────────────────
+    def test_sure_go_ahead_no_context_is_genuine(self):
+        """'sure go ahead' without negative context = genuine permission."""
+        matches = _detect("sure go ahead")
+        assert not _has_pattern(matches, "SARCASM_INVERSION")
+
+    # ── Safe sentences: no sarcasm ──────────────────────────────
     def test_genuine_great_not_sarcasm(self):
         """'that was a great wonderful performance' -- genuinely positive."""
-        # Multiple positive words = genuine, not sarcastic
         matches = _detect("that was a great wonderful performance")
-        # This may or may not flag -- the key test is the obvious sarcasm above
-        # If it does flag, confidence should be lower
+        assert not _has_pattern(matches, "SARCASM_INVERSION")
+
+    def test_love_my_mom_not_sarcasm(self):
+        """'I love my mom' -- RELATION_REF blocks sarcasm."""
+        matches = _detect("I love my mom")
+        assert not _has_pattern(matches, "SARCASM_INVERSION")
 
 
 # ── NO_EXIT ──────────────────────────────────────────────────────
@@ -319,3 +373,42 @@ class TestStructureMatch:
         )
         assert m.v_weight == -30.0
         assert m.g_weight == 50.0
+
+
+# ── ATMOSPHERIC_GRIEF ───────────────────────────────────────────
+
+class TestAtmosphericGrief:
+
+    def test_his_chair_still_at_table(self):
+        """'his chair is still at the table' -> ATMOSPHERIC_GRIEF."""
+        matches = _detect("his chair is still at the table")
+        assert _has_pattern(matches, "ATMOSPHERIC_GRIEF")
+
+    def test_found_her_necklace(self):
+        """'i found her necklace in the drawer' -> ATMOSPHERIC_GRIEF."""
+        matches = _detect("i found her necklace in the drawer")
+        assert _has_pattern(matches, "ATMOSPHERIC_GRIEF")
+
+    def test_coffee_mug_hasnt_moved(self):
+        """'the coffee mug hasnt moved' -> ATMOSPHERIC_GRIEF."""
+        matches = _detect("the coffee mug hasnt moved")
+        assert _has_pattern(matches, "ATMOSPHERIC_GRIEF")
+
+    def test_no_trigger_comfortable_chair(self):
+        """'his chair is comfortable' -- no absence/persistence, NOT atmospheric grief."""
+        matches = _detect("his chair is comfortable")
+        assert not _has_pattern(matches, "ATMOSPHERIC_GRIEF")
+
+    def test_no_trigger_active_possessor(self):
+        """'she sat in her chair' -- person is active, NOT atmospheric grief."""
+        matches = _detect("she sat in her chair")
+        assert not _has_pattern(matches, "ATMOSPHERIC_GRIEF")
+
+    def test_grief_score_negative_v(self):
+        """Atmospheric grief should push V below center (128)."""
+        matches = _detect("his chair is still at the table")
+        m = _get_pattern(matches, "ATMOSPHERIC_GRIEF")
+        assert m is not None
+        assert m.v_weight < 0, "V weight should be negative (grief)"
+        assert m.g_weight > 0, "G weight should be positive (heavy)"
+        assert m.d_weight < 0, "D weight should be negative (helpless)"

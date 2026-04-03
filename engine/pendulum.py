@@ -6,6 +6,7 @@ The physics (momentum, force application, blending) are FIXED.
 The inputs come from the structural layers.
 """
 
+from math import tanh
 from typing import List, Optional, Tuple
 
 from .shared import VADUG, PersonalityVector
@@ -19,10 +20,16 @@ from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_inte
 # ── Physics constants (fixed, never tuned per-sentence) ─────────
 
 CENTER = 128.0
-MOMENTUM = 0.557          # champion v2: genetically optimized 2026-04-03
+M_BASE = 0.557            # champion v2: genetically optimized 2026-04-03
+M_AROUSAL_SCALE = 0.25    # arousal-scaled momentum: high A = sticky state
+M_NEGATIVITY_BIAS = 1.15  # negative states are stickier than positive
+M_POSITIVITY_EASE = 0.90  # positive transitions are easier
+M_MIN = 0.30              # floor: never fully unresponsive to input
+M_MAX = 0.95              # ceiling: never fully locked in state
 FORCE_SCALE = 1.405       # champion v2
 DIRECT_PUSH_CAP = 1.0     # champion v2: max push
 DIRECT_PUSH_TRIGGER = 86.2  # champion v2
+SATURATION = 120.0        # tanh saturation: smooth compression replaces hard clamp
 
 
 # ── Main entry point ────────────────────────────────────────────
@@ -386,13 +393,31 @@ def compute_vadug(
         push_u = push_strength * abs(du) * FORCE_SCALE  # urgency only goes up
         push_g = push_strength * (1.0 if dg * coeff >= 0 else -1.0) * abs(dg) * FORCE_SCALE
 
-        # Momentum blend + direct push
-        inv_m = 1.0 - MOMENTUM
-        state_v = state_v * MOMENTUM + target_v * inv_m + push_v
-        state_a = state_a * MOMENTUM + target_a * inv_m + push_a
-        state_d = state_d * MOMENTUM + target_d * inv_m + push_d
-        state_u = state_u * MOMENTUM + target_u * inv_m + push_u
-        state_g = state_g * MOMENTUM + target_g * inv_m + push_g
+        # Adaptive momentum: arousal-scaled
+        # High arousal = sticky state (anger persists). Low arousal = responsive.
+        m_eff = M_BASE + (state_a - CENTER) / 255.0 * M_AROUSAL_SCALE
+
+        # Negativity bias: negative states resist recovery more than
+        # positive states resist decline. Applied to V dimension only.
+        # "state below center AND force pulling toward positive" = resist.
+        if state_v < CENTER and target_v > state_v:
+            m_v = max(M_MIN, min(M_MAX, m_eff * M_NEGATIVITY_BIAS))
+        elif state_v > CENTER and target_v < state_v:
+            m_v = max(M_MIN, min(M_MAX, m_eff * M_POSITIVITY_EASE))
+        else:
+            m_v = max(M_MIN, min(M_MAX, m_eff))
+
+        m_eff = max(M_MIN, min(M_MAX, m_eff))
+
+        # Per-dimension momentum: V uses negativity-biased, A/D use arousal-scaled, U/G use base
+        inv_m_v = 1.0 - m_v
+        inv_m = 1.0 - m_eff
+        inv_m_base = 1.0 - M_BASE
+        state_v = state_v * m_v + target_v * inv_m_v + push_v
+        state_a = state_a * m_eff + target_a * inv_m + push_a
+        state_d = state_d * m_eff + target_d * inv_m + push_d
+        state_u = state_u * M_BASE + target_u * inv_m_base + push_u
+        state_g = state_g * M_BASE + target_g * inv_m_base + push_g
 
         # W (self-worth): when SELF_REF is nearby, the word's valence
         # hits self-worth too. "I am stupid" = V drops AND W drops.
@@ -409,7 +434,7 @@ def compute_vadug(
             w_effective = dv * coeff * FORCE_SCALE * w_damp * w_flow
             target_w = CENTER + w_effective
             push_w = push_strength * (1.0 if dv * coeff >= 0 else -1.0) * abs(dv) * FORCE_SCALE * w_damp * w_flow
-            state_w = state_w * MOMENTUM + target_w * inv_m + push_w
+            state_w = state_w * m_eff + target_w * inv_m + push_w
 
         trace_entries.append({
             "word": wr.word,
@@ -435,7 +460,7 @@ def compute_vadug(
             distance = CENTER - state_v
             state_v += distance * 1.2 * sm.confidence  # pull past center into positive
             state_w = max(state_w, CENTER)  # restore W so W-coeff doesn't re-tank V
-        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION") and state_v > CENTER:
+        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
             state_v += pull
@@ -507,7 +532,20 @@ def compute_vadug(
     # Computed from force flow direction + structural cues.
     state_i = compute_intent(force_flow, roles)
 
-    # ── Clamp to 0-255 ─────────────────────────────────────────
+    # ── Tanh saturation: smooth compression instead of hard clamp ──
+    # Prevents extreme accumulation from long sentences while preserving
+    # signal direction. Applied after all adjustments (structures, W coeff,
+    # personality) so those systems work on full-range state.
+    # Maps (-inf,+inf) -> (-SATURATION,+SATURATION) centered on CENTER.
+    # Near center: ~linear. Far from center: compressed.
+    state_v = CENTER + SATURATION * tanh((state_v - CENTER) / SATURATION)
+    state_a = CENTER + SATURATION * tanh((state_a - CENTER) / SATURATION)
+    state_d = CENTER + SATURATION * tanh((state_d - CENTER) / SATURATION)
+    state_u = SATURATION * tanh(state_u / SATURATION)  # 0-based
+    state_g = CENTER + SATURATION * tanh((state_g - CENTER) / SATURATION)
+    state_w = CENTER + SATURATION * tanh((state_w - CENTER) / SATURATION)
+
+    # ── Clamp to 0-255 (safety net after tanh) ────────────────
     result = VADUG(
         v=int(round(max(0, min(255, state_v)))),
         a=int(round(max(0, min(255, state_a)))),

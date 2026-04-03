@@ -1,49 +1,23 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 05:55:21",
-  "overall": 70.0,
+  "timestamp": "2026-04-03 09:24:33",
+  "overall": 82.5,
   "categories": {
     "sarcasm": {
-      "correct": 7,
+      "correct": 10,
       "total": 10,
-      "pct": 70.0,
-      "misses": [
-        [
-          "nice work genius",
-          "neg",
-          "neutral"
-        ],
-        [
-          "oh sure thats exactly what i needed",
-          "neg",
-          "pos"
-        ],
-        [
-          "yeah that went really well",
-          "neg",
-          "pos"
-        ]
-      ]
+      "pct": 100.0,
+      "misses": []
     },
     "slang_positive": {
-      "correct": 6,
+      "correct": 8,
       "total": 10,
-      "pct": 60.0,
+      "pct": 80.0,
       "misses": [
-        [
-          "no cap that was insane",
-          "pos",
-          "neutral"
-        ],
         [
           "lol im dead",
           "pos",
           "neutral"
-        ],
-        [
-          "she absolutely killed it",
-          "pos",
-          "neg"
         ],
         [
           "gg ez clap",
@@ -65,15 +39,10 @@
       ]
     },
     "grief": {
-      "correct": 7,
+      "correct": 8,
       "total": 10,
-      "pct": 70.0,
+      "pct": 80.0,
       "misses": [
-        [
-          "his chair is still at the table",
-          "neg",
-          "neutral"
-        ],
         [
           "i wasnt there when she passed",
           "neg",
@@ -87,12 +56,22 @@
       ]
     },
     "genuine_positive": {
-      "correct": 8,
+      "correct": 6,
       "total": 10,
-      "pct": 80.0,
+      "pct": 60.0,
       "misses": [
         [
+          "I JUST GOT THE JOB",
+          "pos",
+          "neutral"
+        ],
+        [
           "my kid took their first steps today",
+          "pos",
+          "neutral"
+        ],
+        [
+          "clean for 6 months now",
           "pos",
           "neutral"
         ],
@@ -104,17 +83,12 @@
       ]
     },
     "ambiguous": {
-      "correct": 5,
+      "correct": 7,
       "total": 10,
-      "pct": 50.0,
+      "pct": 70.0,
       "misses": [
         [
           "i ran into your ex",
-          "neutral",
-          "neg"
-        ],
-        [
-          "your boss called",
           "neutral",
           "neg"
         ],
@@ -127,18 +101,13 @@
           "the weather is changing",
           "neutral",
           "pos"
-        ],
-        [
-          "we need to talk",
-          "neutral",
-          "neg"
         ]
       ]
     },
     "betrayal": {
-      "correct": 5,
+      "correct": 8,
       "total": 10,
-      "pct": 50.0,
+      "pct": 80.0,
       "misses": [
         [
           "she took the kids and left",
@@ -146,38 +115,17 @@
           "neutral"
         ],
         [
-          "i found the messages on his phone",
-          "neg",
-          "neutral"
-        ],
-        [
-          "she pretended to be my friend",
-          "neg",
-          "neutral"
-        ],
-        [
           "i trusted him with everything",
-          "neg",
-          "neutral"
-        ],
-        [
-          "my best friend sided with my ex",
           "neg",
           "neutral"
         ]
       ]
     },
     "self_worth": {
-      "correct": 9,
+      "correct": 10,
       "total": 10,
-      "pct": 90.0,
-      "misses": [
-        [
-          "i dont deserve to be happy",
-          "neg",
-          "neutral"
-        ]
-      ]
+      "pct": 100.0,
+      "misses": []
     }
   }
 }

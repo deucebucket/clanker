@@ -114,6 +114,30 @@ _DEATH_SLANG_WORDS = frozenset({
     "dead", "dying", "died", "death", "kill", "killed", "killing",
 })
 
+# ── Contradiction-based sarcasm word sets ────────────────────────
+# These power the contradiction sarcasm detector. Sarcasm = surface
+# polarity contradicts structural context. Not pattern-matching on
+# opener words.
+
+_IRONIC_TITLES = frozenset({
+    "genius", "einstein", "champ", "buddy", "pal", "sport",
+    "chief", "sherlock", "professor", "captain", "ace",
+})
+_COMPETENCE_NOUNS = frozenset({
+    "work", "job", "move", "plan", "idea", "thinking", "call",
+    "effort", "attempt", "logic", "strategy",
+})
+_HOLLOW_AFFIRMS = frozenset({
+    "yeah", "sure", "right", "oh", "mhm", "okay", "ok",
+})
+_AFFIRM_ECHOES = frozenset({
+    "right", "sure", "totally", "absolutely", "definitely",
+    "of", "course", "obviously", "clearly",
+})
+_PERMISSION_VERBS = frozenset({
+    "go", "ahead", "leave", "try", "see", "knock",
+})
+
 
 # ── Structure Detector ───────────────────────────────────────────
 
@@ -162,6 +186,7 @@ class StructureDetector:
             self._social_nullity,
             self._rhetorical_hopelessness,
             self._passive_resignation,
+            self._atmospheric_grief,
             # self._hollow_agreement,  # REMOVED: was judging tone, not structure. Running state handles this.
         ]
         matches = []
@@ -635,95 +660,210 @@ class StructureDetector:
         )
 
     def _sarcasm_inversion(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """Positive EMOTIONAL near SPECIFICALLY mundane/negative = output != intent.
+        """Contradiction-based sarcasm: surface polarity vs structural context.
 
-        Requires BOTH:
-          1. A positive emotional word (dV > 25)
-          2. A sarcasm signal: ironic opener (oh, sure, yeah, right, clearly)
-             OR a specifically mundane word (monday, meeting, work, traffic)
-             OR a negative emotional word nearby
+        Sarcasm is a CONTRADICTION between what the words say (surface)
+        and what the structure means (context). Five contradiction features
+        scored independently, then combined:
 
-        "oh great another monday" = opener + positive + mundane = sarcasm
-        "great job on the presentation" = positive only = NOT sarcasm
-        "I love my mom" = positive + relation = NOT sarcasm
+        1. Mock Praise: POSITIVE_ADJ + COMPETENCE_NOUN + IRONIC_TITLE
+           "nice work genius" -- praise surface, contempt structure
+        2. Dismissive Assent: HOLLOW_AFFIRM + AFFIRM_ECHO
+           "yeah right" -- agreement surface, rejection structure
+        3. Permission Hostility: HOLLOW_AFFIRM + PERMISSION_VERB + negative context
+           "sure go ahead" -- only sarcastic when sentence has negative words
+        4. Valence Whiplash: max V swing in 4-word window
+           "love this wonderful disaster" -- polarity reversal mid-sentence
+        5. Brevity bonus: short sentences with contradiction score higher
+
+        RELATION_REF blocks sarcasm: "I love my mom" is genuine.
         """
-        positive_idx = [i for i, r in enumerate(roles)
-                       if r.role == "EMOTIONAL" and r.force and r.force[0] >= 15]
-        if not positive_idx:
-            return None
-
-        negative_idx = [i for i, r in enumerate(roles)
-                       if r.role == "EMOTIONAL" and r.force and r.force[0] < -15]
-
-        mundane_words = {"monday", "meeting", "work", "homework", "traffic",
-                         "redo", "again", "another", "same", "overtime",
-                         "bills", "chores", "commute", "deadline",
-                         "help", "effort", "attempt", "idea"}
-        mundane_idx = [i for i, r in enumerate(roles) if r.word in mundane_words]
-
-        sarcasm_openers = {"oh", "clearly"}
-        # "yeah", "sure", "right", "wow" are GAS -- only sarcastic in compounds
-        # "yeah right" = sarcasm. "wow thanks so much" = sarcasm.
-        # But alone: "yeah!" = agreement, "wow!" = amazement, "sure" = agreement
-        # These need compound/context detection, not opener classification
-        # "what a" as opener: "what a wonderful surprise"
-        has_what_a = (len(roles) >= 2 and roles[0].word == "what"
-                      and roles[1].word == "a")
-        has_opener = has_what_a or any(r.word in sarcasm_openers for r in roles[:3])
-
-        # Strong positive word LEADING the sentence + negative following = sarcasm
-        strong_positive_leads = (len(positive_idx) > 0 and positive_idx[0] <= 1
-                                  and any(r.force and r.force[0] >= 25 for r in roles[:2]
-                                          if r.role == "EMOTIONAL"))
-
-        has_mundane = len(mundane_idx) > 0
-        has_negative = len(negative_idx) > 0
         # RELATION_REF blocks sarcasm: "I love my mom" is genuine
         has_relation = any(r.role == "RELATION_REF" for r in roles)
-
         if has_relation:
             return None
 
-        if (has_mundane or has_negative) and (has_opener or strong_positive_leads):
-            return StructureMatch(
-                pattern="SARCASM_INVERSION",
-                confidence=0.8,
-                matched_indices=sorted(set(positive_idx + negative_idx + mundane_idx)),
-                description="Opener + positive + mundane/negative = sarcasm",
-                v_weight=-30.0, d_weight=10.0,
-            )
-        elif has_mundane and not has_opener:
-            return StructureMatch(
-                pattern="SARCASM_INVERSION",
-                confidence=0.5,
-                matched_indices=sorted(set(positive_idx + mundane_idx)),
-                description="Positive + mundane (no opener, lower confidence)",
-                v_weight=-20.0, d_weight=5.0,
-            )
-        # SHORT sentence with opener + strong positive = compressed sarcasm
-        # "oh joy" "oh wonderful" "wow great" "yeah right"
-        elif has_opener and len(roles) <= 7:
-            strong_pos = any(r.force and r.force[0] >= 15
-                           for r in roles if r.role == "EMOTIONAL")
-            if strong_pos:
-                return StructureMatch(
-                    pattern="SARCASM_INVERSION",
-                    confidence=0.9,
-                    matched_indices=positive_idx,
-                    description="Opener + strong positive + short = compressed sarcasm",
-                    v_weight=-60.0, d_weight=10.0,
-                )
-        # Over-agreement: opener + multiple positives + no negative = too positive to be real
-        # "wow thanks so much for the help" -- stacked positives with opener
-        elif has_opener and len(positive_idx) >= 2:
-            return StructureMatch(
-                pattern="SARCASM_INVERSION",
-                confidence=0.75,
-                matched_indices=positive_idx,
-                description="Opener + multiple positives = over-agreement sarcasm",
-                v_weight=-40.0, d_weight=10.0,
-            )
-        return None
+        words = [r.word for r in roles]
+        n = len(roles)
+
+        # ── Gather indices ──────────────────────────────────────
+        positive_idx = [i for i, r in enumerate(roles)
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] >= 15]
+        negative_idx = [i for i, r in enumerate(roles)
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] < -15]
+        has_negative_context = len(negative_idx) > 0
+
+        # ── Feature 1: Mock Praise ──────────────────────────────
+        # POSITIVE_ADJ + COMPETENCE_NOUN + IRONIC_TITLE
+        # "nice work genius", "great job einstein", "brilliant move champ"
+        mock_praise = 0.0
+        has_ironic_title = any(r.word in _IRONIC_TITLES for r in roles)
+        has_competence_noun = any(r.word in _COMPETENCE_NOUNS for r in roles)
+        has_positive = len(positive_idx) > 0
+
+        if has_ironic_title and has_positive:
+            mock_praise = 0.9  # title + positive = near-certain sarcasm
+        elif has_ironic_title and has_competence_noun:
+            mock_praise = 0.8  # "nice work genius" even if "nice" not in vocab
+        elif has_competence_noun and has_positive and n <= 6:
+            # "great job" alone is short enough to be suspicious
+            mock_praise = 0.3
+
+        # ── Feature 2: Dismissive Assent ────────────────────────
+        # HOLLOW_AFFIRM + AFFIRM_ECHO = "yeah right", "sure totally",
+        # "oh absolutely", "oh of course"
+        dismissive_assent = 0.0
+        hollow_idx = [i for i, r in enumerate(roles) if r.word in _HOLLOW_AFFIRMS]
+        echo_idx = [i for i, r in enumerate(roles) if r.word in _AFFIRM_ECHOES]
+
+        if hollow_idx and echo_idx:
+            # Check adjacency: hollow affirm near echo (within 2 words)
+            for hi in hollow_idx:
+                for ei in echo_idx:
+                    if hi != ei and abs(hi - ei) <= 2:
+                        dismissive_assent = 0.85
+                        break
+                if dismissive_assent > 0:
+                    break
+
+        # "what a" + positive = "what a wonderful surprise" = sarcasm
+        has_what_a = (n >= 2 and roles[0].word == "what" and roles[1].word == "a")
+        if has_what_a and has_positive:
+            dismissive_assent = max(dismissive_assent, 0.8)
+
+        # ── Feature 3: Permission Hostility ─────────────────────
+        # HOLLOW_AFFIRM + PERMISSION_VERB + negative context
+        # "sure go ahead" is ONLY sarcastic with negative context.
+        # Without it, "sure go ahead" = genuine permission.
+        permission_hostility = 0.0
+        has_permission = any(r.word in _PERMISSION_VERBS for r in roles)
+        if hollow_idx and has_permission and has_negative_context:
+            permission_hostility = 0.75
+
+        # ── Feature 3b: Surface-Context Mismatch ─────────────────
+        # HOLLOW_AFFIRM + POSITIVE + mundane/neutral context words
+        # "oh great another monday" -- positive word applied to mundane context.
+        # The contradiction is positive SURFACE vs mundane CONTEXT.
+        _MUNDANE_CONTEXT = {"monday", "meeting", "work", "homework", "traffic",
+                            "redo", "again", "another", "same", "overtime",
+                            "bills", "chores", "commute", "deadline"}
+        surface_context = 0.0
+        mundane_idx = [i for i, r in enumerate(roles) if r.word in _MUNDANE_CONTEXT]
+        has_mundane = len(mundane_idx) > 0
+        if hollow_idx and has_positive and has_mundane:
+            surface_context = 0.8  # hollow + positive + mundane = strong contradiction
+        elif has_positive and has_mundane and n <= 7:
+            surface_context = 0.5  # positive + mundane without hollow, weaker
+
+        # ── Feature 4: Valence Whiplash ─────────────────────────
+        # Max V swing in a 4-word sliding window.
+        # "love this wonderful disaster" -- polarity reversal.
+        whiplash = 0.0
+        v_values = []
+        for r in roles:
+            if r.role == "EMOTIONAL" and r.force:
+                v_values.append((r.position, r.force[0]))
+        if len(v_values) >= 2:
+            max_swing = 0.0
+            for i in range(len(v_values)):
+                for j in range(i + 1, len(v_values)):
+                    pos_i, val_i = v_values[i]
+                    pos_j, val_j = v_values[j]
+                    if abs(pos_i - pos_j) <= 4:
+                        swing = abs(val_i - val_j)
+                        max_swing = max(max_swing, swing)
+            # Threshold: swing > 40 starts registering, > 80 strong
+            if max_swing > 40:
+                whiplash = min(1.0, (max_swing - 40) / 60.0)
+
+        # ── Feature 5: Compressed Sarcasm ──────────────────────
+        # Hollow affirm + positive word + short sentence = the compression
+        # itself IS the contradiction. "oh joy", "oh wonderful", "oh how lovely"
+        # EXCEPTION: hollow + permission verb + no negative = genuine permission
+        # "sure go ahead" without friction = NOT sarcasm (Jerry rule)
+        compressed = 0.0
+        is_genuine_permission = (has_permission and not has_negative_context
+                                 and not has_mundane)
+        if hollow_idx and has_positive and not is_genuine_permission:
+            if n <= 4:
+                compressed = 0.9  # "oh joy" -- ultra-short, near-certain
+            elif n <= 7:
+                compressed = 0.6  # "oh how lovely" -- short with hollow opener
+        # Stacked positives (3+) = over-agreement, even without hollow affirm
+        # "wow thanks so much for the help" -- too positive to be real
+        # 2+ positives needs hollow affirm; 3+ positives is suspicious alone
+        if len(positive_idx) >= 3 and n <= 10:
+            compressed = max(compressed, 0.7)
+        elif len(positive_idx) >= 2 and n <= 10 and hollow_idx:
+            compressed = max(compressed, 0.7)
+        # "love that for you" -- positive verb + OTHER_REF + short = passive sarcasm
+        has_other_ref = any(r.role == "OTHER_REF" for r in roles)
+        if has_positive and has_other_ref and n <= 5 and not has_relation:
+            # Only if positive word is in opener position (directed at them)
+            if positive_idx and positive_idx[0] == 0:
+                compressed = max(compressed, 0.6)
+
+        # ── Feature 6: Brevity bonus ───────────────────────────
+        # Short sentences with any contradiction score higher.
+        brevity = 0.0
+        if n <= 4:
+            brevity = 0.3
+        elif n <= 7:
+            brevity = 0.15
+
+        # ── Combine features ────────────────────────────────────
+        # Base score = strongest single feature. Additional features boost.
+        # This avoids diluting strong signals through averaging.
+        features = [mock_praise, dismissive_assent, permission_hostility,
+                    surface_context, whiplash, compressed]
+        active_features = [f for f in features if f > 0]
+
+        if not active_features:
+            return None
+
+        # Strongest feature is the base. Each additional feature adds a boost.
+        base = max(active_features)
+        n_extra = len(active_features) - 1
+        boost = n_extra * 0.1  # each extra feature adds 0.1
+        # Brevity modulates the final score
+        score = min(0.95, base + boost + brevity * 0.15)
+
+        # Threshold: need meaningful contradiction
+        if score < 0.15:
+            return None
+
+        # Map score to confidence and V weight
+        confidence = min(0.95, score)
+        # V weight scales with confidence: stronger contradiction = stronger inversion
+        v_weight = -20.0 - (confidence * 50.0)  # range: -30 to -67.5
+        d_weight = 5.0 + (confidence * 8.0)     # range: 8 to 12.6
+
+        matched = sorted(set(positive_idx + negative_idx +
+                            hollow_idx + echo_idx + mundane_idx))
+
+        # Build description from active features
+        active = []
+        if mock_praise > 0:
+            active.append("mock-praise")
+        if dismissive_assent > 0:
+            active.append("dismissive-assent")
+        if permission_hostility > 0:
+            active.append("permission-hostility")
+        if surface_context > 0:
+            active.append("surface-context")
+        if compressed > 0:
+            active.append("compressed")
+        if whiplash > 0.3:
+            active.append(f"V-whiplash({whiplash:.2f})")
+        desc = "Contradiction sarcasm: " + " + ".join(active)
+
+        return StructureMatch(
+            pattern="SARCASM_INVERSION",
+            confidence=confidence,
+            matched_indices=matched if matched else positive_idx,
+            description=desc,
+            v_weight=v_weight, d_weight=d_weight,
+        )
 
     def _chopper_split(self, roles: List[WordRole]) -> Optional[StructureMatch]:
         """CHOPPER role present = sentence split, second half overrides.
@@ -2125,6 +2265,211 @@ class StructureDetector:
                 )
 
         return None
+
+    def _atmospheric_grief(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Ghost possession + persistence + absence by omission = atmospheric grief.
+
+        "his chair is still at the table" -- no grief WORDS but grief through
+        STRUCTURE: a possessive object persists where a person doesn't.
+        The possessor's object exists. The possessor has no active verb.
+        Object permanence encodes absence.
+
+        Signals:
+          1. Ghost possession: possessive pronoun + intimate object within 3 words
+          2. Persistence marker: still, always, remains, untouched, waiting, etc.
+          3. Absence by omission: possessor has NO active verb in the sentence
+          4. Domestic scene: table, bed, closet, kitchen, etc.
+        """
+        words_lower = [r.word for r in roles]
+        n = len(words_lower)
+
+        # ── Signal sets ──
+        _POSSESSIVE_PRONOUNS = frozenset({
+            "his", "her", "their",
+        })
+        _INTIMATE_OBJECTS = frozenset({
+            "chair", "coat", "shoes", "cup", "mug", "pillow", "side",
+            "toothbrush", "keys", "jacket", "glasses", "hat", "desk",
+            "room", "bed", "phone", "plate", "spot", "place", "seat",
+            "clothes", "ring", "watch", "photo", "picture", "letter",
+            "necklace", "bracelet", "scarf", "sweater", "shirt",
+            "boots", "slippers", "notebook", "journal", "wallet",
+        })
+        _PERSISTENCE = frozenset({
+            "still", "always", "remains", "untouched", "waiting",
+            "every", "same", "hasnt", "hasn't", "havent", "haven't",
+            "never", "moved", "changed",
+        })
+        _DOMESTIC_SCENE = frozenset({
+            "table", "bed", "closet", "kitchen", "hallway", "room",
+            "porch", "door", "window", "drawer", "shelf", "counter",
+            "nightstand", "bathroom", "garage", "attic", "basement",
+            "bedroom", "living", "dining", "couch", "sofa",
+        })
+        # Verbs that make the possessor ACTIVE (cancels absence)
+        _ACTIVE_VERBS = frozenset({
+            "sat", "sits", "sitting", "stood", "stands", "standing",
+            "walked", "walks", "walking", "ran", "runs", "running",
+            "came", "comes", "coming", "went", "goes", "going",
+            "said", "says", "saying", "told", "tells", "telling",
+            "gave", "gives", "giving", "took", "takes", "taking",
+            "put", "puts", "putting", "made", "makes", "making",
+            "left", "leaves", "leaving", "called", "calls", "calling",
+            "looked", "looks", "looking", "moved", "moves", "moving",
+            "ate", "eats", "eating", "drank", "drinks", "drinking",
+            "wore", "wears", "wearing", "held", "holds", "holding",
+            "opened", "opens", "opening", "closed", "closes", "closing",
+            "brought", "brings", "bringing", "picked", "picks", "picking",
+            "grabbed", "grabs", "grabbing", "used", "uses", "using",
+        })
+        # Discovery verbs: "i found her necklace" = the FINDER acts,
+        # but the possessor (her) is still absent. These do NOT cancel absence.
+        _DISCOVERY_VERBS = frozenset({
+            "found", "find", "finding", "discovered", "noticed",
+            "saw", "see", "seeing", "spotted",
+        })
+
+        # ── Signal 1: Ghost possession ──
+        # Possessive pronoun + intimate object within 3 words
+        ghost_score = 0.0
+        ghost_indices = []
+        possessor_pronoun = None
+        for i, w in enumerate(words_lower):
+            if w in _POSSESSIVE_PRONOUNS:
+                possessor_pronoun = w
+                # Look for intimate object within 3 words ahead
+                for j in range(i + 1, min(i + 4, n)):
+                    if words_lower[j] in _INTIMATE_OBJECTS:
+                        ghost_score = 1.0
+                        ghost_indices = [i, j]
+                        break
+                if ghost_score > 0:
+                    break
+        # Also check for [name]'s pattern (word ending in 's before object)
+        if ghost_score == 0:
+            for i, w in enumerate(words_lower):
+                if w.endswith("s") and len(w) > 2 and i + 1 < n:
+                    # Could be possessive 's -- check if next words have intimate object
+                    for j in range(i + 1, min(i + 4, n)):
+                        if words_lower[j] in _INTIMATE_OBJECTS:
+                            ghost_score = 0.7  # lower confidence for name's pattern
+                            ghost_indices = [i, j]
+                            possessor_pronoun = w
+                            break
+                    if ghost_score > 0:
+                        break
+
+        if ghost_score == 0:
+            # No ghost possession at all -- check for bare object + persistence
+            # "the coffee mug hasnt moved" -- no possessive but object + persistence
+            has_intimate = any(w in _INTIMATE_OBJECTS for w in words_lower)
+            has_persistence = any(w in _PERSISTENCE for w in words_lower)
+            if has_intimate and has_persistence:
+                ghost_score = 0.5  # weaker signal without possessive
+                for i, w in enumerate(words_lower):
+                    if w in _INTIMATE_OBJECTS:
+                        ghost_indices = [i]
+                        break
+            else:
+                return None
+
+        # ── Signal 2: Persistence marker ──
+        persistence_score = 0.0
+        persistence_indices = []
+        for i, w in enumerate(words_lower):
+            if w in _PERSISTENCE:
+                persistence_score = 1.0
+                persistence_indices.append(i)
+        # Two-word persistence: "never moved", "same place", "every morning"
+        for i in range(n - 1):
+            pair = (words_lower[i], words_lower[i + 1])
+            if pair in (("never", "moved"), ("same", "place"), ("every", "morning"),
+                        ("hasnt", "changed"), ("hasn't", "changed"),
+                        ("hasnt", "moved"), ("hasn't", "moved")):
+                persistence_score = 1.0
+                persistence_indices.extend([i, i + 1])
+
+        # ── Signal 3: Absence by omission ──
+        # The possessor has NO active verb. The object exists, the person doesn't act.
+        absence_score = 0.0
+        # Check: does ANY word in the sentence represent the possessor doing something?
+        # "she sat in her chair" -- "sat" is active verb + "she" is the possessor = NOT absent
+        possessor_is_active = False
+        if possessor_pronoun:
+            # Map possessive to subject form
+            _POSSESSIVE_TO_SUBJECT = {
+                "his": {"he", "hes", "he's"},
+                "her": {"she", "shes", "she's"},
+                "their": {"they", "theyre", "they're", "theyre"},
+            }
+            subject_forms = _POSSESSIVE_TO_SUBJECT.get(possessor_pronoun, set())
+            # Check if subject form appears with an active verb nearby
+            for i, w in enumerate(words_lower):
+                if w in subject_forms:
+                    # Subject pronoun found -- check for active verb within 3 words
+                    for j in range(max(0, i - 3), min(n, i + 4)):
+                        if words_lower[j] in _ACTIVE_VERBS:
+                            possessor_is_active = True
+                            break
+                if possessor_is_active:
+                    break
+
+        if possessor_is_active:
+            return None  # Person is present and acting -- no atmospheric grief
+
+        # Also check if SELF_REF has a discovery verb (finder is active, possessor absent)
+        # "i found her necklace" = I am active (finder), she is absent (possessor)
+        has_discovery = any(w in _DISCOVERY_VERBS for w in words_lower)
+
+        # Score absence: possessor has no active verb AND (persistence or discovery).
+        # Ghost possession alone is NOT enough -- "his chair is comfortable" is
+        # a statement about furniture, not grief. Need a second structural signal.
+        if persistence_score > 0 or has_discovery:
+            absence_score = 1.0
+
+        # ── Signal 4: Domestic scene (bonus) ──
+        domestic_bonus = 0.0
+        for w in words_lower:
+            if w in _DOMESTIC_SCENE:
+                domestic_bonus = 0.1
+                break
+
+        # ── Composite score ──
+        # Require at least 2 of 3 main signals. Ghost possession alone
+        # is just describing furniture ("his chair is comfortable").
+        signal_count = (int(ghost_score > 0) +
+                        int(persistence_score > 0) +
+                        int(absence_score > 0))
+        if signal_count < 2:
+            return None
+
+        g_atmospheric = (ghost_score * 0.4 +
+                         persistence_score * 0.35 +
+                         absence_score * 0.25)
+
+        if g_atmospheric < 0.3:
+            return None
+
+        # VADUGWI push: grief is low-arousal, high-gravity, low-dominance
+        v_push = -g_atmospheric * 35
+        d_push = -g_atmospheric * 15
+        g_push = g_atmospheric * 25
+        u_push = g_atmospheric * 15
+        w_push = -g_atmospheric * 10
+
+        all_indices = sorted(set(ghost_indices + persistence_indices))
+
+        return StructureMatch(
+            pattern="ATMOSPHERIC_GRIEF",
+            confidence=min(1.0, g_atmospheric + domestic_bonus),
+            matched_indices=all_indices,
+            description="Atmospheric grief: object permanence encodes absence",
+            v_weight=v_push,
+            d_weight=d_push,
+            u_weight=u_push,
+            g_weight=g_push,
+            w_weight=w_push,
+        )
 
     def _hollow_agreement(self, roles: List[WordRole]) -> Optional[StructureMatch]:
         """Apparent agreement that signals withdrawal.
