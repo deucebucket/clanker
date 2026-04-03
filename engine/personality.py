@@ -1,2 +1,2 @@
-"""Personality system — carried from V2."""
-from demo.shared import PersonalityVector
+"""Personality system — V5.5."""
+from .shared import PersonalityVector

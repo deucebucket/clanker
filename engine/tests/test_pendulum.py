@@ -87,25 +87,28 @@ class TestNegation:
         )
 
     def test_negation_flips_direction(self):
-        """Negation should push V toward or below center."""
-        v_not_happy = _vadug("not happy").v
-        # "not happy" should be closer to center than "happy"
-        v_happy = _vadug("happy").v
-        assert abs(v_not_happy - 128) < abs(v_happy - 128)
+        """Negation should flip V direction on moderate words."""
+        # Use moderate word to avoid ceiling effects
+        v_good = _vadug("good").v
+        v_not_good = _vadug("not good").v
+        # "not good" should be below center, "good" above
+        assert v_good > 128
+        assert v_not_good < 128
 
 
 # ── Amplification ──────────────────────────────────────────────
 
 class TestAmplification:
 
-    def test_very_happy_further_than_happy(self):
-        """'very happy' should be further from center than 'happy'."""
-        v_happy = _vadug("happy").v
-        v_very_happy = _vadug("very happy").v
-        dist_happy = abs(v_happy - 128)
-        dist_very = abs(v_very_happy - 128)
-        assert dist_very > dist_happy, (
-            f"very happy dist={dist_very} should be > happy dist={dist_happy}"
+    def test_amplifier_increases_displacement(self):
+        """Amplifier should increase displacement from center on moderate words."""
+        # Use a moderate word so neither version maxes at 255/0
+        v_good = _vadug("good").v
+        v_very_good = _vadug("very good").v
+        dist_good = abs(v_good - 128)
+        dist_very = abs(v_very_good - 128)
+        assert dist_very > dist_good, (
+            f"very good dist={dist_very} should be > good dist={dist_good}"
         )
 
 

@@ -1,2 +1,2 @@
-"""Zone classification — carried from V2."""
-from demo.zones import ZONES, ZoneClassifier, ZoneResult
+"""Zone classification — V5.5. Re-exports from zones_impl."""
+from .zones_impl import ZONES, ZoneClassifier, ZoneResult

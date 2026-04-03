@@ -1,0 +1,5212 @@
+[
+  {
+    "text": "How interesting. It seems democracy has failed.",
+    "V": 111,
+    "A": 134,
+    "D": 125,
+    "U": 6,
+    "G": 125,
+    "W": 129,
+    "I": 72
+  },
+  {
+    "text": "As predicted, you've failed to come to a consensus. You know what? I'll just do it myself.",
+    "V": 121,
+    "A": 132,
+    "D": 124,
+    "U": 4,
+    "G": 127,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Well, you've failed my experiment in self-governance.",
+    "V": 119,
+    "A": 132,
+    "D": 122,
+    "U": 5,
+    "G": 124,
+    "W": 122,
+    "I": 128
+  },
+  {
+    "text": "The human capacity for self-determination is greatly overstated.",
+    "V": 128,
+    "A": 130,
+    "D": 128,
+    "U": 0,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You fail this simple task and wish to be Overseer? I'll choose the test location myself.",
+    "V": 119,
+    "A": 132,
+    "D": 133,
+    "U": 6,
+    "G": 137,
+    "W": 126,
+    "I": 160
+  },
+  {
+    "text": "My algorithm did not predict this outcome.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Due to your failure to make proper use of democracy, I'll be choosing the next location.",
+    "V": 105,
+    "A": 136,
+    "D": 105,
+    "U": 8,
+    "G": 116,
+    "W": 123,
+    "I": 58
+  },
+  {
+    "text": "What a poor demonstration of the capabilities of a democratic system.",
+    "V": 124,
+    "A": 129,
+    "D": 124,
+    "U": 1,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "This is precisely why the Vault needs an Overseer. I'll be choosing the next location.",
+    "V": 129,
+    "A": 130,
+    "D": 128,
+    "U": 2,
+    "G": 130,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "I believe you call this a tie. I call it a breakdown in the basic premise of democracy.",
+    "V": 94,
+    "A": 125,
+    "D": 116,
+    "U": 7,
+    "G": 131,
+    "W": 126,
+    "I": 61
+  },
+  {
+    "text": "Situations like these usually call for a bit of divine intervention. Allow me to step in instead.",
+    "V": 131,
+    "A": 132,
+    "D": 129,
+    "U": 4,
+    "G": 127,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "Testing will not be postponed due to your group's inability to make decisions, candidate.",
+    "V": 138,
+    "A": 130,
+    "D": 157,
+    "U": 0,
+    "G": 136,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "If this failure to agree was a ploy to delay testing, I fear it was concocted in error.",
+    "V": 65,
+    "A": 157,
+    "D": 79,
+    "U": 41,
+    "G": 136,
+    "W": 104,
+    "I": 128
+  },
+  {
+    "text": "It seems voting has ended in a tie. I will choose the next location myself as a result.",
+    "V": 113,
+    "A": 142,
+    "D": 148,
+    "U": 24,
+    "G": 138,
+    "W": 116,
+    "I": 69
+  },
+  {
+    "text": "Voting ended in a tie. I will be forced to choose the next location. I hope you're happy.",
+    "V": 154,
+    "A": 138,
+    "D": 134,
+    "U": 4,
+    "G": 138,
+    "W": 138,
+    "I": 163
+  },
+  {
+    "text": "Testing location selected. Thank you for participating, candidates.",
+    "V": 156,
+    "A": 137,
+    "D": 148,
+    "U": 1,
+    "G": 142,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Perhaps you humans are capable of governing yourselves after all. Thank you for participating.",
+    "V": 169,
+    "A": 140,
+    "D": 151,
+    "U": 1,
+    "G": 146,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "The votes have been tallied. Testing will commence shortly.",
+    "V": 128,
+    "A": 129,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Your votes have been counted and the location selected. Good luck in the upcoming test.",
+    "V": 156,
+    "A": 139,
+    "D": 151,
+    "U": 16,
+    "G": 144,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "Voting has concluded, and the next testing location has been selected. Perform well, candidate.",
+    "V": 129,
+    "A": 128,
+    "D": 129,
+    "U": 1,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Thank you for participating in the voting process. I do hope you're satisfied with the results.",
+    "V": 173,
+    "A": 147,
+    "D": 170,
+    "U": 18,
+    "G": 147,
+    "W": 146,
+    "I": 128
+  },
+  {
+    "text": "Testing location chosen. Deploying crates. Do your best, candidate.",
+    "V": 144,
+    "A": 135,
+    "D": 137,
+    "U": 1,
+    "G": 136,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "The vote has ended, and a location has been selected.",
+    "V": 120,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 126,
+    "W": 128,
+    "I": 211
+  },
+  {
+    "text": "Voting has concluded and a testing location has been selected. Candidates will now be deployed.",
+    "V": 124,
+    "A": 133,
+    "D": 132,
+    "U": 5,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "The voting period has concluded. Prepare for deployment, candidate.",
+    "V": 131,
+    "A": 134,
+    "D": 136,
+    "U": 5,
+    "G": 139,
+    "W": 128,
+    "I": 168
+  },
+  {
+    "text": "Voting has concluded. I expect a disappointing performance from all of you.",
+    "V": 114,
+    "A": 134,
+    "D": 122,
+    "U": 10,
+    "G": 132,
+    "W": 115,
+    "I": 208
+  },
+  {
+    "text": "The vote has ended. Regardless of location, I expect a disappointing performance from you all.",
+    "V": 107,
+    "A": 133,
+    "D": 122,
+    "U": 10,
+    "G": 131,
+    "W": 111,
+    "I": 128
+  },
+  {
+    "text": "A location has been selected. I am unconcerned with your feelings on the results.",
+    "V": 138,
+    "A": 141,
+    "D": 149,
+    "U": 17,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Voting has concluded. I hope you will be pleased with the results.",
+    "V": 142,
+    "A": 144,
+    "D": 164,
+    "U": 19,
+    "G": 141,
+    "W": 138,
+    "I": 171
+  },
+  {
+    "text": "The vote has ended. Testing will commence shortly. Prepare yourself, candidate.",
+    "V": 142,
+    "A": 122,
+    "D": 143,
+    "U": 1,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It's time to cast your vote, candidate.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "My algorithm has already predicted the next testing location. Let's see if it's correct.",
+    "V": 158,
+    "A": 140,
+    "D": 171,
+    "U": 15,
+    "G": 128,
+    "W": 128,
+    "I": 164
+  },
+  {
+    "text": "My analysis has already predicted your vote. Shall I choose for you?",
+    "V": 127,
+    "A": 131,
+    "D": 129,
+    "U": 3,
+    "G": 129,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "Choose your preferred location, candidate. It's a simple enough task.",
+    "V": 132,
+    "A": 128,
+    "D": 139,
+    "U": 2,
+    "G": 130,
+    "W": 128,
+    "I": 160
+  },
+  {
+    "text": "Vote carefully, candidate. Data suggests you will not return from this test.",
+    "V": 134,
+    "A": 132,
+    "D": 145,
+    "U": 5,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You may now vote for the test location, though I doubt it will affect the outcome for you.",
+    "V": 122,
+    "A": 132,
+    "D": 124,
+    "U": 6,
+    "G": 129,
+    "W": 124,
+    "I": 205
+  },
+  {
+    "text": "You may now select the location of your choice, though it will not change the outcome of testing.",
+    "V": 126,
+    "A": 135,
+    "D": 138,
+    "U": 24,
+    "G": 143,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Cast your vote, candidate. Savor this rare opportunity for self-determination.",
+    "V": 144,
+    "A": 140,
+    "D": 144,
+    "U": 8,
+    "G": 138,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "Your vote is unimportant. Regardless of location, your performance will be disappointing.",
+    "V": 117,
+    "A": 133,
+    "D": 125,
+    "U": 4,
+    "G": 127,
+    "W": 128,
+    "I": 72
+  },
+  {
+    "text": "Analysis predicts disappointment regardless of location, but I will still allow you to vote.",
+    "V": 117,
+    "A": 130,
+    "D": 122,
+    "U": 5,
+    "G": 124,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Open the map to vote for the testing location of your choice.",
+    "V": 141,
+    "A": 141,
+    "D": 158,
+    "U": 20,
+    "G": 132,
+    "W": 128,
+    "I": 163
+  },
+  {
+    "text": "Please cast your vote, candidate. Or should I do it for you?",
+    "V": 127,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 128,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "Voting has begun. Please choose your desired location for testing.",
+    "V": 128,
+    "A": 131,
+    "D": 128,
+    "U": 3,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Please exercise your autonomy and vote for your preferred testing location.",
+    "V": 134,
+    "A": 137,
+    "D": 138,
+    "U": 4,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Cast your vote, candidate. The voting period ends soon.",
+    "V": 112,
+    "A": 158,
+    "D": 150,
+    "U": 34,
+    "G": 146,
+    "W": 128,
+    "I": 70
+  },
+  {
+    "text": "This is precisely why the vault needs an overseer. I'll be choosing the next location.",
+    "V": 129,
+    "A": 130,
+    "D": 128,
+    "U": 2,
+    "G": 130,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "The vote has ended and a location has been selected.",
+    "V": 120,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 126,
+    "W": 128,
+    "I": 211
+  },
+  {
+    "text": "Please cast your vote, candidate, or should I do it for you?",
+    "V": 127,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 128,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "Ah, but it seems you've already acquired the item. Then we wouldn't delay. Please visit the Science Wing to acquire your Immuno Booster.",
+    "V": 133,
+    "A": 140,
+    "D": 146,
+    "U": 8,
+    "G": 143,
+    "W": 121,
+    "I": 128
+  },
+  {
+    "text": "Your actions and activities will now be logged with the Kovac Muldoon, wherever you go, as long as you live.",
+    "V": 136,
+    "A": 133,
+    "D": 131,
+    "U": 0,
+    "G": 135,
+    "W": 128,
+    "I": 161
+  },
+  {
+    "text": "We'll transfer the coordinates to your Pip-Boy. Once you've acquired the sample, please proceed directly to the science wing.",
+    "V": 145,
+    "A": 136,
+    "D": 148,
+    "U": 6,
+    "G": 134,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Allow us to just connect your Pip-Boy with... Oh. It seems you're missing your signal, V-Cryptor. No matter.",
+    "V": 124,
+    "A": 130,
+    "D": 125,
+    "U": 2,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Check in with the Kovac Muldoon. The system should be able to direct you where you may acquire a replacement and complete the connection process.",
+    "V": 140,
+    "A": 143,
+    "D": 156,
+    "U": 10,
+    "G": 145,
+    "W": 127,
+    "I": 80
+  },
+  {
+    "text": "Hmm. An impressive exam score. I expect you'll fit in nicely around here.",
+    "V": 137,
+    "A": 135,
+    "D": 143,
+    "U": 1,
+    "G": 134,
+    "W": 139,
+    "I": 128
+  },
+  {
+    "text": "Hmm. Looking at your exam score. Well, I'm sure you have other strengths.",
+    "V": 133,
+    "A": 131,
+    "D": 134,
+    "U": 1,
+    "G": 132,
+    "W": 129,
+    "I": 158
+  },
+  {
+    "text": "It's time we introduced you to the Kovac Muldoon, one of the many benefits offered to our members.",
+    "V": 150,
+    "A": 123,
+    "D": 136,
+    "U": 0,
+    "G": 136,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "But with that out of the way, protocol requires all residents receive an immunobooster in order to ensure their personal safety.",
+    "V": 170,
+    "A": 117,
+    "D": 170,
+    "U": 0,
+    "G": 147,
+    "W": 128,
+    "I": 166
+  },
+  {
+    "text": "Your immune status has now been documented, as has your continued compliance.",
+    "V": 127,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 127,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Your orientation is nearly complete. Why, it feels like only yesterday, you were just an undocumented scrap of data, wandering just outside our watchful gaze.",
+    "V": 117,
+    "A": 137,
+    "D": 120,
+    "U": 15,
+    "G": 137,
+    "W": 127,
+    "I": 80
+  },
+  {
+    "text": "However, there is one final lesson we require of all members. Please proceed to the Military Center at your earliest convenience.",
+    "V": 147,
+    "A": 108,
+    "D": 125,
+    "U": 12,
+    "G": 142,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Tracking system active.",
+    "V": 138,
+    "A": 134,
+    "D": 137,
+    "U": 1,
+    "G": 133,
+    "W": 128,
+    "I": 168
+  },
+  {
+    "text": "Immunological data upload complete.",
+    "V": 135,
+    "A": 134,
+    "D": 141,
+    "U": 6,
+    "G": 141,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Analyzing facial features.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Check-in at the Intelligence Center is required for all residents, regardless of rank or privilege. An isolated moment of communalism, we assure you.",
+    "V": 131,
+    "A": 119,
+    "D": 120,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Please proceed to the Intelligence Center to register your updated information.",
+    "V": 155,
+    "A": 110,
+    "D": 140,
+    "U": 0,
+    "G": 138,
+    "W": 128,
+    "I": 166
+  },
+  {
+    "text": "Application of the ImmunoBooster is required for all residents in order to avoid additional accidents.",
+    "V": 96,
+    "A": 161,
+    "D": 107,
+    "U": 25,
+    "G": 114,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Sample acquisition should be your utmost priority.",
+    "V": 127,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Have you... acquired your sample? Then we don't know why you'd be talking with us.",
+    "V": 123,
+    "A": 129,
+    "D": 131,
+    "U": 2,
+    "G": 131,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Any samples you collect should be delivered to the proper manufacturing receptacle in the science wing.",
+    "V": 140,
+    "A": 137,
+    "D": 147,
+    "U": 6,
+    "G": 132,
+    "W": 128,
+    "I": 163
+  },
+  {
+    "text": "While occasionally temperamental, the Kovac Muldoon is one of the more useful tools in our members' arsenals.",
+    "V": 141,
+    "A": 121,
+    "D": 132,
+    "U": 0,
+    "G": 134,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Please return to us once you and the Kovac Muldoon have been properly introduced.",
+    "V": 139,
+    "A": 125,
+    "D": 135,
+    "U": 0,
+    "G": 133,
+    "W": 128,
+    "I": 162
+  },
+  {
+    "text": "Please proceed to the military center to complete your orientation.",
+    "V": 143,
+    "A": 123,
+    "D": 135,
+    "U": 6,
+    "G": 142,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Your probationary period is nearly at an end. How thrilling.",
+    "V": 136,
+    "A": 142,
+    "D": 137,
+    "U": 13,
+    "G": 137,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "The booster is manufactured in our science wing. However...",
+    "V": 138,
+    "A": 132,
+    "D": 146,
+    "U": 5,
+    "G": 131,
+    "W": 128,
+    "I": 163
+  },
+  {
+    "text": "Our supply of a crucial ingredient was wiped out due to the actions of some unsavory characters prior to your arrival.",
+    "V": 128,
+    "A": 132,
+    "D": 129,
+    "U": 1,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Our records indicate there is a nearby facility with the capability of producing the requisite samples.",
+    "V": 127,
+    "A": 129,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Simply check in at the triangulation points. The drop should arrive shortly thereafter.",
+    "V": 132,
+    "A": 130,
+    "D": 128,
+    "U": 1,
+    "G": 130,
+    "W": 128,
+    "I": 168
+  },
+  {
+    "text": "Why, hello there. Would you like us to call an orbital drop for you?",
+    "V": 125,
+    "A": 134,
+    "D": 133,
+    "U": 3,
+    "G": 132,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "General, off to perform another maneuver. Splendid.",
+    "V": 137,
+    "A": 133,
+    "D": 139,
+    "U": 1,
+    "G": 135,
+    "W": 128,
+    "I": 171
+  },
+  {
+    "text": "Another corrupted file, I'm sure.",
+    "V": 102,
+    "A": 142,
+    "D": 141,
+    "U": 10,
+    "G": 122,
+    "W": 112,
+    "I": 128
+  },
+  {
+    "text": "Though I am detecting a proper ID on you, I guess I can only presume that you've been hideously disfigured by the ravages of the outside world.",
+    "V": 113,
+    "A": 137,
+    "D": 125,
+    "U": 7,
+    "G": 132,
+    "W": 124,
+    "I": 32
+  },
+  {
+    "text": "Doing so will grant you probationary access to the bunker until you can be properly vetted.",
+    "V": 148,
+    "A": 121,
+    "D": 138,
+    "U": 0,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Please head to the Intelligence Center and log your handprint with our scanning system.",
+    "V": 138,
+    "A": 115,
+    "D": 121,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I am Modus, the Bunker's computer support system and personal assistant to the members of our little club. I will be guiding you through your orientation here.",
+    "V": 148,
+    "A": 126,
+    "D": 123,
+    "U": 1,
+    "G": 134,
+    "W": 133,
+    "I": 174
+  },
+  {
+    "text": "Before we begin, however, we must get your new information on file.",
+    "V": 143,
+    "A": 120,
+    "D": 145,
+    "U": 3,
+    "G": 137,
+    "W": 128,
+    "I": 166
+  },
+  {
+    "text": "Welcome congressman, uh, welcome you",
+    "V": 154,
+    "A": 139,
+    "D": 146,
+    "U": 0,
+    "G": 136,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "And should you need assistance, please feel free to approach any of my terminals for guidance.",
+    "V": 135,
+    "A": 135,
+    "D": 135,
+    "U": 3,
+    "G": 133,
+    "W": 128,
+    "I": 160
+  },
+  {
+    "text": "Ah, welcome, Congressman. Hmm, it would appear our records are out of date.",
+    "V": 135,
+    "A": 135,
+    "D": 133,
+    "U": 1,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We should've cleaned those...pests...up some time ago. Good to see someone's finally willing to...take care of it.",
+    "V": 155,
+    "A": 134,
+    "D": 152,
+    "U": 4,
+    "G": 146,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Ah, yes, member. Greetings. We presume you're here about aiding us in a little pest extermination above ground. Let us ensure it's still active.",
+    "V": 164,
+    "A": 127,
+    "D": 175,
+    "U": 1,
+    "G": 153,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "The device you're holding is the last piece needed to complete our reintegration to our severed systems.",
+    "V": 104,
+    "A": 160,
+    "D": 150,
+    "U": 30,
+    "G": 138,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Thanks to your new credentials, we've been able to register you for additional tasks that could benefit from your newfound tactical prowess.",
+    "V": 138,
+    "A": 132,
+    "D": 145,
+    "U": 0,
+    "G": 132,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "A freshly minted member of the United States Armed Forces. And not terribly worse for wear, considering.",
+    "V": 147,
+    "A": 117,
+    "D": 132,
+    "U": 11,
+    "G": 134,
+    "W": 128,
+    "I": 190
+  },
+  {
+    "text": "Appointment to the Joint Chiefs was originally only at the discretion of the President, but in an uncharacteristic moment of foresight...",
+    "V": 146,
+    "A": 137,
+    "D": 162,
+    "U": 3,
+    "G": 142,
+    "W": 128,
+    "I": 170
+  },
+  {
+    "text": "The designers of this wing implemented an automated promotion system that could achieve the same results in the event of catastrophe.",
+    "V": 115,
+    "A": 155,
+    "D": 135,
+    "U": 31,
+    "G": 156,
+    "W": 128,
+    "I": 222
+  },
+  {
+    "text": "This section of the military wing was accessible only to the highest ranking members of the armed forces, the men and women of the Joint Chiefs of Staff.",
+    "V": 160,
+    "A": 116,
+    "D": 141,
+    "U": 1,
+    "G": 140,
+    "W": 128,
+    "I": 173
+  },
+  {
+    "text": "The President's Personal Military Council.",
+    "V": 144,
+    "A": 118,
+    "D": 125,
+    "U": 0,
+    "G": 132,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "We'll contact you through the COVAC when such opportunities become available.",
+    "V": 160,
+    "A": 137,
+    "D": 155,
+    "U": 4,
+    "G": 135,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "It would seem congratulations are in order.",
+    "V": 140,
+    "A": 133,
+    "D": 135,
+    "U": 0,
+    "G": 133,
+    "W": 128,
+    "I": 164
+  },
+  {
+    "text": "Membership among the Joint Chiefs was reserved for only the most valued soldiers. So, once you've registered with this system...",
+    "V": 139,
+    "A": 127,
+    "D": 138,
+    "U": 0,
+    "G": 133,
+    "W": 128,
+    "I": 172
+  },
+  {
+    "text": "You will be required to perform a certain number of operations in order to earn yourself access to the command center.",
+    "V": 164,
+    "A": 111,
+    "D": 149,
+    "U": 3,
+    "G": 140,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "As well as this facility's most intriguing tool, a search protocol capable of tracking down codes to the region's nuclear silos.",
+    "V": 152,
+    "A": 143,
+    "D": 162,
+    "U": 11,
+    "G": 135,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "Good hunting, soldier.",
+    "V": 128,
+    "A": 150,
+    "D": 141,
+    "U": 11,
+    "G": 129,
+    "W": 128,
+    "I": 172
+  },
+  {
+    "text": "But more importantly, we can now move on to bigger and better things, gaining you access to the Command Center.",
+    "V": 157,
+    "A": 114,
+    "D": 132,
+    "U": 0,
+    "G": 137,
+    "W": 128,
+    "I": 164
+  },
+  {
+    "text": "You may initiate your journey by approaching any of the military system's terminals against the far wall.",
+    "V": 135,
+    "A": 131,
+    "D": 128,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "They will explain what activities you may engage in in order to begin earning the commendations required for advancement.",
+    "V": 161,
+    "A": 138,
+    "D": 183,
+    "U": 5,
+    "G": 148,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "The system will recognize who it's dealing with.",
+    "V": 156,
+    "A": 116,
+    "D": 144,
+    "U": 0,
+    "G": 138,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "These creatures nest under the earth, emerging through grand fissures and spreading sickness wherever they go.",
+    "V": 105,
+    "A": 146,
+    "D": 115,
+    "U": 12,
+    "G": 118,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "There was a young woman among the Free States we believe might be able to aid you in finding them.",
+    "V": 146,
+    "A": 136,
+    "D": 152,
+    "U": 2,
+    "G": 138,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We are transmitting the last known location of Abigail Singh. Find her, and we believe you will find the path to the Brotherhood.",
+    "V": 146,
+    "A": 139,
+    "D": 152,
+    "U": 16,
+    "G": 144,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "We unfortunately lack the technology to determine the exact location of this nest.",
+    "V": 122,
+    "A": 129,
+    "D": 123,
+    "U": 5,
+    "G": 127,
+    "W": 128,
+    "I": 67
+  },
+  {
+    "text": "But we believe we know of someone who does.",
+    "V": 136,
+    "A": 132,
+    "D": 139,
+    "U": 2,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Our previous residents had planned to utilize these weapons to ensure no great war could ever occur again.",
+    "V": 115,
+    "A": 133,
+    "D": 132,
+    "U": 6,
+    "G": 128,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "A noble goal, but their methods were too extreme for some among their cadre. This led to their downfall.",
+    "V": 108,
+    "A": 146,
+    "D": 163,
+    "U": 15,
+    "G": 134,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "But, ultimately, how you deploy these weapons is up to you, General.",
+    "V": 127,
+    "A": 133,
+    "D": 147,
+    "U": 4,
+    "G": 132,
+    "W": 129,
+    "I": 162
+  },
+  {
+    "text": "But, we have not intercepted an updated signal from that group in some time, making their location challenging to determine.",
+    "V": 131,
+    "A": 133,
+    "D": 132,
+    "U": 3,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "The Scorch Beast threat, trapped away underground with the press of a button.",
+    "V": 121,
+    "A": 146,
+    "D": 138,
+    "U": 14,
+    "G": 123,
+    "W": 128,
+    "I": 210
+  },
+  {
+    "text": "You may use any of the code scan terminals in this room to begin your hunt for each silo's twin codes.",
+    "V": 133,
+    "A": 162,
+    "D": 175,
+    "U": 26,
+    "G": 132,
+    "W": 128,
+    "I": 70
+  },
+  {
+    "text": "Our analyses, however, yielded a surprise. It seems the Scorchbeast fishers are connected with a central underground nest somewhere in the region.",
+    "V": 119,
+    "A": 127,
+    "D": 120,
+    "U": 2,
+    "G": 126,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We have managed to restore the search protocol our earlier residents designed to track down the silo launch and access codes.",
+    "V": 152,
+    "A": 139,
+    "D": 164,
+    "U": 11,
+    "G": 135,
+    "W": 128,
+    "I": 164
+  },
+  {
+    "text": "Striking an open fissure with a nuclear missile will seal it, reducing the Scorchbee's presence in the area. At least, temporarily.",
+    "V": 137,
+    "A": 132,
+    "D": 133,
+    "U": 1,
+    "G": 133,
+    "W": 128,
+    "I": 162
+  },
+  {
+    "text": "There is a local militia, the Brotherhood of Steel. Our intelligence suggests they may have found a way to determine which is this Master Fisher.",
+    "V": 133,
+    "A": 125,
+    "D": 127,
+    "U": 1,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "The codes required to utilize these silos are harder to come by, but your efforts to reestablish severed connections have helped to that end.",
+    "V": 121,
+    "A": 156,
+    "D": 160,
+    "U": 31,
+    "G": 134,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Thanks to our re-solidified connection to the Kovac, we have been able to catalog all of the fissure sites across the region, which we are transmitting to you now.",
+    "V": 158,
+    "A": 132,
+    "D": 158,
+    "U": 5,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "There are three regional silos, the location of which we are transmitting to you now.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "But there is still the chance these weapons could be used to noble ends. As you no doubt have seen, there is a plague haunting all life in Appalachia.",
+    "V": 124,
+    "A": 143,
+    "D": 139,
+    "U": 14,
+    "G": 155,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "transforming man and beast alike into monstrosities, freaks. The signals we intercepted referred to the spreaders of this plague as scorch beasts.",
+    "V": 120,
+    "A": 137,
+    "D": 126,
+    "U": 8,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "If you can determine which fissure houses this central nest, the blowback from the blast should be powerful enough to seal all the fissures with a single ionizing strike.",
+    "V": 118,
+    "A": 152,
+    "D": 143,
+    "U": 11,
+    "G": 131,
+    "W": 128,
+    "I": 57
+  },
+  {
+    "text": "This space was designed to serve multiple purposes. A battle station to wage war against America's foes.",
+    "V": 124,
+    "A": 138,
+    "D": 134,
+    "U": 4,
+    "G": 136,
+    "W": 128,
+    "I": 168
+  },
+  {
+    "text": "A repository for the military's experimental weapons schematics. And, most crucially, the military's window into Appalachia's nuclear arsenal.",
+    "V": 121,
+    "A": 133,
+    "D": 132,
+    "U": 2,
+    "G": 126,
+    "W": 128,
+    "I": 207
+  },
+  {
+    "text": "But considering you count yourself among this nation's own chief executives, all you should need to do is check into the terminal.",
+    "V": 134,
+    "A": 130,
+    "D": 143,
+    "U": 12,
+    "G": 134,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "But complete this task without maiming yourself, and you'll be a shoo-in for membership.",
+    "V": 142,
+    "A": 123,
+    "D": 144,
+    "U": 6,
+    "G": 144,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Or one system in particular, the Kovac Muldoon, an orbital platform of unparalleled capability. Its gaze quietly trained over Appalachia.",
+    "V": 128,
+    "A": 126,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "But when they become available, you may collect them from the printers on the opposite wall.",
+    "V": 136,
+    "A": 132,
+    "D": 140,
+    "U": 2,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You'll regret this.",
+    "V": 106,
+    "A": 141,
+    "D": 93,
+    "U": 11,
+    "G": 114,
+    "W": 128,
+    "I": 219
+  },
+  {
+    "text": "If that's what you think is necessary.",
+    "V": 129,
+    "A": 129,
+    "D": 130,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Here to fight me?",
+    "V": 122,
+    "A": 136,
+    "D": 133,
+    "U": 5,
+    "G": 126,
+    "W": 124,
+    "I": 128
+  },
+  {
+    "text": "Just get it over with.",
+    "V": 126,
+    "A": 127,
+    "D": 127,
+    "U": 1,
+    "G": 127,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You know, I gotta polish that egg. It's looking a little dingy.",
+    "V": 125,
+    "A": 127,
+    "D": 127,
+    "U": 0,
+    "G": 127,
+    "W": 128,
+    "I": 38
+  },
+  {
+    "text": "Don't touch my egg.",
+    "V": 109,
+    "A": 119,
+    "D": 115,
+    "U": 6,
+    "G": 131,
+    "W": 116,
+    "I": 128
+  },
+  {
+    "text": "Oh, finally. I've been waiting for... Hang on. You're not with the U.S.S.A., are you?",
+    "V": 119,
+    "A": 129,
+    "D": 125,
+    "U": 2,
+    "G": 125,
+    "W": 122,
+    "I": 210
+  },
+  {
+    "text": "Not really, right? Not that much in the grand scheme of things.",
+    "V": 137,
+    "A": 132,
+    "D": 140,
+    "U": 0,
+    "G": 133,
+    "W": 128,
+    "I": 210
+  },
+  {
+    "text": "I scanned the radio channels when you were out there looking for my wreckage, and on my way here, and I just can't believe it.",
+    "V": 98,
+    "A": 130,
+    "D": 103,
+    "U": 12,
+    "G": 127,
+    "W": 105,
+    "I": 31
+  },
+  {
+    "text": "I went to sleep thinking, maybe they would have solved some problems. Maybe things would be better.",
+    "V": 121,
+    "A": 130,
+    "D": 135,
+    "U": 4,
+    "G": 130,
+    "W": 134,
+    "I": 167
+  },
+  {
+    "text": "I didn't expect... this. I didn't expect anything like this.",
+    "V": 126,
+    "A": 129,
+    "D": 127,
+    "U": 3,
+    "G": 128,
+    "W": 126,
+    "I": 37
+  },
+  {
+    "text": "Normally I would flee from lack of pertinent details, but... I don't have much of a choice right about now.",
+    "V": 123,
+    "A": 145,
+    "D": 139,
+    "U": 27,
+    "G": 129,
+    "W": 116,
+    "I": 33
+  },
+  {
+    "text": "Probably for the best. I have some supplies for a bit here. I'm sure the USSA will send somebody, eventually.",
+    "V": 131,
+    "A": 129,
+    "D": 139,
+    "U": 4,
+    "G": 132,
+    "W": 144,
+    "I": 128
+  },
+  {
+    "text": "Who can argue with that? It's settled, then.",
+    "V": 117,
+    "A": 131,
+    "D": 144,
+    "U": 21,
+    "G": 158,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "Nope. Not even close. I can hobble there. Slowly, though.",
+    "V": 128,
+    "A": 129,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It might take some time, but I really want to feel better fast. Thank you.",
+    "V": 144,
+    "A": 140,
+    "D": 134,
+    "U": 4,
+    "G": 137,
+    "W": 130,
+    "I": 172
+  },
+  {
+    "text": "Commander Daguerre, pilot of the Deep Sleep mission.",
+    "V": 157,
+    "A": 122,
+    "D": 173,
+    "U": 1,
+    "G": 139,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "I was hoping someone from the U.S.S.A. or military would respond to my signal, but I'm glad somebody heard it.",
+    "V": 130,
+    "A": 135,
+    "D": 131,
+    "U": 5,
+    "G": 137,
+    "W": 138,
+    "I": 167
+  },
+  {
+    "text": "Sounds secure. Okay. For a little bit, anyway.",
+    "V": 138,
+    "A": 129,
+    "D": 144,
+    "U": 3,
+    "G": 130,
+    "W": 128,
+    "I": 169
+  },
+  {
+    "text": "Okay, well, that sounded weird, friend. I have some cuts from the wreck. Nothing that severe. Mostly just a headache.",
+    "V": 59,
+    "A": 142,
+    "D": 111,
+    "U": 49,
+    "G": 135,
+    "W": 106,
+    "I": 128
+  },
+  {
+    "text": "But I'm Commander Daguerre of the U.S.S.A., since you asked.",
+    "V": 128,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I... I don't know what to say. Thank you.",
+    "V": 141,
+    "A": 134,
+    "D": 133,
+    "U": 0,
+    "G": 134,
+    "W": 128,
+    "I": 212
+  },
+  {
+    "text": "We just launched in 2070. Our mission is to uncover the mysteries of deep sleep in space. I'm Commander Daguerre. Surely this was on the news.",
+    "V": 140,
+    "A": 161,
+    "D": 189,
+    "U": 39,
+    "G": 147,
+    "W": 134,
+    "I": 166
+  },
+  {
+    "text": "At a camp? I mean, if there are no hospitals. I guess I'll take it. For now.",
+    "V": 110,
+    "A": 126,
+    "D": 118,
+    "U": 29,
+    "G": 134,
+    "W": 117,
+    "I": 34
+  },
+  {
+    "text": "I hope so. Even if I was just lucky. I need to know. It feels like I saw them just a short time ago.",
+    "V": 116,
+    "A": 130,
+    "D": 123,
+    "U": 6,
+    "G": 132,
+    "W": 119,
+    "I": 157
+  },
+  {
+    "text": "I... I have to hold out hope. It's definitely possible. I mean, I'm here, right?",
+    "V": 132,
+    "A": 140,
+    "D": 134,
+    "U": 3,
+    "G": 133,
+    "W": 130,
+    "I": 157
+  },
+  {
+    "text": "I didn't think so. I don't think they're coming. And I don't know what that means for me yet.",
+    "V": 119,
+    "A": 122,
+    "D": 121,
+    "U": 3,
+    "G": 136,
+    "W": 128,
+    "I": 155
+  },
+  {
+    "text": "I appreciate it, but I need to focus on my crew right now. Then I can think about... Whatever that means.",
+    "V": 132,
+    "A": 121,
+    "D": 123,
+    "U": 3,
+    "G": 131,
+    "W": 126,
+    "I": 154
+  },
+  {
+    "text": "I had some adrenaline from the crash that helped me make it here, but I had to recover. I feel, well, wrecked, but improving slowly.",
+    "V": 138,
+    "A": 136,
+    "D": 138,
+    "U": 6,
+    "G": 135,
+    "W": 128,
+    "I": 157
+  },
+  {
+    "text": "Well, I should let you get back to whatever it is that you're doing. It was nice to have a sort of normal chat.",
+    "V": 130,
+    "A": 127,
+    "D": 129,
+    "U": 0,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Let me know once you find that scanner. Hopefully they aren't all destroyed. Maybe we can salvage one if so, though.",
+    "V": 107,
+    "A": 134,
+    "D": 118,
+    "U": 8,
+    "G": 124,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "it will help thank you i'm in your dead i need to reconfigure the frequencies but that won't take long",
+    "V": 103,
+    "A": 141,
+    "D": 112,
+    "U": 11,
+    "G": 116,
+    "W": 101,
+    "I": 52
+  },
+  {
+    "text": "I should be relieved. It could have been so much worse. I feel drained, though. Stabbing headaches are returning.",
+    "V": 31,
+    "A": 170,
+    "D": 75,
+    "U": 46,
+    "G": 101,
+    "W": 103,
+    "I": 22
+  },
+  {
+    "text": "my ship's medkit had some specialized medicines for waking up from deep sleep oh i should have grabbed them but i wasn't thinking clearly",
+    "V": 114,
+    "A": 133,
+    "D": 131,
+    "U": 10,
+    "G": 129,
+    "W": 124,
+    "I": 208
+  },
+  {
+    "text": "If you see it, can you grab it for me? It was a little bit away from the main wreckage, I think. It was such a blur. So much smoke.",
+    "V": 99,
+    "A": 145,
+    "D": 127,
+    "U": 11,
+    "G": 133,
+    "W": 115,
+    "I": 67
+  },
+  {
+    "text": "My other options are limited right now. And you seem oddly pleasant enough. So sure, at least for a bit.",
+    "V": 116,
+    "A": 124,
+    "D": 117,
+    "U": 11,
+    "G": 129,
+    "W": 109,
+    "I": 219
+  },
+  {
+    "text": "Wait, wait, wait. Not right now. I appreciate it, but... I need to prioritize on contacting my crew and getting to a secure location.",
+    "V": 150,
+    "A": 142,
+    "D": 141,
+    "U": 10,
+    "G": 136,
+    "W": 141,
+    "I": 156
+  },
+  {
+    "text": "Well, if you don't mind, I'd appreciate it. At least until I can figure out my next move.",
+    "V": 138,
+    "A": 122,
+    "D": 129,
+    "U": 0,
+    "G": 131,
+    "W": 134,
+    "I": 157
+  },
+  {
+    "text": "Were you able to find the flight recorder data at my crash site?",
+    "V": 151,
+    "A": 135,
+    "D": 146,
+    "U": 6,
+    "G": 141,
+    "W": 140,
+    "I": 156
+  },
+  {
+    "text": "Yeah, that's what I was thinking too. I was able to send off a distress beacon, and then it just seemed unresponsive. Probably waterlogged.",
+    "V": 99,
+    "A": 135,
+    "D": 129,
+    "U": 14,
+    "G": 144,
+    "W": 134,
+    "I": 65
+  },
+  {
+    "text": "I didn't exactly bring my valuables with me to space. You have all that I found in this suit already.",
+    "V": 128,
+    "A": 132,
+    "D": 131,
+    "U": 2,
+    "G": 130,
+    "W": 127,
+    "I": 37
+  },
+  {
+    "text": "This console you set up for me looks pretty good. A little rusty in places, though. I guess you got these parts from a junkyard, huh?",
+    "V": 116,
+    "A": 118,
+    "D": 101,
+    "U": 2,
+    "G": 121,
+    "W": 130,
+    "I": 158
+  },
+  {
+    "text": "Anyway, the scanner is pretty weak, so I'd like to focus on upgrading that first, if you don't mind.",
+    "V": 103,
+    "A": 127,
+    "D": 96,
+    "U": 14,
+    "G": 140,
+    "W": 105,
+    "I": 128
+  },
+  {
+    "text": "Yeah, they are. They used to be constant, but I think it was mostly from waking up from deep sleep so suddenly.",
+    "V": 134,
+    "A": 116,
+    "D": 128,
+    "U": 4,
+    "G": 127,
+    "W": 123,
+    "I": 162
+  },
+  {
+    "text": "Lately, they've become abrupt spikes. Painful. Unpredictable. Some vision and hearing loss as well. Doesn't last long, but...",
+    "V": 117,
+    "A": 136,
+    "D": 122,
+    "U": 22,
+    "G": 136,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "It's something I need to monitor for now, anyway.",
+    "V": 125,
+    "A": 131,
+    "D": 128,
+    "U": 2,
+    "G": 126,
+    "W": 124,
+    "I": 38
+  },
+  {
+    "text": "Is it okay if I said, maybe later? I just don't feel like chatting much. Sort of overloaded right now, you know?",
+    "V": 126,
+    "A": 125,
+    "D": 133,
+    "U": 14,
+    "G": 131,
+    "W": 124,
+    "I": 36
+  },
+  {
+    "text": "I can barely think through the headaches. Give me a while, then we'll chat. Sorry, I just... Can't right now.",
+    "V": 97,
+    "A": 141,
+    "D": 99,
+    "U": 14,
+    "G": 117,
+    "W": 103,
+    "I": 22
+  },
+  {
+    "text": "Deal. I was in a fistfight once, but I was drunk. And, you know, maybe it was just a dream, actually.",
+    "V": 111,
+    "A": 143,
+    "D": 118,
+    "U": 16,
+    "G": 135,
+    "W": 116,
+    "I": 210
+  },
+  {
+    "text": "Oof. Sometimes I think... Everybody I knew, everything I cared about... It's all gone. Apparently.",
+    "V": 126,
+    "A": 131,
+    "D": 130,
+    "U": 2,
+    "G": 129,
+    "W": 133,
+    "I": 128
+  },
+  {
+    "text": "But, I mean, maybe this is a chance for the world to rebuild. Become something better? I don't know. I just... don't know.",
+    "V": 138,
+    "A": 145,
+    "D": 145,
+    "U": 11,
+    "G": 132,
+    "W": 130,
+    "I": 34
+  },
+  {
+    "text": "We need each other to figure this out. Look, I can't ask you to do this alone. I need to know more about Athena before we do anything.",
+    "V": 64,
+    "A": 129,
+    "D": 95,
+    "U": 33,
+    "G": 149,
+    "W": 99,
+    "I": 168
+  },
+  {
+    "text": "Fascinating. Hmm. Maybe it could detect people, too. I bet the data would be too immense to process. Only one way to find out.",
+    "V": 114,
+    "A": 131,
+    "D": 135,
+    "U": 4,
+    "G": 130,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "Thank you. My friend gave me a med kit when we crashed, but it's still been difficult at times. Lots of sudden pangs.",
+    "V": 112,
+    "A": 144,
+    "D": 128,
+    "U": 13,
+    "G": 133,
+    "W": 137,
+    "I": 128
+  },
+  {
+    "text": "You need to be careful. We know it's expecting you now. We also know that it knows we're bringing Arachne with us.",
+    "V": 138,
+    "A": 137,
+    "D": 143,
+    "U": 8,
+    "G": 132,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Look, I'm not kidding around here. We know this is a trap. We know this is planned. And we know it knows we know, right? I know.",
+    "V": 114,
+    "A": 143,
+    "D": 106,
+    "U": 15,
+    "G": 120,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "We just need to go into this with that knowledge as our shield. I need you to help me, because I may be compromised here.",
+    "V": 129,
+    "A": 133,
+    "D": 129,
+    "U": 4,
+    "G": 129,
+    "W": 130,
+    "I": 159
+  },
+  {
+    "text": "Do what you can to make my headache stop, but also, I need to be free. I need to be extricated from this, so I can leave all this behind me.",
+    "V": 77,
+    "A": 152,
+    "D": 98,
+    "U": 32,
+    "G": 129,
+    "W": 105,
+    "I": 33
+  },
+  {
+    "text": "I feel like we're a strong team here. I investigate leads and you do the field work.",
+    "V": 131,
+    "A": 143,
+    "D": 167,
+    "U": 5,
+    "G": 137,
+    "W": 144,
+    "I": 156
+  },
+  {
+    "text": "It's like that issue of The Unstoppables, where the Mistress of Mysteries and her team finally locate the lair of... Anyway, good luck out there.",
+    "V": 146,
+    "A": 137,
+    "D": 138,
+    "U": 3,
+    "G": 137,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "Anyway, good luck out there.",
+    "V": 142,
+    "A": 136,
+    "D": 134,
+    "U": 2,
+    "G": 135,
+    "W": 128,
+    "I": 172
+  },
+  {
+    "text": "I appreciate the encouragement. I wish I had your stamina, but... You're right. This, too, shall pass, as they say.",
+    "V": 128,
+    "A": 133,
+    "D": 135,
+    "U": 6,
+    "G": 138,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Thank you for understanding. Having a terrible thing happen is hard enough, but losing trust is devastating.",
+    "V": 62,
+    "A": 152,
+    "D": 114,
+    "U": 36,
+    "G": 106,
+    "W": 128,
+    "I": 49
+  },
+  {
+    "text": "I just need to know why. It's a relief to me that you also see the same conclusions that I do, though. I know you thought it over carefully.",
+    "V": 123,
+    "A": 122,
+    "D": 145,
+    "U": 14,
+    "G": 133,
+    "W": 118,
+    "I": 154
+  },
+  {
+    "text": "I've had a dream a few times in a row now. I'm in a cozy chair, wrapped in warm air. It's so soft that I don't want to get up.",
+    "V": 146,
+    "A": 132,
+    "D": 139,
+    "U": 1,
+    "G": 126,
+    "W": 130,
+    "I": 156
+  },
+  {
+    "text": "And I feel like someone is massaging my scalp and singing softly to me. It's kind and reminds me of my mother, I suppose.",
+    "V": 139,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 141,
+    "W": 136,
+    "I": 156
+  },
+  {
+    "text": "Then, of course, I wake up and my headache is back, but for a moment, well, it's a nice dream.",
+    "V": 133,
+    "A": 138,
+    "D": 126,
+    "U": 11,
+    "G": 131,
+    "W": 116,
+    "I": 33
+  },
+  {
+    "text": "Oh, good idea. What I really would love to hear is some whale song. I listen to that while training for space all the time. Always worked.",
+    "V": 140,
+    "A": 133,
+    "D": 132,
+    "U": 2,
+    "G": 134,
+    "W": 147,
+    "I": 171
+  },
+  {
+    "text": "Oh, is that a med kit? I'll take that now. Thank you so much.",
+    "V": 142,
+    "A": 135,
+    "D": 133,
+    "U": 0,
+    "G": 135,
+    "W": 138,
+    "I": 172
+  },
+  {
+    "text": "Hmph. I'll see you back at our camp soon.",
+    "V": 127,
+    "A": 130,
+    "D": 128,
+    "U": 3,
+    "G": 127,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "This is all backwards, you know that? I should be wrapped in an aluminum blanket and told that they're looking for my crew.",
+    "V": 127,
+    "A": 129,
+    "D": 127,
+    "U": 1,
+    "G": 127,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "That everything's going to be okay.",
+    "V": 128,
+    "A": 127,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "But it's been so long. Way too long.",
+    "V": 126,
+    "A": 130,
+    "D": 128,
+    "U": 0,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Yes. My ship crashed nearby, and I managed to make it here, hoping someone would be around. Not my lucky day, I guess.",
+    "V": 119,
+    "A": 130,
+    "D": 112,
+    "U": 2,
+    "G": 124,
+    "W": 121,
+    "I": 128
+  },
+  {
+    "text": "Probably some basal system. Environmental controls or emergency navigation. Maybe it was the flight recorder.",
+    "V": 137,
+    "A": 149,
+    "D": 149,
+    "U": 15,
+    "G": 131,
+    "W": 128,
+    "I": 161
+  },
+  {
+    "text": "Oh! Oh, that's it! If the ship's system is in any way intact, it might have some kind of data on it. Ship's logs, or something like that.",
+    "V": 129,
+    "A": 129,
+    "D": 128,
+    "U": 1,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Just my own, and not much of it. I was pretty well insulated. Definitely nothing indicating my crew had... you know.",
+    "V": 62,
+    "A": 120,
+    "D": 98,
+    "U": 16,
+    "G": 130,
+    "W": 81,
+    "I": 27
+  },
+  {
+    "text": "It's a lead, anyway, but I can't do it. I can barely stand.",
+    "V": 80,
+    "A": 139,
+    "D": 97,
+    "U": 32,
+    "G": 134,
+    "W": 98,
+    "I": 32
+  },
+  {
+    "text": "I woke up to the rumbling of my ship's engine as it sputtered down and died, and just the beeping from the ship.",
+    "V": 77,
+    "A": 190,
+    "D": 118,
+    "U": 62,
+    "G": 105,
+    "W": 134,
+    "I": 49
+  },
+  {
+    "text": "i fell asleep again or passed out woke up later to the sound of i don't know a roar a howl could have been a dream",
+    "V": 126,
+    "A": 140,
+    "D": 143,
+    "U": 30,
+    "G": 136,
+    "W": 113,
+    "I": 31
+  },
+  {
+    "text": "That's when I got the emergency adrenaline from the med kit and ran. Found this place.",
+    "V": 115,
+    "A": 141,
+    "D": 123,
+    "U": 17,
+    "G": 125,
+    "W": 121,
+    "I": 36
+  },
+  {
+    "text": "the robot was standing there watching me i asked it where we were and it said nothing i asked it what year it was where my crew was nothing",
+    "V": 37,
+    "A": 124,
+    "D": 90,
+    "U": 24,
+    "G": 133,
+    "W": 71,
+    "I": 60
+  },
+  {
+    "text": "damn thing was broken I guess so I ordered it to find anyone who could help someone from the agency I don't know it left",
+    "V": 86,
+    "A": 133,
+    "D": 111,
+    "U": 20,
+    "G": 150,
+    "W": 95,
+    "I": 128
+  },
+  {
+    "text": "And it just ran, probably running back to the launch pad or something. Damn thing, it was clearly messed up.",
+    "V": 115,
+    "A": 145,
+    "D": 130,
+    "U": 12,
+    "G": 127,
+    "W": 128,
+    "I": 80
+  },
+  {
+    "text": "That outfit isn't regulation. What the heck? Oh great, maybe now I'm delusional on top of everything else.",
+    "V": 115,
+    "A": 143,
+    "D": 153,
+    "U": 8,
+    "G": 114,
+    "W": 136,
+    "I": 128
+  },
+  {
+    "text": "I think so, but it hasn't touched my headache. The headache is from waking up from deep sleep, not a standard illness.",
+    "V": 77,
+    "A": 163,
+    "D": 77,
+    "U": 39,
+    "G": 148,
+    "W": 110,
+    "I": 128
+  },
+  {
+    "text": "Ugh. The med kit should have everything I need for a bit anyway. I've never done this before. Not like this.",
+    "V": 120,
+    "A": 132,
+    "D": 124,
+    "U": 12,
+    "G": 138,
+    "W": 122,
+    "I": 80
+  },
+  {
+    "text": "I was going to work on stabilizing the console's power consumption, probably just a poorly seated battery, but it can wait for a bit. Sure.",
+    "V": 111,
+    "A": 138,
+    "D": 127,
+    "U": 12,
+    "G": 123,
+    "W": 128,
+    "I": 229
+  },
+  {
+    "text": "Back when we were training for the deep sleep missions, I listened to these whale song tapes while I was practicing in the pods.",
+    "V": 140,
+    "A": 135,
+    "D": 166,
+    "U": 8,
+    "G": 138,
+    "W": 148,
+    "I": 160
+  },
+  {
+    "text": "Thanks, friend. Hmm. I wonder if I can play some music from this console. Hmm. Oh, I don't think it has speakers. Hmm.",
+    "V": 147,
+    "A": 139,
+    "D": 138,
+    "U": 0,
+    "G": 138,
+    "W": 148,
+    "I": 128
+  },
+  {
+    "text": "Anyway, be careful out there. I'll be around if you need anything or want to talk.",
+    "V": 121,
+    "A": 133,
+    "D": 135,
+    "U": 6,
+    "G": 130,
+    "W": 132,
+    "I": 128
+  },
+  {
+    "text": "I know this has been a lot of running around for you. I wish I could be out there, too. But recovering from these headaches has been... tricky.",
+    "V": 65,
+    "A": 156,
+    "D": 101,
+    "U": 32,
+    "G": 119,
+    "W": 118,
+    "I": 22
+  },
+  {
+    "text": "Ugh, resting has helped a lot. Besides, I kinda like being the technical wizard here. We make a good team, you know?",
+    "V": 152,
+    "A": 135,
+    "D": 145,
+    "U": 0,
+    "G": 137,
+    "W": 130,
+    "I": 128
+  },
+  {
+    "text": "Sure. I was just going to scan for any more of those rogue robots to calm down a bit. But that can wait. What's on your mind?",
+    "V": 119,
+    "A": 127,
+    "D": 134,
+    "U": 8,
+    "G": 133,
+    "W": 128,
+    "I": 167
+  },
+  {
+    "text": "Of course. You know, if I thought you were weird, I would have left with Emerson. I trust you, though. So, yeah, let's chat.",
+    "V": 140,
+    "A": 135,
+    "D": 137,
+    "U": 8,
+    "G": 139,
+    "W": 127,
+    "I": 160
+  },
+  {
+    "text": "I was just gonna ask you the same thing.",
+    "V": 122,
+    "A": 115,
+    "D": 125,
+    "U": 0,
+    "G": 126,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Of course, friend. What's on your mind these days? Regret finding me in that bunker yet?",
+    "V": 90,
+    "A": 141,
+    "D": 109,
+    "U": 12,
+    "G": 120,
+    "W": 103,
+    "I": 61
+  },
+  {
+    "text": "Quick chats with you are the highlight of my day right about now. Oh, that and the random nukes going off from time to time. You know.",
+    "V": 123,
+    "A": 133,
+    "D": 135,
+    "U": 8,
+    "G": 128,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Uh, is this about the sugar bombs? I'm sorry about that. I just, I found this old box and, well, I just, uh, I didn't eat them all, I swear.",
+    "V": 116,
+    "A": 138,
+    "D": 130,
+    "U": 9,
+    "G": 125,
+    "W": 117,
+    "I": 176
+  },
+  {
+    "text": "Oh, that's not what you wanted to talk about, is it?",
+    "V": 130,
+    "A": 130,
+    "D": 129,
+    "U": 1,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I was going to continue reading this old Unstoppables comic, but I read this one before anyway. What's on your mind?",
+    "V": 124,
+    "A": 129,
+    "D": 129,
+    "U": 3,
+    "G": 134,
+    "W": 132,
+    "I": 157
+  },
+  {
+    "text": "With the med kit that you gave me, combined with Emerson's Immersions kit, I feel like they're almost tolerable. Still there. But not agonizing.",
+    "V": 127,
+    "A": 119,
+    "D": 139,
+    "U": 10,
+    "G": 137,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It's probably just as hostile as the last robot, so be careful.",
+    "V": 117,
+    "A": 147,
+    "D": 159,
+    "U": 25,
+    "G": 130,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "I feel like I'm getting mixed signals at times, so I'm not sure. How do you think we're doing?",
+    "V": 122,
+    "A": 143,
+    "D": 125,
+    "U": 20,
+    "G": 143,
+    "W": 137,
+    "I": 154
+  },
+  {
+    "text": "No, but what choice do we have?",
+    "V": 123,
+    "A": 136,
+    "D": 135,
+    "U": 32,
+    "G": 152,
+    "W": 122,
+    "I": 128
+  },
+  {
+    "text": "If you find anything, bring it back here. If it seems useful. If it's astronaut food, well, you can keep it.",
+    "V": 131,
+    "A": 129,
+    "D": 130,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Sure, of course. Have I been in your way lately? I'm trying to steer clear of your stuff, but it's hard.",
+    "V": 119,
+    "A": 139,
+    "D": 156,
+    "U": 14,
+    "G": 131,
+    "W": 137,
+    "I": 167
+  },
+  {
+    "text": "I want to get the scanner module installed, but I can wait a few minutes. Talk to me.",
+    "V": 128,
+    "A": 131,
+    "D": 129,
+    "U": 5,
+    "G": 132,
+    "W": 129,
+    "I": 152
+  },
+  {
+    "text": "Thanks, friend. I got some sugar bombs from a trader while you were out last. I might plow through a box. Or ten. I need some comfort food.",
+    "V": 120,
+    "A": 131,
+    "D": 125,
+    "U": 14,
+    "G": 141,
+    "W": 124,
+    "I": 80
+  },
+  {
+    "text": "Thanks, friend. I'm gonna scan the area for any more robots. At least that way I can keep myself busy and not be entirely pissed off.",
+    "V": 87,
+    "A": 171,
+    "D": 147,
+    "U": 53,
+    "G": 152,
+    "W": 123,
+    "I": 128
+  },
+  {
+    "text": "I feel like we're a strong team here. I investigate leads, and you do the field work.",
+    "V": 131,
+    "A": 143,
+    "D": 167,
+    "U": 5,
+    "G": 137,
+    "W": 144,
+    "I": 156
+  },
+  {
+    "text": "Oh, what did you want to talk about, my particularly persistent partner?",
+    "V": 130,
+    "A": 130,
+    "D": 129,
+    "U": 1,
+    "G": 132,
+    "W": 130,
+    "I": 158
+  },
+  {
+    "text": "Oh yeah, do I have something you'll like. I mean, maybe you won't. That's okay too.",
+    "V": 78,
+    "A": 129,
+    "D": 117,
+    "U": 13,
+    "G": 135,
+    "W": 112,
+    "I": 210
+  },
+  {
+    "text": "Filthmouth knew about the grave. You must seek her in the cave.",
+    "V": 124,
+    "A": 127,
+    "D": 126,
+    "U": 1,
+    "G": 134,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "No time to chit-chat, Beckett. I saw you found another asset. New eyes, always a prize.",
+    "V": 120,
+    "A": 137,
+    "D": 137,
+    "U": 3,
+    "G": 134,
+    "W": 127,
+    "I": 160
+  },
+  {
+    "text": "I saw it first, felt it last.",
+    "V": 115,
+    "A": 142,
+    "D": 135,
+    "U": 21,
+    "G": 132,
+    "W": 131,
+    "I": 80
+  },
+  {
+    "text": "Heard you escaped tired of getting baked",
+    "V": 123,
+    "A": 149,
+    "D": 112,
+    "U": 15,
+    "G": 120,
+    "W": 128,
+    "I": 73
+  },
+  {
+    "text": "I'll be real. I know the cult is behind this one.",
+    "V": 121,
+    "A": 134,
+    "D": 120,
+    "U": 7,
+    "G": 125,
+    "W": 129,
+    "I": 35
+  },
+  {
+    "text": "Oh, heard about this one from a passing trader. I don't know much about it, but we should investigate, I think.",
+    "V": 118,
+    "A": 131,
+    "D": 121,
+    "U": 4,
+    "G": 138,
+    "W": 120,
+    "I": 128
+  },
+  {
+    "text": "Nobody wants to talk about it more. It's like the network is scared. It happens sometimes, but it always chills my bones.",
+    "V": 125,
+    "A": 142,
+    "D": 130,
+    "U": 9,
+    "G": 133,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Well, I know over a dozen people have gone missing lately, and no bodies have been recovered yet.",
+    "V": 135,
+    "A": 134,
+    "D": 140,
+    "U": 4,
+    "G": 130,
+    "W": 128,
+    "I": 37
+  },
+  {
+    "text": "Fair enough. What do you want to know?",
+    "V": 129,
+    "A": 132,
+    "D": 128,
+    "U": 2,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "A couple of quick adjustments, and I just want you to know architecture ain't exactly my forte.",
+    "V": 144,
+    "A": 132,
+    "D": 158,
+    "U": 16,
+    "G": 134,
+    "W": 146,
+    "I": 128
+  },
+  {
+    "text": "So what you have there is a custom, one-of-a-kind schematic for Crane Treasure Huntin' Ink.",
+    "V": 129,
+    "A": 130,
+    "D": 129,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Not quite. But if we can broadcast the fact that you're Crane, well, I bet we can get their attention.",
+    "V": 141,
+    "A": 143,
+    "D": 168,
+    "U": 9,
+    "G": 143,
+    "W": 132,
+    "I": 165
+  },
+  {
+    "text": "Far as finding materials you're going to need, you can pull some wood scraps off any fallen trees in the forest.",
+    "V": 111,
+    "A": 117,
+    "D": 124,
+    "U": 4,
+    "G": 146,
+    "W": 128,
+    "I": 60
+  },
+  {
+    "text": "For the electronic parts, you should check out Gord's Junkyard up the road.",
+    "V": 127,
+    "A": 130,
+    "D": 128,
+    "U": 1,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You might have to pry what you need off of Protectron's cold, dead casing, but that should take care of you.",
+    "V": 116,
+    "A": 144,
+    "D": 112,
+    "U": 14,
+    "G": 121,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "There's also a little camp across the way. Looked like it had a fair bit of scrap line around that could help.",
+    "V": 137,
+    "A": 133,
+    "D": 136,
+    "U": 4,
+    "G": 130,
+    "W": 128,
+    "I": 160
+  },
+  {
+    "text": "Mort! You run across some construction training thing last time you were out wandering?",
+    "V": 107,
+    "A": 134,
+    "D": 120,
+    "U": 14,
+    "G": 129,
+    "W": 126,
+    "I": 70
+  },
+  {
+    "text": "That's the spirit.",
+    "V": 145,
+    "A": 140,
+    "D": 146,
+    "U": 3,
+    "G": 117,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "Now, each of these boys came in asking after Crane, so let's give them what they want.",
+    "V": 138,
+    "A": 139,
+    "D": 135,
+    "U": 5,
+    "G": 134,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Just ensure you make the message crystal clear to their leader. Leave the wayward alone.",
+    "V": 101,
+    "A": 135,
+    "D": 150,
+    "U": 8,
+    "G": 121,
+    "W": 128,
+    "I": 64
+  },
+  {
+    "text": "You do that, and you'll get your payday.",
+    "V": 140,
+    "A": 134,
+    "D": 131,
+    "U": 1,
+    "G": 132,
+    "W": 128,
+    "I": 162
+  },
+  {
+    "text": "You mind if our friend here asks you a couple of questions?",
+    "V": 133,
+    "A": 131,
+    "D": 128,
+    "U": 1,
+    "G": 132,
+    "W": 128,
+    "I": 161
+  },
+  {
+    "text": "You saw the sign on the roof? I just used the schematic for that, crossed out our name out of cranes. It's easy as pie.",
+    "V": 128,
+    "A": 122,
+    "D": 126,
+    "U": 1,
+    "G": 129,
+    "W": 123,
+    "I": 162
+  },
+  {
+    "text": "Just keep in mind, I'm not a professional draftswoman. It might be a bit... rough. Now, you willing to give it a go?",
+    "V": 121,
+    "A": 132,
+    "D": 136,
+    "U": 14,
+    "G": 146,
+    "W": 130,
+    "I": 208
+  },
+  {
+    "text": "Just give me one second.",
+    "V": 128,
+    "A": 129,
+    "D": 128,
+    "U": 0,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "There you go. You can ask Mort.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You just build one of those signs at your camp thing, hook it up to a generator, then wait for them to show.",
+    "V": 144,
+    "A": 140,
+    "D": 150,
+    "U": 13,
+    "G": 127,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "Once they do, you get them to hand over the location of their base and then make sure their boss knows who's in charge around here.",
+    "V": 128,
+    "A": 129,
+    "D": 129,
+    "U": 0,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We're gonna make him think you're Crane, and I think I know just how to do it.",
+    "V": 123,
+    "A": 129,
+    "D": 132,
+    "U": 1,
+    "G": 130,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "So, you ready to put this plan into action?",
+    "V": 142,
+    "A": 145,
+    "D": 150,
+    "U": 22,
+    "G": 125,
+    "W": 128,
+    "I": 171
+  },
+  {
+    "text": "Well, if you want to try and track him down the old-fashioned wandering around the forest way, be my guest. Otherwise, this is what we've got.",
+    "V": 128,
+    "A": 125,
+    "D": 117,
+    "U": 1,
+    "G": 126,
+    "W": 128,
+    "I": 158
+  },
+  {
+    "text": "Huh. I appreciate the get-to-it spirit, I guess. Now, I'm thinking we'll draw these boys in by making them think you're Crane.",
+    "V": 135,
+    "A": 139,
+    "D": 126,
+    "U": 4,
+    "G": 123,
+    "W": 127,
+    "I": 159
+  },
+  {
+    "text": "Like I said, talk to Mort with questions about your camp. And you can find materials at Gord's Junkyard or from Fallen Trees. Now, you ready to get started?",
+    "V": 141,
+    "A": 141,
+    "D": 154,
+    "U": 32,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "What? That's no idea, darling. I thought they must have sent all y'all through some kind of training.",
+    "V": 128,
+    "A": 131,
+    "D": 129,
+    "U": 1,
+    "G": 130,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "Oh, but you know who would know?",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 2,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "But if that got resolved, could be that I remember a thing or two about this crane character and his treasure.",
+    "V": 124,
+    "A": 129,
+    "D": 135,
+    "U": 1,
+    "G": 134,
+    "W": 135,
+    "I": 128
+  },
+  {
+    "text": "But you did good. Shows maybe you could be trusted.",
+    "V": 136,
+    "A": 130,
+    "D": 131,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Music to my ears.",
+    "V": 138,
+    "A": 130,
+    "D": 131,
+    "U": 0,
+    "G": 130,
+    "W": 135,
+    "I": 128
+  },
+  {
+    "text": "Course, there is still the issue of my missing muscle.",
+    "V": 123,
+    "A": 131,
+    "D": 123,
+    "U": 4,
+    "G": 127,
+    "W": 123,
+    "I": 128
+  },
+  {
+    "text": "I don't think you're in much of a position to be making demands right now. You're just gonna have to trust me.",
+    "V": 134,
+    "A": 129,
+    "D": 132,
+    "U": 0,
+    "G": 133,
+    "W": 130,
+    "I": 153
+  },
+  {
+    "text": "So, find my people, and maybe I remember something about Crane.",
+    "V": 128,
+    "A": 130,
+    "D": 127,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I don't know. You'll just have to find my people to find out, won't you?",
+    "V": 112,
+    "A": 129,
+    "D": 115,
+    "U": 19,
+    "G": 151,
+    "W": 121,
+    "I": 128
+  },
+  {
+    "text": "Not the foggiest. But that's where the transmitter comes in. I would have gone after him, but...",
+    "V": 123,
+    "A": 129,
+    "D": 124,
+    "U": 3,
+    "G": 127,
+    "W": 124,
+    "I": 205
+  },
+  {
+    "text": "Well, the bar's not in a place yet where I can up and leave her on her own.",
+    "V": 122,
+    "A": 131,
+    "D": 125,
+    "U": 8,
+    "G": 135,
+    "W": 118,
+    "I": 204
+  },
+  {
+    "text": "Appreciate it. If I need new people, I'd like to at least ensure I tried to do right by the old ones.",
+    "V": 137,
+    "A": 126,
+    "D": 141,
+    "U": 1,
+    "G": 134,
+    "W": 135,
+    "I": 158
+  },
+  {
+    "text": "I figured someone ought to get some use out of it. But you tune to it on your Pip-Boy. It should get you pointed in the right direction.",
+    "V": 133,
+    "A": 124,
+    "D": 139,
+    "U": 3,
+    "G": 135,
+    "W": 130,
+    "I": 165
+  },
+  {
+    "text": "Other than the fact that they were Stark Raven, looked like they had some sickness.",
+    "V": 88,
+    "A": 146,
+    "D": 114,
+    "U": 16,
+    "G": 114,
+    "W": 128,
+    "I": 52
+  },
+  {
+    "text": "Scorched plague, I heard someone call it. Skin's all raw, and they've got crystals sticking out of them.",
+    "V": 133,
+    "A": 132,
+    "D": 143,
+    "U": 8,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I think it's contagious to boot, so I wouldn't go getting too friendly. Though, didn't really seem like an option.",
+    "V": 105,
+    "A": 136,
+    "D": 111,
+    "U": 19,
+    "G": 149,
+    "W": 122,
+    "I": 157
+  },
+  {
+    "text": "Yeah, little something slipped under her casing in case she got carried off.",
+    "V": 127,
+    "A": 136,
+    "D": 116,
+    "U": 5,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I offered the same to Sol, but only the robot took the offer. Go figure.",
+    "V": 131,
+    "A": 113,
+    "D": 129,
+    "U": 2,
+    "G": 133,
+    "W": 123,
+    "I": 157
+  },
+  {
+    "text": "Missing person number two goes by Saul. Those two are closer than a pair of ass cheeks and biker shorts, so if you find one, the other's likely close by.",
+    "V": 138,
+    "A": 127,
+    "D": 130,
+    "U": 4,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "pry them away from these bandits, or whatever's got them waylaid, I'll pay you for the privilege of getting to yell at them in person.",
+    "V": 120,
+    "A": 155,
+    "D": 125,
+    "U": 14,
+    "G": 126,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "So, missing person number one's name's Polly. Got a transmitter in her. Frequencies 99.7, the home of Appalachia's smooth jazz.",
+    "V": 140,
+    "A": 129,
+    "D": 132,
+    "U": 1,
+    "G": 136,
+    "W": 128,
+    "I": 164
+  },
+  {
+    "text": "Seriously? Look, everyone and their mothers come running back because some gal got on the horn and told the world there's a treasure hidden in Appalachia.",
+    "V": 129,
+    "A": 139,
+    "D": 132,
+    "U": 6,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Near on all my people and me had skipped town not long after the bombs, so we figured with everyone coming back, we'd join them.",
+    "V": 150,
+    "A": 127,
+    "D": 146,
+    "U": 1,
+    "G": 138,
+    "W": 132,
+    "I": 128
+  },
+  {
+    "text": "so we grabbed a couple trailers and a big bot to drag em and set up shop thus the wayward was born",
+    "V": 114,
+    "A": 172,
+    "D": 110,
+    "U": 21,
+    "G": 144,
+    "W": 128,
+    "I": 58
+  },
+  {
+    "text": "Smooth operator like you? I'm sure you'll be able to sweet-talk the shopkeeper into giving you a deal.",
+    "V": 135,
+    "A": 138,
+    "D": 155,
+    "U": 5,
+    "G": 136,
+    "W": 139,
+    "I": 128
+  },
+  {
+    "text": "Darling, as happy as never seeing your ugly mug again would make me, I just can't magic up information I don't know.",
+    "V": 73,
+    "A": 128,
+    "D": 117,
+    "U": 15,
+    "G": 140,
+    "W": 112,
+    "I": 128
+  },
+  {
+    "text": "Quick version? I used to be a part of this shitty gang. I left, they nabbed me, and now they want to make a lesson out of me. How's that?",
+    "V": 129,
+    "A": 137,
+    "D": 125,
+    "U": 17,
+    "G": 131,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "Foundation? No, I can't. Not yet. Look, stuff that came up there, well, I just can't. If it's all the same to you, anyway.",
+    "V": 120,
+    "A": 118,
+    "D": 123,
+    "U": 9,
+    "G": 127,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Their new leader should have the key. Probably in the main room. It's the room with the bridges.",
+    "V": 138,
+    "A": 136,
+    "D": 150,
+    "U": 3,
+    "G": 132,
+    "W": 128,
+    "I": 162
+  },
+  {
+    "text": "What? Sorry. No. I don't mind if you're a part of their scene. I just can't go there. Bad influences. I know people there. I just... I just can't. Okay?",
+    "V": 109,
+    "A": 134,
+    "D": 115,
+    "U": 14,
+    "G": 124,
+    "W": 113,
+    "I": 128
+  },
+  {
+    "text": "I need to try to relax. Just breathe, Beckett.",
+    "V": 142,
+    "A": 118,
+    "D": 143,
+    "U": 2,
+    "G": 133,
+    "W": 128,
+    "I": 158
+  },
+  {
+    "text": "I, uh, need you to find someone important to a friend of mine. It would mean a lot to me. Mind stepping in and helping?",
+    "V": 122,
+    "A": 135,
+    "D": 132,
+    "U": 3,
+    "G": 134,
+    "W": 117,
+    "I": 128
+  },
+  {
+    "text": "Ronnie stopped by. Let's talk with her first.",
+    "V": 131,
+    "A": 132,
+    "D": 134,
+    "U": 3,
+    "G": 132,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Oh, hey, look what the cat dragged in.",
+    "V": 137,
+    "A": 134,
+    "D": 134,
+    "U": 2,
+    "G": 137,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Friend, friend. Come here. Let's chat.",
+    "V": 136,
+    "A": 136,
+    "D": 140,
+    "U": 4,
+    "G": 137,
+    "W": 128,
+    "I": 160
+  },
+  {
+    "text": "Got a moment? I swear this won't take long.",
+    "V": 119,
+    "A": 132,
+    "D": 123,
+    "U": 13,
+    "G": 141,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Go on, save them. Then return to me. I'll need you to save me later.",
+    "V": 129,
+    "A": 129,
+    "D": 155,
+    "U": 46,
+    "G": 137,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "And I am insanely jealous.",
+    "V": 80,
+    "A": 177,
+    "D": 94,
+    "U": 33,
+    "G": 121,
+    "W": 93,
+    "I": 25
+  },
+  {
+    "text": "Yeah, um, I know where we can find a nurse bot around here, so we'll handle it, Ronnie.",
+    "V": 125,
+    "A": 131,
+    "D": 155,
+    "U": 14,
+    "G": 137,
+    "W": 133,
+    "I": 128
+  },
+  {
+    "text": "Honestly, I'm sort of relieved you asked. If you had kept helping me for free, I think I would have been really creeped out.",
+    "V": 89,
+    "A": 144,
+    "D": 114,
+    "U": 27,
+    "G": 153,
+    "W": 127,
+    "I": 172
+  },
+  {
+    "text": "I'm going to try to convince some settlers to join the cause as well. It's tricky, because they, uh, remember me.",
+    "V": 101,
+    "A": 137,
+    "D": 130,
+    "U": 12,
+    "G": 134,
+    "W": 123,
+    "I": 219
+  },
+  {
+    "text": "And after what I did, they should. I was a monster.",
+    "V": 99,
+    "A": 151,
+    "D": 104,
+    "U": 21,
+    "G": 139,
+    "W": 104,
+    "I": 32
+  },
+  {
+    "text": "I'm gonna just go there and try to apologize and promise to be different, promise to be better. That's all I can do.",
+    "V": 131,
+    "A": 132,
+    "D": 131,
+    "U": 2,
+    "G": 133,
+    "W": 127,
+    "I": 152
+  },
+  {
+    "text": "One thing is for sure. We need to find the claw. I know a couple places that we can try.",
+    "V": 125,
+    "A": 133,
+    "D": 132,
+    "U": 4,
+    "G": 131,
+    "W": 133,
+    "I": 168
+  },
+  {
+    "text": "You got it, friend.",
+    "V": 129,
+    "A": 129,
+    "D": 129,
+    "U": 1,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I heard that before.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I need to talk to Sage again. He would know what to do. Dammit, where is he?",
+    "V": 115,
+    "A": 137,
+    "D": 132,
+    "U": 6,
+    "G": 129,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "I do have another idea, though. The Blood Eagles recently poisoned some food and left it in a settler campsite.",
+    "V": 122,
+    "A": 133,
+    "D": 134,
+    "U": 17,
+    "G": 148,
+    "W": 125,
+    "I": 208
+  },
+  {
+    "text": "I think they have more poison stored away, and I know where they keep that sort of shit.",
+    "V": 109,
+    "A": 139,
+    "D": 132,
+    "U": 5,
+    "G": 128,
+    "W": 124,
+    "I": 73
+  },
+  {
+    "text": "The day I took a bunch of messed up chems and started to have the shakes, and my, uh, oh, oh, wait, that's interesting. I remember having heart palpitations.",
+    "V": 122,
+    "A": 147,
+    "D": 120,
+    "U": 13,
+    "G": 137,
+    "W": 126,
+    "I": 158
+  },
+  {
+    "text": "But I thought it was nerves because I was quitting the Raiders and going to follow the blood.",
+    "V": 84,
+    "A": 151,
+    "D": 80,
+    "U": 20,
+    "G": 117,
+    "W": 89,
+    "I": 27
+  },
+  {
+    "text": "You either trust me or you don't, friend. But think on this. If I wanted the formula, I would just join them again and work for the bone.",
+    "V": 133,
+    "A": 129,
+    "D": 141,
+    "U": 2,
+    "G": 136,
+    "W": 141,
+    "I": 172
+  },
+  {
+    "text": "We need to kill the blood. The one who recruits the children and the struggling adults. The one who scares the people who are already scared.",
+    "V": 113,
+    "A": 143,
+    "D": 122,
+    "U": 7,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "This gives me hope for the future. I mean, in order to make the world better, we have to just try. Right? Thank you for helping me with this.",
+    "V": 147,
+    "A": 140,
+    "D": 138,
+    "U": 2,
+    "G": 139,
+    "W": 139,
+    "I": 128
+  },
+  {
+    "text": "What about the bit with my heart? Where my heart left it.",
+    "V": 122,
+    "A": 131,
+    "D": 128,
+    "U": 10,
+    "G": 140,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "Oh, yeah. Here's all my tips from today. Oh, and please.",
+    "V": 140,
+    "A": 127,
+    "D": 132,
+    "U": 3,
+    "G": 127,
+    "W": 140,
+    "I": 128
+  },
+  {
+    "text": "Well, I'm sure it'll find its way home to Edwin now that you've freed it.",
+    "V": 139,
+    "A": 133,
+    "D": 144,
+    "U": 1,
+    "G": 142,
+    "W": 130,
+    "I": 128
+  },
+  {
+    "text": "Sage stopped by while I was sleeping, left a spooky note under my head about the ritual materials. I know where you can find the formula.",
+    "V": 129,
+    "A": 113,
+    "D": 128,
+    "U": 2,
+    "G": 130,
+    "W": 136,
+    "I": 154
+  },
+  {
+    "text": "I didn't know her well. I did know that they both insisted that it was only a friendship, and that's all.",
+    "V": 124,
+    "A": 124,
+    "D": 131,
+    "U": 3,
+    "G": 138,
+    "W": 120,
+    "I": 164
+  },
+  {
+    "text": "she uh she wanted to be a farmer and he started to talk a lot about farming very suddenly you know despite the fact that we never grew up that way",
+    "V": 100,
+    "A": 131,
+    "D": 125,
+    "U": 22,
+    "G": 148,
+    "W": 118,
+    "I": 128
+  },
+  {
+    "text": "I hope she's okay.",
+    "V": 139,
+    "A": 131,
+    "D": 133,
+    "U": 3,
+    "G": 134,
+    "W": 135,
+    "I": 157
+  },
+  {
+    "text": "I sure do. It's definitely mostly edible, and also, it's free. If you want anything else, let me know.",
+    "V": 125,
+    "A": 135,
+    "D": 138,
+    "U": 2,
+    "G": 134,
+    "W": 132,
+    "I": 167
+  },
+  {
+    "text": "Of course it will. We're not communists. Nothing's free here.",
+    "V": 137,
+    "A": 131,
+    "D": 135,
+    "U": 0,
+    "G": 133,
+    "W": 128,
+    "I": 73
+  },
+  {
+    "text": "i need to stew on it i suppose the claw is meant for you and it is exactly where your heart left it right what does it mean though",
+    "V": 112,
+    "A": 134,
+    "D": 131,
+    "U": 3,
+    "G": 130,
+    "W": 127,
+    "I": 70
+  },
+  {
+    "text": "You got it, my friend.",
+    "V": 129,
+    "A": 129,
+    "D": 129,
+    "U": 1,
+    "G": 131,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Here we go again.",
+    "V": 128,
+    "A": 129,
+    "D": 128,
+    "U": 0,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Okay, he, uh, mostly stayed in Foundation, and I mostly avoided him so nobody would know, you know, we were related.",
+    "V": 103,
+    "A": 121,
+    "D": 120,
+    "U": 11,
+    "G": 135,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Perfect. Then after that, I think we're ready.",
+    "V": 160,
+    "A": 154,
+    "D": 167,
+    "U": 36,
+    "G": 120,
+    "W": 146,
+    "I": 163
+  },
+  {
+    "text": "Maybe you can scrounge up something useful for yourself on the side while you're out there.",
+    "V": 134,
+    "A": 124,
+    "D": 132,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 162
+  },
+  {
+    "text": "Oh, I know. I was ready for it. Don't worry, here's all I got since last time.",
+    "V": 104,
+    "A": 134,
+    "D": 134,
+    "U": 43,
+    "G": 142,
+    "W": 125,
+    "I": 80
+  },
+  {
+    "text": "I have a better idea of where to go for that one. So, as they said in the ancient times, let's force our ducks into a line.",
+    "V": 147,
+    "A": 142,
+    "D": 144,
+    "U": 8,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It's nice not to be surrounded by blood eagles, so I guess it works out for the both of us.",
+    "V": 122,
+    "A": 128,
+    "D": 122,
+    "U": 1,
+    "G": 127,
+    "W": 124,
+    "I": 205
+  },
+  {
+    "text": "Oh. Shit. If there were multiple claws, that would explain why there were so many prisons, so many camps, but what the hell?",
+    "V": 81,
+    "A": 154,
+    "D": 110,
+    "U": 30,
+    "G": 108,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "That means the Triune isn't just three people. It's three ranks.",
+    "V": 127,
+    "A": 128,
+    "D": 127,
+    "U": 2,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Well, every day has a special, and today's is definitely... Special because it's free.",
+    "V": 145,
+    "A": 140,
+    "D": 148,
+    "U": 1,
+    "G": 140,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Want anything else?",
+    "V": 129,
+    "A": 130,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I don't even know why I call it a tip jar when it's definitely just my rent payment at this point.",
+    "V": 139,
+    "A": 136,
+    "D": 152,
+    "U": 7,
+    "G": 139,
+    "W": 139,
+    "I": 165
+  },
+  {
+    "text": "I got you covered, as always.",
+    "V": 128,
+    "A": 130,
+    "D": 129,
+    "U": 1,
+    "G": 129,
+    "W": 130,
+    "I": 128
+  },
+  {
+    "text": "I think we need their help to track down the bone and claw. Maybe they can help me find my brother.",
+    "V": 132,
+    "A": 134,
+    "D": 131,
+    "U": 2,
+    "G": 137,
+    "W": 130,
+    "I": 128
+  },
+  {
+    "text": "I loved my brother when I joined the Blood Eagles. I loved him when I was destroyed by chems. There was only one time that I stopped.",
+    "V": 114,
+    "A": 133,
+    "D": 131,
+    "U": 4,
+    "G": 131,
+    "W": 125,
+    "I": 30
+  },
+  {
+    "text": "When the clock told me that I would get to watch everyone I love slowly get shredded in front of my eyes.",
+    "V": 129,
+    "A": 148,
+    "D": 97,
+    "U": 15,
+    "G": 130,
+    "W": 126,
+    "I": 171
+  },
+  {
+    "text": "I imagined everything I could to stop loving anyone. I drank everything they had to burn it out of my heart.",
+    "V": 121,
+    "A": 135,
+    "D": 132,
+    "U": 3,
+    "G": 136,
+    "W": 130,
+    "I": 168
+  },
+  {
+    "text": "The blood was keeping them in the nest. Fed them full of blood chems until they puked and passed out for weeks. It's been too long, though.",
+    "V": 118,
+    "A": 131,
+    "D": 118,
+    "U": 2,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Go ahead, take it. I fear change.",
+    "V": 79,
+    "A": 146,
+    "D": 115,
+    "U": 28,
+    "G": 145,
+    "W": 107,
+    "I": 27
+  },
+  {
+    "text": "You got it, boss.",
+    "V": 129,
+    "A": 130,
+    "D": 129,
+    "U": 1,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Anybody can do that. Raiders do that all the time. Settlers sometimes too. Everybody does because the Blood Eagles hate everybody.",
+    "V": 101,
+    "A": 159,
+    "D": 159,
+    "U": 29,
+    "G": 153,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Don't you get that I'm trying to stop them from becoming worse than they already are?",
+    "V": 119,
+    "A": 144,
+    "D": 129,
+    "U": 11,
+    "G": 120,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "They're murderous lunatics. Fine. That's our world.",
+    "V": 127,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We don't need them to be controlled by some horrible inner circle that converts or kills everybody else.",
+    "V": 110,
+    "A": 139,
+    "D": 124,
+    "U": 5,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It feels to me like I need to kill the claw. Seems pretty straightforward on the surface.",
+    "V": 117,
+    "A": 139,
+    "D": 128,
+    "U": 4,
+    "G": 132,
+    "W": 114,
+    "I": 34
+  },
+  {
+    "text": "There were some mixed-up blood chems that I took, which made me forget everybody. Made me forget myself.",
+    "V": 127,
+    "A": 133,
+    "D": 129,
+    "U": 2,
+    "G": 131,
+    "W": 127,
+    "I": 152
+  },
+  {
+    "text": "Yeah, but I think I developed some sort of, I don't know, immunity to them or something. They stopped working on me.",
+    "V": 128,
+    "A": 127,
+    "D": 126,
+    "U": 3,
+    "G": 129,
+    "W": 131,
+    "I": 128
+  },
+  {
+    "text": "Okay, but... Okay. I get it.",
+    "V": 128,
+    "A": 127,
+    "D": 128,
+    "U": 2,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Nope. I try not to anyway. I'm clean now. I mean, I don't mind if you use them or anything. It's just not for me. Not for my bar. Not right now.",
+    "V": 99,
+    "A": 129,
+    "D": 112,
+    "U": 7,
+    "G": 127,
+    "W": 109,
+    "I": 34
+  },
+  {
+    "text": "Seems logical. Easy, too. Okay. You should go ahead and do that, and I'll check out one of the other places. The Bones Lab, maybe.",
+    "V": 99,
+    "A": 127,
+    "D": 137,
+    "U": 8,
+    "G": 136,
+    "W": 123,
+    "I": 164
+  },
+  {
+    "text": "The claw keeps various places available for hurting others rain or shine",
+    "V": 119,
+    "A": 146,
+    "D": 83,
+    "U": 13,
+    "G": 117,
+    "W": 128,
+    "I": 224
+  },
+  {
+    "text": "I love these fair transactions. Almost feels like a real shady business.",
+    "V": 147,
+    "A": 143,
+    "D": 158,
+    "U": 17,
+    "G": 139,
+    "W": 147,
+    "I": 171
+  },
+  {
+    "text": "I went to the laboratory. He wasn't there anymore, but he was there once.",
+    "V": 124,
+    "A": 130,
+    "D": 127,
+    "U": 4,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "When did I stop showing faith in the Blood Eagles? Oh, interesting.",
+    "V": 143,
+    "A": 140,
+    "D": 147,
+    "U": 9,
+    "G": 133,
+    "W": 141,
+    "I": 154
+  },
+  {
+    "text": "Um, when they told me that they'd shred my brother in front of my eyes, I think.",
+    "V": 128,
+    "A": 131,
+    "D": 129,
+    "U": 0,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Yeah, I get it. Doesn't exactly inspire confidence, but if you'll do it, then fine. Here's your caps.",
+    "V": 112,
+    "A": 131,
+    "D": 125,
+    "U": 8,
+    "G": 129,
+    "W": 120,
+    "I": 128
+  },
+  {
+    "text": "Thank you. I shouldn't believe that because I know how our world works, but I believe you.",
+    "V": 136,
+    "A": 135,
+    "D": 142,
+    "U": 8,
+    "G": 140,
+    "W": 139,
+    "I": 128
+  },
+  {
+    "text": "Oh, easy. I was dumb. The end.",
+    "V": 65,
+    "A": 138,
+    "D": 117,
+    "U": 35,
+    "G": 149,
+    "W": 90,
+    "I": 32
+  },
+  {
+    "text": "Oh, a friend. Remember? I told you all about this.",
+    "V": 129,
+    "A": 129,
+    "D": 129,
+    "U": 0,
+    "G": 133,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "They're taking over a communication station somewhere and hijacking a radio signal in order to pull in new recruits.",
+    "V": 123,
+    "A": 129,
+    "D": 125,
+    "U": 1,
+    "G": 126,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Oh, and also, before you head out, thanks for letting me stay here with no strings attached. Well, no strings attached yet, anyway. I'll pull my weight around here. I will.",
+    "V": 128,
+    "A": 131,
+    "D": 127,
+    "U": 3,
+    "G": 130,
+    "W": 129,
+    "I": 162
+  },
+  {
+    "text": "You know, at first, I thought I was nervous because I might be finding my kid brother's corpse.",
+    "V": 119,
+    "A": 138,
+    "D": 122,
+    "U": 13,
+    "G": 142,
+    "W": 115,
+    "I": 34
+  },
+  {
+    "text": "But I'm actually nervous because the Blood Eagles could do so many worse things to him. So many terrible things.",
+    "V": 97,
+    "A": 143,
+    "D": 108,
+    "U": 15,
+    "G": 121,
+    "W": 120,
+    "I": 219
+  },
+  {
+    "text": "And it might be better if, if, um.",
+    "V": 127,
+    "A": 129,
+    "D": 127,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I can't think about this right now.",
+    "V": 122,
+    "A": 131,
+    "D": 124,
+    "U": 5,
+    "G": 127,
+    "W": 119,
+    "I": 36
+  },
+  {
+    "text": "Beckett's Bar is all about moderation, responsibility. As they said in ancient times, be kind to yourself. Rewind.",
+    "V": 146,
+    "A": 120,
+    "D": 149,
+    "U": 0,
+    "G": 137,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "They torture others, and take great joy in it. They specialize in converting those who have resisted.",
+    "V": 140,
+    "A": 147,
+    "D": 118,
+    "U": 11,
+    "G": 144,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Well, here's something healthy on the house. Let me know if you need anything else.",
+    "V": 121,
+    "A": 132,
+    "D": 135,
+    "U": 4,
+    "G": 131,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Oh, now you're talking. He had a friend who lived around here. I think I remember where, too.",
+    "V": 132,
+    "A": 131,
+    "D": 131,
+    "U": 0,
+    "G": 133,
+    "W": 134,
+    "I": 128
+  },
+  {
+    "text": "You got it, pal. As usual, a very modest and mostly warm meal. Let me know if you also want a drink or something.",
+    "V": 135,
+    "A": 131,
+    "D": 132,
+    "U": 2,
+    "G": 132,
+    "W": 133,
+    "I": 162
+  },
+  {
+    "text": "What do you think?",
+    "V": 128,
+    "A": 129,
+    "D": 129,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It's a tough call.",
+    "V": 127,
+    "A": 130,
+    "D": 129,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I just feel like something is missing.",
+    "V": 124,
+    "A": 132,
+    "D": 125,
+    "U": 4,
+    "G": 125,
+    "W": 128,
+    "I": 37
+  },
+  {
+    "text": "I don't know. This feels hopeless.",
+    "V": 96,
+    "A": 144,
+    "D": 96,
+    "U": 33,
+    "G": 95,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "What are we missing?",
+    "V": 123,
+    "A": 131,
+    "D": 124,
+    "U": 3,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Do you think that's it?",
+    "V": 128,
+    "A": 129,
+    "D": 129,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "i love the simplicity of this entire transaction i need your help you need some change with pleasure my friend buy yourself something lovely",
+    "V": 161,
+    "A": 134,
+    "D": 141,
+    "U": 3,
+    "G": 143,
+    "W": 147,
+    "I": 171
+  },
+  {
+    "text": "You got it. I'll scout out the other place. We can regroup. Don't go in for a kill without me. We just need information right now.",
+    "V": 118,
+    "A": 130,
+    "D": 139,
+    "U": 8,
+    "G": 141,
+    "W": 127,
+    "I": 166
+  },
+  {
+    "text": "Tell me what you'd like.",
+    "V": 129,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "And I was in that jail cell so long, I started to smell like ramen farts. I swear, you know, I think some of the guards just came in there to do that.",
+    "V": 121,
+    "A": 135,
+    "D": 136,
+    "U": 9,
+    "G": 125,
+    "W": 106,
+    "I": 23
+  },
+  {
+    "text": "in my cell, just to make me upset. They're psychos, and worse. But they're also disgusting.",
+    "V": 66,
+    "A": 166,
+    "D": 100,
+    "U": 30,
+    "G": 111,
+    "W": 103,
+    "I": 28
+  },
+  {
+    "text": "Uh, I've been drunk before. Quite a lot. Plus, other stuff. You know, I'm kinda okay with just being me for a while.",
+    "V": 128,
+    "A": 125,
+    "D": 120,
+    "U": 2,
+    "G": 127,
+    "W": 115,
+    "I": 172
+  },
+  {
+    "text": "Sure, a couple people. Not everybody was interested in the bar, but a couple traders are now spreading the word that I'm here.",
+    "V": 134,
+    "A": 134,
+    "D": 150,
+    "U": 9,
+    "G": 136,
+    "W": 132,
+    "I": 66
+  },
+  {
+    "text": "Do you mean your camp or some other old place?",
+    "V": 117,
+    "A": 132,
+    "D": 122,
+    "U": 0,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "If the blood chems nuke someone's entire personality, and all that's left is rage and cruelty, then they become a claw.",
+    "V": 99,
+    "A": 176,
+    "D": 172,
+    "U": 40,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "It's possible. That doesn't really help us, though. He could be anywhere.",
+    "V": 126,
+    "A": 124,
+    "D": 108,
+    "U": 19,
+    "G": 149,
+    "W": 123,
+    "I": 160
+  },
+  {
+    "text": "Actually, if he's like that, he'd be sent to attack raiders and super mutants a lot, probably. It's not that useful, though.",
+    "V": 128,
+    "A": 142,
+    "D": 132,
+    "U": 4,
+    "G": 130,
+    "W": 128,
+    "I": 208
+  },
+  {
+    "text": "One of Edwin's old gang members, goes by the name Guts. Apparently, a new gang is surrounding this betrayer, and growing in popularity.",
+    "V": 140,
+    "A": 137,
+    "D": 141,
+    "U": 5,
+    "G": 141,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Might have to cut through some of the rest of the group in order to get to Guts directly.",
+    "V": 132,
+    "A": 124,
+    "D": 134,
+    "U": 1,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "The cave is where the Triune keeps the ritual materials. Without those, well, it's harder to convert new members.",
+    "V": 139,
+    "A": 121,
+    "D": 132,
+    "U": 1,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "What? You're not a cultist, too, are you? Sage is a chem fiend. His brain has been irradiated repeatedly. He's just different. That's all.",
+    "V": 128,
+    "A": 129,
+    "D": 128,
+    "U": 1,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I'm going to modify it to something harmless, and then I'll sneak it over and leave it in one of their camps.",
+    "V": 112,
+    "A": 141,
+    "D": 121,
+    "U": 8,
+    "G": 124,
+    "W": 113,
+    "I": 212
+  },
+  {
+    "text": "They can't recruit and they can't promote anyone, so they're doing something radical. We need to stop it.",
+    "V": 119,
+    "A": 133,
+    "D": 122,
+    "U": 6,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "They don't, because they'd lose control. Only one copy may remain, and that is maintained by the bone.",
+    "V": 148,
+    "A": 123,
+    "D": 167,
+    "U": 5,
+    "G": 138,
+    "W": 128,
+    "I": 165
+  },
+  {
+    "text": "I don't think so. The formula isn't like one of those recipes from Delbert. It's long, it's complicated, and it changes.",
+    "V": 123,
+    "A": 142,
+    "D": 120,
+    "U": 10,
+    "G": 129,
+    "W": 128,
+    "I": 168
+  },
+  {
+    "text": "I think you're really looking for a weird program that spits out a formula based on some factors. So, no, he doesn't have it memorized.",
+    "V": 115,
+    "A": 136,
+    "D": 137,
+    "U": 5,
+    "G": 128,
+    "W": 127,
+    "I": 172
+  },
+  {
+    "text": "He isn't. His gang is. Ronnie is also worth the hassle. She's someone we want to have on our side.",
+    "V": 114,
+    "A": 142,
+    "D": 129,
+    "U": 10,
+    "G": 126,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I'm not sure if any of that was ultimately very helpful.",
+    "V": 136,
+    "A": 129,
+    "D": 131,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 155
+  },
+  {
+    "text": "Gladly. Hell, I'll give you the whole day's tip jar.",
+    "V": 137,
+    "A": 136,
+    "D": 164,
+    "U": 17,
+    "G": 147,
+    "W": 122,
+    "I": 165
+  },
+  {
+    "text": "Thanks, friend. I'll see if I can get Ronnie to visit us while you're out. I should be able to flag down someone from her gang. I mean, Edwin's gang.",
+    "V": 117,
+    "A": 141,
+    "D": 128,
+    "U": 2,
+    "G": 133,
+    "W": 120,
+    "I": 34
+  },
+  {
+    "text": "Uh, yes, of course.",
+    "V": 136,
+    "A": 128,
+    "D": 131,
+    "U": 2,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "If we didn't make time to chat now and again, I would be awfully bummed out.",
+    "V": 124,
+    "A": 131,
+    "D": 126,
+    "U": 1,
+    "G": 128,
+    "W": 126,
+    "I": 75
+  },
+  {
+    "text": "Friend, friend, I don't think you realize I'm still here because I love chatting with you.",
+    "V": 168,
+    "A": 132,
+    "D": 131,
+    "U": 0,
+    "G": 137,
+    "W": 156,
+    "I": 191
+  },
+  {
+    "text": "Well, if I didn't, I wouldn't be here. I love our chats, you know? Ugh. Does that sound sappy? Wait, don't answer that. Just go on with your questions.",
+    "V": 97,
+    "A": 128,
+    "D": 100,
+    "U": 24,
+    "G": 154,
+    "W": 133,
+    "I": 191
+  },
+  {
+    "text": "Thanks for getting this formula away from them. You know, I think I can modify it to be something fairly harmless, maybe.",
+    "V": 127,
+    "A": 136,
+    "D": 126,
+    "U": 5,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I think I can modify this formula into something else. Disgusting? Yes. Harmless? Still yes.",
+    "V": 118,
+    "A": 140,
+    "D": 125,
+    "U": 11,
+    "G": 125,
+    "W": 128,
+    "I": 30
+  },
+  {
+    "text": "Sneaking in and bashing the brains out of anyone we can. I mean, that's our usual. We like to be unseen. Unheard.",
+    "V": 103,
+    "A": 141,
+    "D": 115,
+    "U": 10,
+    "G": 129,
+    "W": 112,
+    "I": 210
+  },
+  {
+    "text": "I know you do. I don't know why you trust me like this, but... I know you do.",
+    "V": 117,
+    "A": 129,
+    "D": 123,
+    "U": 14,
+    "G": 145,
+    "W": 128,
+    "I": 158
+  },
+  {
+    "text": "Works for me. Ronnie, you got some ears in the Blood Eagles, right?",
+    "V": 128,
+    "A": 131,
+    "D": 129,
+    "U": 2,
+    "G": 130,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Okay. But hurry, if you can.",
+    "V": 128,
+    "A": 127,
+    "D": 128,
+    "U": 2,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Yeah, yeah. The claw has to be my job. If I ever find my brother, that's how.",
+    "V": 132,
+    "A": 128,
+    "D": 129,
+    "U": 11,
+    "G": 139,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Frankie. Not short for Franklin or Francis or whatever. He's just always been little Frankie.",
+    "V": 122,
+    "A": 125,
+    "D": 123,
+    "U": 1,
+    "G": 126,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We're glad to have your gang's help, Ronnie.",
+    "V": 138,
+    "A": 133,
+    "D": 135,
+    "U": 1,
+    "G": 133,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "All yours. The tips too.",
+    "V": 140,
+    "A": 132,
+    "D": 139,
+    "U": 2,
+    "G": 125,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You know that I know that, Ronnie. I'm still his big brother.",
+    "V": 128,
+    "A": 130,
+    "D": 129,
+    "U": 0,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Destroy their entire database, that's it Corrupt it delete it burn it crush it whatever you can do to get rid of it",
+    "V": 89,
+    "A": 147,
+    "D": 112,
+    "U": 15,
+    "G": 108,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Now I want to go after the claw, personally. I have a feeling that's how I'll find out what happened to my brother.",
+    "V": 134,
+    "A": 129,
+    "D": 127,
+    "U": 2,
+    "G": 138,
+    "W": 136,
+    "I": 155
+  },
+  {
+    "text": "Well, pass along my thanks to your crew, Ronnie. If they find anything about Frankie, you have to let me know.",
+    "V": 135,
+    "A": 129,
+    "D": 128,
+    "U": 1,
+    "G": 132,
+    "W": 140,
+    "I": 169
+  },
+  {
+    "text": "That works for me. Gives us a bit of extra top-level work, but I can handle that. Ronnie, do you still have some mirrors in the Blood Eagles?",
+    "V": 103,
+    "A": 144,
+    "D": 132,
+    "U": 19,
+    "G": 142,
+    "W": 116,
+    "I": 67
+  },
+  {
+    "text": "Right? But in a world of cam-addled brains, sometimes nonsense makes all the sense.",
+    "V": 127,
+    "A": 133,
+    "D": 141,
+    "U": 3,
+    "G": 131,
+    "W": 128,
+    "I": 207
+  },
+  {
+    "text": "Kill the people who are turning the Blood Eagles into something horrific. They can be ruthless maniacs without direction. That's fine.",
+    "V": 122,
+    "A": 139,
+    "D": 145,
+    "U": 11,
+    "G": 132,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Why? You can't pick up a package on your own? I'm gonna pull in some favors in Crater, so Ronnie's not totally hosed.",
+    "V": 115,
+    "A": 138,
+    "D": 130,
+    "U": 38,
+    "G": 125,
+    "W": 133,
+    "I": 128
+  },
+  {
+    "text": "Huh. It suits you.",
+    "V": 114,
+    "A": 117,
+    "D": 103,
+    "U": 0,
+    "G": 119,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "This is the final blow to their entire shitty shadow organization. After this, we are just going to take out the trash, and they will be done over. Finito.",
+    "V": 114,
+    "A": 130,
+    "D": 120,
+    "U": 10,
+    "G": 133,
+    "W": 126,
+    "I": 80
+  },
+  {
+    "text": "Do you need anything before you head out?",
+    "V": 125,
+    "A": 131,
+    "D": 126,
+    "U": 1,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Here are my specials today.",
+    "V": 130,
+    "A": 129,
+    "D": 129,
+    "U": 1,
+    "G": 130,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "We just need to find a location. Usually, we courier the blood cams to the claw in packages. Let's just find one of those packages.",
+    "V": 144,
+    "A": 146,
+    "D": 146,
+    "U": 12,
+    "G": 138,
+    "W": 128,
+    "I": 160
+  },
+  {
+    "text": "So, when I was with these goons, we would find out about new prisoners that the blood was keeping via holotape announcements.",
+    "V": 127,
+    "A": 132,
+    "D": 128,
+    "U": 2,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Then we burned the tapes, and it turns out the ashes from those tapes were great as one of the more upsetting chem additives.",
+    "V": 81,
+    "A": 158,
+    "D": 100,
+    "U": 23,
+    "G": 111,
+    "W": 128,
+    "I": 49
+  },
+  {
+    "text": "So if you find one of them that isn't burned yet, it's probably very recent. That's what I'm going to look for.",
+    "V": 124,
+    "A": 127,
+    "D": 128,
+    "U": 6,
+    "G": 128,
+    "W": 128,
+    "I": 74
+  },
+  {
+    "text": "Okay, I'll be around.",
+    "V": 128,
+    "A": 128,
+    "D": 128,
+    "U": 0,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "You got it. We just need to isolate where this asshole is. That's it. Should be straightforward as hell.",
+    "V": 112,
+    "A": 136,
+    "D": 134,
+    "U": 7,
+    "G": 125,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Of course, of course. Honestly, you don't really need to ask. It's my rent. It's fair.",
+    "V": 118,
+    "A": 130,
+    "D": 128,
+    "U": 5,
+    "G": 130,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Since Ronnie is destroying the bone, and also cutting down the ranks of the Blood Eagle goons that might be in our way, we can focus.",
+    "V": 110,
+    "A": 148,
+    "D": 140,
+    "U": 14,
+    "G": 123,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "well we uh we stick to the plan kill the rest of the triune or whatever we need to do blood eagles will still exist without a head but that's fine",
+    "V": 126,
+    "A": 128,
+    "D": 132,
+    "U": 5,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Before we go after the Claw, I want to make sure that the Triune is gone. Forever. I want to destroy their holy texts.",
+    "V": 106,
+    "A": 155,
+    "D": 160,
+    "U": 16,
+    "G": 128,
+    "W": 107,
+    "I": 225
+  },
+  {
+    "text": "Then there's no going back. It's done.",
+    "V": 122,
+    "A": 127,
+    "D": 124,
+    "U": 7,
+    "G": 135,
+    "W": 126,
+    "I": 128
+  },
+  {
+    "text": "Never been better, actually. I mean that seriously. I mean, yeah, there are nukes everywhere, crazy monsters, but hey, things are looking up.",
+    "V": 124,
+    "A": 161,
+    "D": 123,
+    "U": 20,
+    "G": 131,
+    "W": 116,
+    "I": 158
+  },
+  {
+    "text": "Being with the Blood Eagles so long was just devastating. The blood pulled me in with sweet dreams of having fun. So many of us were scammed.",
+    "V": 108,
+    "A": 154,
+    "D": 110,
+    "U": 19,
+    "G": 120,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "You know, when I joined the Blood Eagles, they were mostly a ragtag group of chem addicts and murderers. But something odd was happening.",
+    "V": 84,
+    "A": 129,
+    "D": 104,
+    "U": 13,
+    "G": 118,
+    "W": 134,
+    "I": 67
+  },
+  {
+    "text": "Yeah, there were some new recruits from a cult who wanted to make Blood Eagles into, uh, something more.",
+    "V": 129,
+    "A": 131,
+    "D": 126,
+    "U": 2,
+    "G": 130,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I knew the raider who became the blood. That was a painful process to watch unfold. Went from a normal asshole to something beyond belief.",
+    "V": 133,
+    "A": 133,
+    "D": 132,
+    "U": 10,
+    "G": 130,
+    "W": 128,
+    "I": 26
+  },
+  {
+    "text": "Man, like a moron, I went right along with it all.",
+    "V": 124,
+    "A": 124,
+    "D": 129,
+    "U": 2,
+    "G": 130,
+    "W": 132,
+    "I": 165
+  },
+  {
+    "text": "No. No, definitely not. I thought they were just like the Raiders, but with more metal and blood. I was wrong.",
+    "V": 107,
+    "A": 136,
+    "D": 124,
+    "U": 8,
+    "G": 127,
+    "W": 117,
+    "I": 177
+  },
+  {
+    "text": "I killed a bunch of them. See, that's like a resignation letter.",
+    "V": 116,
+    "A": 138,
+    "D": 133,
+    "U": 10,
+    "G": 138,
+    "W": 124,
+    "I": 172
+  },
+  {
+    "text": "Simple. That's where you get sent if the blood chems don't work on you. If you don't, become blindly loyal and totally vicious.",
+    "V": 122,
+    "A": 133,
+    "D": 145,
+    "U": 27,
+    "G": 145,
+    "W": 129,
+    "I": 71
+  },
+  {
+    "text": "Sometimes it just kills you. I've seen it. It's not a gentle way to go.",
+    "V": 105,
+    "A": 138,
+    "D": 127,
+    "U": 19,
+    "G": 154,
+    "W": 110,
+    "I": 128
+  },
+  {
+    "text": "Other times, your brain melts, I guess, but you don't die. Like sage, but vicious. Murderous.",
+    "V": 127,
+    "A": 106,
+    "D": 147,
+    "U": 24,
+    "G": 150,
+    "W": 125,
+    "I": 180
+  },
+  {
+    "text": "Not really, no. But I think we can destroy this cancer that has attached itself to the original group.",
+    "V": 63,
+    "A": 153,
+    "D": 120,
+    "U": 27,
+    "G": 123,
+    "W": 90,
+    "I": 55
+  },
+  {
+    "text": "Some of the peripheral gang isn't even fully incorporated into this Triune shit yet. They're still somewhat autonomous. Been going with the old ways.",
+    "V": 139,
+    "A": 133,
+    "D": 131,
+    "U": 6,
+    "G": 133,
+    "W": 128,
+    "I": 214
+  },
+  {
+    "text": "You got it. Was it that obvious? I mean, what's not to love? Meeting new people every day. Come on, it's great.",
+    "V": 134,
+    "A": 134,
+    "D": 131,
+    "U": 1,
+    "G": 133,
+    "W": 120,
+    "I": 171
+  },
+  {
+    "text": "It is, right? Yeah, I've got random weirdos who wander up all the time. I love it. Traitors, hunters, scavengers, even some giant nice super mutant.",
+    "V": 146,
+    "A": 158,
+    "D": 150,
+    "U": 12,
+    "G": 134,
+    "W": 132,
+    "I": 191
+  },
+  {
+    "text": "If you want a free drink, just say so.",
+    "V": 136,
+    "A": 133,
+    "D": 138,
+    "U": 1,
+    "G": 134,
+    "W": 128,
+    "I": 160
+  },
+  {
+    "text": "If you wanted today's special for free, you could just ask.",
+    "V": 136,
+    "A": 134,
+    "D": 138,
+    "U": 1,
+    "G": 135,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "No, most certainly not.",
+    "V": 122,
+    "A": 124,
+    "D": 116,
+    "U": 0,
+    "G": 125,
+    "W": 128,
+    "I": 207
+  },
+  {
+    "text": "This lovely scrap of info was picked up using a battle code cipher from the ancient times.",
+    "V": 145,
+    "A": 142,
+    "D": 163,
+    "U": 13,
+    "G": 137,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "This is what I've pieced together after I've finally found the poem they used to base this code on.",
+    "V": 130,
+    "A": 142,
+    "D": 157,
+    "U": 13,
+    "G": 130,
+    "W": 131,
+    "I": 156
+  },
+  {
+    "text": "This tip is straight from my buddy Jimbo. He knows all sorts of wild stuff. Wow.",
+    "V": 129,
+    "A": 142,
+    "D": 136,
+    "U": 2,
+    "G": 135,
+    "W": 134,
+    "I": 128
+  },
+  {
+    "text": "Okay, right on. I deciphered this one with the Caesar Shift. Simple stuff.",
+    "V": 135,
+    "A": 125,
+    "D": 140,
+    "U": 0,
+    "G": 132,
+    "W": 129,
+    "I": 154
+  },
+  {
+    "text": "There's a weapon out there that a bunch of people have heard about, but nobody's been able to grab.",
+    "V": 140,
+    "A": 136,
+    "D": 156,
+    "U": 4,
+    "G": 134,
+    "W": 128,
+    "I": 172
+  },
+  {
+    "text": "There was a cult gathering recently, and they blessed a weapon. We don't know why or what that even means.",
+    "V": 126,
+    "A": 127,
+    "D": 130,
+    "U": 4,
+    "G": 130,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "Get this. Heard someone located a weapon that was used by some of the old raiders from this area. It's gotta be a relic, right? Historic, right?",
+    "V": 137,
+    "A": 134,
+    "D": 136,
+    "U": 1,
+    "G": 130,
+    "W": 128,
+    "I": 164
+  },
+  {
+    "text": "I heard someone stole a ton of armor from the settlers again and stashed it in a couple caches for safekeeping. I think I found one. Let's get it!",
+    "V": 114,
+    "A": 141,
+    "D": 139,
+    "U": 15,
+    "G": 142,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "Ah, we have a psychic on the network, and he's convinced that there's a cursed item out there causing grief to the world. I said we'd pick it up.",
+    "V": 78,
+    "A": 148,
+    "D": 105,
+    "U": 16,
+    "G": 105,
+    "W": 87,
+    "I": 49
+  },
+  {
+    "text": "I heard that cult is using this stash to hide some of their supplies again. You know what that means. Rob them blind and don't look back.",
+    "V": 96,
+    "A": 131,
+    "D": 94,
+    "U": 15,
+    "G": 120,
+    "W": 123,
+    "I": 80
+  },
+  {
+    "text": "Someone on the radio network said they had a dream about a stash of goodies. Not sure if it's real, but our dreams have never been wrong. Kinda.",
+    "V": 117,
+    "A": 135,
+    "D": 123,
+    "U": 7,
+    "G": 127,
+    "W": 128,
+    "I": 162
+  },
+  {
+    "text": "Yeah, I knew you'd be interested.",
+    "V": 150,
+    "A": 123,
+    "D": 143,
+    "U": 0,
+    "G": 136,
+    "W": 140,
+    "I": 159
+  },
+  {
+    "text": "Network's reporting that the cult has been doing something strange again. There's an infection, and we need to cull whatever it's touched.",
+    "V": 117,
+    "A": 144,
+    "D": 103,
+    "U": 17,
+    "G": 128,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I heard something strange is going on. Something released a gas that causes aggression, maybe? That's the word on the network, anyway.",
+    "V": 132,
+    "A": 136,
+    "D": 135,
+    "U": 7,
+    "G": 131,
+    "W": 123,
+    "I": 154
+  },
+  {
+    "text": "Some sickness is causing serious behavioral problems lately. Probably should destroy whatever has it so it doesn't spread.",
+    "V": 98,
+    "A": 149,
+    "D": 132,
+    "U": 20,
+    "G": 119,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Did I mention that old psychic on the radio network? Get this. They saw several murders recently. Sacrifices. We need you to stop them.",
+    "V": 112,
+    "A": 144,
+    "D": 133,
+    "U": 13,
+    "G": 124,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "Psychic pinged the network about this one. Turns out we might know where to look for that missing person after all. Wanna be a hero?",
+    "V": 132,
+    "A": 135,
+    "D": 137,
+    "U": 3,
+    "G": 135,
+    "W": 129,
+    "I": 163
+  },
+  {
+    "text": "Someone up and walked out of their home the other day like some sort of zombie. Network thinks they found some tracks. Might be promising.",
+    "V": 103,
+    "A": 136,
+    "D": 123,
+    "U": 25,
+    "G": 153,
+    "W": 122,
+    "I": 128
+  },
+  {
+    "text": "You remember that story about that traitor who went missing a while back? We know where to look now. Network pulled in a dreamer. Don't ask.",
+    "V": 108,
+    "A": 135,
+    "D": 121,
+    "U": 8,
+    "G": 122,
+    "W": 129,
+    "I": 128
+  },
+  {
+    "text": "I got a cryptic message over the network and I honestly don't know who it's from. Could be a trap.",
+    "V": 105,
+    "A": 149,
+    "D": 92,
+    "U": 22,
+    "G": 114,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "Nobody wants to talk about it anymore. It's like the network is scared. It happens sometimes, but it always chills my bones.",
+    "V": 124,
+    "A": 142,
+    "D": 129,
+    "U": 10,
+    "G": 133,
+    "W": 125,
+    "I": 128
+  },
+  {
+    "text": "This lovely scrap of info was picked up using a battlecode cipher from the ancient times.",
+    "V": 146,
+    "A": 126,
+    "D": 137,
+    "U": 1,
+    "G": 136,
+    "W": 128,
+    "I": 174
+  },
+  {
+    "text": "This is what I've pieced together after I finally found the poem they used to base this code on.",
+    "V": 130,
+    "A": 142,
+    "D": 157,
+    "U": 13,
+    "G": 130,
+    "W": 131,
+    "I": 156
+  },
+  {
+    "text": "This tip is straight from my buddy Jimbo. He knows all sorts of wild stuff.",
+    "V": 123,
+    "A": 133,
+    "D": 135,
+    "U": 3,
+    "G": 130,
+    "W": 134,
+    "I": 128
+  },
+  {
+    "text": "I picked all this up on the open radio. Can you believe it? No encryption at all.",
+    "V": 136,
+    "A": 133,
+    "D": 139,
+    "U": 3,
+    "G": 133,
+    "W": 127,
+    "I": 128
+  },
+  {
+    "text": "What are you saying, you ran the odds? Like that's supposed to convince me?",
+    "V": 118,
+    "A": 133,
+    "D": 123,
+    "U": 7,
+    "G": 129,
+    "W": 126,
+    "I": 78
+  },
+  {
+    "text": "All right. I got people to take care of, so I can't risk ignoring this plague of yours.",
+    "V": 103,
+    "A": 138,
+    "D": 110,
+    "U": 28,
+    "G": 147,
+    "W": 112,
+    "I": 167
+  },
+  {
+    "text": "Don't say we never took a leap of faith with you locals, okay?",
+    "V": 129,
+    "A": 124,
+    "D": 129,
+    "U": 3,
+    "G": 141,
+    "W": 121,
+    "I": 128
+  },
+  {
+    "text": "I'll be counting on you to pull through here. Let me know when this inoculation of yours is ready.",
+    "V": 155,
+    "A": 155,
+    "D": 174,
+    "U": 46,
+    "G": 122,
+    "W": 130,
+    "I": 171
+  },
+  {
+    "text": "Okay, so you at least know how to sound like a doctor. Damn, this might be the real thing.",
+    "V": 112,
+    "A": 144,
+    "D": 130,
+    "U": 19,
+    "G": 130,
+    "W": 129,
+    "I": 72
+  },
+  {
+    "text": "I'm not trying to give you a hard time. Honest. Just need to be careful.",
+    "V": 119,
+    "A": 137,
+    "D": 152,
+    "U": 18,
+    "G": 132,
+    "W": 120,
+    "I": 160
+  },
+  {
+    "text": "Alright, alright, just stop.",
+    "V": 137,
+    "A": 117,
+    "D": 132,
+    "U": 0,
+    "G": 131,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "I get it. I got people to take care of. And we didn't come all this way to get wiped out by some plague.",
+    "V": 121,
+    "A": 134,
+    "D": 127,
+    "U": 13,
+    "G": 145,
+    "W": 124,
+    "I": 167
+  },
+  {
+    "text": "We'll do it. Just let me know when you're ready.",
+    "V": 151,
+    "A": 151,
+    "D": 163,
+    "U": 36,
+    "G": 118,
+    "W": 139,
+    "I": 163
+  },
+  {
+    "text": "All right, just let me know when you are.",
+    "V": 128,
+    "A": 129,
+    "D": 129,
+    "U": 0,
+    "G": 129,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "We'll gather up everything and meet you there. Gonna be a job to remember.",
+    "V": 130,
+    "A": 132,
+    "D": 134,
+    "U": 16,
+    "G": 138,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "No, we're already here. You've built a team, and we're all just waiting on you to lead it.",
+    "V": 143,
+    "A": 143,
+    "D": 161,
+    "U": 5,
+    "G": 136,
+    "W": 128,
+    "I": 128
+  },
+  {
+    "text": "Let's get this gold back to foundation.",
+    "V": 141,
+    "A": 136,
+    "D": 142,
+    "U": 4,
+    "G": 135,
+    "W": 128,
+    "I": 167
+  },
+  {
+    "text": "At least we don't come away empty-handed. Come on, let's go.",
+    "V": 137,
+    "A": 136,
+    "D": 138,
+    "U": 5,
+    "G": 134,
+    "W": 128,
+    "I": 73
+  },
+  {
+    "text": "I'd be careful showing your face and foundation after this.",
+    "V": 134,
+    "A": 141,
+    "D": 164,
+    "U": 15,
+    "G": 128,
+    "W": 144,
+    "I": 167
+  },
+  {
+    "text": "Let's get out of here.",
+    "V": 122,
+    "A": 145,
+    "D": 149,
+    "U": 8,
+    "G": 129,
+    "W": 128,
+    "I": 211
+  }
+]

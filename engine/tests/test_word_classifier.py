@@ -82,10 +82,10 @@ class TestPositionOverrides:
         assert roles[1].role == "TEMPORAL"
         assert roles[2].role == "ACQUIRE"
 
-    def test_just_alone_is_filler(self):
-        """'just' without acquire context = FILLER."""
+    def test_just_is_compressor(self):
+        """'just' = COMPRESSOR — squeezes magnitude of nearby words."""
         roles = classify_sentence(["I", "just", "want", "to", "sleep"])
-        assert roles[1].role == "FILLER"
+        assert roles[1].role == "COMPRESSOR"
 
 
 class TestNeighbors:

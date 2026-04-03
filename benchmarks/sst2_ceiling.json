@@ -1,0 +1,16 @@
+{
+  "sst2_accuracy": 70.4,
+  "champion": {
+    "momentum": 0.95,
+    "force_scale": 0.7046210361482184,
+    "direct_push_cap": 0.3127995771204041,
+    "direct_push_trigger": 33.373821707241284,
+    "proximity_decay": 0.6180054314594032,
+    "coeff_cap": 1.8040503015241058,
+    "amplifier_mod": 0.39247754523483863,
+    "negator_mod": -2.1420033351257124,
+    "self_ref_mod": 0.3030496004963889,
+    "hedge_mod": -0.21406755184245163,
+    "compressor_mod": -0.8024352158299721
+  }
+}

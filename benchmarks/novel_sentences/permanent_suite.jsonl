@@ -630,3 +630,4 @@
 {"text": "Oh great, another humid day in paradise.", "expected_negative": true, "source": "generated"}
 {"text": "Wow. That must be a very special friend. I net you were surprised.", "expected_negative": false, "source": "generated"}
 {"text": "yeah that kid were more lovely and attractive. i was love kids", "expected_negative": false, "source": "generated"}
+{"text": "Well cool!  Were you nervous at all going into it?", "expected_negative": true, "source": "generated"}

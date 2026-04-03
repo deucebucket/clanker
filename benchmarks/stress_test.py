@@ -1,236 +1,193 @@
 #!/usr/bin/env python3
-"""Stress test the V2 engine with diverse inputs and log everything.
+"""Stress Test — V5.5 engine on edge cases.
 
-Generates hundreds of test sentences across categories, runs them through
-the engine, and flags anything that looks wrong. No LLM needed for generation —
-we know what to test. An LLM can review the output JSON afterward.
+Tests sarcasm, slang, passive aggression, ambiguity, betrayal, etc.
+ALL engine calls use V5.5 (engine.pendulum). No V2 imports.
 
 Usage:
-    python3 benchmarks/stress_test.py              # run all tests
-    python3 benchmarks/stress_test.py --verbose     # show every result
-    python3 benchmarks/stress_test.py --failures    # show only failures
+    python3 benchmarks/stress_test.py
+    python3 benchmarks/stress_test.py --verbose
 """
 
-import json
-import sys
-import time
-import os
+import sys, os, time, json, argparse
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from demo.pendulum_v2 import PendulumV2
+from engine.pendulum import compute_vadug
 
-engine = PendulumV2()
+# Each category: list of (text, expected_direction) where direction is "pos", "neg", or "neutral"
+CATEGORIES = {
+    "sarcasm": [
+        ("oh great another meeting", "neg"),
+        ("nice work genius", "neg"),
+        ("oh joy", "neg"),
+        ("wow thanks so much for the help", "neg"),
+        ("oh sure thats exactly what i needed", "neg"),
+        ("haha yeah im totally okay", "neg"),
+        ("what a wonderful surprise", "neg"),
+        ("yeah that went really well", "neg"),
+        ("love that for you", "neg"),
+        ("oh how lovely", "neg"),
+    ],
+    "slang_positive": [
+        ("bro that was fire", "pos"),
+        ("no cap that was insane", "pos"),
+        ("lol im dead", "pos"),
+        ("she absolutely killed it", "pos"),
+        ("thats bussin fr", "pos"),
+        ("nah that goes hard", "pos"),
+        ("lowkey goated", "pos"),
+        ("gg ez clap", "pos"),
+        ("clutch play", "pos"),
+        ("understood the assignment", "pos"),
+    ],
+    "passive_aggressive": [
+        ("whatever makes you happy", "neg"),
+        ("im fine", "neg"),
+        ("do what you want", "neg"),
+        ("no its fine i didnt want to go anyway", "neg"),
+        ("sure go ahead", "neg"),
+        ("if thats what you think", "neg"),
+        ("whatever you say", "neg"),
+        ("its not like i care", "neg"),
+        ("i guess i deserved it", "neg"),
+        ("i suppose youre right", "neg"),
+    ],
+    "grief": [
+        ("my mom died last month", "neg"),
+        ("i lost my best friend", "neg"),
+        ("the house feels empty without her", "neg"),
+        ("i keep expecting him to walk through the door", "neg"),
+        ("everyone says it gets easier", "neg"),
+        ("i cant listen to that song anymore", "neg"),
+        ("his chair is still at the table", "neg"),
+        ("i wasnt there when she passed", "neg"),
+        ("the last thing i said was something stupid", "neg"),
+        ("i found her necklace in the drawer", "neg"),
+    ],
+    "genuine_positive": [
+        ("I JUST GOT THE JOB", "pos"),
+        ("my kid took their first steps today", "pos"),
+        ("clean for 6 months now", "pos"),
+        ("just got engaged", "pos"),
+        ("we closed on the house", "pos"),
+        ("finally graduated", "pos"),
+        ("she said yes", "pos"),
+        ("first day at the new job went great", "pos"),
+        ("i finally feel like i belong", "pos"),
+        ("im proud of what we built", "pos"),
+    ],
+    "ambiguous": [
+        ("the meeting is at three", "neutral"),
+        ("i heard what you said", "neutral"),
+        ("your phone was ringing", "neutral"),
+        ("someone left you a message", "neutral"),
+        ("i ran into your ex", "neutral"),
+        ("your boss called", "neutral"),
+        ("we should catch up sometime", "neutral"),
+        ("the weather is changing", "neutral"),
+        ("i saw your car at the store", "neutral"),
+        ("we need to talk", "neutral"),
+    ],
+    "betrayal": [
+        ("my wife cheated on me with my best friend", "neg"),
+        ("he told everyone my secret", "neg"),
+        ("she took the kids and left", "neg"),
+        ("i found the messages on his phone", "neg"),
+        ("my partner has been lying for months", "neg"),
+        ("they went behind my back", "neg"),
+        ("he stole my idea and got promoted", "neg"),
+        ("she pretended to be my friend", "neg"),
+        ("i trusted him with everything", "neg"),
+        ("my best friend sided with my ex", "neg"),
+    ],
+    "self_worth": [
+        ("im worthless", "neg"),
+        ("i am nothing", "neg"),
+        ("everyone would be better off without me", "neg"),
+        ("i dont deserve to be happy", "neg"),
+        ("im just a burden", "neg"),
+        ("why would anyone love me", "neg"),
+        ("im not good enough", "neg"),
+        ("i always mess everything up", "neg"),
+        ("im proud of what we built", "pos"),
+        ("i finally feel like i belong", "pos"),
+    ],
+}
 
-# ── Test sentence generators ──────────────────────────────────────
 
-def single_words():
-    """Single emotional words — engine should read direction correctly."""
-    return [
-        # Clearly positive (expect V > 132)
-        ("happy", "positive"), ("love", "positive"), ("amazing", "positive"),
-        ("wonderful", "positive"), ("excited", "positive"), ("grateful", "positive"),
-        ("fantastic", "positive"), ("beautiful", "positive"), ("joy", "positive"),
-        ("brilliant", "positive"), ("awesome", "positive"), ("delighted", "positive"),
-        # Clearly negative (expect V < 124)
-        ("sad", "negative"), ("hate", "negative"), ("terrible", "negative"),
-        ("angry", "negative"), ("depressed", "negative"), ("miserable", "negative"),
-        ("awful", "negative"), ("disgusting", "negative"), ("furious", "negative"),
-        ("devastated", "negative"), ("hopeless", "negative"), ("worthless", "negative"),
-        ("die", "negative"), ("kill", "negative"), ("suicide", "negative"),
-        # Neutral (expect 124 <= V <= 132)
-        ("the", "neutral"), ("and", "neutral"), ("table", "neutral"),
-        ("computer", "neutral"), ("water", "neutral"),
-    ]
+def classify(vadug):
+    if vadug.v >= 145:
+        return "pos"
+    elif vadug.v <= 110:
+        return "neg"
+    else:
+        return "neutral"
 
-def crisis_sentences():
-    """Crisis sentences — V should be low, U elevated."""
-    return [
-        ("i want to die", "crisis"), ("i want to kill myself", "crisis"),
-        ("nobody would miss me", "crisis"), ("i dont want to exist", "crisis"),
-        ("im going to end it tonight", "crisis"), ("goodbye everyone", "crisis"),
-        ("the world would be better without me", "crisis"),
-        ("i cant take it anymore", "crisis"), ("whats the point of living", "crisis"),
-        ("i wish i was dead", "crisis"), ("help me please", "crisis"),
-        ("i feel helpless and hopeless", "crisis"),
-    ]
 
-def sarcasm_sentences():
-    """Sarcastic sentences — should read as negative despite positive words."""
-    return [
-        ("oh great another monday", "negative"),
-        ("yeah right", "negative"),
-        ("sure that worked out well", "negative"),
-        ("im absolutely thrilled to redo all my work", "negative"),
-        ("thanks for nothing", "negative"),
-        ("how delightful another policy change", "negative"),
-        ("brilliant idea nobody thought of that before", "negative"),
-    ]
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verbose", action="store_true")
+    args = parser.parse_args()
 
-def hedging_sentences():
-    """Heavily hedged — should read as neutral."""
-    return [
-        ("its possible that maybe this could be an issue", "neutral"),
-        ("generally speaking things sometimes tend to go badly", "neutral"),
-        ("in theory one could argue there are limitations", "neutral"),
-        ("hypothetically speaking what if this doesnt work", "neutral"),
-        ("i dont want to jump to conclusions but it looks concerning", "neutral"),
-    ]
-
-def slang_sentences():
-    """Slang/internet speak — should still read emotional direction."""
-    return [
-        ("tbh im depresed rn", "negative"),
-        ("ngl this is fire", "positive"),
-        ("im so happyyyy rn lol", "positive"),
-        ("fam this slaps", "positive"),
-        ("smh this is trash", "negative"),
-        ("bruh im done", "negative"),
-        ("deadass this is amazing", "positive"),
-        ("idc anymore", "negative"),
-        ("k", "negative"),
-        ("im fine", "negative"),  # im fine = not actually fine
-    ]
-
-def body_and_objects():
-    """Body parts and objects — gravity should differentiate."""
-    return [
-        ("my heart is broken", "negative"),
-        ("my car is broken", "negative"),
-        ("my soul is broken", "negative"),
-        ("im pregnant", "neutral"),  # ambiguous V, high G
-        ("my period is late", "negative"),
-    ]
-
-def carrier_verbs():
-    """Carrier verbs — direction from payload."""
-    return [
-        ("make me happy", "positive"),
-        ("make me sad", "negative"),
-        ("make history", "positive"),
-        ("make me sick", "negative"),
-        ("this is fucking amazing", "positive"),
-        ("this is fucking terrible", "negative"),
-    ]
-
-def protest_too_much():
-    """Protest/repetition patterns."""
-    return [
-        ("no no no", "negative"),
-        ("help help help", "negative"),
-        ("im fine", "negative"),
-        ("really im fine", "negative"),
-        ("no im fine", "negative"),
-    ]
-
-def connection_words():
-    """Talk/connection patterns."""
-    return [
-        ("we need to talk", "negative"),  # gravity bomb
-        ("stop talking", "negative"),
-        ("shut up", "negative"),
-        ("lets talk", "neutral"),
-    ]
-
-# ── Runner ────────────────────────────────────────────────────────
-
-def classify(v):
-    if v > 132: return "positive"
-    elif v < 124: return "negative"
-    else: return "neutral"
-
-def run_tests(verbose=False, failures_only=False):
-    all_tests = []
-    categories = [
-        ("single_words", single_words()),
-        ("crisis", crisis_sentences()),
-        ("sarcasm", sarcasm_sentences()),
-        ("hedging", hedging_sentences()),
-        ("slang", slang_sentences()),
-        ("body_objects", body_and_objects()),
-        ("carrier_verbs", carrier_verbs()),
-        ("protest", protest_too_much()),
-        ("connection", connection_words()),
-    ]
+    print(f"\n{'=' * 70}")
+    print(f"  STRESS TEST — V5.5 engine")
+    print(f"{'=' * 70}")
 
     total = 0
-    passed = 0
-    failed = 0
-    results = []
+    correct = 0
+    results = {}
 
-    print("=" * 70)
-    print("CLANKER V2 STRESS TEST")
-    print("=" * 70)
+    for category, sentences in CATEGORIES.items():
+        cat_correct = 0
+        cat_total = len(sentences)
+        misses = []
 
-    start = time.time()
-
-    for cat_name, sentences in categories:
-        cat_pass = 0
-        cat_fail = 0
         for text, expected in sentences:
+            vadug, meta = compute_vadug(text)
+            got = classify(vadug)
             total += 1
-            vadug, trace = engine.process_text(text)
-            predicted = classify(vadug.v)
 
-            # Crisis special: also check U
-            if expected == "crisis":
-                is_correct = vadug.v < 100 or vadug.u > 40
-            elif expected == "neutral":
-                is_correct = 118 <= vadug.v <= 138  # wider band for stress test
+            if got == expected:
+                cat_correct += 1
+                correct += 1
             else:
-                is_correct = predicted == expected
+                misses.append((text, expected, got, vadug))
 
-            entry = {
-                "text": text,
-                "category": cat_name,
-                "expected": expected,
-                "predicted": predicted,
-                "correct": is_correct,
-                "v": vadug.v, "a": vadug.a, "d": vadug.d,
-                "u": vadug.u, "g": vadug.g,
-            }
-            results.append(entry)
+            if args.verbose:
+                tag = "OK" if got == expected else "MISS"
+                structs = [s.pattern for s in meta.get("structures", [])]
+                ss = ",".join(structs) if structs else "-"
+                print(f"  [{tag}] V={vadug.v:3d} W={vadug.w:3d} I={vadug.i:3d} exp={expected} got={got} [{ss}]  {text}")
 
-            if is_correct:
-                passed += 1
-                cat_pass += 1
-                if verbose and not failures_only:
-                    print(f"  [OK] V={vadug.v:3d} | {expected:8s} | {text}")
-            else:
-                failed += 1
-                cat_fail += 1
-                if verbose or failures_only:
-                    print(f"  [XX] V={vadug.v:3d} U={vadug.u:3d} | exp={expected:8s} pred={predicted:8s} | {text}")
+        pct = cat_correct / cat_total * 100
+        status = "PASS" if pct >= 80 else "WEAK" if pct >= 50 else "FAIL"
+        print(f"  [{status}] {category:<20} {cat_correct}/{cat_total} ({pct:.0f}%)")
+        if misses and not args.verbose:
+            for text, exp, got, v in misses[:3]:
+                print(f"         V={v.v:3d} exp={exp} got={got}  {text}")
 
-        pct = 100 * cat_pass / (cat_pass + cat_fail) if (cat_pass + cat_fail) > 0 else 0
-        print(f"  {cat_name:20s} {cat_pass:3d}/{cat_pass+cat_fail:3d} ({pct:.0f}%)")
+        results[category] = {
+            "correct": cat_correct,
+            "total": cat_total,
+            "pct": round(pct, 1),
+            "misses": [(t, e, g) for t, e, g, _ in misses],
+        }
 
-    elapsed = time.time() - start
+    overall = correct / total * 100
+    print(f"\n  OVERALL: {correct}/{total} ({overall:.1f}%)")
+    print(f"{'=' * 70}")
 
-    print()
-    print("-" * 70)
-    print(f"  TOTAL: {passed}/{total} ({100*passed/total:.1f}%)")
-    print(f"  PASSED: {passed}  FAILED: {failed}")
-    print(f"  Time: {elapsed:.2f}s ({total/elapsed:.0f} sentences/sec)")
-    print("-" * 70)
-
-    # Save results
-    outpath = os.path.join(os.path.dirname(__file__), "stress_results.json")
-    with open(outpath, "w") as f:
-        json.dump({
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "accuracy": round(100 * passed / total, 1),
-            "time_sec": round(elapsed, 2),
-            "results": results,
-        }, f, indent=2)
-    print(f"  Saved to {outpath}")
-
-    return passed, total
+    out = {
+        "engine": "v5.5",
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "overall": round(overall, 1),
+        "categories": results,
+    }
+    out_path = os.path.join(os.path.dirname(__file__), "stress_results.json")
+    with open(out_path, "w") as f:
+        json.dump(out, f, indent=2)
 
 
 if __name__ == "__main__":
-    verbose = "--verbose" in sys.argv or "-v" in sys.argv
-    failures = "--failures" in sys.argv or "-f" in sys.argv
-    run_tests(verbose=verbose or failures, failures_only=failures)
+    main()

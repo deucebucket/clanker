@@ -1,4 +1,7 @@
 {
+  "engine": "v5.5",
+  "vocabulary": 4117,
+  "timestamp": "2026-04-03 05:24:20",
   "benchmarks": [
     {
       "dataset": "SST-2",
@@ -15,9 +18,9 @@
           "neutral_pct": 22.7,
           "samples": 872
         },
-        "ClankerV2": {
-          "accuracy": 61.0,
-          "f1": 39.8,
+        "ClankerV5.5": {
+          "accuracy": 66.9,
+          "f1": 44.2,
           "neutral_pct": 0.0,
           "samples": 872
         },
@@ -44,10 +47,10 @@
           "neutral_pct": 35.5,
           "samples": 1000
         },
-        "ClankerV2": {
-          "accuracy": 55.1,
-          "f1": 54.7,
-          "neutral_pct": 47.7,
+        "ClankerV5.5": {
+          "accuracy": 47.9,
+          "f1": 47.3,
+          "neutral_pct": 22.7,
           "samples": 1000
         },
         "RoBERTa": {
@@ -73,9 +76,9 @@
           "neutral_pct": 30.6,
           "samples": 1000
         },
-        "ClankerV2": {
-          "accuracy": 65.9,
-          "f1": 43.5,
+        "ClankerV5.5": {
+          "accuracy": 64.4,
+          "f1": 42.0,
           "neutral_pct": 0.0,
           "samples": 1000
         },

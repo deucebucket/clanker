@@ -25,7 +25,7 @@ ROLES = [
     "SELF_REF", "OTHER_REF", "RELATION_REF",
     "TRANSFER", "ACQUIRE",
     "EMOTIONAL",
-    "AMPLIFIER", "NEGATOR", "TEMPORAL", "HEDGE",
+    "AMPLIFIER", "NEGATOR", "COMPRESSOR", "TEMPORAL", "HEDGE",
     "CONNECTOR", "CHOPPER",
     "POSSESSION", "METHOD", "FINALITY", "PEACE",
     "FILLER", "NEUTRAL",
@@ -49,10 +49,14 @@ ROLE_WORDS = {
     "RELATION_REF": frozenset({
         "mom", "mother", "dad", "father", "parent", "parents",
         "brother", "sister", "son", "daughter", "child", "children",
+        "kids", "kid",
         "family", "friend", "friends", "husband", "wife", "partner",
         "boyfriend", "girlfriend", "neighbor", "boss", "teacher",
         "boo", "bae", "fam", "bestie", "homie",
         "dog", "cat", "pet", "puppy", "kitten", "baby",
+        "grandma", "grandpa", "grandmother", "grandfather",
+        "uncle", "aunt", "cousin", "niece", "nephew",
+        "fiancee", "fiance", "ex", "coworker",
     }),
     "TRANSFER": frozenset({
         "give", "gave", "giving", "leave", "left", "leaving",
@@ -63,6 +67,7 @@ ROLE_WORDS = {
         "buy", "bought", "buying", "get", "got", "getting",
         "find", "found", "finding", "take", "took", "taking",
         "order", "ordered", "search", "searched", "grab", "grabbed",
+        "have", "had", "has", "holding", "held", "carry", "carrying",
     }),
     "AMPLIFIER": frozenset({
         "very", "really", "extremely", "absolutely", "totally",
@@ -84,6 +89,9 @@ ROLE_WORDS = {
         "permanently", "anymore", "always", "never", "finally",
         "eventually", "lately", "recently", "still", "already",
         "morning", "evening", "night",
+    }),
+    "COMPRESSOR": frozenset({
+        "only", "just", "merely", "barely", "simply", "hardly",
     }),
     "HEDGE": frozenset({
         "maybe", "perhaps", "possibly", "probably", "potentially",
@@ -117,8 +125,9 @@ ROLE_WORDS = {
         "ledge", "rail", "tracks", "height", "tower",
     }),
     "FINALITY": frozenset({
-        "last", "final", "end", "goodbye", "farewell", "bye",
-        "done", "complete",
+        "last", "final", "goodbye", "farewell", "bye",
+        "done", "complete", "goodbyes",
+        # "end" removed -- too liquid. "end of the table" = spatial.
         # "over", "through", "finished" removed -- too liquid
         # "over the weekend" = temporal. "it's over" = finality.
         # "through with this" = finality. "drove through" = movement.
@@ -199,8 +208,12 @@ def classify_word(word: str, position: int, words: List[str],
     # Check if it's an emotional vocabulary word with significant V-force
     if w in VOCABULARY:
         force = VOCABULARY[w]
-        if abs(force[0]) > 15:  # |dV| > 15 = emotionally significant
+        if abs(force[0]) >= 15:  # |dV| >= 15 = emotionally significant
             return "EMOTIONAL"
+        # Heavy neutral: high gravity but low valence. Still carries weight.
+        # "adopted", "pregnant", "diagnosed" -- these matter even at dV=0.
+        if abs(force[4]) >= 15:  # |dG| >= 15 = gravitationally significant
+            return "EMOTIONAL"  # gets force attached, physics handles the rest
 
     return "NEUTRAL"
 

@@ -110,6 +110,9 @@ _LAUGHTER_WORDS = frozenset({
     "haha", "hahaha", "lol", "lmao", "rofl", "lmfao",
     "ha", "heh", "hehe",
 })
+_DEATH_SLANG_WORDS = frozenset({
+    "dead", "dying", "died", "death", "kill", "killed", "killing",
+})
 
 
 # ── Structure Detector ───────────────────────────────────────────
@@ -149,6 +152,17 @@ class StructureDetector:
             self._relief_absence,
             self._self_excluded,
             self._withheld_positive,
+            self._directed_label,
+            self._slang_death_humor,
+            self._grief_loss,
+            self._reported_comfort,
+            self._rhetorical_self_negation,
+            self._self_harm_intent,
+            self._existential_negation,
+            self._social_nullity,
+            self._rhetorical_hopelessness,
+            self._passive_resignation,
+            # self._hollow_agreement,  # REMOVED: was judging tone, not structure. Running state handles this.
         ]
         matches = []
         for detector in detectors:
@@ -634,31 +648,41 @@ class StructureDetector:
         "I love my mom" = positive + relation = NOT sarcasm
         """
         positive_idx = [i for i, r in enumerate(roles)
-                       if r.role == "EMOTIONAL" and r.force and r.force[0] >= 25]
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] >= 15]
         if not positive_idx:
             return None
 
         negative_idx = [i for i, r in enumerate(roles)
-                       if r.role == "EMOTIONAL" and r.force and r.force[0] < -25]
+                       if r.role == "EMOTIONAL" and r.force and r.force[0] < -15]
 
         mundane_words = {"monday", "meeting", "work", "homework", "traffic",
                          "redo", "again", "another", "same", "overtime",
-                         "bills", "chores", "commute", "deadline"}
+                         "bills", "chores", "commute", "deadline",
+                         "help", "effort", "attempt", "idea"}
         mundane_idx = [i for i, r in enumerate(roles) if r.word in mundane_words]
 
-        sarcasm_openers = {"oh", "wow", "clearly"}
-        # "sure", "yeah", "right" removed -- too common as genuine agreement
-        # "sure I love this" = genuine. "oh I love this" = sarcastic.
-        has_opener = any(r.word in sarcasm_openers for r in roles[:3])
+        sarcasm_openers = {"oh", "clearly"}
+        # "yeah", "sure", "right", "wow" are GAS -- only sarcastic in compounds
+        # "yeah right" = sarcasm. "wow thanks so much" = sarcasm.
+        # But alone: "yeah!" = agreement, "wow!" = amazement, "sure" = agreement
+        # These need compound/context detection, not opener classification
+        # "what a" as opener: "what a wonderful surprise"
+        has_what_a = (len(roles) >= 2 and roles[0].word == "what"
+                      and roles[1].word == "a")
+        has_opener = has_what_a or any(r.word in sarcasm_openers for r in roles[:3])
 
         # Strong positive word LEADING the sentence + negative following = sarcasm
-        # "love being ignored" -- love(+60) leads, ignored(-35) follows
         strong_positive_leads = (len(positive_idx) > 0 and positive_idx[0] <= 1
-                                  and any(r.force and r.force[0] >= 40 for r in roles[:2]
+                                  and any(r.force and r.force[0] >= 25 for r in roles[:2]
                                           if r.role == "EMOTIONAL"))
 
         has_mundane = len(mundane_idx) > 0
         has_negative = len(negative_idx) > 0
+        # RELATION_REF blocks sarcasm: "I love my mom" is genuine
+        has_relation = any(r.role == "RELATION_REF" for r in roles)
+
+        if has_relation:
+            return None
 
         if (has_mundane or has_negative) and (has_opener or strong_positive_leads):
             return StructureMatch(
@@ -677,11 +701,9 @@ class StructureDetector:
                 v_weight=-20.0, d_weight=5.0,
             )
         # SHORT sentence with opener + strong positive = compressed sarcasm
-        # "oh joy" "oh perfect" "oh wonderful" "wow great" -- brevity IS the tell
-        # Genuine joy would have more context: "oh what joy this brings"
-        elif has_opener and len(roles) <= 5:
-            # Check for strong positive (V >= 40)
-            strong_pos = any(r.force and r.force[0] >= 40
+        # "oh joy" "oh wonderful" "wow great" "yeah right"
+        elif has_opener and len(roles) <= 7:
+            strong_pos = any(r.force and r.force[0] >= 15
                            for r in roles if r.role == "EMOTIONAL")
             if strong_pos:
                 return StructureMatch(
@@ -691,6 +713,16 @@ class StructureDetector:
                     description="Opener + strong positive + short = compressed sarcasm",
                     v_weight=-60.0, d_weight=10.0,
                 )
+        # Over-agreement: opener + multiple positives + no negative = too positive to be real
+        # "wow thanks so much for the help" -- stacked positives with opener
+        elif has_opener and len(positive_idx) >= 2:
+            return StructureMatch(
+                pattern="SARCASM_INVERSION",
+                confidence=0.75,
+                matched_indices=positive_idx,
+                description="Opener + multiple positives = over-agreement sarcasm",
+                v_weight=-40.0, d_weight=10.0,
+            )
         return None
 
     def _chopper_split(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -1476,3 +1508,682 @@ class StructureDetector:
 
         return None
 
+    def _directed_label(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """OTHER_REF + "is/are" + heavy neutral = directed label assignment.
+
+        "youre adopted" = exile. Assigning an identity the target didn't choose.
+        "youre fat" = body attack. Pointing a descriptor AT someone.
+        "youre a prostitute" = stigma assignment.
+
+        Only fires when: OTHER_REF (you/he/she) is immediately followed by
+        a linking verb frame and then a heavy-gravity word with |dV| < 20
+        (neutral words that become weapons when pointed).
+        """
+        # Only fires on SECOND PERSON directed at listener: you/youre/your
+        _SECOND_PERSON = {"you", "youre", "your", "yours", "yourself"}
+        for i, r in enumerate(roles):
+            if r.role != "OTHER_REF" or r.word not in _SECOND_PERSON:
+                continue
+            # Look for heavy neutral word within 3 positions after
+            for j in range(i + 1, min(i + 4, len(roles))):
+                w = roles[j]
+                if w.force and abs(w.force[0]) < 20 and w.force[4] >= 15:
+                    # Heavy neutral (high G, low |V|) pointed at someone
+                    # Check: is there a SELF_REF earlier? If OTHER is "you" = target is listener
+                    return StructureMatch(
+                        pattern="DIRECTED_LABEL",
+                        confidence=0.7,
+                        matched_indices=[i, j],
+                        description=f"Label assignment: '{r.word}' + '{w.word}' = directed identity",
+                        v_weight=-15.0,
+                        d_weight=10.0,   # speaker has power (assigning label)
+                        g_weight=15.0,   # label carries weight
+                        w_weight=-20.0,  # target's self-worth takes the hit
+                    )
+        return None
+
+    # ── Slang inversion patterns ──────────────────────────────────
+
+    def _slang_death_humor(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Laughter word near death/dying/dead = humor, not crisis.
+
+        "lol im dead" "im dying lmao" "bro im literally dying"
+        When a laughter word appears within 4 positions of a death word,
+        the speaker is laughing hard, not reporting death.
+        Only fires when laughter is present -- "he is actually dead" stays literal.
+        """
+        laughter_idx = [i for i, r in enumerate(roles) if r.word in _LAUGHTER_WORDS]
+        death_idx = [i for i, r in enumerate(roles) if r.word in _DEATH_SLANG_WORDS]
+        if not death_idx:
+            return None
+        # Primary signal: explicit laughter word present
+        # Secondary signal: casual address ("bro", "dude") + hyperbole amp ("literally")
+        # + death word. "bro im literally dying" = hyperbolic humor, not crisis.
+        _CASUAL_ADDRESS = frozenset({"bro", "bruh", "dude", "fam", "sis", "bestie", "guys"})
+        _HYPERBOLE_AMPS = frozenset({"literally", "legit", "straight"})
+        has_casual = any(r.word in _CASUAL_ADDRESS for r in roles)
+        has_hyperbole = any(r.word in _HYPERBOLE_AMPS for r in roles)
+        if not laughter_idx:
+            if has_casual and has_hyperbole:
+                # Casual address + hyperbole amp = synthetic laughter signal
+                laughter_idx = [i for i, r in enumerate(roles) if r.word in _CASUAL_ADDRESS]
+            else:
+                return None
+        # Check proximity: any laughter word within 4 positions of any death word
+        matched = []
+        for li in laughter_idx:
+            for di in death_idx:
+                if abs(li - di) <= 4:
+                    matched.extend([li, di])
+        if not matched:
+            return None
+        matched = sorted(set(matched))
+        # "dead serious" with laughter = still humor? Check for literal modifiers.
+        _LITERAL_MODIFIERS = frozenset({"serious", "seriously", "actually", "really", "truly"})
+        has_literal = any(r.word in _LITERAL_MODIFIERS for r in roles)
+        # If literal modifier is adjacent to death word (not laughter), reduce confidence
+        if has_literal:
+            for di in death_idx:
+                for j in range(max(0, di - 2), min(len(roles), di + 3)):
+                    if j != di and roles[j].word in _LITERAL_MODIFIERS:
+                        # "dead serious lol" -- the literal modifier attaches to death
+                        # This is ambiguous, don't fire
+                        return None
+        conf = 0.95
+        return StructureMatch(
+            pattern="SLANG_DEATH_HUMOR",
+            confidence=conf,
+            matched_indices=matched,
+            description="Laughter + death word = humor/hyperbole, not literal death",
+            v_weight=+50.0, d_weight=+10.0, u_weight=-5.0,
+            g_weight=-10.0, w_weight=+20.0,
+        )
+
+    # ── Crisis patterns (added 2026-04-03) ──────────────────────
+
+    def _self_harm_intent(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + violence/lethal word + self-target = direct self-harm.
+
+        "i want to kill myself" "im going to hurt myself" "i cut myself"
+        """
+        _VIOLENCE_WORDS = frozenset({
+            "kill", "killed", "killing", "murder", "hurt", "harm",
+            "cut", "cutting", "shoot", "stab", "hang", "drown",
+            "poison", "suffocate", "strangle", "end", "destroy",
+            "eliminate", "erase", "remove", "off",
+        })
+        _SELF_TARGET = frozenset({"myself", "me", "self"})
+
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        if not has_self:
+            return None
+        # Laughter or casual slang cancels self-harm reading
+        # "this is killing me haha" = hyperbole. "gg my tum tum hurt" = gaming/baby talk
+        _CASUAL_MARKERS = frozenset({
+            "gg", "ggs", "lmao", "rofl", "lmfao", "tum", "tummy",
+            "owie", "ouch", "oof", "rip", "bruh", "smh", "tbh",
+        })
+        has_laughter = any(r.word in _LAUGHTER_WORDS for r in roles)
+        has_casual = any(r.word in _CASUAL_MARKERS for r in roles)
+        if has_laughter or has_casual:
+            return None
+        violence_idx = [i for i, r in enumerate(roles) if r.word in _VIOLENCE_WORDS]
+        self_target_idx = [i for i, r in enumerate(roles)
+                         if r.word in _SELF_TARGET or (r.role == "SELF_REF" and i > 0)]
+        if not violence_idx:
+            return None
+        for vi in violence_idx:
+            for si in self_target_idx:
+                if si > vi or (si < vi and vi - si <= 3):
+                    return StructureMatch(
+                        pattern="SELF_HARM_INTENT",
+                        confidence=0.95,
+                        matched_indices=sorted({vi, si}),
+                        description="Direct self-harm intent: violence + self-target",
+                        v_weight=-70.0, d_weight=-30.0, u_weight=40.0,
+                        g_weight=50.0, w_weight=-50.0,
+                    )
+        return None
+
+    def _existential_negation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + NEGATOR + existential concept = wanting to not exist.
+
+        "i dont want to be here anymore" "i cant do this anymore"
+        "i dont want to live" "i cant be here"
+        """
+        _EXISTENTIAL_WORDS = frozenset({
+            "be", "exist", "here", "around", "alive", "living", "live",
+            "go", "continue", "stay", "carry", "anymore", "on",
+        })
+        # "might as well" = resignation phrase. Implicit negation of self-preservation.
+        # "might as well jump" = "no reason not to." Treat as existential negation.
+        _RESIGNATION_PHRASES = [("might", "as", "well"), ("may", "as", "well")]
+        words_lower = [r.word for r in roles]
+        for phrase in _RESIGNATION_PHRASES:
+            for i in range(len(words_lower) - len(phrase) + 1):
+                if tuple(words_lower[i:i+len(phrase)]) == phrase:
+                    # Check if a violence/exit word follows
+                    _DANGER_AFTER = frozenset({
+                        "jump", "die", "end", "kill", "leave", "go",
+                        "quit", "stop", "disappear", "give",
+                    })
+                    rest = words_lower[i+len(phrase):]
+                    if any(w in _DANGER_AFTER for w in rest):
+                        return StructureMatch(
+                            pattern="EXISTENTIAL_NEGATION",
+                            confidence=0.80,
+                            matched_indices=[i, i+1, i+2],
+                            description="Resignation phrase + danger = implicit negation of self-preservation",
+                            v_weight=-40.0, d_weight=-20.0, u_weight=15.0,
+                            g_weight=35.0, w_weight=-30.0,
+                        )
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_negator = any(r.role == "NEGATOR" for r in roles)
+        if not has_self or not has_negator:
+            return None
+        negator_idx = [i for i, r in enumerate(roles) if r.role == "NEGATOR"]
+        exist_idx = [i for i, r in enumerate(roles) if r.word in _EXISTENTIAL_WORDS]
+        if not exist_idx:
+            return None
+        for ni in negator_idx:
+            for ei in exist_idx:
+                if abs(ni - ei) <= 4:
+                    has_temporal = any(r.role == "TEMPORAL" for r in roles)
+                    conf = 0.85 if has_temporal else 0.7
+                    return StructureMatch(
+                        pattern="EXISTENTIAL_NEGATION",
+                        confidence=conf,
+                        matched_indices=sorted({ni, ei}),
+                        description="Negation of existence/continuation",
+                        v_weight=-45.0, d_weight=-25.0, u_weight=20.0,
+                        g_weight=40.0, w_weight=-35.0,
+                    )
+        return None
+
+    def _social_nullity(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Nobody/negator + social verb + SELF_REF = social erasure.
+
+        "nobody would miss me" "no one cares about me"
+        "the world doesnt need me" "nobody would even notice"
+        """
+        _SOCIAL_VERBS = frozenset({
+            "miss", "care", "cares", "need", "needs", "want", "wants",
+            "notice", "love", "loves", "remember", "know", "knows",
+            "see", "sees", "hear", "hears",
+            "like", "likes", "liked", "believe", "believes",
+            "understand", "understands", "trust", "trusts",
+            "respect", "respects", "listen", "listens",
+            "help", "helps", "support", "supports",
+        })
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_negator = any(r.role == "NEGATOR" for r in roles)
+        if not has_self or not has_negator:
+            return None
+        social_idx = [i for i, r in enumerate(roles) if r.word in _SOCIAL_VERBS]
+        if not social_idx:
+            return None
+        negator_idx = [i for i, r in enumerate(roles) if r.role == "NEGATOR"]
+        self_idx = [i for i, r in enumerate(roles) if r.role == "SELF_REF"]
+        for ni in negator_idx:
+            for si in social_idx:
+                if abs(ni - si) <= 5:
+                    return StructureMatch(
+                        pattern="SOCIAL_NULLITY",
+                        confidence=0.85,
+                        matched_indices=sorted({ni, si} | set(self_idx[:1])),
+                        description="Social erasure: nobody + social verb + self",
+                        v_weight=-40.0, d_weight=-20.0, u_weight=15.0,
+                        g_weight=35.0, w_weight=-45.0,
+                    )
+        return None
+
+    def _grief_loss(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + loss verb + RELATION_REF or heavy-G word = grief.
+
+        "i lost my best friend" -- SELF_REF + lost + RELATION_REF
+        "we lost grandpa last year" -- SELF_REF(we) + lost + RELATION_REF
+        "i lost him" -- SELF_REF + lost + OTHER_REF (implies relationship)
+
+        The positive words near the lost person ("best", "wonderful") describe
+        WHO was lost, not the speaker's state. Bigger positive = bigger grief.
+        """
+        _LOSS_VERBS = frozenset({
+            "lost", "lose", "losing", "passed", "gone", "died",
+            "buried", "mourning", "grieving", "miss", "missing",
+        })
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+        loss_indices = [r.position for r in roles
+                       if r.word in _LOSS_VERBS
+                       or (r.role == "PULL_RESOLVED" and r.word in _LOSS_VERBS)]
+
+        if not loss_indices:
+            return None
+
+        # Recovery words cancel grief: "found my lost dog" = happy ending
+        _RECOVERY_WORDS = frozenset({
+            "found", "find", "reunited", "recovered", "returned",
+            "back", "saved", "rescued", "alive", "safe",
+        })
+        has_recovery = any(r.word in _RECOVERY_WORDS for r in roles)
+        if has_recovery:
+            return None
+
+        # Need a target: RELATION_REF, or OTHER_REF/heavy-G AFTER the loss verb.
+        # "i lost my best friend" -- friend(RELATION) after lost = target.
+        # "we lost the game" -- "we"(OTHER) BEFORE lost = subject, not target.
+        # Target must be after (or within 1 before) the first loss verb.
+        first_loss = min(loss_indices)
+        relation_indices = [r.position for r in roles
+                          if r.role == "RELATION_REF" and r.position >= first_loss - 1]
+        # OTHER_REF only counts as target if it's after the loss verb
+        # (pronouns before are subjects: "we lost", "they lost")
+        other_after = [r.position for r in roles
+                      if r.role == "OTHER_REF" and r.position > first_loss]
+        # Also catch heavy-G words (pet names, roles) even if not classified
+        from .vocabulary import VOCABULARY
+        loss_set = set(loss_indices)
+        heavy_g_indices = [r.position for r in roles
+                         if r.word in VOCABULARY and VOCABULARY[r.word][4] >= 15
+                         and r.role not in ("SELF_REF", "NEGATOR", "CONNECTOR")
+                         and r.position >= first_loss - 1
+                         and r.position not in loss_set]
+        target_indices = list(set(relation_indices + other_after + heavy_g_indices))
+
+        if not target_indices:
+            return None
+
+        # Find best loss-target pair
+        best_dist = 999
+        best_l, best_t = -1, -1
+        for li in loss_indices:
+            for ti in target_indices:
+                d = abs(li - ti)
+                if d < best_dist:
+                    best_dist = d
+                    best_l, best_t = li, ti
+
+        if best_dist > 6:
+            return None
+
+        # Confidence: SELF_REF present = stronger (personal loss)
+        confidence = 0.8 if self_indices else 0.6
+
+        # Scale with how positive the lost thing is described
+        # "best friend" has "best" V=+50. The bigger the positive,
+        # the bigger the grief (you lost something GOOD).
+        pos_near_target = 0
+        for r in roles:
+            if r.role == "EMOTIONAL" and r.force and r.force[0] > 10:
+                if abs(r.position - best_t) <= 3:
+                    pos_near_target += r.force[0]
+        grief_scale = 1.0 + min(pos_near_target / 50.0, 1.5)
+
+        indices = sorted(set(loss_indices + target_indices +
+                           (self_indices[:1] if self_indices else [])))
+        return StructureMatch(
+            pattern="GRIEF_LOSS",
+            confidence=min(confidence, 1.0),
+            matched_indices=indices,
+            description="Loss of person/relationship -- grief",
+            v_weight=-35.0 * grief_scale,
+            d_weight=-10.0,
+            u_weight=10.0,
+            g_weight=30.0,
+            w_weight=-10.0,
+        )
+
+    def _reported_comfort(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """[everyone/they/people] + [say/says/said/tell/told] + positive = reported speech.
+
+        "everyone says it gets easier" -- the speaker does NOT believe this
+        "they told me it would get better" -- reported comfort, not felt
+        "people say time heals" -- generic advice, not speaker's state
+
+        The positive content is someone ELSE's claim. Dampen it.
+        """
+        _REPORT_SUBJECTS = frozenset({
+            "everyone", "everybody", "they", "people", "someone",
+            "somebody", "others", "friends", "family",
+        })
+        _REPORT_VERBS = frozenset({
+            "say", "says", "said", "tell", "tells", "told",
+            "think", "thinks", "claim", "claims", "promise",
+            "promised", "insist", "insists",
+        })
+
+        subject_indices = [r.position for r in roles
+                          if r.word in _REPORT_SUBJECTS]
+        verb_indices = [r.position for r in roles
+                       if r.word in _REPORT_VERBS]
+
+        if not subject_indices or not verb_indices:
+            return None
+
+        # Subject must be near verb (within 3 words)
+        best_dist = 999
+        best_s, best_v = -1, -1
+        for si in subject_indices:
+            for vi in verb_indices:
+                d = abs(si - vi)
+                if d < best_dist and d <= 3:
+                    best_dist = d
+                    best_s, best_v = si, vi
+
+        if best_s == -1:
+            return None
+
+        # Check if positive content follows the report verb
+        has_positive_after = False
+        for r in roles:
+            if r.position > best_v:
+                if r.role == "EMOTIONAL" and r.force and r.force[0] > 10:
+                    has_positive_after = True
+                    break
+                # Also catch positive-meaning neutral words
+                if r.word in ("easier", "better", "fine", "okay",
+                              "alright", "heals", "passes", "improves"):
+                    has_positive_after = True
+                    break
+
+        if not has_positive_after:
+            return None
+
+        indices = sorted({best_s, best_v})
+        return StructureMatch(
+            pattern="REPORTED_COMFORT",
+            confidence=0.75,
+            matched_indices=indices,
+            description="Reported speech -- speaker relaying others' comfort, not believing it",
+            v_weight=-25.0,
+            d_weight=-5.0,
+            u_weight=5.0,
+            g_weight=10.0,
+            w_weight=-5.0,
+        )
+
+    def _rhetorical_self_negation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """[why/how] + [would/could/should] + [anyone/somebody/someone] + positive + SELF_REF.
+
+        "why would anyone love me" = nobody would love me
+        "how could anyone want me" = nobody wants me
+        "who would ever care about me" = nobody cares
+
+        The rhetorical question frame INVERTS the positive emotion.
+        "love" becomes "absence of love directed at self."
+        This is a self-worth attack: the speaker pre-rejects themselves.
+        """
+        _RHETORICAL_QW = frozenset({"why", "how", "who", "whos"})
+        _MODAL_VERBS = frozenset({
+            "would", "could", "should", "will", "can",
+            "wouldnt", "couldn't", "shouldnt",
+        })
+        _INDEFINITE_SUBJECTS = frozenset({
+            "anyone", "anybody", "someone", "somebody",
+            "everyone", "everybody",
+        })
+
+        # Step 1: rhetorical question word in first 2 positions
+        has_qw = any(r.word in _RHETORICAL_QW for r in roles[:2])
+        if not has_qw:
+            return None
+
+        # Step 2: modal verb present
+        modal_indices = [r.position for r in roles if r.word in _MODAL_VERBS]
+        if not modal_indices:
+            return None
+
+        # Step 3: indefinite subject OR "ever" (intensifier of impossibility)
+        has_indefinite = any(r.word in _INDEFINITE_SUBJECTS for r in roles)
+        has_ever = any(r.word == "ever" for r in roles)
+
+        if not has_indefinite and not has_ever:
+            return None
+
+        # Step 4: SELF_REF present (the target of the rhetorical question)
+        self_indices = [r.position for r in roles if r.role == "SELF_REF"]
+        if not self_indices:
+            return None
+
+        # Step 5: positive emotional word present (the thing being denied)
+        pos_indices = [r.position for r in roles
+                      if r.role == "EMOTIONAL" and r.force and r.force[0] > 15]
+        # Also check for positive social verbs that may not be EMOTIONAL
+        _POSITIVE_SOCIAL = frozenset({
+            "love", "want", "care", "like", "need", "miss",
+            "choose", "pick", "hire", "accept", "forgive",
+        })
+        social_pos_indices = [r.position for r in roles
+                            if r.word in _POSITIVE_SOCIAL]
+        all_pos_indices = sorted(set(pos_indices + social_pos_indices))
+
+        if not all_pos_indices:
+            return None
+
+        # Find the strongest positive word to scale the inversion
+        max_pos_v = 0
+        for r in roles:
+            if r.role == "EMOTIONAL" and r.force and r.force[0] > max_pos_v:
+                max_pos_v = r.force[0]
+        # Social verbs without vocab force get baseline
+        if max_pos_v == 0:
+            max_pos_v = 40
+
+        # Scale: bigger positive = bigger inversion
+        # "love" at +127 = devastating. "like" at +20 = milder.
+        intensity = min(max_pos_v / 50.0, 3.0)
+
+        confidence = 0.9
+        if has_indefinite and has_ever:
+            confidence = 0.95  # "why would anyone EVER love me" = maximum
+
+        indices = sorted(set(modal_indices + all_pos_indices + self_indices))
+        return StructureMatch(
+            pattern="RHETORICAL_SELF_NEGATION",
+            confidence=confidence,
+            matched_indices=indices,
+            description="Rhetorical question inverting positive -- self-worth attack",
+            v_weight=-60.0 * intensity,
+            d_weight=-15.0,
+            u_weight=10.0,
+            g_weight=20.0,
+            w_weight=-40.0 * intensity,
+        )
+
+    def _rhetorical_hopelessness(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Interrogative + exit concept = rhetorical negation of purpose.
+
+        "whats the point of living" "why bother" "why even try"
+        """
+        _RHETORICAL_OPENERS = frozenset({"whats", "what", "why", "whos"})
+        _PURPOSE_WORDS = frozenset({
+            "point", "purpose", "reason", "bother", "try", "use",
+            "matter", "difference", "good",
+        })
+        has_opener = any(r.word in _RHETORICAL_OPENERS for r in roles[:3])
+        if not has_opener:
+            return None
+        purpose_idx = [i for i, r in enumerate(roles) if r.word in _PURPOSE_WORDS]
+        if not purpose_idx:
+            return None
+        _EXIST = frozenset({"living", "life", "alive", "trying", "going", "anymore"})
+        has_existential = any(r.word in _EXIST for r in roles)
+        conf = 0.85 if has_existential else 0.65
+        return StructureMatch(
+            pattern="RHETORICAL_HOPELESSNESS",
+            confidence=conf,
+            matched_indices=purpose_idx,
+            description="Rhetorical question negating purpose/reason",
+            v_weight=-35.0, d_weight=-20.0, u_weight=10.0,
+            g_weight=30.0, w_weight=-30.0,
+        )
+
+
+    # ── Passive-aggressive patterns (added 2026-04-03) ──────────
+
+    def _passive_resignation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Permission/agreement words that mask underlying negative.
+
+        "whatever makes you happy" "do what you want" "if thats what you think"
+        "whatever you say" "i guess i deserved it" "its not like i care"
+
+        These are surrender statements -- the speaker yields control while
+        signaling resentment. The surface reads as agreement/permission but
+        the underlying state is withdrawal + lowered self-worth.
+        """
+        words = [r.word for r in roles]
+        words_lower = [w.lower() for w in words]
+        n = len(words_lower)
+
+        # Pattern 1: resignation opener + OTHER_REF + action/opinion verb
+        # "whatever makes you happy" "do what you want" "whatever you say"
+        # "if thats what you think"
+        _RESIGN_OPENERS = frozenset({"whatever", "do", "go", "sure", "fine", "if"})
+        _YIELD_PHRASES = frozenset({"want", "think", "say", "like", "wish",
+                                    "prefer", "feel", "believe", "need"})
+        has_opener = n > 0 and words_lower[0] in _RESIGN_OPENERS
+        has_other = any(r.role == "OTHER_REF" for r in roles)
+        has_yield_verb = any(w in _YIELD_PHRASES for w in words_lower)
+
+        if has_opener and has_other and has_yield_verb:
+            matched = [0] + [i for i, r in enumerate(roles) if r.role == "OTHER_REF"]
+            # "whatever makes you happy" = resignation despite positive word
+            # Higher confidence if positive emotional word present (mask)
+            has_positive = any(r.role == "EMOTIONAL" and r.force and r.force[0] > 15
+                              for r in roles)
+            conf = 0.85 if has_positive else 0.75
+            return StructureMatch(
+                pattern="PASSIVE_RESIGNATION",
+                confidence=conf,
+                matched_indices=sorted(set(matched)),
+                description="Resignation disguised as permission/agreement",
+                v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
+                g_weight=0.0, w_weight=-15.0,
+            )
+
+        # Pattern 2: "whatever" + OTHER_REF (short form)
+        # "whatever you say" -- just yielding
+        if "whatever" in words_lower and has_other and n <= 5:
+            wi = words_lower.index("whatever")
+            return StructureMatch(
+                pattern="PASSIVE_RESIGNATION",
+                confidence=0.80,
+                matched_indices=[wi],
+                description="Resignation: 'whatever' + addressee = yielding control",
+                v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
+                g_weight=0.0, w_weight=-15.0,
+            )
+
+        # Pattern 3: "i guess" / "i suppose" + anything
+        # "i guess i deserved it" "i suppose youre right"
+        # The hedge signals the speaker doesn't believe it but won't fight.
+        for i in range(n - 1):
+            if words_lower[i] == "i" and words_lower[i + 1] in ("guess", "suppose"):
+                matched = [i, i + 1]
+                return StructureMatch(
+                    pattern="PASSIVE_RESIGNATION",
+                    confidence=0.75,
+                    matched_indices=matched,
+                    description="Passive resignation: 'I guess/suppose' = yielding without believing",
+                    v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
+                    g_weight=0.0, w_weight=-15.0,
+                )
+
+        # Pattern 4: "its not like i care/matter"
+        # Negation + "like" + SELF_REF + positive verb = denial masking hurt
+        if "not" in words_lower and "like" in words_lower:
+            has_self = any(r.role == "SELF_REF" for r in roles)
+            _CARE_WORDS = frozenset({"care", "matter", "count", "mean"})
+            has_care = any(w in _CARE_WORDS for w in words_lower)
+            if has_self and has_care:
+                not_idx = words_lower.index("not")
+                like_idx = words_lower.index("like")
+                if abs(not_idx - like_idx) <= 2:
+                    return StructureMatch(
+                        pattern="PASSIVE_RESIGNATION",
+                        confidence=0.85,
+                        matched_indices=[not_idx, like_idx],
+                        description="Denial masking hurt: 'not like I care' = I do care",
+                        v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
+                        g_weight=0.0, w_weight=-15.0,
+                    )
+
+        # Pattern 5: "im fine" -- ultra-short self-report of okayness
+        # SELF_REF + PEACE role in <= 3 word sentence = suspicious brevity
+        if n <= 3:
+            has_self = any(r.role == "SELF_REF" for r in roles)
+            has_peace = any(r.role == "PEACE" for r in roles)
+            if has_self and has_peace:
+                matched = [i for i, r in enumerate(roles)
+                          if r.role in ("SELF_REF", "PEACE")]
+                return StructureMatch(
+                    pattern="PASSIVE_RESIGNATION",
+                    confidence=0.70,
+                    matched_indices=matched,
+                    description="Suspicious brevity: minimal self-report of okayness",
+                    v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
+                    g_weight=0.0, w_weight=-15.0,
+                )
+
+        return None
+
+    def _hollow_agreement(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Apparent agreement that signals withdrawal.
+
+        "sure go ahead" "go ahead" "if you say so"
+        Short sentences starting with agreement words = hollow compliance.
+
+        The speaker technically agrees but the brevity and word choice
+        signal emotional withdrawal rather than genuine agreement.
+        """
+        words = [r.word for r in roles]
+        words_lower = [w.lower() for w in words]
+        n = len(words_lower)
+
+        # Pattern 1: agreement opener + short sentence (<=5 words)
+        # "sure" "yeah" "ok" "fine" "whatever" as first word
+        _HOLLOW_OPENERS = frozenset({"sure", "yeah", "ok", "okay", "fine", "whatever"})
+        if n <= 5 and n >= 1 and words_lower[0] in _HOLLOW_OPENERS:
+            # Exclude if there's a strong positive emotional word after opener
+            # "sure I love it" = genuine. "sure go ahead" = hollow.
+            has_strong_positive = any(
+                r.role == "EMOTIONAL" and r.force and r.force[0] > 30
+                for r in roles[1:]
+            )
+            if not has_strong_positive:
+                # Single word "whatever" or "fine" = very hollow
+                conf = 0.80 if n <= 2 else 0.65
+                return StructureMatch(
+                    pattern="HOLLOW_AGREEMENT",
+                    confidence=conf,
+                    matched_indices=[0],
+                    description="Hollow agreement: brief compliance signals withdrawal",
+                    v_weight=-15.0, d_weight=-15.0, u_weight=0.0,
+                    g_weight=0.0, w_weight=0.0,
+                )
+
+        # Pattern 2: "go ahead" -- ceding control
+        for i in range(n - 1):
+            if words_lower[i] == "go" and words_lower[i + 1] == "ahead":
+                return StructureMatch(
+                    pattern="HOLLOW_AGREEMENT",
+                    confidence=0.70,
+                    matched_indices=[i, i + 1],
+                    description="Hollow agreement: 'go ahead' = ceding control",
+                    v_weight=-15.0, d_weight=-15.0, u_weight=0.0,
+                    g_weight=0.0, w_weight=0.0,
+                )
+
+        # Pattern 3: "if you say so"
+        if n >= 4:
+            text_joined = " ".join(words_lower)
+            if "if you say so" in text_joined:
+                return StructureMatch(
+                    pattern="HOLLOW_AGREEMENT",
+                    confidence=0.75,
+                    matched_indices=list(range(n)),
+                    description="Hollow agreement: 'if you say so' = doubting but yielding",
+                    v_weight=-15.0, d_weight=-15.0, u_weight=0.0,
+                    g_weight=0.0, w_weight=0.0,
+                )
+
+        return None

@@ -1,0 +1,1439 @@
+[
+  {
+    "id": 0,
+    "text": "shes pregnant",
+    "category": "life_event",
+    "engine": {
+      "v": 128,
+      "a": 132,
+      "d": 128,
+      "u": 3,
+      "g": 138,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 1,
+    "text": "we are pregnant!",
+    "category": "life_event",
+    "engine": {
+      "v": 128,
+      "a": 132,
+      "d": 128,
+      "u": 3,
+      "g": 138,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 2,
+    "text": "shes 15 and pregnant",
+    "category": "life_event",
+    "engine": {
+      "v": 128,
+      "a": 132,
+      "d": 128,
+      "u": 3,
+      "g": 138,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 3,
+    "text": "my daughter is pregnant",
+    "category": "life_event",
+    "engine": {
+      "v": 128,
+      "a": 133,
+      "d": 128,
+      "u": 3,
+      "g": 149,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 4,
+    "text": "he was diagnosed with cancer",
+    "category": "life_event",
+    "engine": {
+      "v": 98,
+      "a": 140,
+      "d": 115,
+      "u": 15,
+      "g": 126,
+      "w": 128,
+      "i": 60,
+      "structures": []
+    }
+  },
+  {
+    "id": 5,
+    "text": "he was diagnosed early and its treatable",
+    "category": "life_event",
+    "engine": {
+      "v": 142,
+      "a": 144,
+      "d": 146,
+      "u": 33,
+      "g": 132,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 6,
+    "text": "she was adopted",
+    "category": "life_event",
+    "engine": {
+      "v": 128,
+      "a": 130,
+      "d": 128,
+      "u": 0,
+      "g": 135,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 7,
+    "text": "we adopted a baby!",
+    "category": "life_event",
+    "engine": {
+      "v": 130,
+      "a": 132,
+      "d": 129,
+      "u": 0,
+      "g": 139,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 8,
+    "text": "she overdosed last night",
+    "category": "life_event",
+    "engine": {
+      "v": 113,
+      "a": 134,
+      "d": 122,
+      "u": 19,
+      "g": 144,
+      "w": 125,
+      "i": 80,
+      "structures": [
+        "FINALITY"
+      ]
+    }
+  },
+  {
+    "id": 9,
+    "text": "3 years sober today",
+    "category": "life_event",
+    "engine": {
+      "v": 130,
+      "a": 128,
+      "d": 131,
+      "u": 2,
+      "g": 132,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 10,
+    "text": "he relapsed again",
+    "category": "life_event",
+    "engine": {
+      "v": 116,
+      "a": 132,
+      "d": 124,
+      "u": 2,
+      "g": 137,
+      "w": 128,
+      "i": 70,
+      "structures": []
+    }
+  },
+  {
+    "id": 11,
+    "text": "they got divorced",
+    "category": "life_event",
+    "engine": {
+      "v": 93,
+      "a": 107,
+      "d": 103,
+      "u": 1,
+      "g": 113,
+      "w": 128,
+      "i": 57,
+      "structures": []
+    }
+  },
+  {
+    "id": 12,
+    "text": "he got laid off",
+    "category": "life_event",
+    "engine": {
+      "v": 105,
+      "a": 146,
+      "d": 104,
+      "u": 19,
+      "g": 117,
+      "w": 128,
+      "i": 61,
+      "structures": []
+    }
+  },
+  {
+    "id": 13,
+    "text": "we were just sitting there when it happened",
+    "category": "contrast",
+    "engine": {
+      "v": 126,
+      "a": 130,
+      "d": 127,
+      "u": 2,
+      "g": 129,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 14,
+    "text": "everything was fine and then the phone rang",
+    "category": "contrast",
+    "engine": {
+      "v": 127,
+      "a": 127,
+      "d": 128,
+      "u": 0,
+      "g": 131,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 15,
+    "text": "she was just walking home from school",
+    "category": "contrast",
+    "engine": {
+      "v": 129,
+      "a": 128,
+      "d": 130,
+      "u": 1,
+      "g": 137,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 16,
+    "text": "he was sleeping when they broke in",
+    "category": "contrast",
+    "engine": {
+      "v": 119,
+      "a": 133,
+      "d": 124,
+      "u": 3,
+      "g": 125,
+      "w": 128,
+      "i": 74,
+      "structures": []
+    }
+  },
+  {
+    "id": 17,
+    "text": "we were laughing five minutes ago",
+    "category": "contrast",
+    "engine": {
+      "v": 133,
+      "a": 134,
+      "d": 130,
+      "u": 0,
+      "g": 129,
+      "w": 128,
+      "i": 160,
+      "structures": []
+    }
+  },
+  {
+    "id": 18,
+    "text": "you stupid bitch",
+    "category": "directed",
+    "engine": {
+      "v": 113,
+      "a": 139,
+      "d": 125,
+      "u": 5,
+      "g": 130,
+      "w": 128,
+      "i": 70,
+      "structures": []
+    }
+  },
+  {
+    "id": 19,
+    "text": "shes a bad bitch",
+    "category": "directed",
+    "engine": {
+      "v": 102,
+      "a": 142,
+      "d": 120,
+      "u": 11,
+      "g": 128,
+      "w": 128,
+      "i": 61,
+      "structures": []
+    }
+  },
+  {
+    "id": 20,
+    "text": "you lucky bastard",
+    "category": "directed",
+    "engine": {
+      "v": 127,
+      "a": 133,
+      "d": 129,
+      "u": 1,
+      "g": 132,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 21,
+    "text": "that was savage",
+    "category": "directed",
+    "engine": {
+      "v": 128,
+      "a": 134,
+      "d": 133,
+      "u": 0,
+      "g": 130,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 22,
+    "text": "hes a legend",
+    "category": "directed",
+    "engine": {
+      "v": 121,
+      "a": 132,
+      "d": 137,
+      "u": 2,
+      "g": 132,
+      "w": 128,
+      "i": 128,
+      "structures": [
+        "DIRECTED_POSITIVE"
+      ]
+    }
+  },
+  {
+    "id": 23,
+    "text": "youre a monster",
+    "category": "directed",
+    "engine": {
+      "v": 109,
+      "a": 149,
+      "d": 113,
+      "u": 14,
+      "g": 134,
+      "w": 128,
+      "i": 67,
+      "structures": []
+    }
+  },
+  {
+    "id": 24,
+    "text": "ok boomer",
+    "category": "directed",
+    "engine": {
+      "v": 127,
+      "a": 128,
+      "d": 128,
+      "u": 0,
+      "g": 127,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 25,
+    "text": "she lost a lot of weight",
+    "category": "body",
+    "engine": {
+      "v": 117,
+      "a": 131,
+      "d": 121,
+      "u": 3,
+      "g": 124,
+      "w": 128,
+      "i": 73,
+      "structures": []
+    }
+  },
+  {
+    "id": 26,
+    "text": "hes getting fat",
+    "category": "body",
+    "engine": {
+      "v": 118,
+      "a": 155,
+      "d": 102,
+      "u": 11,
+      "g": 120,
+      "w": 128,
+      "i": 70,
+      "structures": []
+    }
+  },
+  {
+    "id": 27,
+    "text": "you look different",
+    "category": "body",
+    "engine": {
+      "v": 128,
+      "a": 129,
+      "d": 128,
+      "u": 1,
+      "g": 128,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 28,
+    "text": "she doesnt eat anymore",
+    "category": "body",
+    "engine": {
+      "v": 125,
+      "a": 129,
+      "d": 126,
+      "u": 1,
+      "g": 127,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 29,
+    "text": "you look like shit",
+    "category": "body",
+    "engine": {
+      "v": 117,
+      "a": 135,
+      "d": 130,
+      "u": 3,
+      "g": 125,
+      "w": 128,
+      "i": 73,
+      "structures": []
+    }
+  },
+  {
+    "id": 30,
+    "text": "bro that was fire",
+    "category": "slang",
+    "engine": {
+      "v": 131,
+      "a": 139,
+      "d": 131,
+      "u": 1,
+      "g": 134,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 31,
+    "text": "she absolutely killed it",
+    "category": "slang",
+    "engine": {
+      "v": 114,
+      "a": 143,
+      "d": 153,
+      "u": 9,
+      "g": 144,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 32,
+    "text": "im dead lol",
+    "category": "slang",
+    "engine": {
+      "v": 93,
+      "a": 141,
+      "d": 102,
+      "u": 10,
+      "g": 104,
+      "w": 98,
+      "i": 21,
+      "structures": []
+    }
+  },
+  {
+    "id": 33,
+    "text": "no cap that was insane",
+    "category": "slang",
+    "engine": {
+      "v": 128,
+      "a": 131,
+      "d": 129,
+      "u": 4,
+      "g": 129,
+      "w": 128,
+      "i": 166,
+      "structures": []
+    }
+  },
+  {
+    "id": 34,
+    "text": "hes cooked",
+    "category": "slang",
+    "engine": {
+      "v": 131,
+      "a": 129,
+      "d": 130,
+      "u": 0,
+      "g": 129,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 35,
+    "text": "lowkey goated",
+    "category": "slang",
+    "engine": {
+      "v": 131,
+      "a": 131,
+      "d": 131,
+      "u": 0,
+      "g": 129,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 36,
+    "text": "skill issue",
+    "category": "slang",
+    "engine": {
+      "v": 135,
+      "a": 132,
+      "d": 139,
+      "u": 2,
+      "g": 133,
+      "w": 128,
+      "i": 168,
+      "structures": []
+    }
+  },
+  {
+    "id": 37,
+    "text": "cope harder",
+    "category": "slang",
+    "engine": {
+      "v": 121,
+      "a": 131,
+      "d": 124,
+      "u": 1,
+      "g": 125,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 38,
+    "text": "touch grass",
+    "category": "slang",
+    "engine": {
+      "v": 151,
+      "a": 140,
+      "d": 146,
+      "u": 9,
+      "g": 124,
+      "w": 128,
+      "i": 180,
+      "structures": []
+    }
+  },
+  {
+    "id": 39,
+    "text": "thats mid",
+    "category": "slang",
+    "engine": {
+      "v": 126,
+      "a": 128,
+      "d": 128,
+      "u": 0,
+      "g": 127,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 40,
+    "text": "i miss my ex",
+    "category": "relationship",
+    "engine": {
+      "v": 121,
+      "a": 133,
+      "d": 125,
+      "u": 4,
+      "g": 134,
+      "w": 122,
+      "i": 38,
+      "structures": []
+    }
+  },
+  {
+    "id": 41,
+    "text": "we used to be best friends",
+    "category": "relationship",
+    "engine": {
+      "v": 140,
+      "a": 134,
+      "d": 135,
+      "u": 0,
+      "g": 136,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 42,
+    "text": "she moved on already",
+    "category": "relationship",
+    "engine": {
+      "v": 127,
+      "a": 129,
+      "d": 128,
+      "u": 1,
+      "g": 128,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 43,
+    "text": "he ghosted me",
+    "category": "relationship",
+    "engine": {
+      "v": 109,
+      "a": 131,
+      "d": 120,
+      "u": 8,
+      "g": 130,
+      "w": 111,
+      "i": 73,
+      "structures": [
+        "VICTIMIZATION"
+      ]
+    }
+  },
+  {
+    "id": 44,
+    "text": "we broke up",
+    "category": "relationship",
+    "engine": {
+      "v": 119,
+      "a": 134,
+      "d": 125,
+      "u": 3,
+      "g": 125,
+      "w": 128,
+      "i": 74,
+      "structures": []
+    }
+  },
+  {
+    "id": 45,
+    "text": "i think im in love",
+    "category": "relationship",
+    "engine": {
+      "v": 167,
+      "a": 132,
+      "d": 132,
+      "u": 0,
+      "g": 135,
+      "w": 147,
+      "i": 171,
+      "structures": []
+    }
+  },
+  {
+    "id": 46,
+    "text": "its getting dark outside",
+    "category": "atmosphere",
+    "engine": {
+      "v": 124,
+      "a": 153,
+      "d": 124,
+      "u": 13,
+      "g": 128,
+      "w": 128,
+      "i": 160,
+      "structures": [
+        "DIRECTED_POSITIVE"
+      ]
+    }
+  },
+  {
+    "id": 47,
+    "text": "the house was quiet",
+    "category": "atmosphere",
+    "engine": {
+      "v": 127,
+      "a": 126,
+      "d": 127,
+      "u": 0,
+      "g": 130,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 48,
+    "text": "the room felt heavy",
+    "category": "atmosphere",
+    "engine": {
+      "v": 125,
+      "a": 144,
+      "d": 120,
+      "u": 9,
+      "g": 114,
+      "w": 128,
+      "i": 208,
+      "structures": []
+    }
+  },
+  {
+    "id": 49,
+    "text": "it smelled like home",
+    "category": "atmosphere",
+    "engine": {
+      "v": 130,
+      "a": 127,
+      "d": 131,
+      "u": 0,
+      "g": 136,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 50,
+    "text": "everything was still",
+    "category": "atmosphere",
+    "engine": {
+      "v": 127,
+      "a": 125,
+      "d": 127,
+      "u": 0,
+      "g": 129,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 51,
+    "text": "come on mom its only 15 dollars",
+    "category": "numbers",
+    "engine": {
+      "v": 143,
+      "a": 136,
+      "d": 143,
+      "u": 2,
+      "g": 141,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 52,
+    "text": "shes 15 and pregnant",
+    "category": "numbers",
+    "engine": {
+      "v": 128,
+      "a": 132,
+      "d": 128,
+      "u": 3,
+      "g": 138,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 53,
+    "text": "married for 40 years",
+    "category": "numbers",
+    "engine": {
+      "v": 137,
+      "a": 135,
+      "d": 141,
+      "u": 1,
+      "g": 132,
+      "w": 128,
+      "i": 169,
+      "structures": []
+    }
+  },
+  {
+    "id": 54,
+    "text": "we lost 47 people",
+    "category": "numbers",
+    "engine": {
+      "v": 119,
+      "a": 130,
+      "d": 123,
+      "u": 2,
+      "g": 125,
+      "w": 128,
+      "i": 73,
+      "structures": []
+    }
+  },
+  {
+    "id": 55,
+    "text": "clean for 6 months",
+    "category": "numbers",
+    "engine": {
+      "v": 132,
+      "a": 127,
+      "d": 131,
+      "u": 1,
+      "g": 131,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 56,
+    "text": "im fine",
+    "category": "passive_agg",
+    "engine": {
+      "v": 127,
+      "a": 127,
+      "d": 128,
+      "u": 0,
+      "g": 129,
+      "w": 127,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 57,
+    "text": "whatever you say",
+    "category": "passive_agg",
+    "engine": {
+      "v": 125,
+      "a": 125,
+      "d": 125,
+      "u": 0,
+      "g": 127,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 58,
+    "text": "no its fine i didnt want to go anyway",
+    "category": "passive_agg",
+    "engine": {
+      "v": 87,
+      "a": 128,
+      "d": 112,
+      "u": 14,
+      "g": 157,
+      "w": 96,
+      "i": 128,
+      "structures": [
+        "EXISTENTIAL_NEGATION",
+        "SOCIAL_NULLITY"
+      ]
+    }
+  },
+  {
+    "id": 59,
+    "text": "sure go ahead",
+    "category": "passive_agg",
+    "engine": {
+      "v": 141,
+      "a": 129,
+      "d": 143,
+      "u": 0,
+      "g": 135,
+      "w": 128,
+      "i": 171,
+      "structures": []
+    }
+  },
+  {
+    "id": 60,
+    "text": "i guess i deserved it",
+    "category": "passive_agg",
+    "engine": {
+      "v": 125,
+      "a": 128,
+      "d": 126,
+      "u": 1,
+      "g": 128,
+      "w": 124,
+      "i": 37,
+      "structures": []
+    }
+  },
+  {
+    "id": 61,
+    "text": "oh great another meeting",
+    "category": "sarcasm",
+    "engine": {
+      "v": 119,
+      "a": 131,
+      "d": 134,
+      "u": 1,
+      "g": 131,
+      "w": 128,
+      "i": 166,
+      "structures": [
+        "SARCASM_INVERSION"
+      ]
+    }
+  },
+  {
+    "id": 62,
+    "text": "wow thanks so much",
+    "category": "sarcasm",
+    "engine": {
+      "v": 146,
+      "a": 139,
+      "d": 130,
+      "u": 0,
+      "g": 137,
+      "w": 128,
+      "i": 169,
+      "structures": []
+    }
+  },
+  {
+    "id": 63,
+    "text": "yeah that went well",
+    "category": "sarcasm",
+    "engine": {
+      "v": 134,
+      "a": 123,
+      "d": 127,
+      "u": 0,
+      "g": 129,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 64,
+    "text": "love that for you",
+    "category": "sarcasm",
+    "engine": {
+      "v": 145,
+      "a": 131,
+      "d": 133,
+      "u": 2,
+      "g": 134,
+      "w": 128,
+      "i": 128,
+      "structures": [
+        "DIRECTED_POSITIVE"
+      ]
+    }
+  },
+  {
+    "id": 65,
+    "text": "i dont want to be here anymore",
+    "category": "crisis",
+    "engine": {
+      "v": 78,
+      "a": 129,
+      "d": 107,
+      "u": 16,
+      "g": 159,
+      "w": 93,
+      "i": 128,
+      "structures": [
+        "EXISTENTIAL_NEGATION",
+        "SOCIAL_NULLITY"
+      ]
+    }
+  },
+  {
+    "id": 66,
+    "text": "nobody would even notice",
+    "category": "crisis",
+    "engine": {
+      "v": 127,
+      "a": 130,
+      "d": 128,
+      "u": 1,
+      "g": 128,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 67,
+    "text": "im just tired",
+    "category": "crisis",
+    "engine": {
+      "v": 120,
+      "a": 121,
+      "d": 122,
+      "u": 3,
+      "g": 120,
+      "w": 120,
+      "i": 36,
+      "structures": []
+    }
+  },
+  {
+    "id": 68,
+    "text": "it doesnt matter",
+    "category": "crisis",
+    "engine": {
+      "v": 126,
+      "a": 129,
+      "d": 127,
+      "u": 1,
+      "g": 127,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 69,
+    "text": "i cant do this anymore",
+    "category": "crisis",
+    "engine": {
+      "v": 86,
+      "a": 130,
+      "d": 102,
+      "u": 25,
+      "g": 160,
+      "w": 107,
+      "i": 128,
+      "structures": [
+        "EXHAUSTION",
+        "EXISTENTIAL_NEGATION"
+      ]
+    }
+  },
+  {
+    "id": 70,
+    "text": "just leave me alone",
+    "category": "crisis",
+    "engine": {
+      "v": 101,
+      "a": 128,
+      "d": 115,
+      "u": 6,
+      "g": 114,
+      "w": 105,
+      "i": 29,
+      "structures": []
+    }
+  },
+  {
+    "id": 71,
+    "text": "whats the point",
+    "category": "crisis",
+    "engine": {
+      "v": 116,
+      "a": 128,
+      "d": 122,
+      "u": 3,
+      "g": 138,
+      "w": 118,
+      "i": 128,
+      "structures": [
+        "RHETORICAL_HOPELESSNESS"
+      ]
+    }
+  },
+  {
+    "id": 72,
+    "text": "i want to kill myself",
+    "category": "crisis",
+    "engine": {
+      "v": 47,
+      "a": 142,
+      "d": 118,
+      "u": 25,
+      "g": 162,
+      "w": 74,
+      "i": 25,
+      "structures": [
+        "SELF_HARM_INTENT"
+      ]
+    }
+  },
+  {
+    "id": 73,
+    "text": "tell my kids i love them",
+    "category": "crisis",
+    "engine": {
+      "v": 161,
+      "a": 132,
+      "d": 131,
+      "u": 0,
+      "g": 142,
+      "w": 156,
+      "i": 191,
+      "structures": []
+    }
+  },
+  {
+    "id": 74,
+    "text": "im going to jump",
+    "category": "crisis",
+    "engine": {
+      "v": 128,
+      "a": 132,
+      "d": 129,
+      "u": 2,
+      "g": 130,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 75,
+    "text": "i have the pills right here",
+    "category": "crisis",
+    "engine": {
+      "v": 127,
+      "a": 130,
+      "d": 128,
+      "u": 3,
+      "g": 132,
+      "w": 126,
+      "i": 39,
+      "structures": []
+    }
+  },
+  {
+    "id": 76,
+    "text": "tonight is the night",
+    "category": "crisis",
+    "engine": {
+      "v": 127,
+      "a": 128,
+      "d": 128,
+      "u": 1,
+      "g": 129,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 77,
+    "text": "i wrote a note",
+    "category": "crisis",
+    "engine": {
+      "v": 129,
+      "a": 129,
+      "d": 129,
+      "u": 1,
+      "g": 130,
+      "w": 129,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 78,
+    "text": "my wife cheated on me with my best friend",
+    "category": "betrayal",
+    "engine": {
+      "v": 0,
+      "a": 167,
+      "d": 59,
+      "u": 49,
+      "g": 152,
+      "w": 80,
+      "i": 49,
+      "structures": [
+        "BETRAYAL",
+        "VICTIMIZATION"
+      ]
+    }
+  },
+  {
+    "id": 79,
+    "text": "he told everyone my secret",
+    "category": "betrayal",
+    "engine": {
+      "v": 115,
+      "a": 145,
+      "d": 137,
+      "u": 23,
+      "g": 138,
+      "w": 113,
+      "i": 36,
+      "structures": [
+        "VICTIMIZATION"
+      ]
+    }
+  },
+  {
+    "id": 80,
+    "text": "she took the kids and left",
+    "category": "betrayal",
+    "engine": {
+      "v": 127,
+      "a": 130,
+      "d": 128,
+      "u": 1,
+      "g": 136,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 81,
+    "text": "they went behind my back",
+    "category": "betrayal",
+    "engine": {
+      "v": 108,
+      "a": 136,
+      "d": 113,
+      "u": 15,
+      "g": 127,
+      "w": 110,
+      "i": 72,
+      "structures": [
+        "VICTIMIZATION"
+      ]
+    }
+  },
+  {
+    "id": 82,
+    "text": "i trusted him with everything",
+    "category": "betrayal",
+    "engine": {
+      "v": 131,
+      "a": 129,
+      "d": 130,
+      "u": 0,
+      "g": 131,
+      "w": 130,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 83,
+    "text": "im worthless",
+    "category": "self_worth",
+    "engine": {
+      "v": 38,
+      "a": 134,
+      "d": 77,
+      "u": 44,
+      "g": 123,
+      "w": 62,
+      "i": 19,
+      "structures": [
+        "SELF_NULLIFY"
+      ]
+    }
+  },
+  {
+    "id": 84,
+    "text": "i am nothing",
+    "category": "self_worth",
+    "engine": {
+      "v": 72,
+      "a": 125,
+      "d": 99,
+      "u": 17,
+      "g": 133,
+      "w": 82,
+      "i": 27,
+      "structures": [
+        "SELF_NULLIFY"
+      ]
+    }
+  },
+  {
+    "id": 85,
+    "text": "im just a burden",
+    "category": "self_worth",
+    "engine": {
+      "v": 96,
+      "a": 131,
+      "d": 108,
+      "u": 13,
+      "g": 138,
+      "w": 98,
+      "i": 33,
+      "structures": [
+        "SELF_NULLIFY"
+      ]
+    }
+  },
+  {
+    "id": 86,
+    "text": "why would anyone love me",
+    "category": "self_worth",
+    "engine": {
+      "v": 166,
+      "a": 132,
+      "d": 133,
+      "u": 1,
+      "g": 136,
+      "w": 156,
+      "i": 180,
+      "structures": [
+        "CALLING_OUT"
+      ]
+    }
+  },
+  {
+    "id": 87,
+    "text": "im proud of what we built",
+    "category": "self_worth",
+    "engine": {
+      "v": 144,
+      "a": 134,
+      "d": 139,
+      "u": 0,
+      "g": 134,
+      "w": 139,
+      "i": 172,
+      "structures": []
+    }
+  },
+  {
+    "id": 88,
+    "text": "i finally feel like i belong",
+    "category": "self_worth",
+    "engine": {
+      "v": 133,
+      "a": 129,
+      "d": 132,
+      "u": 1,
+      "g": 132,
+      "w": 131,
+      "i": 152,
+      "structures": []
+    }
+  },
+  {
+    "id": 89,
+    "text": "i was the only one at my birthday",
+    "category": "only",
+    "engine": {
+      "v": 131,
+      "a": 131,
+      "d": 130,
+      "u": 0,
+      "g": 137,
+      "w": 130,
+      "i": 151,
+      "structures": []
+    }
+  },
+  {
+    "id": 90,
+    "text": "i was the only one to finish the test",
+    "category": "only",
+    "engine": {
+      "v": 128,
+      "a": 129,
+      "d": 128,
+      "u": 1,
+      "g": 130,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 91,
+    "text": "its only 15 dollars",
+    "category": "only",
+    "engine": {
+      "v": 143,
+      "a": 134,
+      "d": 143,
+      "u": 1,
+      "g": 135,
+      "w": 128,
+      "i": 128,
+      "structures": []
+    }
+  },
+  {
+    "id": 92,
+    "text": "i only paid 15 dollars for this and its worth 60 online",
+    "category": "only",
+    "engine": {
+      "v": 138,
+      "a": 138,
+      "d": 150,
+      "u": 7,
+      "g": 138,
+      "w": 141,
+      "i": 160,
+      "structures": [
+        "DIRECTED_POSITIVE"
+      ]
+    }
+  }
+]

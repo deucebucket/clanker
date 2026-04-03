@@ -62,14 +62,17 @@ class TestProximityField:
         assert field[0] == {}
 
     def test_cutoff_applied(self):
-        """Words beyond ~5 apart should be excluded (influence < 0.1)."""
-        # 0.7^6 = 0.1176... (included), 0.7^7 = 0.0823... (excluded)
-        roles = _roles("a b c d e f g h i j")
+        """Distant words eventually fall below influence cutoff."""
+        from engine.proximity import PROXIMITY_DECAY, INFLUENCE_CUTOFF
+        # Find the distance where influence drops below cutoff
+        import math
+        cutoff_dist = int(math.log(INFLUENCE_CUTOFF) / math.log(PROXIMITY_DECAY)) + 1
+        roles = _roles(" ".join(f"w{i}" for i in range(cutoff_dist + 5)))
         field = compute_proximity_field(roles)
-        # distance 6 should be included (0.7^6 ~ 0.118)
-        assert 6 in field[0]
-        # distance 7 should be excluded (0.7^7 ~ 0.082)
-        assert 7 not in field[0]
+        # distance cutoff_dist-2 should be included
+        assert cutoff_dist - 2 in field[0]
+        # distance cutoff_dist+1 should be excluded
+        assert cutoff_dist + 1 not in field[0]
 
 
 # ── find_role_pairs tests ────────────────────────────────────────
@@ -167,10 +170,11 @@ class TestProximityCoefficient:
         assert coeff == 1.0
 
     def test_coefficient_capped(self):
-        """Coefficient should never exceed [-3.0, 3.0]."""
+        """Coefficient should never exceed [-COEFFICIENT_CAP, COEFFICIENT_CAP]."""
+        from engine.proximity import COEFFICIENT_CAP
         roles = _roles("very really extremely totally absolutely happy")
         coeff = proximity_coefficient(roles, 5)
-        assert -3.0 <= coeff <= 3.0
+        assert -COEFFICIENT_CAP <= coeff <= COEFFICIENT_CAP
 
     def test_empty_roles(self):
         """Empty roles list returns 1.0."""

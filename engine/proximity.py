@@ -19,18 +19,19 @@ from .word_classifier import WordRole
 
 # ── Constants ────────────────────────────────────────────────────
 
-PROXIMITY_DECAY = 0.7  # influence drops 30% per word of distance
-INFLUENCE_CUTOFF = 0.1  # ignore influence below this (~5 words away)
-COEFFICIENT_CAP = 3.0   # max absolute coefficient value
+PROXIMITY_DECAY = 0.822   # V6 champion: 500 real sentences
+INFLUENCE_CUTOFF = 0.1    # ignore influence below this
+COEFFICIENT_CAP = 1.75    # V6 champion: tight cap, prevent runaway
 
 
-# ── Role modifier strengths ──────────────────────────────────────
+# ── Role modifier strengths (V6 champion, real dataset tuned) ──
 
 ROLE_MODIFIERS = {
-    "AMPLIFIER": 0.4,    # boost: coeff *= (1.0 + 0.4 * influence)
-    "NEGATOR": -1.6,     # flip:  coeff *= (1.0 + (-1.6) * influence)
-    "SELF_REF": 0.3,     # personalize: coeff *= (1.0 + 0.3 * influence)
-    "HEDGE": -0.3,       # dampen: coeff *= (1.0 + (-0.3) * influence)
+    "AMPLIFIER": 0.856,   # V6: strong amplification
+    "NEGATOR": -2.068,    # V6: strong negation
+    "SELF_REF": 0.312,    # V6: self-reference
+    "HEDGE": -0.708,      # V6: strong hedge dampening (real text has lots of hedging)
+    "COMPRESSOR": -0.220, # V6: light compression
 }
 
 
@@ -132,6 +133,12 @@ def proximity_coefficient(
             if role == "NEGATOR" and roles[target_idx].force:
                 if roles[target_idx].word in _NEGATION_RESISTANT:
                     modifier *= 0.15  # barely any negation
+            # Compressor dome doesn't touch people — only values/emotions.
+            # "only" + self = neutral isolation. The rest of the sentence
+            # decides if that isolation is proud or lonely.
+            _PERSON_ROLES = {"SELF_REF", "OTHER_REF", "RELATION_REF"}
+            if role == "COMPRESSOR" and roles[target_idx].role in _PERSON_ROLES:
+                modifier = 0.0  # dome passes through people
             coeff *= (1.0 + modifier * influence)
 
         # Star-to-star gravity: stronger emotional words pull weaker ones

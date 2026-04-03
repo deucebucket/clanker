@@ -19,10 +19,10 @@ from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_inte
 # ── Physics constants (fixed, never tuned per-sentence) ─────────
 
 CENTER = 128.0
-MOMENTUM = 0.82
-FORCE_SCALE = 0.5
-DIRECT_PUSH_CAP = 0.4
-DIRECT_PUSH_TRIGGER = 80.0
+MOMENTUM = 0.85           # V6 champion: 500 real sentences (SST-2+GoEmotions+TweetEval)
+FORCE_SCALE = 1.98        # V6 champion: strong forces, high momentum = stable but responsive
+DIRECT_PUSH_CAP = 1.0     # V6 champion
+DIRECT_PUSH_TRIGGER = 40.2  # V6 champion: low trigger = push on weaker words too
 
 
 # ── Main entry point ────────────────────────────────────────────
@@ -30,6 +30,7 @@ DIRECT_PUSH_TRIGGER = 80.0
 def compute_vadug(
     text: str,
     personality: Optional[PersonalityVector] = None,
+    perspective: str = "speaker",
 ) -> Tuple[VADUG, dict]:
     """Compute VADUGWI coordinates for a text string.
 
@@ -42,6 +43,12 @@ def compute_vadug(
       6. Structure adjustments
       7. Personality adjustments (if provided)
       8. Clamp to 0-255
+
+    perspective controls whose emotional state is being scored:
+      - "speaker": default. "I" = self, "you" = other. Scores the speaker.
+      - "listener": "you" = self, "I" = other. Scores the person being spoken to.
+      - "bystander": no self. "I" and "you" are both other people. Scores a
+        detached observer who sees the emotional content but takes no directed hits.
 
     Returns (VADUG, trace_dict) where trace_dict contains:
       - trace: list of per-word entries {word, role, coeff, v, a, d, u, g}
@@ -132,6 +139,21 @@ def compute_vadug(
             else:
                 resolved.append("nobody")
                 i += 2
+        elif w_low == "come" and next_low == "on":
+            resolved.append("comeon")
+            i += 2
+        elif w_low == "killed" and next_low == "it":
+            # "killed it" = slang for excelled. Collapse to positive token.
+            resolved.append("killedit")
+            i += 2
+        elif w_low == "goes" and next_low == "hard":
+            # "goes hard" = slang for impressive. Collapse to positive token.
+            resolved.append("goeshard")
+            i += 2
+        elif w_low == "closed" and next_low == "on":
+            # "closed on" = completed purchase. Positive.
+            resolved.append("closedon")
+            i += 2
         else:
             resolved.append(words[i])
             i += 1
@@ -139,6 +161,82 @@ def compute_vadug(
 
     # Layer 1: structural roles
     roles = classify_sentence(words)
+
+    # Perspective remapping: change who counts as "self" in the scoring.
+    #
+    # Universal address detection: words like "everyone", "all of you",
+    # "anybody" promote a bystander to listener (they're included in the
+    # address). "EVERYONE GET DOWN" targets the bystander too.
+    _UNIVERSAL_ADDRESS = {
+        "everyone", "everybody", "anyone", "anybody", "all", "people",
+        "folks", "y'all", "yall", "ladies", "gentlemen",
+    }
+    has_universal = any(w.lower() in _UNIVERSAL_ADDRESS for w in words)
+
+    # Auto-detect perspective from sentence structure when set to "auto".
+    # Uses both roles AND the actual words to distinguish:
+    #   - SELF_REF present ("I/me/my") = speaker voice
+    #   - 2nd-person address ("you/your") without SELF_REF = listener voice
+    #   - 3rd-person only ("she/he/they") or no person refs = bystander
+    _SECOND_PERSON = {"you", "your", "yours", "yourself", "yourselves"}
+    if perspective == "auto":
+        has_self = any(wr.role == "SELF_REF" for wr in roles)
+        has_second = any(wr.word.lower() in _SECOND_PERSON for wr in roles)
+        if has_self:
+            perspective = "speaker"
+        elif has_second:
+            perspective = "listener"
+        elif has_universal:
+            # "everyone get down" with no I/you = addressed to a crowd
+            perspective = "listener"
+        else:
+            perspective = "bystander"
+
+    if perspective == "listener":
+        for wr in roles:
+            if wr.role == "SELF_REF":
+                wr.role = "OTHER_REF"
+            elif wr.role == "OTHER_REF":
+                wr.role = "SELF_REF"
+    elif perspective == "bystander":
+        if has_universal:
+            # "EVERYONE GET DOWN" -- bystander is in the crowd, promote to
+            # listener. Speaker's "I" stays OTHER_REF (not the bystander).
+            for wr in roles:
+                if wr.role == "SELF_REF":
+                    wr.role = "OTHER_REF"
+        else:
+            # Pure bystander: strip all personal reference, just raw emotion.
+            for wr in roles:
+                if wr.role in ("SELF_REF", "OTHER_REF"):
+                    wr.role = "NEUTRAL"
+
+    # Bystander self-projection: an NPC overhearing negative 3rd-person
+    # content ("she is fat", "he's useless") may project it onto themselves.
+    # Likelihood depends on existing self-worth: low W = more projection.
+    # When bystander_state is provided with low W, 3rd-person negative
+    # content can re-insert SELF_REF, making the bystander take the hit.
+    bystander_state = None
+    if perspective == "bystander" and personality is not None:
+        # Use personality assertiveness as W proxy (low assert = low W analog)
+        bystander_w = personality.assertiveness
+        # If W proxy is below 80 (fragile), check for gendered 3rd-person refs
+        # near negative emotional words. "she is fat" with a low-W female NPC
+        # = self-projection. We re-tag the pronoun as SELF_REF.
+        if bystander_w < 80:
+            _THIRD_PERSON = {"she", "he", "her", "him", "they", "them"}
+            for idx, wr in enumerate(roles):
+                if wr.word.lower() in _THIRD_PERSON and wr.role == "NEUTRAL":
+                    # Check if negative emotional word within 3 positions
+                    for j in range(max(0, idx - 3), min(len(roles), idx + 4)):
+                        if j != idx and roles[j].role == "EMOTIONAL":
+                            w_clean = _clean(roles[j].word)
+                            forces = VOCABULARY.get(w_clean)
+                            if forces and forces[0] < -10:
+                                # Negative word near 3rd-person pronoun +
+                                # low W bystander = self-projection
+                                wr.role = "SELF_REF"
+                                break
 
     # Layer 1.1: absence scope — mark words that describe events that AREN'T happening.
     # "havent had a panic attack" = panic and attack are ABSENT, dampen their force.
@@ -329,10 +427,31 @@ def compute_vadug(
     for sm in structures:
         # Sarcasm and bravado scale with distance from neutral
         # Bigger positive = stronger correction (overcompensation = more mask)
-        if sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE") and state_v > CENTER:
+        if sm.pattern == "SLANG_DEATH_HUMOR":
+            # Slang death humor: "lol im dead" = laughing hard.
+            # Death word tanks V and W, then W coefficient doubles the negative.
+            # Override: pull V toward positive and restore W to neutral BEFORE
+            # the W coefficient runs. This is an inversion, not an additive fix.
+            distance = CENTER - state_v
+            state_v += distance * 1.2 * sm.confidence  # pull past center into positive
+            state_w = max(state_w, CENTER)  # restore W so W-coeff doesn't re-tank V
+        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
             state_v += pull
+            # RHETORICAL_SELF_NEGATION: W was falsely inflated by the positive
+            # word near SELF_REF. Scale W correction with excess too.
+            if sm.pattern == "RHETORICAL_SELF_NEGATION" and state_w > CENTER:
+                w_excess = state_w - CENTER
+                w_pull = sm.w_weight * sm.confidence * FORCE_SCALE * (1.0 + w_excess / 50.0)
+                state_w += w_pull
+                # Skip default W application for this pattern
+                sm = StructureMatch(
+                    pattern=sm.pattern, confidence=sm.confidence,
+                    matched_indices=sm.matched_indices, description=sm.description,
+                    v_weight=sm.v_weight, d_weight=sm.d_weight, u_weight=sm.u_weight,
+                    g_weight=sm.g_weight, w_weight=0.0,  # already applied
+                )
         elif sm.pattern == "CHOPPER_SPLIT" and sm.matched_indices:
             # "but" means: second half overrides first half.
             # Check emotional content after the chop to determine direction.
