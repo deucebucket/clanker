@@ -1,0 +1,6 @@
+SST-2: 872 sentences
+Current SST-2: 67.5%
+  Gen   0 | best=70.1% | all-time=70.1% | 28.0s
+  Gen  20 | best=71.0% | all-time=71.0% | 27.4s
+  Gen  40 | best=71.0% | all-time=71.0% | 27.5s
+  Gen  60 | best=71.0% | all-time=71.0% | 27.5s
