@@ -7591,6 +7591,8 @@ _V8_CORRECTIONS = {
     'yes':          (12,  5,  5,  0,  5),  # affirmation, mild positive
     'yay':          (20, 10,  5,  0,  5),  # celebration
     'noway':        (  5, 15,   0, 5,  5),  # disbelief/hype compound, mild positive + arousal
+    'center':       (  0,  0,   0, 0,  0),  # spatial noun, zero charge
+    'intelligence': (  0,  0,   5, 0,  5),  # abstract noun
     # LIQUID slang words: these need negative dV for SOLVENT dissolution to flip them positive
     # The mass zero killed them but SOLVENT physics needs them charged
     'insane':       (-20, 25, -10, 10, -5),  # LIQUID: flips positive near SOLVENT

@@ -211,7 +211,34 @@ class StructureDetector:
     """
 
     def detect_all(self, roles: List[WordRole]) -> List[StructureMatch]:
-        """Run all detectors, return matches with confidence > 0.3."""
+        """Run all detectors, return matches with confidence > 0.3.
+
+        Applies complexity dampening: long/complex sentences get reduced
+        confidence on sarcasm/irony structures to prevent false positives
+        on literary prose. (Council Round 5 consensus fix #3)
+        """
+        # ── Complexity score ──
+        # C = (word_count / 10) + (comma_count * 0.5) + (subordinator_count * 1.0)
+        # Claude's formula. Sigmoid decay above C > 3.0.
+        _SUBORDINATORS = {"whether", "although", "because", "while", "since",
+                         "unless", "whereas", "though", "whereby", "wherein"}
+        wc = len(roles)
+        cc = sum(1 for r in roles if r.word.endswith(','))
+        sc = sum(1 for r in roles if r.word in _SUBORDINATORS)
+        complexity = (wc / 10.0) + (cc * 0.5) + (sc * 1.0)
+
+        # Dampener: 1.0 at C<=3, decays toward 0.4 floor
+        if complexity > 3.0:
+            complexity_dampener = max(0.4, 1.0 / (1.0 + 0.3 * (complexity - 3.0)))
+        else:
+            complexity_dampener = 1.0
+
+        # Structures affected by complexity dampening
+        _COMPLEXITY_SENSITIVE = {
+            "SARCASM_INVERSION", "SOCIAL_NULLITY", "DIRECTED_POSITIVE",
+            "DIRECTED_LABEL", "PASSIVE_RESIGNATION",
+        }
+
         detectors = [
             self._farewell,
             self._method_acquisition,
@@ -267,6 +294,11 @@ class StructureDetector:
         for detector in detectors:
             result = detector(roles)
             if result is not None and result.confidence > 0.3:
+                # Apply complexity dampening to sensitive structures
+                if result.pattern in _COMPLEXITY_SENSITIVE and complexity_dampener < 1.0:
+                    result.confidence *= complexity_dampener
+                    if result.confidence <= 0.3:
+                        continue  # dampened below threshold, skip
                 matches.append(result)
         return matches
 

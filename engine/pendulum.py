@@ -343,12 +343,43 @@ def interpret_context(context: dict) -> dict:
             roles[0].force = None  # strip negative charge
 
     # ── 3. Register detection ─────────────────────────────────
-    # Instructional/procedural text → dampen all forces
+    # CONVERSATIONAL = full force (emotional register)
+    # LITERARY = reduced force (narration, not expression)
+    # EXPOSITORY = heavily dampened (procedural text)
+    # Claude: "Quoted dialogue inside literary = CONVERSATIONAL override"
     instructional_count = sum(1 for w in words if w in _INSTRUCTIONAL_CUES)
+
+    # Detect conversational signals
+    _CASUAL_SIGNALS = {"im", "i'm", "ive", "youre", "dont", "cant", "wont",
+                       "gonna", "wanna", "gotta", "lol", "lmao", "bruh", "bro",
+                       "dude", "omg", "tbh", "ngl", "fr"}
+    casual_count = sum(1 for w in words if w in _CASUAL_SIGNALS)
+    has_exclamation = any(w.endswith('!') for w in words)
+    has_quotes = context["text"].count('"') >= 2
+
+    # Detect literary signals (3rd person past tense narration)
+    _LITERARY_SIGNALS = {"he", "she", "they", "him", "her", "said", "replied",
+                        "remarked", "observed", "continued", "exclaimed"}
+    literary_count = sum(1 for w in words if w in _LITERARY_SIGNALS)
+    _SUBORDINATORS = {"whether", "although", "because", "while", "since",
+                     "unless", "whereas", "though", "whereby", "wherein",
+                     "notwithstanding", "inasmuch"}
+    subordinate_count = sum(1 for w in words if w in _SUBORDINATORS)
+
     if instructional_count >= 1:
-        context["register_dampener"] = 0.4  # 60% reduction
-    else:
+        register = "EXPOSITORY"
+        context["register_dampener"] = 0.35
+    elif casual_count >= 1 or has_exclamation or has_quotes:
+        register = "CONVERSATIONAL"
         context["register_dampener"] = 1.0
+    elif (literary_count >= 2 and n > 10) or (n > 15 and subordinate_count >= 1):
+        register = "LITERARY"
+        context["register_dampener"] = 0.65
+    else:
+        register = "CONVERSATIONAL"  # default to full force
+        context["register_dampener"] = 1.0
+
+    context["register"] = register
 
     # ── 4. Counterfactual marking ─────────────────────────────
     # "supposed to", "would have" → flag for force inversion
