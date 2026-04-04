@@ -1,8 +1,8 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 13:54:09",
+  "timestamp": "2026-04-03 20:59:27",
   "total_sentences": 275,
-  "overall": 73.8,
+  "overall": 73.1,
   "categories": {
     "sarcasm": {
       "correct": 21,
@@ -32,9 +32,9 @@
       ]
     },
     "slang_positive": {
-      "correct": 12,
+      "correct": 11,
       "total": 25,
-      "pct": 48.0,
+      "pct": 44.0,
       "misses": [
         [
           "thats bussin fr",
@@ -64,12 +64,17 @@
         [
           "deadass that was wild",
           "pos",
+          "neg"
+        ],
+        [
+          "ngl that was sick",
+          "pos",
           "neutral"
         ],
         [
           "fr fr that hit different",
           "pos",
-          "neg"
+          "neutral"
         ],
         [
           "haha im literally choking",
@@ -151,9 +156,9 @@
       ]
     },
     "grief": {
-      "correct": 14,
+      "correct": 13,
       "total": 25,
-      "pct": 56.0,
+      "pct": 52.0,
       "misses": [
         [
           "the house feels empty without her",
@@ -198,10 +203,15 @@
         [
           "we were supposed to grow old together",
           "neg",
-          "pos"
+          "neutral"
         ],
         [
           "i hate that life just keeps going",
+          "neg",
+          "neutral"
+        ],
+        [
+          "three years and some days are still just as hard",
           "neg",
           "neutral"
         ],

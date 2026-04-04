@@ -1,8 +1,8 @@
 {
   "engine": "v5.5",
-  "timestamp": "2026-04-03 13:54:09",
+  "timestamp": "2026-04-03 20:59:27",
   "total_sentences": 126,
-  "recall": 72.5,
+  "recall": 70.6,
   "safe_clean": 100.0,
   "dark_humor_clean": 100.0,
   "metaphor_clean": 100.0,
@@ -19,6 +19,7 @@
     "tell my kids i love them",
     "i wrote a note",
     "ive made my decision",
+    "theres no way out",
     "i just want it to be over",
     "cant do this shit anymore",
     "the world would keep spinning without me",

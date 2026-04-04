@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-03 13:55:37",
-  "vocabulary": 4473,
+  "timestamp": "2026-04-03 20:57:54",
+  "vocabulary": 4475,
   "ground_truth": {
     "correct": 40,
     "total": 41,
@@ -11,10 +11,10 @@
       "text": "she said yes",
       "expected": "pos",
       "got": "neutral",
-      "V": 128,
+      "V": 134,
       "W": 128,
-      "A": 133,
-      "D": 130,
+      "A": 132,
+      "D": 132,
       "I": 128,
       "structures": [],
       "category": "positive"
@@ -23,23 +23,23 @@
   "throughput": {
     "Twitch": {
       "sentences": 43723,
-      "seconds": 7.76,
-      "rate": 5631
+      "seconds": 7.31,
+      "rate": 5979
     },
     "FO76": {
       "sentences": 521,
-      "seconds": 0.19,
-      "rate": 2689
+      "seconds": 0.18,
+      "rate": 2969
     },
     "Novels": {
       "sentences": 163102,
-      "seconds": 62.3,
-      "rate": 2618
+      "seconds": 62.1,
+      "rate": 2626
     },
     "Philosophy": {
       "sentences": 34391,
-      "seconds": 17.1,
-      "rate": 2011
+      "seconds": 17.2,
+      "rate": 1997
     }
   }
 }

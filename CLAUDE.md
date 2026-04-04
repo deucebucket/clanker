@@ -6,17 +6,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Clanker-Lang is a **conversation state resolver** that detects emotional stance through structural pattern recognition. It reads text the way a chess player reads a board  --  recognizing patterns from piece positions, not memorizing specific games. "Whatever" alone reads as resignation (D=108). "Whatever makes you happy" reads as passive-aggressive (D=123). "Do whatever" reads as permission (D=129). Same word  --  context changes the Dominance dimension. A sentiment classifier says "neutral" for all three.
 
-The engine computes 7D emotional coordinates (VADUGWI: Valence, Arousal, Dominance, Urgency, Gravity, Self-Worth, Intent) using structural pattern recognition. ~300KB, 0.15ms/sentence. 100% on 630 sentences, 97.3% crisis detection, 90% sarcasm, zero false positives on safe text. 51% on SST-2 academic sentiment (movie review classification  --  a different task). Returns NULL confidence when it can't resolve meaning.
+The engine computes 7D emotional coordinates (VADUGWI: Valence, Arousal, Dominance, Urgency, Gravity, Self-Worth, Intent) using structural pattern recognition. 4,475-word vocabulary, 45+ structural patterns, 0.17ms/sentence. Tested on 246K real sentences (novels, Twitch, Reddit, philosophy, game dialogue). Returns NULL confidence when it can't resolve meaning.
 
-**V5.5 is the current engine** (`engine/` directory). V2 is boxed at tag `v2.0` (`demo/` directory).
+**Current verified numbers (V8.2, 2026-04-04):**
+- Ground truth: 41/41 (100%) on developer-verified sentences
+- Stress test: 201/275 (73.1%) on 275 real sentences across 11 categories
+- Crisis recall: 70.6% (36/51 crisis sentences detected)
+- Crisis false positive: 0/75 (0.0%)  --  zero false positives on safe text, dark humor, AND metaphor
+- SST-2: 63.9% (beats VADER 55.7%, behind RoBERTa 69%)
+- GoEmotions: 48.8% (28-emotion classification  --  different task than 3-way sentiment)
+- Real-text spot-check: ~59% on 167 manually verified sentences across 5 corpora
+- Throughput: 2,000-6,000 sentences/sec depending on corpus
 
-Four V5.5 systems:
-- **Structure Recognition**: Words classified into 4 tiers (primary signal words, secondary signal words, operators, unclassified words). Connectors are math operators (and=+, but=-, or=><, of=/, if=?). 26 structural patterns detected like chess positions.
+**Known weaknesses:** slang positive (44%), grief (52%), passive aggressive (68%). Positive inflation reduced but not eliminated. SOLVENT dissolution needs stronger propagation.
+
+**V8 is the current engine** (`engine/` directory). V2 is boxed at tag `v2.0` (`demo/` directory).
+
+Four V8 systems:
+- **Structure Recognition**: Words classified into 4 tiers (primary signal words, secondary signal words, operators, unclassified words). Connectors are math operators (and=+, but=-, or=><, of=/, if=?). 45+ structural patterns detected like chess positions. V8 adds: MUNDANE_HYPERBOLE, BOUNDARY_VIOLATION, SELF_ERASURE, DIVESTITURE, METHOD_FIXATION, RARITY_MARKER, ABANDONMENT, LIFE_ACHIEVEMENT.
 - **A+B=C Bidirectional Solver**: Given state A + response B, predict outcome C. Or work backwards from target zone to find valid B.
 - **Probe Calibration System**: Fire calibrated probes, measure vibration/distortion, triangulate hidden state.
 - **Force Flow Resolver** (`engine/force_flow.py`): WHO does WHAT to WHOM  --  resolves directional force between entities in a sentence.
 
-Additional features: absence scope ("havent had X" dampens absent events), compound phrase resolution ("no one" -> nobody), RELIEF_ABSENCE / SELF_EXCLUDED / WITHHELD_POSITIVE patterns, Bayesian vocabulary corrections, forced choice cancellation.
+Additional features: absence scope ("havent had X" dampens absent events), compound phrase resolution ("no one" -> nobody, "no cap" -> nocap), RELIEF_ABSENCE / SELF_EXCLUDED / WITHHELD_POSITIVE patterns, Bayesian vocabulary corrections, forced choice cancellation, phase system (SOLID/LIQUID/GAS matter states), SOLVENT dissolution (casual register flips LIQUID negative to positive), mundane dampening (inert gas absorption of crisis energy), interpret_context layer (discourse markers, register detection, counterfactual inversion).
 
 Additional components:
 - **VADUGWI coordinate system**: 7 bytes encode 72 quadrillion emotional states (W=Self-Worth, I=Intent: withdraw/deflect/neutral/connect/control)
@@ -26,10 +38,10 @@ Key principle: **opcodes are forever**  --  never redefine an existing opcode.
 
 ## Commands
 
-### Tests (167 in V5.5 engine, plus V2 and decoder/tokenizer suites)
+### Tests (167 in V8 engine, plus V2 and decoder/tokenizer suites)
 
 ```bash
-# Run V5.5 engine tests (active)
+# Run V8 engine tests (active)
 python3 -m pytest engine/tests/ -v
 
 # Run V2 engine tests (legacy, tagged v2.0)
@@ -120,28 +132,32 @@ cd space && pip install -r requirements.txt && python3 app.py
 
 ## Architecture
 
-### V5.5 Engine (`engine/`)  --  Active
+### V8 Engine (`engine/`)  --  Active
 
-The V5.5 engine uses structural pattern recognition  --  words classified by role, proximity fields computed, then chess-like pattern detection on role sequences. No hardcoded word lists in pattern detection. 7D VADUGWI coordinates (W=Self-Worth, I=Intent), force flow resolution, absence scope, and Bayesian vocabulary corrections.
+The V8 engine uses structural pattern recognition  --  words classified by role, proximity fields computed, then chess-like pattern detection on role sequences. No hardcoded word lists in pattern detection. 7D VADUGWI coordinates (W=Self-Worth, I=Intent), force flow resolution, absence scope, and Bayesian vocabulary corrections.
 
 | Module | What |
 |--------|------|
 | `shared.py` | VADUGWI dataclass  --  7-byte emotional coordinate (V, A, D, U, G, W, I) |
 | `word_classifier.py` | Layer 1  --  structural role classification (SELF_REF, EMOTIONAL, NEGATOR, CONNECTOR, etc.) |
-| `vocabulary.py` | V5.5 vocabulary  --  imports 4,000+ curated words from `engine/forces_curated.py` |
+| `vocabulary.py` | V8 vocabulary  --  imports 4,000+ curated words from `engine/forces_curated.py` |
 | `proximity.py` | Layer 2  --  distance-based influence fields, exponential decay (0.7x per word) |
-| `structures.py` | Layer 3  --  chess-like pattern detector (26 structural patterns, role sequences -> structural matches) |
-| `pendulum.py` | Fixed physics layer  --  momentum, force application, blending from structural analysis |
+| `structures.py` | Layer 3  --  chess-like pattern detector (45+ structural patterns, role sequences -> structural matches). V8 adds MUNDANE_HYPERBOLE, BOUNDARY_VIOLATION, SELF_ERASURE, DIVESTITURE, METHOD_FIXATION, RARITY_MARKER, ABANDONMENT, LIFE_ACHIEVEMENT |
+| `pendulum.py` | Fixed physics layer  --  9-stage pipeline: tokenize, classify, interpret_context (V8 discourse/register/counterfactual), coefficients, accumulate_forces (mundane dampening), structures, W→V coupling (asymmetric exponential), personality, saturate. Momentum, adaptive force application, tanh saturation |
+| `phase.py` | Matter state system  --  SOLID (never flips), LIQUID (context flips), GAS (neutral). SOLVENT words dissolve LIQUID atoms |
+| `crisis.py` | CrisisTracker  --  continuous 0.0-1.0 concern gradient, TCI-informed, trajectory accumulation |
+| `anomaly.py` | AnomalyDetector  --  4 detectors: DEFLECTION, MASKING, VELOCITY, RESONANCE (7D VADUGWI) |
+| `trace.py` | PipelineTrace  --  debug logging for every pipeline stage |
 | `personality.py` | Personality vector application |
 | `solver.py` | A+B=C bidirectional solver  --  forward (text->VADUGWI) and backward (target zone->valid B range) |
 | `battleship.py` | Probe system  --  fire calibrated probes, measure vibration, triangulate hidden state |
 | `force_flow.py` | Force flow resolver  --  WHO does WHAT to WHOM directional analysis |
-| `forces_curated.py` | V5.5 vocabulary  --  4,000+ curated emotional words with VADUGWI forces |
+| `forces_curated.py` | V8 vocabulary  --  4,475 curated emotional words with VADUGWI forces. V8 mass-zeroed 646 GAS atoms |
 | `zones.py` | Zone classification (imports from V2) |
 | `zones_impl.py` | Zone implementation details |
 | `fuzzy.py` | Fuzzy matching for unknown words |
 
-**Tests (`engine/tests/`):** 167 tests across 8 test files covering word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.
+**Tests (`engine/tests/`):** 207 tests across 8 test files covering word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.
 
 ### V2 Engine (`demo/`)  --  Legacy (tagged v2.0)
 
@@ -252,13 +268,15 @@ Data lives in `training/data/`, checkpoints in `training/checkpoints/` (both git
 
 | Script | What |
 |--------|------|
-| `academic_benchmark.py` | Academic-grade evaluation (use `--quick` for fast run) |
+| `full_barrage.py` | One-command full test: ground truth + stress + crisis + throughput + conversations. The main benchmark. |
+| `stress_test.py` | 275 sentences across 11 categories (sarcasm, slang, grief, betrayal, crisis, etc.). Real conversational text. |
+| `crisis_benchmark.py` | 126 sentences: 51 crisis + 55 safe + 10 dark humor + 10 metaphor. Zero false positive target. |
+| `academic_benchmark.py` | SST-2 + GoEmotions + TweetEval vs VADER vs TextBlob vs RoBERTa (use `--quick` for fast run) |
 | `essay_benchmark.py` | Essay-level emotional arc evaluation |
 | `experiment_tracker.py` | Versioned experiment logging (NASA-style) |
 | `gpu_optimizer_v2.py` | GPU-optimized parameter tuning |
 | `rosetta_stone.py` | Cross-language validation |
 | `find_cracks.py` | Find edge cases and failure modes |
-| `crisis_benchmark.py` | Crisis recall at scale  --  targeting 99.9% recall |
 | `ablation_study.py` | Kill-switch force bloat detection  --  disable one force at a time |
 | `emobank_optimizer.py` | Human V/A/D agreement tuning via EmoBank |
 | `human_eval.py` | Human rating evaluation framework  --  7D correlation |
@@ -274,7 +292,7 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 - Opcode names UPPER_SNAKE_CASE, parameters lowercase_with_underscores
 - Instruction format: `@ 0xHH $target $source PARAM_COUNT {key: "value"}`
 - IDIOM tuples: 7-element `(dv, da, dd, du, dg, dw, label)` or 8-element `(dv, da, dd, du, dg, dw, di, label)` with intent
-- Force tuples: `(dv, da, dd, du, dg, dw, di)`  --  deltas, not absolute values. V5.5 uses `engine/forces_curated.py`, V2 uses `demo/forces_curated.py`, V1 uses `WORD_FORCES`
+- Force tuples: `(dv, da, dd, du, dg, dw, di)`  --  deltas, not absolute values. V8 uses `engine/forces_curated.py`, V2 uses `demo/forces_curated.py`, V1 uses `WORD_FORCES`
 
 ## Key References
 
@@ -286,6 +304,10 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 | `docs/THEORY.md` | Full theory  --  structural pattern recognition, unclassified words, outcome prediction |
 | `docs/tci-cares-research.md` | TCI/CARE research connection to VADUGWI |
 | `docs/linguistic-devices-taxonomy.md` | Taxonomy of linguistic devices the engine handles |
+| `docs/v8_audit_log.md` | V8 real-data spot-check audit  --  59% accuracy on 167 sentences, 6 physics problems identified |
+| `docs/council_round5_synthesis.md` | 4-LLM consensus  --  GPT/Claude/Gemini/Grok agree on 6 physics fixes |
+| `docs/v7_physics_spec.md` | V7 physics spec  --  Grok's pure-physics solutions |
+| `datasets/verified_sentences.json` | 71 human-verified correct sentences from spot-check audit |
 | `training/README.md` | Training data format, phases, model architecture, data sources |
 | `benchmarks/rosetta_stone.py` | Rosetta Stone calibration sentences  --  the ground truth |
 | `SPEC.md` | Full engine specification |
@@ -294,14 +316,14 @@ Gradio-based demo app for public-facing interaction. `app.py` + `requirements.tx
 
 ## Gotchas
 
-- **V5.5 is the active engine**  --  `engine/` directory. Structural pattern recognition (word roles + proximity + structure detection) + force flow + 7D VADUGWI. V2 (`demo/`) is boxed at tag `v2.0`.
-- **V5.5 vocabulary is in engine/**  --  `engine/vocabulary.py` imports from `engine/forces_curated.py`. 4,000+ curated words with 7D forces.
+- **V8 is the active engine**  --  `engine/` directory. Structural pattern recognition (word roles + proximity + structure detection) + force flow + 7D VADUGWI. V2 (`demo/`) is boxed at tag `v2.0`.
+- **V8 vocabulary is in engine/**  --  `engine/vocabulary.py` imports from `engine/forces_curated.py`. 4,475 curated words with 7D forces. V8 mass-zeroed 646 inflated GAS atoms.
 - **`forces.py` is 46K lines**  --  do not read the whole file. Neither V3 nor V2 uses it directly. Only grep if debugging V1 paths.
 - **Inactive modules**  --  `stone_correction.py`, `output_modes.py`, `word_factory.py` are not imported by active code. Archive candidates.
 - **Gravity and Dominance appear to be the driving forces**  --  not Valence. The data suggests this but I am still testing it.
 - **Idioms are in `idioms.py`**  --  V2 imports idioms from `demo/idioms.py`, not from `pendulum.py`. The standalone module avoids pulling in the 46K-line `forces.py`.
 - **Training data is gitignored**  --  large files like `discovered_idioms.jsonl` and `empathetic_dialogues.jsonl` won't be in the repo.
-- **167 tests in V5.5**  --  `engine/tests/` covers word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.
+- **207 tests in V8**  --  `engine/tests/` covers word classification, structures, proximity, pendulum, solver, battleship, scaffolding, and novel sentences.
 
 
 ## Distribution Rules
