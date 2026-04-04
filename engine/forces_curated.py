@@ -7590,6 +7590,18 @@ _V8_CORRECTIONS = {
     'helpful':      (15,  5,  5,  0, 10),
     'yes':          (12,  5,  5,  0,  5),  # affirmation, mild positive
     'yay':          (20, 10,  5,  0,  5),  # celebration
+    'noway':        (  5, 15,   0, 5,  5),  # disbelief/hype compound, mild positive + arousal
+    # LIQUID slang words: these need negative dV for SOLVENT dissolution to flip them positive
+    # The mass zero killed them but SOLVENT physics needs them charged
+    'insane':       (-20, 25, -10, 10, -5),  # LIQUID: flips positive near SOLVENT
+    'crazy':        (-15, 20,  -5,  5, -3),  # LIQUID
+    'wild':         (-10, 20,   5,  5,  0),  # LIQUID
+    'nuts':         (-12, 15,  -5,  5, -3),  # LIQUID
+    'sick':         (-15, 10,  -5,  5, -5),  # LIQUID: "thats sick" = positive in slang
+    'hard':         (  0, 10,  10,  5,  0),  # context-dependent: "goes hard" = positive
+    'hit':          (  0, 10,   5,  5,  0),  # "that hit different" = impactful
+    'shook':        (-10, 20, -10,  5, -5),  # LIQUID: surprise/awe in slang
+    'stupid':       (-15, 10,  -5,  0, -3),  # LIQUID: "stupid good" = positive
     # Missing SOLID negative words — these must NEVER read positive
     'raping':       (-40, 25, -30, 20, -20),
     'raped':        (-40, 25, -30, 20, -20),

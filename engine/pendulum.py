@@ -154,6 +154,12 @@ def tokenize(context: dict) -> dict:
         elif w_low == "closed" and next_low == "on":
             resolved.append("closedon")
             i += 2
+        elif w_low == "no" and next_low == "cap":
+            resolved.append("nocap")
+            i += 2
+        elif w_low == "no" and next_low == "way":
+            resolved.append("noway")
+            i += 2
         else:
             resolved.append(words[i])
             i += 1
@@ -256,6 +262,123 @@ def classify(context: dict) -> dict:
     return context
 
 
+# ── Stage 2.5: Interpret Context ──────────────────────────────
+# GPT's insight: "words → role/context interpretation → forces → result"
+# This layer reclassifies roles based on PRAGMATIC FUNCTION before
+# forces are computed. The physics is the same — the interpretation
+# of what role each atom plays changes based on molecular context.
+
+_DISCOURSE_AFFIRMS = frozenset({"no", "nah", "nope"})
+_DISCOURSE_LOOKAHEAD_POS = frozenset({
+    "good", "fine", "right", "great", "cool", "ok", "okay",
+    "way", "cap", "doubt", "kidding", "worries",
+})
+_EXPLETIVE_WORDS = frozenset({"shit", "fuck", "damn", "hell", "goddamn"})
+_COUNTERFACTUAL_MARKERS = frozenset({
+    "supposed", "would", "should", "could", "wished", "hoped",
+})
+_PAST_TRUST_VERBS = frozenset({
+    "trusted", "believed", "thought", "assumed", "expected",
+})
+_INSTRUCTIONAL_CUES = frozenset({
+    "please", "proceed", "enter", "select", "follow",
+    "click", "press", "navigate", "submit", "confirm",
+    "objective", "quest", "mission", "instructions",
+})
+
+
+def interpret_context(context: dict) -> dict:
+    """Reinterpret word roles based on pragmatic context.
+
+    Runs AFTER classify, BEFORE force computation. Modifies roles
+    and sets context flags that downstream stages use.
+
+    Fixes:
+    1. Discourse markers: "no we good" → "no" becomes DISCOURSE_AFFIRM
+    2. Expletive-as-intensifier: "shit you are right" → "shit" becomes AMPLIFIER
+    3. Register detection: instructional text → force dampening flag
+    4. Counterfactual marking: "supposed to" → positive forces inverted
+    5. Hard negator inversion: NEGATOR + strong positive → full sign flip
+    """
+    roles = context["roles"]
+    if not roles:
+        return context
+
+    words = [r.word for r in roles]
+    n = len(roles)
+
+    # ── 1. Discourse markers ──────────────────────────────────
+    # "no we good" — "no" followed by positive content = affirm, not negate
+    for i, wr in enumerate(roles):
+        if wr.word in _DISCOURSE_AFFIRMS and wr.role == "NEGATOR":
+            # Check 3-token lookahead for positive signal
+            lookahead = words[i+1:i+4]
+            has_positive_ahead = any(w in _DISCOURSE_LOOKAHEAD_POS for w in lookahead)
+            # Also check: is there a positive emotional word ahead?
+            has_emo_pos = any(
+                roles[j].force and roles[j].force[0] > 10
+                for j in range(i+1, min(i+4, n))
+            )
+            if has_positive_ahead or has_emo_pos:
+                # Reclassify: this "no" is discourse, not negation
+                wr.role = "FILLER"
+                wr.base_role = "FILLER"
+
+    # ── 2. Expletive-as-intensifier ───────────────────────────
+    # "shit you are right" — sentence-initial expletive + positive/affirm content
+    _AFFIRM_WORDS = frozenset({
+        "right", "true", "yes", "exactly", "correct", "agreed",
+        "good", "great", "nice", "thanks", "thank",
+    })
+    if roles[0].word in _EXPLETIVE_WORDS:
+        # Check if next clause has positive content OR affirmative words
+        pos_ahead = sum(
+            1 for j in range(1, min(6, n))
+            if (roles[j].force and roles[j].force[0] > 10)
+            or roles[j].word in _AFFIRM_WORDS
+        )
+        if pos_ahead > 0:
+            # Convert expletive to amplifier
+            roles[0].role = "AMPLIFIER"
+            roles[0].force = None  # strip negative charge
+
+    # ── 3. Register detection ─────────────────────────────────
+    # Instructional/procedural text → dampen all forces
+    instructional_count = sum(1 for w in words if w in _INSTRUCTIONAL_CUES)
+    if instructional_count >= 1:
+        context["register_dampener"] = 0.4  # 60% reduction
+    else:
+        context["register_dampener"] = 1.0
+
+    # ── 4. Counterfactual marking ─────────────────────────────
+    # "supposed to", "would have" → flag for force inversion
+    has_counterfactual = any(w in _COUNTERFACTUAL_MARKERS for w in words)
+    has_past_trust = any(w in _PAST_TRUST_VERBS for w in words)
+    context["counterfactual"] = has_counterfactual
+    context["past_trust"] = has_past_trust
+
+    # ── 5. Hard negator inversion ─────────────────────────────
+    # NEGATOR within 3 tokens of positive EMOTIONAL (dV > 25) → flip sign
+    # Also reclassify the NEGATOR to FILLER so proximity doesn't double-negate
+    negators_consumed = set()
+    for i, wr in enumerate(roles):
+        if wr.role == "NEGATOR":
+            for j in range(i+1, min(n, i+4)):
+                jr = roles[j]
+                if jr.force and jr.force[0] > 25:
+                    # Full inversion: flip the positive word's dV
+                    old_f = jr.force
+                    jr.force = (-old_f[0], old_f[1], -old_f[2], old_f[3], old_f[4])
+                    negators_consumed.add(i)
+                    break
+    # Consumed negators become FILLER so proximity doesn't double-apply
+    for i in negators_consumed:
+        roles[i].role = "FILLER"
+
+    context["roles"] = roles
+    return context
+
+
 # ── Stage 3: Compute Coefficients (structure detection + force flow) ─
 
 def compute_coefficients(context: dict) -> dict:
@@ -284,7 +407,8 @@ def accumulate_forces(context: dict) -> dict:
     """Per-word force application loop with adaptive momentum.
 
     Reads: context["roles"], context["absence_scope"], context["forced_choice_scope"],
-           context["force_flow"], context["flow_mods"]
+           context["force_flow"], context["flow_mods"],
+           context["register_dampener"], context["counterfactual"], context["past_trust"]
     Writes: context["state_v"], context["state_a"], context["state_d"],
             context["state_u"], context["state_g"], context["state_w"],
             context["trace_entries"]
@@ -336,6 +460,19 @@ def accumulate_forces(context: dict) -> dict:
             continue
 
         dv, da, dd, du, dg = word_force
+
+        # ── REGISTER DAMPENING: instructional text → reduced forces ──
+        reg_damp = context.get("register_dampener", 1.0)
+        if reg_damp < 1.0:
+            dv = int(dv * reg_damp)
+            da = int(da * reg_damp)
+            dd = int(dd * reg_damp)
+
+        # ── COUNTERFACTUAL INVERSION: positive in past/counterfactual → grief ──
+        if context.get("counterfactual") and dv > 10:
+            dv = int(dv * -0.75)  # 75% inversion
+        elif context.get("past_trust") and dv > 5:
+            dv = int(dv * 0.5)  # dampen positive (broken trust context)
 
         # ── MUNDANE DAMPENING: massless context absorbs crisis energy ──
         # High-charge emotional atoms (|dV| > threshold) get dampened when
@@ -713,6 +850,7 @@ class Pipeline:
         return [
             tokenize,
             classify,
+            interpret_context,     # V8.1: role reinterpretation before forces
             compute_coefficients,
             accumulate_forces,
             apply_structures,
