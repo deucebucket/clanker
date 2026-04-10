@@ -109,7 +109,7 @@ FL = RootCategory.FILLER
 ROOTS: dict[str, Root] = {
 
     # ── Positive states ──────────────────────────────────────────────────────
-    "HAPPY":     _r("HAPPY",     P,  ( 14, -5,   7,   0,  10,   4,   0)),
+    "HAPPY":     _r("HAPPY",     P,  ( 40, -5,  20,   0,  30,  13,   0)),
     "EXCITED":   _r("EXCITED",   P,  ( 40, 60,  20,  15,  30,  10,   0)),
     "GRATEFUL":  _r("GRATEFUL",  P,  ( 45,-10,  -5,   0,  20,  20,  30)),
     "RELIEVED":  _r("RELIEVED",  P,  ( 35,-30,  10, -20,  30,  15,   0)),

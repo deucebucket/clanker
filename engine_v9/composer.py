@@ -28,14 +28,14 @@ from engine_v9.roots import RootCategory
 
 CENTER = 128.0
 
-FORCE_SCALE = 2.0          # optimizer gen50 champion (bal=0.622)
+FORCE_SCALE = 1.95         # optimizer v8-charges champion (bal=0.605)
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
-CONTEXT_WEIGHT = 0.53      # optimizer gen50
-SATURATION = 97.0          # optimizer gen50 — tight compression
+CONTEXT_WEIGHT = 0.28      # optimizer: low — V8 charges are strong enough alone
+SATURATION = 168.0         # optimizer: wide — V8 charges have larger magnitudes
 
-NEGATOR_FACTOR = -0.81     # optimizer: partial negation, not full flip
-INTENSIFIER_FACTOR = 2.25  # optimizer: strong amplification
-HEDGE_FACTOR = 0.44        # optimizer gen50
+NEGATOR_FACTOR = -1.1      # optimizer: slightly over-flip
+INTENSIFIER_FACTOR = 2.08  # optimizer champion
+HEDGE_FACTOR = 0.27        # optimizer champion
 COMPRESSOR_FACTOR = 0.7    # compression
 
 SUBJECT_SELF_BONUS = 1.0   # no self-amplification
