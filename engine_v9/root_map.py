@@ -2964,8 +2964,8 @@ WORD_TO_ROOT: dict[str, str] = {
     "crumbs":      "FILLER_WORD",     # slang: "left no crumbs" = did well
 
     # ── Negative event/situation words (novel-500 gap) ───────────────────
-    "cancelled":   "NEG_QUALITY",
-    "canceled":    "NEG_QUALITY",
+    "cancelled":   "SLIGHT_NEG",     # context-dependent: force flow determines negativity
+    "canceled":    "SLIGHT_NEG",     # "they cancelled" = bad, "I cancelled" = neutral
     "sideswiped":  "NEG_QUALITY",
     "leaking":     "NEG_QUALITY",
     "scratched":   "SLIGHT_NEG",
