@@ -979,6 +979,37 @@ WORD_TO_ROOT: dict[str, str] = {
     "attempt":     "FILLER_WORD",     # V8 dV=-25 — action verb
     "attempting":  "FILLER_WORD",
 
+    # ── V8 inflation batch 5 (v9.3) ─────────────────────────────────────
+    "mass":        "FILLER_WORD",     # V8 dV=-25 — physics/quantity
+    "larger":      "FILLER_WORD",     # V8 dV=+50 — size comparison
+    "top":         "FILLER_WORD",     # V8 dV=+51 — position
+    "era":         "FILLER_WORD",     # V8 dV=+51 — time period
+    "society":     "FILLER_WORD",     # V8 dV=+37 — concept
+    "resulting":   "FILLER_WORD",     # V8 dV=+28 — connective
+    "results":     "FILLER_WORD",
+    "warned":      "SLIGHT_NEG",      # V8 dV=-47 — too strong, mild negative
+    "warning":     "SLIGHT_NEG",
+    "clearance":   "FILLER_WORD",     # V8 dV=+66 — shopping/security term
+    "religious":   "FILLER_WORD",     # V8 dV=+51 — descriptor
+    "sweat":       "FILLER_WORD",     # V8 dV=-52 — bodily function
+    "sweating":    "FILLER_WORD",
+    "launched":    "FILLER_WORD",     # V8 dV=+30 — action
+    "launch":      "FILLER_WORD",
+    "allergy":     "FILLER_WORD",     # V8 dV=-77 — medical condition, not crisis
+    "allergies":   "FILLER_WORD",
+    "starvation":  "NEG_QUALITY",     # V8 dV=-90 — IS negative but override strength
+    "hunt":        "FILLER_WORD",     # V8 dV=-40 — activity
+    "hunting":     "FILLER_WORD",
+    "remove":      "FILLER_WORD",     # V8 dV=-49 — action
+    "removed":     "FILLER_WORD",
+    "breaker":     "FILLER_WORD",     # V8 dV=-30 — object
+    "chance":      "FILLER_WORD",     # V8 dV=+28 — neutral concept
+    "violently":   "SLIGHT_NEG",      # V8 dV=-20 — adverb
+    "failure":     "ACAD_NEG",        # V8 dV=-89 — IS negative, route to domain
+    "dissonance":  "SLIGHT_NEG",      # V8 dV=-25 — can be emotional but mild
+    "quit":        "SLIGHT_NEG",      # V8 dV=-32 — context-dependent
+    "trash":       "SLIGHT_NEG",      # V8 dV=-35 — can be evaluative
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
