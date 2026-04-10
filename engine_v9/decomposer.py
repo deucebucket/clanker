@@ -184,8 +184,12 @@ def decompose(text: str) -> Equation:
             continue
 
         # Operators: negators, intensifiers, hedges, compressors
+        # Only apply if within 3 tokens of nucleus (council consensus)
         if cat in _OPERATOR_CATEGORIES:
-            operators.append(atom)
+            dist = abs(atom.position - nucleus.position)
+            if dist <= 3:
+                operators.append(atom)
+            # else: distant operator, ignore (e.g., "neither" far from nucleus)
             continue
 
         # Skip filler, formulaic, connectors, temporal, bare objects

@@ -179,6 +179,11 @@ ROOTS: dict[str, Root] = {
     # ── Filler ───────────────────────────────────────────────────────────────
     "FILLER_WORD": _r("FILLER_WORD", FL, (0,0,0,0,0,0,0)),
 
+    # ── Mild emotional roots (for words with |dV| 15-30) ────────────────────
+    # These prevent 5x amplification when a dV=-5 word gets rounded to dV=-25
+    "SLIGHT_POS":  _r("SLIGHT_POS",  RootCategory.POSITIVE_QUALITY, (+12,  0,  +5,   0,  +5,  +3,   0)),
+    "SLIGHT_NEG":  _r("SLIGHT_NEG",  RootCategory.NEGATIVE_QUALITY, (-12,  0,  -5,   0,  -5,  -3,   0)),
+
     # ── Compound events ──────────────────────────────────────────────────────
     "EMPLOYMENT_LOSS":   _r("EMPLOYMENT_LOSS",   CE, (-60, 40, -60,  50, -40, -30, -20), phase="SOLID"),
     "MEDICAL_RELIEF":    _r("MEDICAL_RELIEF",    CE, ( 55,-10,  30, -20,  40,  30,  20), phase="SOLID"),
