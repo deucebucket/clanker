@@ -660,6 +660,45 @@ WORD_TO_ROOT: dict[str, str] = {
     "ghosting":    "SLIGHT_NEG",
     "ghosted":     "SLIGHT_NEG",
 
+    # Ambiguous action words — neutral in most contexts
+    "bumped":      "FILLER_WORD",     # "bumped up" = positive, "bumped into" = neutral
+    "bump":        "FILLER_WORD",
+    "beat":        "FILLER_WORD",     # "beat the boss" = positive, "beat him" = negative — ambiguous
+    "beating":     "FILLER_WORD",
+    "stray":       "FILLER_WORD",     # "stray dog" = neutral context
+    "grade":       "FILLER_WORD",     # academic word, not emotional
+    "grades":      "FILLER_WORD",
+    "insanely":    "INTENSIFY",       # intensifier, not negative
+    "insane":      "INTENSIFY",       # often used as positive intensifier in casual speech
+
+    # Positive achievement/life words missing from V8
+    "confident":   "POS_QUALITY",
+    "confidence":  "POS_QUALITY",
+    "approved":    "SLIGHT_POS",
+    "approval":    "SLIGHT_POS",
+    "promoted":    "ACHIEVEMENT",
+    "promotion":   "ACHIEVEMENT",
+    "secured":     "SLIGHT_POS",
+    "funded":      "SLIGHT_POS",
+    "funding":     "SLIGHT_POS",
+    "agreed":      "SLIGHT_POS",
+    "agreement":   "SLIGHT_POS",
+    "repaired":    "SLIGHT_POS",
+    "fixed":       "SLIGHT_POS",
+    "cleared":     "SLIGHT_POS",
+    "matched":     "SLIGHT_POS",
+    "earned":      "ACHIEVEMENT",
+    "graduated":   "ACHIEVEMENT",
+    "accepted":    "SLIGHT_POS",
+    "pregnant":    "SURPRISE",        # high-impact life event, direction depends on context
+    "engaged":     "SLIGHT_POS",
+    "married":     "SLIGHT_POS",
+    "hired":       "ACHIEVEMENT",
+    "startup":     "FILLER_WORD",
+    "outfit":      "FILLER_WORD",
+    "concert":     "FILLER_WORD",     # venue, not emotion — override V8's dV=+40
+    "stepped":     "FILLER_WORD",
+
     # Relationship verbs — need structural context to determine meaning
     "left":        "SLIGHT_NEG",      # "she left me" = abandonment, "I left the room" = neutral
     "leave":       "SLIGHT_NEG",
