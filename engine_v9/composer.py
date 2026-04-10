@@ -28,10 +28,10 @@ from engine_v9.roots import RootCategory
 
 CENTER = 128.0
 
-FORCE_SCALE = 1.0          # 1:1 — root charge = displacement. Tuned: 1.4→1.0 gained 2.3%
+FORCE_SCALE = 1.2          # balanced accuracy sweep: best at 1.2
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
-CONTEXT_WEIGHT = 0.9       # tuned: 0.3 too weak, context carries real signal
-SATURATION = 120.0         # tanh compression range
+CONTEXT_WEIGHT = 0.5       # balanced sweep: 0.5 beats 0.3 and 0.9
+SATURATION = 120.0         # balanced sweep: 120 marginally best
 
 NEGATOR_FACTOR = -1.0      # full inversion
 INTENSIFIER_FACTOR = 1.5   # 50% amplification
