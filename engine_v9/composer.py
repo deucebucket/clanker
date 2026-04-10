@@ -112,19 +112,33 @@ def compose(equation: Equation) -> VADUG:
     # Step 1: Start at neutral
     state = list(_NEUTRAL_STATE)  # [V, A, D, U, G, W, I]
 
+    # Adaptive force scale: shorter sentences push harder, longer ones dampen.
+    # Short sentences = high signal density, every word matters.
+    # Long sentences = diluted signal, more noise.
+    # effective_FS = FORCE_SCALE / sqrt(word_count)
+    # 3 words: FS * 0.58 (×1.7 effective per word)
+    # 5 words: FS * 0.45
+    # 10 words: FS * 0.32
+    # 20 words: FS * 0.22
+    word_count = max(1, len(equation.all_atoms))
+    effective_fs = FORCE_SCALE / (word_count ** 0.35)
+
     # Step 2: Get nucleus charge and apply operators
     nucleus_charge_raw = equation.nucleus.root.charge
     nucleus_charge = _apply_operators(nucleus_charge_raw, equation.operators)
 
     # Step 3: Accumulate nucleus (full weight)
     for dim in range(7):
-        state[dim] += nucleus_charge[dim] * EVENT_WEIGHT * FORCE_SCALE
+        state[dim] += nucleus_charge[dim] * EVENT_WEIGHT * effective_fs
 
-    # Step 4: Accumulate context atoms (reduced weight)
-    for ctx_atom in equation.context:
-        ctx_charge = ctx_atom.root.charge
-        for dim in range(7):
-            state[dim] += ctx_charge[dim] * CONTEXT_WEIGHT * FORCE_SCALE
+    # Step 4: Accumulate context atoms (with per-atom diminishing returns)
+    n_ctx = len(equation.context)
+    if n_ctx > 0:
+        per_atom_weight = CONTEXT_WEIGHT * (1.0 + math.log(max(1, n_ctx))) / max(1, n_ctx)
+        for ctx_atom in equation.context:
+            ctx_charge = ctx_atom.root.charge
+            for dim in range(7):
+                state[dim] += ctx_charge[dim] * per_atom_weight * effective_fs
 
     # Step 5: Subject modifier — self-reference amplifies deviation from center
     if equation.subject.root.category == RootCategory.SELF_REF:
