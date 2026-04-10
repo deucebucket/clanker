@@ -22,7 +22,7 @@ from typing import Tuple
 
 
 class RootCategory(Enum):
-    # Emotional states
+    # ── Core emotional states ───────────────────────────────────────────
     POSITIVE_STATE = auto()
     NEGATIVE_STATE = auto()
     POSITIVE_QUALITY = auto()
@@ -33,7 +33,21 @@ class RootCategory(Enum):
     SOCIAL_EVAL_NEG = auto()
     EXPECTATION_VIOLATION = auto()
 
-    # Actions
+    # ── Domain-specific (same polarity math, different context weight) ──
+    FINANCIAL_POS = auto()      # approved, funded, raise, bonus, profit
+    FINANCIAL_NEG = auto()      # debt, bankrupt, fired, overdue, broke
+    MEDICAL_POS = auto()        # healed, cleared, remission, recovered
+    MEDICAL_NEG = auto()        # diagnosed, terminal, relapsed, cancer
+    ACADEMIC_POS = auto()       # graduated, passed, honors, scholarship
+    ACADEMIC_NEG = auto()       # failed, expelled, dropped, flunked
+    LEGAL_POS = auto()          # acquitted, pardoned, cleared, innocent
+    LEGAL_NEG = auto()          # arrested, convicted, sentenced, sued
+    CAREER_POS = auto()         # promoted, hired, raise, recognized
+    CAREER_NEG = auto()         # fired, demoted, laid off, passed over
+    RELATIONSHIP_POS = auto()   # engaged, married, matched, connected
+    RELATIONSHIP_NEG = auto()   # divorced, dumped, ghosted, rejected
+
+    # ── Actions ─────────────────────────────────────────────────────────
     MOTION = auto()
     POSSESSION = auto()
     TRANSFER = auto()
@@ -41,14 +55,14 @@ class RootCategory(Enum):
     COMMUNICATION = auto()
     COGNITION = auto()
 
-    # Entities
+    # ── Entities ────────────────────────────────────────────────────────
     SELF_REF = auto()
     OTHER_REF = auto()
     RELATION_REF = auto()
     PERSON = auto()
     OBJECT = auto()
 
-    # Operators
+    # ── Operators ───────────────────────────────────────────────────────
     INTENSIFIER = auto()
     NEGATOR = auto()
     CONNECTOR = auto()
@@ -56,7 +70,7 @@ class RootCategory(Enum):
     COMPRESSOR = auto()
     TEMPORAL = auto()
 
-    # Special
+    # ── Special ─────────────────────────────────────────────────────────
     FORMULAIC = auto()
     COMPOUND_EVENT = auto()
     FILLER = auto()
@@ -183,6 +197,30 @@ ROOTS: dict[str, Root] = {
     # These prevent 5x amplification when a dV=-5 word gets rounded to dV=-25
     "SLIGHT_POS":  _r("SLIGHT_POS",  RootCategory.POSITIVE_QUALITY, (+12,  0,  +5,   0,  +5,  +3,   0)),
     "SLIGHT_NEG":  _r("SLIGHT_NEG",  RootCategory.NEGATIVE_QUALITY, (-12,  0,  -5,   0,  -5,  -3,   0)),
+
+    # ── Domain: Financial ────────────────────────────────────────────────────
+    "FIN_POS":     _r("FIN_POS",     RootCategory.FINANCIAL_POS,  (+30,  +10, +25,   0, +20, +20,   0)),
+    "FIN_NEG":     _r("FIN_NEG",     RootCategory.FINANCIAL_NEG,  (-35,  +20, -30, +30, -25, -25, -10)),
+
+    # ── Domain: Medical ──────────────────────────────────────────────────────
+    "MED_POS":     _r("MED_POS",     RootCategory.MEDICAL_POS,    (+40, -10, +20, -15, +30, +25, +15)),
+    "MED_NEG":     _r("MED_NEG",     RootCategory.MEDICAL_NEG,    (-50, +30, -40, +40, -35, -30, -20), phase="SOLID"),
+
+    # ── Domain: Academic ─────────────────────────────────────────────────────
+    "ACAD_POS":    _r("ACAD_POS",    RootCategory.ACADEMIC_POS,   (+30, +15, +25,   0, +15, +25,   0)),
+    "ACAD_NEG":    _r("ACAD_NEG",    RootCategory.ACADEMIC_NEG,   (-30, +20, -25, +15, -15, -30, -10)),
+
+    # ── Domain: Legal ────────────────────────────────────────────────────────
+    "LEGAL_POS":   _r("LEGAL_POS",   RootCategory.LEGAL_POS,      (+35, -10, +30, -20, +20, +20, +10)),
+    "LEGAL_NEG":   _r("LEGAL_NEG",   RootCategory.LEGAL_NEG,      (-40, +40, -50, +50, -20, -25, -15), phase="SOLID"),
+
+    # ── Domain: Career ───────────────────────────────────────────────────────
+    "CAREER_POS":  _r("CAREER_POS",  RootCategory.CAREER_POS,     (+35, +15, +30,   0, +20, +30,   0)),
+    "CAREER_NEG":  _r("CAREER_NEG",  RootCategory.CAREER_NEG,     (-40, +25, -35, +25, -25, -35, -15)),
+
+    # ── Domain: Relationship ─────────────────────────────────────────────────
+    "REL_POS":     _r("REL_POS",     RootCategory.RELATIONSHIP_POS,(+40, +15, +10,   0, +20, +25, +25)),
+    "REL_NEG":     _r("REL_NEG",     RootCategory.RELATIONSHIP_NEG,(-45, +30, -20, +20, -25, -35, -25)),
 
     # ── Compound events ──────────────────────────────────────────────────────
     "EMPLOYMENT_LOSS":   _r("EMPLOYMENT_LOSS",   CE, (-60, 40, -60,  50, -40, -30, -20), phase="SOLID"),

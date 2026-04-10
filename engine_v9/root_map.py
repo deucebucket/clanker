@@ -699,6 +699,100 @@ WORD_TO_ROOT: dict[str, str] = {
     "concert":     "FILLER_WORD",     # venue, not emotion — override V8's dV=+40
     "stepped":     "FILLER_WORD",
 
+    # ── Domain: Financial ────────────────────────────────────────────────────
+    "funded":      "FIN_POS",
+    "funding":     "FIN_POS",
+    "approved":    "FIN_POS",
+    "approval":    "FIN_POS",
+    "profit":      "FIN_POS",
+    "profitable":  "FIN_POS",
+    "raise":       "FIN_POS",
+    "bonus":       "FIN_POS",
+    "savings":     "FIN_POS",
+    "invested":    "FIN_POS",
+    "salary":      "FILLER_WORD",
+    "debt":        "FIN_NEG",
+    "bankrupt":    "FIN_NEG",
+    "bankruptcy":  "FIN_NEG",
+    "overdue":     "FIN_NEG",
+    "foreclosure": "FIN_NEG",
+    "eviction":    "FIN_NEG",
+    "evicted":     "FIN_NEG",
+    "broke":       "FIN_NEG",         # "I'm broke" = financial
+    "overdraft":   "FIN_NEG",
+    "bills":       "FIN_NEG",
+    "rent":        "FILLER_WORD",     # neutral unless paired with neg
+
+    # ── Domain: Medical ──────────────────────────────────────────────────────
+    "healed":      "MED_POS",
+    "remission":   "MED_POS",
+    "recovered":   "MED_POS",
+    "recovery":    "MED_POS",
+    "cured":       "MED_POS",
+    "cleared":     "MED_POS",        # "scans cleared" = medical relief
+    "diagnosed":   "MED_NEG",
+    "diagnosis":   "MED_NEG",
+    "terminal":    "MED_NEG",
+    "relapsed":    "MED_NEG",
+    "relapse":     "MED_NEG",
+    "tumor":       "MED_NEG",
+    "chemo":       "MED_NEG",
+    "chemotherapy":"MED_NEG",
+    "surgery":     "FILLER_WORD",    # neutral — context determines
+    "hospital":    "FILLER_WORD",
+
+    # ── Domain: Academic ─────────────────────────────────────────────────────
+    "graduated":   "ACAD_POS",
+    "honors":      "ACAD_POS",
+    "scholarship": "ACAD_POS",
+    "valedictorian":"ACAD_POS",
+    "dean":        "FILLER_WORD",
+    "failed":      "ACAD_NEG",
+    "expelled":    "ACAD_NEG",
+    "flunked":     "ACAD_NEG",
+    "dropout":     "ACAD_NEG",
+    "suspended":   "ACAD_NEG",
+
+    # ── Domain: Legal ────────────────────────────────────────────────────────
+    "acquitted":   "LEGAL_POS",
+    "pardoned":    "LEGAL_POS",
+    "innocent":    "LEGAL_POS",
+    "exonerated":  "LEGAL_POS",
+    "arrested":    "LEGAL_NEG",
+    "convicted":   "LEGAL_NEG",
+    "sentenced":   "LEGAL_NEG",
+    "sued":        "LEGAL_NEG",
+    "lawsuit":     "LEGAL_NEG",
+    "indicted":    "LEGAL_NEG",
+    "prison":      "LEGAL_NEG",
+    "jail":        "LEGAL_NEG",
+
+    # ── Domain: Career ───────────────────────────────────────────────────────
+    "promoted":    "CAREER_POS",
+    "promotion":   "CAREER_POS",
+    "hired":       "CAREER_POS",
+    "recognized":  "CAREER_POS",
+    "awarded":     "CAREER_POS",
+    "earned":      "CAREER_POS",
+    "demoted":     "CAREER_NEG",
+    "terminated":  "CAREER_NEG",
+    "downsized":   "CAREER_NEG",
+    "outsourced":  "CAREER_NEG",
+
+    # ── Domain: Relationship ─────────────────────────────────────────────────
+    "engaged":     "REL_POS",
+    "married":     "REL_POS",
+    "dating":      "REL_POS",
+    "matched":     "REL_POS",
+    "reconnected": "REL_POS",
+    "divorced":    "REL_NEG",
+    "dumped":      "REL_NEG",
+    "ghosted":     "REL_NEG",
+    "rejected":    "REL_NEG",
+    "cheated":     "REL_NEG",
+    "unfaithful":  "REL_NEG",
+    "separated":   "REL_NEG",        # override FILLER_WORD — relationship context
+
     # Relationship verbs — need structural context to determine meaning
     "left":        "SLIGHT_NEG",      # "she left me" = abandonment, "I left the room" = neutral
     "leave":       "SLIGHT_NEG",
@@ -2863,6 +2957,48 @@ WORD_TO_ROOT: dict[str, str] = {
     "zombie": "AFRAID",
     "zoo": "HAPPY",
 
+    # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
+    # These override coarse auto-mappings with domain-specific roots.
+    # Must be LAST in the dict to take priority over auto-import.
+
+    # Financial
+    "funded": "FIN_POS", "funding": "FIN_POS", "approved": "FIN_POS",
+    "profit": "FIN_POS", "bonus": "FIN_POS", "savings": "FIN_POS",
+    "invested": "FIN_POS", "raise": "FIN_POS",
+    "debt": "FIN_NEG", "bankrupt": "FIN_NEG", "bankruptcy": "FIN_NEG",
+    "overdue": "FIN_NEG", "foreclosure": "FIN_NEG", "evicted": "FIN_NEG",
+    "overdraft": "FIN_NEG", "broke": "FIN_NEG", "bills": "FIN_NEG",
+
+    # Medical
+    "healed": "MED_POS", "remission": "MED_POS", "recovered": "MED_POS",
+    "recovery": "MED_POS", "cured": "MED_POS", "cleared": "MED_POS",
+    "diagnosed": "MED_NEG", "diagnosis": "MED_NEG", "terminal": "MED_NEG",
+    "relapsed": "MED_NEG", "relapse": "MED_NEG", "tumor": "MED_NEG",
+    "cancer": "MED_NEG", "chemo": "MED_NEG", "chemotherapy": "MED_NEG",
+
+    # Academic
+    "graduated": "ACAD_POS", "honors": "ACAD_POS", "scholarship": "ACAD_POS",
+    "failed": "ACAD_NEG", "expelled": "ACAD_NEG", "flunked": "ACAD_NEG",
+    "suspended": "ACAD_NEG",
+
+    # Legal
+    "acquitted": "LEGAL_POS", "pardoned": "LEGAL_POS", "innocent": "LEGAL_POS",
+    "exonerated": "LEGAL_POS",
+    "arrested": "LEGAL_NEG", "convicted": "LEGAL_NEG", "sentenced": "LEGAL_NEG",
+    "sued": "LEGAL_NEG", "indicted": "LEGAL_NEG", "prison": "LEGAL_NEG",
+    "jail": "LEGAL_NEG",
+
+    # Career
+    "promoted": "CAREER_POS", "promotion": "CAREER_POS", "hired": "CAREER_POS",
+    "recognized": "CAREER_POS", "awarded": "CAREER_POS", "earned": "CAREER_POS",
+    "fired": "CAREER_NEG", "demoted": "CAREER_NEG", "terminated": "CAREER_NEG",
+    "downsized": "CAREER_NEG",
+
+    # Relationship
+    "engaged": "REL_POS", "married": "REL_POS", "dating": "REL_POS",
+    "reconnected": "REL_POS",
+    "divorced": "REL_NEG", "dumped": "REL_NEG", "ghosted": "REL_NEG",
+    "rejected": "REL_NEG", "cheated": "REL_NEG", "separated": "REL_NEG",
 }
 
 # ---------------------------------------------------------------------------
