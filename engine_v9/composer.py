@@ -104,6 +104,14 @@ def compose(equation: Equation) -> VADUG:
     """
     Resolve a decomposed Equation to a 7D VADUGWI coordinate.
 
+    The sentence is an ALLOY. Every word is an element. The final VADUGWI
+    is the property of the alloy — not the property of the strongest element.
+
+    All charged atoms contribute proportional to their gravity (emotional mass).
+    Heavier atoms pull the alloy's properties more, but no atom is ignored.
+    Operators (negators, intensifiers) modify the atoms they bond with
+    before the alloy is computed.
+
     Args:
         equation: A decomposed sentence (from engine_v9.decomposer.decompose).
 
@@ -113,38 +121,47 @@ def compose(equation: Equation) -> VADUG:
     # Step 1: Start at neutral
     state = list(_NEUTRAL_STATE)  # [V, A, D, U, G, W, I]
 
-    # Adaptive force scale: shorter sentences push harder, longer ones dampen.
-    # Short sentences = high signal density, every word matters.
-    # Long sentences = diluted signal, more noise.
-    # effective_FS = FORCE_SCALE / sqrt(word_count)
-    # 3 words: FS * 0.58 (×1.7 effective per word)
-    # 5 words: FS * 0.45
-    # 10 words: FS * 0.32
-    # 20 words: FS * 0.22
+    # Adaptive force scale: shorter sentences = denser signal
     word_count = max(1, len(equation.all_atoms))
     effective_fs = FORCE_SCALE / (word_count ** LENGTH_EXPONENT)
 
-    # Step 2: Get nucleus charge and apply operators
-    nucleus_charge_raw = equation.nucleus.root.charge
-    nucleus_charge = _apply_operators(nucleus_charge_raw, equation.operators)
+    # Step 2: Collect ALL charged atoms with their gravity weights
+    # Every atom contributes to the alloy proportional to its mass.
+    # The nucleus gets operator modifications applied first.
+    weighted_charges = []
+    total_gravity = 0.0
 
-    # Step 3: Accumulate nucleus (full weight)
-    for dim in range(7):
-        state[dim] += nucleus_charge[dim] * EVENT_WEIGHT * effective_fs
+    # Nucleus — apply operators first, then add with its gravity
+    nucleus_charge = list(_apply_operators(equation.nucleus.root.charge, equation.operators))
+    nucleus_gravity = equation.nucleus.gravity
+    if nucleus_gravity > 0:
+        weighted_charges.append((nucleus_charge, nucleus_gravity))
+        total_gravity += nucleus_gravity
 
-    # Step 4: Accumulate context atoms (with per-atom diminishing returns)
-    n_ctx = len(equation.context)
-    if n_ctx > 0:
-        per_atom_weight = CONTEXT_WEIGHT * (1.0 + math.log(max(1, n_ctx))) / max(1, n_ctx)
-        for ctx_atom in equation.context:
-            ctx_charge = ctx_atom.root.charge
+    # All other charged atoms — contribute at their own gravity
+    for atom in equation.context:
+        charge = list(atom.root.charge)
+        gravity = atom.gravity
+        if gravity > 0:
+            weighted_charges.append((charge, gravity))
+            total_gravity += gravity
+
+    # Subject contributes too (if it has charge)
+    if equation.subject.gravity > 0 and equation.subject is not equation.nucleus:
+        weighted_charges.append((list(equation.subject.root.charge), equation.subject.gravity))
+        total_gravity += equation.subject.gravity
+
+    # Step 3: Compute the alloy — gravity-weighted average of all elements
+    if total_gravity > 0:
+        for charge, gravity in weighted_charges:
+            weight = gravity / total_gravity  # normalize so weights sum to 1
             for dim in range(7):
-                state[dim] += ctx_charge[dim] * per_atom_weight * effective_fs
+                state[dim] += charge[dim] * weight * effective_fs
 
-    # Step 5: Subject modifier — self-reference amplifies deviation from center
+    # Step 4: Subject modifier — self-reference amplifies deviation
     if equation.subject.root.category == RootCategory.SELF_REF:
         for dim in range(7):
-            center = 0.0 if dim == 3 else CENTER  # U centers at 0
+            center = 0.0 if dim == 3 else CENTER
             deviation = state[dim] - center
             state[dim] = center + deviation * SUBJECT_SELF_BONUS
 

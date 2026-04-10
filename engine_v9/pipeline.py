@@ -126,6 +126,20 @@ def compute_vadug(
             i=result.i,
         )
 
+    # ── Stage 4.6: Attributive dampening ───────────────────────────
+    # No person reference in the sentence → likely descriptive/narrative.
+    # Even with alloy composition, strong emotional words in description
+    # push too hard. Dampen when no person is present.
+    _PERSON_ROLES = frozenset({"SELF_REF", "OTHER_REF", "RELATION_REF"})
+    has_person_ref = any(wr.role in _PERSON_ROLES for wr in word_roles) if word_roles else False
+
+    if not has_person_ref and abs(result.v - 128) > 10:
+        ATTRIBUTIVE_DAMPEN = 0.5
+        result = VADUG(
+            v=max(0, min(255, int(128 + (result.v - 128) * ATTRIBUTIVE_DAMPEN))),
+            a=result.a, d=result.d, u=result.u, g=result.g, w=result.w, i=result.i,
+        )
+
     # ── Stage 5: Detect structural patterns ──────────────────────
     structures = _structure_detector.detect_all(word_roles) if word_roles else []
 
