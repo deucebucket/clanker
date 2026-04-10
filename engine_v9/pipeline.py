@@ -23,6 +23,7 @@ from .shared import VADUG, PersonalityVector
 from .roots import RootCategory
 from .tokenizer import tokenize
 from .word_classifier import classify_sentence
+from .interpret import interpret_context
 from .decomposer import decompose, decompose_molecules
 from .composer import compose
 from .bonding import bond_resolve
@@ -65,6 +66,15 @@ def compute_vadug(
 
     # ── Stage 2: Classify structural roles ───────────────────────
     word_roles = classify_sentence(tokens) if tokens else []
+
+    # ── Stage 2.5: Interpret context ─────────────────────────────
+    # Discourse markers, expletive-as-intensifier, register detection,
+    # counterfactual marking, hard negator inversion, SOLVENT dissolution,
+    # sarcasm field. Modifies word_roles in place + returns context flags.
+    ctx = interpret_context(word_roles, text)
+    word_roles = ctx["roles"]
+    register = ctx["register"]
+    register_dampener = ctx["register_dampener"]
 
     # ── Stage 3: Decompose into equation ─────────────────────────
     # Use molecule-aware decomposition — bonded charges give better gravity
@@ -162,6 +172,23 @@ def compute_vadug(
         g += getattr(s, 'g_weight', 0)
         w += getattr(s, 'w_weight', 0)
 
+    # ── Stage 5.5: Apply interpret_context flags ──────────────────
+    # Register dampening: literary/expository text gets force reduced
+    if register_dampener < 1.0:
+        v = CENTER + (v - CENTER) * register_dampener
+        a = CENTER + (a - CENTER) * register_dampener
+        d = CENTER + (d - CENTER) * register_dampener
+        g = CENTER + (g - CENTER) * register_dampener
+        w = CENTER + (w - CENTER) * register_dampener
+
+    # Counterfactual: "supposed to be happy" → invert positive
+    if ctx["counterfactual"] and v > CENTER:
+        v = CENTER - (v - CENTER) * 0.75  # invert 75% toward negative
+
+    # Sarcasm from interpret_context (ironic onset field)
+    if ctx["sarcasm_inversion"]:
+        v += ctx["sarcasm_penalty"]
+
     # ── Stage 6: Force flow ──────────────────────────────────────
     force_flow = resolve_force_flow(word_roles) if word_roles else None
     flow_mods = compute_flow_modifiers(force_flow) if force_flow else {}
@@ -235,6 +262,9 @@ def compute_vadug(
         "structures": [s.pattern for s in structures],
         "bonds": [{"words": m.words, "v": m.surface_charge[0]} for m in molecules if len(m.words) > 1],
         "bond_flags": list(bond_flags),
+        "register": register,
+        "counterfactual": ctx["counterfactual"],
+        "sarcasm_interpret": ctx["sarcasm_inversion"],
         "force_flow": {
             "actor": force_flow.actor_role if force_flow else None,
             "target": force_flow.target_role if force_flow else None,
