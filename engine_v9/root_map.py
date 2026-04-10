@@ -1060,6 +1060,29 @@ WORD_TO_ROOT: dict[str, str] = {
     "waste": "SLIGHT_NEG", "hazardous": "SLIGHT_NEG",
     "separation": "REL_NEG",
 
+    # ── V8 inflation batch 6 (v9.3) ─────────────────────────────────────
+    # Descriptive/object words
+    "country": "FILLER_WORD", "pepper": "FILLER_WORD", "gym": "FILLER_WORD",
+    "period": "FILLER_WORD", "rope": "FILLER_WORD", "spread": "FILLER_WORD",
+    "labor": "FILLER_WORD", "cut": "FILLER_WORD", "based": "FILLER_WORD",
+    "valid": "FILLER_WORD", "restricted": "FILLER_WORD", "bill": "FILLER_WORD",
+    "reflect": "FILLER_WORD", "flexible": "FILLER_WORD", "rip": "FILLER_WORD",
+    "exposed": "FILLER_WORD", "silent": "FILLER_WORD", "wildly": "INTENSIFY",
+    "heroic": "SOC_EVAL_POS", "fat": "FILLER_WORD", "breathing": "FILLER_WORD",
+    # Emotional but V8 overcharged
+    "starving": "SLIGHT_NEG", "uncomfortable": "SLIGHT_NEG",
+    "defective": "SLIGHT_NEG", "exhausting": "SLIGHT_NEG",
+    "tragedy": "NEG_QUALITY", "terrifying": "AFRAID",
+    "choked": "SLIGHT_NEG", "freezing": "SLIGHT_NEG",
+    "survival": "SLIGHT_NEG", "surrender": "SLIGHT_NEG",
+    "accident": "NEG_QUALITY", "severe": "SLIGHT_NEG",
+    "wailing": "NEG_QUALITY", "desires": "FILLER_WORD",
+    "dying": "SLIGHT_NEG",  # LIQUID — already in phase system
+
+    # ── Positive words missing charge (pos→neutral gap) ──────────────────
+    "free": "SLIGHT_POS",          # "for free" = positive context
+    "back": "FILLER_WORD",         # directional, not positive on its own
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
