@@ -224,6 +224,23 @@ def compute_vadug(
             # Also dampen W (self-worth shouldn't move from others' emotions)
             w = CENTER + (w - CENTER) * PERSPECTIVE_DAMPEN
 
+    # ── Stage 6.8: W→V coupling ────────────────────────────────────
+    # Low self-worth amplifies negatives and suppresses positives.
+    # At W=128 (neutral): no effect. At W=50: negatives amplified ~1.8x.
+    from math import exp
+    w_norm = (w - CENTER) / CENTER  # -1 (broken) to +1 (strong)
+    W_BETA = 0.5    # negative amplification strength
+    W_GAMMA = 0.3   # positive suppression strength
+    W_CAP = 1.8     # max amplification
+
+    displacement = v - CENTER
+    if displacement < 0:
+        amp = min(W_CAP, 1.0 + W_BETA * exp(-w_norm))
+        v = CENTER + displacement * amp
+    elif displacement > 0:
+        sup = max(0.0, 1.0 - W_GAMMA * (1.0 - exp(w_norm)))
+        v = CENTER + displacement * sup
+
     # ── Stage 7: Personality ─────────────────────────────────────
     if personality is not None:
         sensitivity = personality.emotional_sensitivity
