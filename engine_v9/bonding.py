@@ -85,8 +85,15 @@ def _react_amplifier_right(left_charge, right_charge, left_strength):
     return [int(c * factor) for c in right_charge]
 
 def _react_inverter_right(left_charge, right_charge, left_strength):
-    """INVERTER on left flips right's charge sign."""
-    return [-c for c in right_charge]
+    """INVERTER on left flips AND amplifies right's charge.
+
+    Negation in language is stronger than a simple sign flip.
+    "Not happy" is MORE than "mildly unhappy" — it's a deliberate
+    contradiction that carries emphasis. Factor of 1.5 matches the
+    linguistic weight of negation.
+    """
+    factor = -1.0 * (1.0 + left_strength * 0.15)  # strength 2 → -1.3x
+    return [int(c * factor) for c in right_charge]
 
 def _react_directional_merge(left_charge, right_charge, left_strength):
     """DIRECTIONAL bonds create force vectors — merge charges with sign alignment."""

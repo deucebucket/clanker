@@ -23,7 +23,7 @@ from .shared import VADUG, PersonalityVector
 from .roots import RootCategory
 from .tokenizer import tokenize
 from .word_classifier import classify_sentence
-from .decomposer import decompose
+from .decomposer import decompose, decompose_molecules
 from .composer import compose
 from .bonding import bond_resolve
 from .structures import StructureDetector, StructureMatch
@@ -67,7 +67,8 @@ def compute_vadug(
     word_roles = classify_sentence(tokens) if tokens else []
 
     # ── Stage 3: Decompose into equation ─────────────────────────
-    equation = decompose(text)
+    # Use molecule-aware decomposition — bonded charges give better gravity
+    equation = decompose_molecules(molecules) if molecules else decompose(text)
 
     # ── Stage 4: Compose equation → raw VADUGWI ──────────────────
     result = compose(equation)

@@ -210,3 +210,89 @@ def decompose(text: str) -> Equation:
         context=context,
         all_atoms=all_atoms,
     )
+
+
+def decompose_molecules(molecules) -> Equation:
+    """Decompose from pre-bonded Molecules instead of raw text.
+
+    Molecules carry bonded charges (potentially inverted, amplified, etc.)
+    which gives more accurate gravity than raw atom charges.
+
+    Args:
+        molecules: list of Molecule objects from bond_resolve()
+
+    Returns:
+        Equation with nucleus selected from molecule charges.
+    """
+    if not molecules:
+        return Equation(
+            subject=_IMPLICIT_SELF,
+            nucleus=_GENERIC_NUCLEUS,
+        )
+
+    # Convert molecules to atoms using their bonded surface charge
+    all_atoms = []
+    for mol in molecules:
+        # Create a synthetic root with the molecule's bonded charge
+        charge = tuple(mol.surface_charge)
+        synth_root = Root(
+            name=mol.root.name,
+            category=mol.root.category,
+            charge=charge,
+            phase=mol.root.phase,
+        )
+        atom = Atom(
+            word=" ".join(mol.words),
+            root=synth_root,
+            position=mol.position,
+            gravity=mol.gravity,
+        )
+        all_atoms.append(atom)
+
+    # Same logic as decompose: find nucleus, assign roles
+    nucleus = all_atoms[0]
+    for atom in all_atoms[1:]:
+        if atom.gravity >= nucleus.gravity:
+            nucleus = atom
+
+    if nucleus.gravity == 0.0:
+        candidates = [
+            a for a in all_atoms
+            if a.root.category not in _OPERATOR_CATEGORIES
+            and a.root.category not in _SKIP_CONTEXT_CATEGORIES
+        ]
+        nucleus = candidates[-1] if candidates else all_atoms[-1]
+
+    subject = None
+    operators = []
+    context = []
+
+    for atom in all_atoms:
+        if atom is nucleus:
+            continue
+        cat = atom.root.category
+        if cat in _SUBJECT_CATEGORIES:
+            if subject is None:
+                subject = atom
+            else:
+                context.append(atom)
+            continue
+        if cat in _OPERATOR_CATEGORIES:
+            dist = abs(atom.position - nucleus.position)
+            if dist <= 3:
+                operators.append(atom)
+            continue
+        if cat in _SKIP_CONTEXT_CATEGORIES:
+            continue
+        context.append(atom)
+
+    if subject is None:
+        subject = _IMPLICIT_SELF
+
+    return Equation(
+        subject=subject,
+        nucleus=nucleus,
+        operators=operators,
+        context=context,
+        all_atoms=all_atoms,
+    )
