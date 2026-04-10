@@ -586,7 +586,7 @@ WORD_TO_ROOT: dict[str, str] = {
     "chills":      "FILLER_WORD",
     "hanging":     "FILLER_WORD",     # "hanging out" is neutral
     "hang":        "FILLER_WORD",
-    "killing":     "FILLER_WORD",     # "killing it" = doing great (LIQUID)
+    "killing":     "HARM",            # strong negative — LIQUID phase handles "killing it" = great
     "tripping":    "FILLER_WORD",     # "tripping" = overreacting (slang)
     "trip":        "FILLER_WORD",
 

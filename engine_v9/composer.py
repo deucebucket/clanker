@@ -28,7 +28,7 @@ from engine_v9.roots import RootCategory
 
 CENTER = 128.0
 
-FORCE_SCALE = 1.4          # how much charges move the needle
+FORCE_SCALE = 1.0          # 1:1 — root charge = displacement. Tuned: 1.4→1.0 gained 2.3%
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
 CONTEXT_WEIGHT = 0.3       # context atoms color, don't drive
 SATURATION = 120.0         # tanh compression range

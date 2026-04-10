@@ -3354,11 +3354,14 @@ class StructureDetector:
         if has_grief_context:
             return None
 
-        # Find crisis-class words (|dV| >= 25)
+        # Find crisis-class words — NEGATIVE only, dV <= -50
+        # Mundane hyperbole only fires for genuinely crisis-level words
+        # (killing, dying, suicide, torture) near mundane subjects.
+        # Moderate negatives (sad, bad, wrong) are NOT hyperbole candidates.
         crisis_idx = []
         for i, r in enumerate(roles):
             f = r.force or _V.get(r.word)
-            if f and abs(f[0]) >= 25:
+            if f and f[0] <= -50:
                 crisis_idx.append(i)
 
         if not crisis_idx:
@@ -3378,7 +3381,7 @@ class StructureDetector:
             "want", "need", "make", "makes", "making", "get", "got",
             "take", "took", "give", "gave", "come", "go", "going",
             "said", "tell", "told", "think", "know", "feel",
-            "is", "was", "are", "were", "been", "being",
+            "is", "was", "am", "are", "were", "been", "being",
             "have", "had", "has", "do", "did", "does",
             "can", "could", "will", "would", "should", "might",
             "try", "stop", "end", "start", "keep", "let",
