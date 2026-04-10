@@ -903,6 +903,43 @@ WORD_TO_ROOT: dict[str, str] = {
     "found":       "SLIGHT_POS",      # recovery — "finally found" = relief
     "lost":        "SLIGHT_NEG",      # override LOSS — "lost my ring" is mild, not grief
 
+    # ── V8 inflation batch 2 (Gemini-4000 gap, v9.3) ────────────────────
+    # neutral→neg false negatives (595 cases)
+    "black":       "FILLER_WORD",     # V8 dV=-32 — color, not emotion
+    "rough":       "SLIGHT_NEG",      # V8 dV=-25 — can be emotional but usually descriptive
+    "die":         "SLIGHT_NEG",      # V8 dV=-35 — LIQUID, context-dependent
+    "emergency":   "SLIGHT_NEG",      # V8 dV=-25 — situation, not emotion
+    "loudly":      "FILLER_WORD",     # V8 dV=0 but stemming to "loud" which has charge
+    "over":        "FILLER_WORD",     # V8 dV=-10 — preposition
+    "against":     "FILLER_WORD",     # V8 dV=-12 — preposition
+    "choking":     "SLIGHT_NEG",      # V8 dV=-40 — LIQUID, often figurative
+
+    # neutral→pos false positives (269 cases)
+    "social":      "FILLER_WORD",     # V8 dV=+32 — descriptor, not emotional
+    "physical":    "FILLER_WORD",     # V8 dV=+56 — descriptor (absurd charge)
+    "thick":       "FILLER_WORD",     # V8 dV=+50 — descriptor (absurd charge)
+    "early":       "FILLER_WORD",     # V8 dV=+48 — temporal (absurd charge)
+    "conscious":   "FILLER_WORD",     # V8 dV=+51 — state descriptor (absurd charge)
+
+    # pos→neutral (203 cases) — intensifiers with no charge
+    "completely":  "INTENSIFY",       # V8 dV=0 but acts as amplifier
+    "incredibly":  "INTENSIFY",       # V8 dV=0 but acts as amplifier
+    "standing":    "FILLER_WORD",
+    "aggressively":"INTENSIFY",       # slang intensifier — "aggressively good"
+
+    # ── V8 inflation batch 3 (Gemini-4000, v9.3) ────────────────────────
+    "bank":        "FILLER_WORD",     # V8 dV=+39 — financial institution, not emotion
+    "swiftly":     "FILLER_WORD",     # stems to swift which has charge
+    "swift":       "FILLER_WORD",
+    "dragged":     "FILLER_WORD",     # V8 dV=-15 — action verb, not emotion
+    "drag":        "FILLER_WORD",
+    "wait":        "FILLER_WORD",     # V8 dV=-5 — action, not emotion
+    "empty":       "SLIGHT_NEG",      # V8 dV=-18 — can be emotional but usually descriptive
+    "simping":     "FILLER_WORD",     # slang, no V8 charge
+    "perfectly":   "POS_QUALITY",     # positive evaluation
+    "glass":       "FILLER_WORD",     # object
+    "dead":        "SLIGHT_NEG",      # LIQUID — override LOSS for narrative context
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
