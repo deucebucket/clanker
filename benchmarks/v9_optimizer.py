@@ -61,8 +61,12 @@ GENE_RANGES = {
     "HAPPY_DV":           (10, 40),
     "POS_QUALITY_DV":     (8, 30),
     "NEG_QUALITY_DV":     (-30, -8),
+    # Length scaling
+    "LENGTH_EXPONENT":    (0.2, 0.6),   # word_count ** exp in force scale
     # Perspective
     "PERSPECTIVE_DAMPEN": (0.3, 1.0),
+    # SLIGHT root charges
+    "SLIGHT_DV":          (3, 15),
 }
 
 
@@ -95,6 +99,7 @@ def apply_genome(genome):
     comp.NEGATOR_FACTOR = genome["NEGATOR_FACTOR"]
     comp.INTENSIFIER_FACTOR = genome["INTENSIFIER_FACTOR"]
     comp.HEDGE_FACTOR = genome["HEDGE_FACTOR"]
+    comp.LENGTH_EXPONENT = genome.get("LENGTH_EXPONENT", 0.35)
 
     # Root charge tuning
     h = int(genome["HAPPY_DV"])
@@ -110,6 +115,15 @@ def apply_genome(genome):
     roots_mod.ROOTS["NEG_QUALITY"] = roots_mod._r(
         "NEG_QUALITY", roots_mod.RootCategory.NEGATIVE_QUALITY,
         (nq, 0, nq//3, 0, nq//3, nq//5, 0))
+
+    # SLIGHT root charges
+    sdv = int(genome.get("SLIGHT_DV", 7))
+    roots_mod.ROOTS["SLIGHT_POS"] = roots_mod._r(
+        "SLIGHT_POS", roots_mod.RootCategory.POSITIVE_QUALITY,
+        (sdv, 0, sdv//3, 0, sdv//3, sdv//5, 0))
+    roots_mod.ROOTS["SLIGHT_NEG"] = roots_mod._r(
+        "SLIGHT_NEG", roots_mod.RootCategory.NEGATIVE_QUALITY,
+        (-sdv, 0, -sdv//3, 0, -sdv//3, -sdv//5, 0))
 
     # Rebuild vocabulary shim
     import engine_v9.vocabulary as vm
@@ -162,10 +176,12 @@ def run_optimizer(population_size=100, generations=50, elite_frac=0.1):
 
     # Seed the current champion
     champion = {
-        "FORCE_SCALE": 1.2, "CONTEXT_WEIGHT": 0.5, "SATURATION": 120.0,
+        "FORCE_SCALE": 1.79, "CONTEXT_WEIGHT": 0.81, "SATURATION": 129.0,
         "NEGATOR_FACTOR": -1.0, "INTENSIFIER_FACTOR": 1.5, "HEDGE_FACTOR": 0.5,
-        "HAPPY_DV": 18, "POS_QUALITY_DV": 15, "NEG_QUALITY_DV": -15,
-        "PERSPECTIVE_DAMPEN": 0.6,
+        "HAPPY_DV": 23, "POS_QUALITY_DV": 30, "NEG_QUALITY_DV": -19,
+        "LENGTH_EXPONENT": 0.35,
+        "PERSPECTIVE_DAMPEN": 0.87,
+        "SLIGHT_DV": 7,
     }
     population[0] = champion
 

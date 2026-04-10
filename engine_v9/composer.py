@@ -39,6 +39,7 @@ HEDGE_FACTOR = 0.5         # standard
 COMPRESSOR_FACTOR = 0.7    # compression
 
 SUBJECT_SELF_BONUS = 1.0   # tuned: 1.2 over-amplified first-person literary text
+LENGTH_EXPONENT = 0.35     # adaptive FS = FORCE_SCALE / (word_count ** this)
 
 # Neutral starting state — U starts at 0, not 128
 _NEUTRAL_STATE = [128.0, 128.0, 128.0, 0.0, 128.0, 128.0, 128.0]
@@ -121,7 +122,7 @@ def compose(equation: Equation) -> VADUG:
     # 10 words: FS * 0.32
     # 20 words: FS * 0.22
     word_count = max(1, len(equation.all_atoms))
-    effective_fs = FORCE_SCALE / (word_count ** 0.35)
+    effective_fs = FORCE_SCALE / (word_count ** LENGTH_EXPONENT)
 
     # Step 2: Get nucleus charge and apply operators
     nucleus_charge_raw = equation.nucleus.root.charge
