@@ -1156,6 +1156,24 @@ WORD_TO_ROOT: dict[str, str] = {
     "stunning":    "HAPPY",
     "magnificent": "HAPPY",
 
+    # ── Slang vocabulary (Gemini-4350, v9.3) ────────────────────────────
+    "malding":     "FRUSTRATED",
+    "coping":      "SLIGHT_NEG",
+    "copium":      "SLIGHT_NEG",
+    "ratio":       "SOC_EVAL_NEG",
+    "oof":         "SLIGHT_NEG",
+    "yikes":       "SLIGHT_NEG",
+    "sus":         "SLIGHT_NEG",
+    "mid":         "NEG_QUALITY",
+    "bussin":      "POS_QUALITY",
+    "goated":      "POS_QUALITY",
+    "unhinged":    "NEG_QUALITY",
+    "cracked":     "POS_QUALITY",
+    "dogwater":    "NEG_QUALITY",
+    "clutch":      "POS_QUALITY",
+    "ate":         "POS_QUALITY",
+    "periodt":     "INTENSIFY",
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
