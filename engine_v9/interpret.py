@@ -235,6 +235,48 @@ def interpret_context(word_roles, text=""):
             sarcasm_inversion = True
             sarcasm_penalty = -12.0
 
+    # ── 8. Absence scope ──────────────────────────────────────────
+    # "haven't felt happy" → "happy" is in absence scope → dampen
+    # "without love" → "love" dampened
+    _ABSENCE_MARKERS = frozenset({"without", "havent", "hasnt", "hadnt", "didnt"})
+    _ABSENCE_FOLLOWERS = frozenset({"had", "been", "felt", "seen", "gotten", "experienced"})
+
+    absence_scope = set()
+    for idx, wr in enumerate(roles):
+        if wr.word in _ABSENCE_MARKERS:
+            if wr.word == "without":
+                for j in range(idx + 1, min(idx + 4, n)):
+                    absence_scope.add(j)
+            elif idx + 1 < n and roles[idx + 1].word in _ABSENCE_FOLLOWERS:
+                for j in range(idx + 2, min(idx + 7, n)):
+                    absence_scope.add(j)
+
+    # Apply absence scope: dampen absent words' charges
+    for idx in absence_scope:
+        if idx < n:
+            wr = roles[idx]
+            f = wr.force or VOCABULARY.get(wr.word)
+            if f and f[0] < -10:
+                wr.force = (int(f[0] * 0.2), int(f[1] * 0.3), int(f[2] * 0.3), f[3], f[4])
+            elif f and f[0] > 10:
+                # Absent positive → slight negative (missing something good = sad)
+                wr.force = (int(-f[0] * 0.3), f[1], int(-f[2] * 0.2), f[3], f[4])
+
+    # ── 9. Forced choice cancellation ───────────────────────────
+    _CHOICE_VERBS = frozenset({"choose", "chose", "choosing", "decide", "pick", "picked"})
+    forced_choice_scope = set()
+    for idx, wr in enumerate(roles):
+        if wr.word == "between":
+            has_choice = any(roles[j].word in _CHOICE_VERBS for j in range(max(0, idx - 3), idx))
+            if has_choice:
+                for j in range(idx + 1, min(idx + 6, n)):
+                    forced_choice_scope.add(j)
+    for idx in forced_choice_scope:
+        if idx < n:
+            wr = roles[idx]
+            if wr.force:
+                wr.force = (0, 0, 0, 0, 0)  # cancel emotional charge in forced choice
+
     return {
         "roles": roles,
         "register": register,
@@ -244,4 +286,5 @@ def interpret_context(word_roles, text=""):
         "sarcasm_inversion": sarcasm_inversion,
         "sarcasm_penalty": sarcasm_penalty,
         "solvent_active": solvent_active,
+        "absence_scope": absence_scope,
     }
