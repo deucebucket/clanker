@@ -940,6 +940,45 @@ WORD_TO_ROOT: dict[str, str] = {
     "glass":       "FILLER_WORD",     # object
     "dead":        "SLIGHT_NEG",      # LIQUID — override LOSS for narrative context
 
+    # ── V8 inflation batch 4 — systematic audit (Gemini-4000, v9.3) ──────
+    # All V8 words with |dV|>20 causing neutral misclassification
+    "total":       "FILLER_WORD",     # V8 dV=+62 — quantifier
+    "totally":     "INTENSIFY",       # intensifier, not evaluator
+    "local":       "FILLER_WORD",     # V8 dV=+34 — geographic descriptor
+    "mail":        "FILLER_WORD",     # V8 dV=+51 — object
+    "classic":     "FILLER_WORD",     # V8 dV=+42 — descriptor
+    "cannot":      "NEGATE",          # V8 dV=-55 — negator, not emotional
+    "blind":       "FILLER_WORD",     # V8 dV=-42 — descriptor
+    "tightly":     "FILLER_WORD",     # V8 dV=-52 — adverb of manner
+    "tight":       "FILLER_WORD",
+    "successfully":"SLIGHT_POS",      # V8 dV=+51 — too strong, just mild positive
+    "event":       "FILLER_WORD",     # V8 dV=+55 — object
+    "grand":       "FILLER_WORD",     # V8 dV=+42 — size descriptor
+    "speed":       "FILLER_WORD",     # V8 dV=+48 — measurement
+    "code":        "FILLER_WORD",     # V8 dV=+39 — object
+    "bright":      "FILLER_WORD",     # V8 dV=+50 — visual descriptor
+    "fully":       "INTENSIFY",       # V8 dV=+58 — intensifier
+    "exact":       "FILLER_WORD",     # V8 dV=+48 — precision descriptor
+    "culture":     "FILLER_WORD",     # V8 dV=+56 — concept
+    "market":      "FILLER_WORD",     # V8 dV=+57 — place/concept
+    "sweater":     "FILLER_WORD",     # V8 dV=-52 — clothing (absurd)
+    "dropping":    "FILLER_WORD",     # V8 dV=-89 — action verb (absurd)
+    "drop":        "FILLER_WORD",
+    "sucking":     "SLIGHT_NEG",      # V8 dV=-36 — can be neg but usually mild
+    "weapons":     "FILLER_WORD",     # V8 dV=-30 — object
+    "weapon":      "FILLER_WORD",
+    "conflict":    "SLIGHT_NEG",      # V8 dV=-25 — situation, mild
+    "struggle":    "SLIGHT_NEG",      # V8 dV=-25 — can be emotional but mild
+    "business":    "FILLER_WORD",     # V8 dV=+28 — concept
+    "sleeping":    "FILLER_WORD",     # V8 dV=+28 — activity
+    "sleep":       "FILLER_WORD",
+    "embarrassing":"NEG_QUALITY",     # V8 dV=-77 — IS emotional but too strong, keep at -19
+    "isolate":     "SLIGHT_NEG",      # V8 dV=-35
+    "isolated":    "SLIGHT_NEG",
+    "kill":        "SLIGHT_NEG",      # V8 dV=-40 — LIQUID, context-dependent
+    "attempt":     "FILLER_WORD",     # V8 dV=-25 — action verb
+    "attempting":  "FILLER_WORD",
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
