@@ -28,9 +28,9 @@ def load_verified_sentences():
 
 def classify(v):
     if v >= 145:
-        return "positive"
+        return "pos"
     elif v < 110:
-        return "negative"
+        return "neg"
     return "neutral"
 
 
