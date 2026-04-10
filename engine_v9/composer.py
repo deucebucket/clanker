@@ -188,7 +188,30 @@ def compose(equation: Equation) -> VADUG:
         weighted_charges.append((charge, equation.subject.gravity))
         total_gravity += equation.subject.gravity
 
-    # Step 3: Compute the alloy — gravity-weighted average of all elements
+    # Step 3: Star-to-star gravity — heavier atoms pull disproportionately
+    # Before computing the alloy, apply gravitational pull between charged atoms.
+    # Stronger emotional words pull weaker ones toward their polarity.
+    if len(weighted_charges) >= 2:
+        # Find the heaviest atom
+        max_gravity = max(g for _, g in weighted_charges)
+        for idx, (charge, gravity) in enumerate(weighted_charges):
+            if gravity == max_gravity or gravity == 0:
+                continue
+            # This atom is weaker than the heaviest — it gets pulled
+            heaviest_charge = [c for c, g in weighted_charges if g == max_gravity][0]
+            mass_ratio = max_gravity / max(gravity, 0.1)
+            if mass_ratio > 1.5:
+                # Pull toward the heaviest atom's valence direction
+                pull_strength = min(mass_ratio * 0.1, 0.5)
+                heaviest_v = heaviest_charge[0]
+                if heaviest_v < 0:
+                    # Heavy negative pulls lighter atoms more negative
+                    charge[0] = int(charge[0] - abs(charge[0]) * pull_strength)
+                elif heaviest_v > 0:
+                    # Heavy positive pulls lighter atoms more positive
+                    charge[0] = int(charge[0] + abs(charge[0]) * pull_strength * 0.5)
+
+    # Step 3b: Compute the alloy — gravity-weighted average of all elements
     if total_gravity > 0:
         for charge, gravity in weighted_charges:
             weight = gravity / total_gravity  # normalize so weights sum to 1
