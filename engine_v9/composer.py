@@ -28,14 +28,14 @@ from engine_v9.roots import RootCategory
 
 CENTER = 128.0
 
-FORCE_SCALE = 2.0          # optimizer champion: push hard, compress wide
+FORCE_SCALE = 1.79         # optimizer gen10 champion (bal=0.581)
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
-CONTEXT_WEIGHT = 1.0       # optimizer: context matters as much as nucleus
-SATURATION = 172.0         # optimizer: wide compression range
+CONTEXT_WEIGHT = 0.81      # optimizer gen10
+SATURATION = 129.0         # optimizer gen10
 
-NEGATOR_FACTOR = -0.65     # optimizer: weaker negation (not full flip)
-INTENSIFIER_FACTOR = 1.68  # optimizer champion
-HEDGE_FACTOR = 0.32        # optimizer champion
+NEGATOR_FACTOR = -1.0      # clean inversion
+INTENSIFIER_FACTOR = 1.5   # standard
+HEDGE_FACTOR = 0.5         # standard
 COMPRESSOR_FACTOR = 0.7    # compression
 
 SUBJECT_SELF_BONUS = 1.0   # tuned: 1.2 over-amplified first-person literary text
