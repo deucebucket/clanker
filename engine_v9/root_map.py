@@ -859,7 +859,49 @@ WORD_TO_ROOT: dict[str, str] = {
     "ranaway":      "SLIGHT_NEG",
     "movedon":      "MOVING_ON",
 
+    # ── V8 inflation overrides (Gemini-4000 gap analysis, v9.2) ──────────
+    # Descriptive words V8 over-charged — neutral in most contexts
+    "wooden":      "FILLER_WORD",     # V8 dV=-30 — material descriptor
+    "distant":     "FILLER_WORD",     # V8 dV=-77 — spatial descriptor
+    "smoke":       "FILLER_WORD",     # V8 dV=-32 — physical substance
+    "fragile":     "SLIGHT_NEG",      # V8 dV=-35 — can be emotional but mild
+    "critical":    "SLIGHT_NEG",      # V8 dV=-55 — context-dependent (critical thinking vs critical condition)
+    "medication":  "FILLER_WORD",     # V8 dV=-32 — medical item, not emotion
+    "secure":      "FILLER_WORD",     # V8 dV=+39 — state descriptor
+    "current":     "FILLER_WORD",     # V8 dV=+28 — temporal descriptor
+    "concert":     "FILLER_WORD",     # V8 dV=+44 — event venue (already overridden but ensuring)
+    "leaves":      "FILLER_WORD",     # V8 dV=? — plant part or verb, both neutral
+    "somewhere":   "FILLER_WORD",     # spatial
+    "currently":   "FILLER_WORD",     # temporal
+    "horizon":     "FILLER_WORD",     # spatial
+    "boots":       "FILLER_WORD",     # clothing
 
+    # ── Missing positive words (Gemini-4000 gap analysis, v9.2) ──────────
+    # Words that should carry positive charge but V8 has zero/low
+    "supportive":  "SOC_EVAL_POS",    # V8 dV=0 — strong social positive
+    "miracle":     "HAPPY",           # V8 dV=+37 — keep strong but via named root
+    "miracles":    "HAPPY",
+    "bonus":       "FIN_POS",         # V8 dV=+10 — financial positive event
+    "massive":     "INTENSIFY",       # amplifier not a charge carrier
+    "tickets":     "SLIGHT_POS",      # event attendance = mild positive
+    "scholarship": "ACAD_POS",        # already domain but ensure override
+    "job":         "CAREER_POS",      # "got the job" = career positive
+    "found":       "SLIGHT_POS",      # "finally found" = recovery/relief
+    "received":    "SLIGHT_POS",      # acquiring something
+    "pizza":       "FILLER_WORD",     # food item
+    "ring":        "FILLER_WORD",     # object
+    "nocap":       "INTENSIFY",       # slang intensifier, not a word to evaluate
+
+    # ── Sarcasm false positive fixes (v9.2) ──────────────────────────────
+    # These triggered false sarcasm detection on genuine positive sentences
+    "supportive":  "SOC_EVAL_POS",
+    "always":      "FILLER_WORD",     # "you always are" is filler, not neg context
+
+    # Words that need stronger positive charge
+    "best":        "HAPPY",           # V8 dV=+25 too weak — "best" is strong positive eval
+    "insane":      "HAPPY",           # slang positive — "that was insane" = amazing (LIQUID)
+    "found":       "SLIGHT_POS",      # recovery — "finally found" = relief
+    "lost":        "SLIGHT_NEG",      # override LOSS — "lost my ring" is mild, not grief
 
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.

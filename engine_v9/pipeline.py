@@ -170,9 +170,11 @@ def compute_vadug(
                 and equation.nucleus.root.category in _SARCASM_CATEGORIES
             )
 
-            if nuc_is_positive and context_v_sum < 0:
+            if nuc_is_positive and context_v_sum < -10 and context_count >= 2:
+                # Context must be MEANINGFULLY negative (sum < -10)
+                # AND have at least 2 negative context atoms (not just one weak word)
                 divergence = nucleus_v - context_v_sum
-                if divergence > 25:
+                if divergence > 50:
                     sarcasm_detected = True
                     bond_flags.add("sarcasm_sentence")
 
