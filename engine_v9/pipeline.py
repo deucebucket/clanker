@@ -1,15 +1,40 @@
-"""V9 Pipeline — the full equation decomposition engine.
+"""V9 Pipeline — equation decomposition engine with full physics stack.
 
-Pipeline: text → tokenize → decompose → compose → VADUGWI
+Pipeline stages:
+  1. Tokenize     — split text, resolve compound bonds
+  2. Classify     — assign structural roles (V8 word_classifier)
+  3. Decompose    — find event nucleus, assign equation roles
+  4. Compose      — resolve charges from equation → raw VADUGWI
+  5. Structures   — detect 45+ chess-like patterns from role sequences
+  6. Force flow   — resolve WHO does WHAT to WHOM
+  7. Personality  — apply personality vector (if provided)
+  8. Clamp        — final bounds enforcement
+
+Parallel outputs (not in main pipeline):
+  - Zone classification (from composed VADUGWI)
+  - Crisis tracking (fed per-turn, not per-pipeline)
 
 Public API: compute_vadug(text) → (VADUG, trace_dict)
 """
 
 from typing import Optional, Tuple
-from engine_v9.shared import VADUG, PersonalityVector
-from engine_v9.tokenizer import tokenize
-from engine_v9.decomposer import decompose
-from engine_v9.composer import compose
+
+from .shared import VADUG, PersonalityVector
+from .tokenizer import tokenize
+from .word_classifier import classify_sentence
+from .decomposer import decompose
+from .composer import compose
+from .structures import StructureDetector, StructureMatch
+from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_intent
+from .zones import ZoneClassifier
+
+
+# ── Module-level singletons ──────────────────────────────────────
+
+_structure_detector = StructureDetector()
+_zone_classifier = ZoneClassifier()
+
+CENTER = 128
 
 
 def compute_vadug(
@@ -27,24 +52,71 @@ def compute_vadug(
     Returns:
         (VADUG, trace_dict) where trace contains decomposition details
     """
+    # ── Stage 1: Tokenize ────────────────────────────────────────
     tokens = tokenize(text)
+
+    # ── Stage 2: Classify structural roles ───────────────────────
+    word_roles = classify_sentence(tokens) if tokens else []
+
+    # ── Stage 3: Decompose into equation ─────────────────────────
     equation = decompose(text)
+
+    # ── Stage 4: Compose equation → raw VADUGWI ──────────────────
     result = compose(equation)
 
-    # Apply personality if provided
+    # ── Stage 5: Detect structural patterns ──────────────────────
+    structures = _structure_detector.detect_all(word_roles) if word_roles else []
+
+    # Apply structure adjustments to VADUGWI
+    v, a, d, u, g, w, i = float(result.v), float(result.a), float(result.d), \
+                           float(result.u), float(result.g), float(result.w), float(result.i)
+
+    for s in structures:
+        v += getattr(s, 'v_weight', 0)
+        d += getattr(s, 'd_weight', 0)
+        u += getattr(s, 'u_weight', 0)
+        g += getattr(s, 'g_weight', 0)
+        w += getattr(s, 'w_weight', 0)
+
+    # ── Stage 6: Force flow ──────────────────────────────────────
+    force_flow = resolve_force_flow(word_roles) if word_roles else None
+    flow_mods = compute_flow_modifiers(force_flow) if force_flow else {}
+
+    # Apply force flow modifiers
+    if flow_mods:
+        v += flow_mods.get('v_mod', 0)
+        d += flow_mods.get('d_mod', 0)
+        w += flow_mods.get('w_mod', 0)
+
+    # Compute intent from force flow
+    if force_flow:
+        i = compute_intent(force_flow)
+
+    # ── Stage 7: Personality ─────────────────────────────────────
     if personality is not None:
         sensitivity = personality.emotional_sensitivity
-        CENTER = 128
-        result = VADUG(
-            v=max(0, min(255, int(CENTER + (result.v - CENTER) * sensitivity))),
-            a=max(0, min(255, int(CENTER + (result.a - CENTER) * sensitivity))),
-            d=max(0, min(255, int(CENTER + (result.d - CENTER) * sensitivity + personality.dominance_baseline))),
-            u=max(0, min(255, int(result.u * sensitivity))),
-            g=max(0, min(255, int(CENTER + (result.g - CENTER) * sensitivity + personality.gravity_bias))),
-            w=max(0, min(255, int(CENTER + (result.w - CENTER) * sensitivity))),
-            i=result.i,
-        )
+        v = CENTER + (v - CENTER) * sensitivity
+        a = CENTER + (a - CENTER) * sensitivity
+        d = CENTER + (d - CENTER) * sensitivity + personality.dominance_baseline
+        u = u * sensitivity
+        g = CENTER + (g - CENTER) * sensitivity + personality.gravity_bias
+        w = CENTER + (w - CENTER) * sensitivity
 
+    # ── Stage 8: Clamp ───────────────────────────────────────────
+    result = VADUG(
+        v=max(0, min(255, int(round(v)))),
+        a=max(0, min(255, int(round(a)))),
+        d=max(0, min(255, int(round(d)))),
+        u=max(0, min(255, int(round(u)))),
+        g=max(0, min(255, int(round(g)))),
+        w=max(0, min(255, int(round(w)))),
+        i=max(0, min(255, int(round(i)))),
+    )
+
+    # ── Zone classification ──────────────────────────────────────
+    zone_result = _zone_classifier.classify(result)
+
+    # ── Build trace ──────────────────────────────────────────────
     trace = {
         "tokens": tokens,
         "equation": {
@@ -55,6 +127,14 @@ def compute_vadug(
             "operators": [a.word for a in equation.operators],
             "context": [a.word for a in equation.context],
         },
+        "structures": [s.pattern for s in structures],
+        "force_flow": {
+            "actor": force_flow.actor_role if force_flow else None,
+            "target": force_flow.target_role if force_flow else None,
+            "force_valence": force_flow.force_valence if force_flow else 0,
+        } if force_flow else None,
+        "zone": zone_result.zone,
+        "zone_confidence": zone_result.confidence,
         "word_count": len(tokens),
     }
 
