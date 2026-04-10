@@ -170,7 +170,7 @@ def compute_vadug(
         )
         if not directed_at_self:
             # Dampen: pull V toward center by 60%
-            PERSPECTIVE_DAMPEN = 0.6  # tuned: 0.4 too aggressive, 0.7 too mild
+            PERSPECTIVE_DAMPEN = 0.87  # optimizer champion: barely dampen
             v = CENTER + (v - CENTER) * PERSPECTIVE_DAMPEN
             # Also dampen W (self-worth shouldn't move from others' emotions)
             w = CENTER + (w - CENTER) * PERSPECTIVE_DAMPEN

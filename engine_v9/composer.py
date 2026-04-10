@@ -28,14 +28,14 @@ from engine_v9.roots import RootCategory
 
 CENTER = 128.0
 
-FORCE_SCALE = 1.2          # balanced accuracy sweep: best at 1.2
+FORCE_SCALE = 2.0          # optimizer champion: push hard, compress wide
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
-CONTEXT_WEIGHT = 0.5       # balanced sweep: 0.5 beats 0.3 and 0.9
-SATURATION = 120.0         # balanced sweep: 120 marginally best
+CONTEXT_WEIGHT = 1.0       # optimizer: context matters as much as nucleus
+SATURATION = 172.0         # optimizer: wide compression range
 
-NEGATOR_FACTOR = -1.0      # full inversion
-INTENSIFIER_FACTOR = 1.5   # 50% amplification
-HEDGE_FACTOR = 0.5         # 50% dampening
+NEGATOR_FACTOR = -0.65     # optimizer: weaker negation (not full flip)
+INTENSIFIER_FACTOR = 1.68  # optimizer champion
+HEDGE_FACTOR = 0.32        # optimizer champion
 COMPRESSOR_FACTOR = 0.7    # compression
 
 SUBJECT_SELF_BONUS = 1.0   # tuned: 1.2 over-amplified first-person literary text
