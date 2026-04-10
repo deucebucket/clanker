@@ -2943,6 +2943,26 @@ WORD_TO_ROOT: dict[str, str] = {
     "drowning":    "FILLER_WORD",     # override AFRAID — often metaphorical in narrative
     "prison":      "FILLER_WORD",     # setting, not emotion — "he went to prison" is descriptive
 
+    # ── Achievement / success words (novel-500 gap analysis) ─────────────
+    "figured":     "ACHIEVEMENT",     # "figured out the bug"
+    "managed":     "SLIGHT_POS",      # "managed to do X"
+    "finally":     "SLIGHT_POS",      # "finally X" = relief/achievement
+    "blessed":     "GRATEFUL",        # "so blessed"
+    "rested":      "CONTENT",         # "feel rested"
+    "slayed":      "POS_QUALITY",     # slang positive
+    "slay":        "POS_QUALITY",
+    "incredible":  "HAPPY",           # strong positive eval
+    "insanely":    "INTENSIFY",       # override — intensifier not neg
+    "perfectly":   "POS_QUALITY",
+    "maple":       "FILLER_WORD",     # food item, not emotional
+    "pancakes":    "FILLER_WORD",
+    "syrup":       "FILLER_WORD",
+    "breeze":      "FILLER_WORD",     # weather descriptor
+    "alarm":       "FILLER_WORD",
+    "cloud":       "FILLER_WORD",
+    "race":        "FILLER_WORD",
+    "crumbs":      "FILLER_WORD",     # slang: "left no crumbs" = did well
+
     # ── Direction words — need DIRECTIONAL bond sites ────────────────────
     # These are FILLER for charge but carry structural bonding potential.
     # Re-mapped to MOTION so they get DIRECTIONAL bond sites from CATEGORY_BONDS.
