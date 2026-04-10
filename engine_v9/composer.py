@@ -1,0 +1,151 @@
+"""
+V9 Composer — Charge Resolution from Equation.
+
+Takes a decomposed Equation and resolves it to a 7D VADUGWI coordinate.
+
+Pipeline:
+  1. Start at neutral state (center for all dims; U starts at 0).
+  2. Extract nucleus charge, apply operator multipliers to it.
+  3. Accumulate weighted nucleus charge (full weight).
+  4. Accumulate context charges (reduced weight — color, don't drive).
+  5. Apply subject modifier (self-reference amplifies deviation).
+  6. Tanh saturation: prevents runaway values.
+  7. Clamp to [0, 255] and return VADUG.
+"""
+
+from __future__ import annotations
+
+import math
+from typing import List
+
+from engine_v9.shared import VADUG
+from engine_v9.decomposer import Equation, Atom
+from engine_v9.roots import RootCategory
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+CENTER = 128.0
+
+FORCE_SCALE = 1.4          # how much charges move the needle
+EVENT_WEIGHT = 1.0         # nucleus gets full weight
+CONTEXT_WEIGHT = 0.3       # context atoms color, don't drive
+SATURATION = 120.0         # tanh compression range
+
+NEGATOR_FACTOR = -1.0      # full inversion
+INTENSIFIER_FACTOR = 1.5   # 50% amplification
+HEDGE_FACTOR = 0.5         # 50% dampening
+COMPRESSOR_FACTOR = 0.7    # compression
+
+SUBJECT_SELF_BONUS = 1.2   # self-reference amplifies deviation from center
+
+# Neutral starting state — U starts at 0, not 128
+_NEUTRAL_STATE = [128.0, 128.0, 128.0, 0.0, 128.0, 128.0, 128.0]
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+def _apply_operators(charge: tuple, operators: List[Atom]) -> List[float]:
+    """
+    Apply operator atoms to a charge vector.
+
+    Builds a per-element multiplier from the operator list, then applies it.
+    Negation flips sign; intensifier/hedge/compressor scale magnitude.
+
+    Args:
+        charge: 7-element tuple of int deltas.
+        operators: List of operator Atoms.
+
+    Returns:
+        Modified charge as a list of floats.
+    """
+    multiplier = 1.0
+    for op in operators:
+        cat = op.root.category
+        if cat == RootCategory.NEGATOR:
+            multiplier *= NEGATOR_FACTOR
+        elif cat == RootCategory.INTENSIFIER:
+            multiplier *= INTENSIFIER_FACTOR
+        elif cat == RootCategory.HEDGE:
+            multiplier *= HEDGE_FACTOR
+        elif cat == RootCategory.COMPRESSOR:
+            multiplier *= COMPRESSOR_FACTOR
+
+    return [c * multiplier for c in charge]
+
+
+def _tanh_saturate(value: float, center: float, saturation: float) -> float:
+    """
+    Apply tanh saturation around a center point.
+
+    Maps deviations from center through tanh so extreme forces
+    compress rather than clip abruptly.
+
+    Args:
+        value: Current state value.
+        center: Neutral center point.
+        saturation: Compression range (half-width at ~76% saturation).
+
+    Returns:
+        Saturated value, centered around center.
+    """
+    deviation = value - center
+    return center + saturation * math.tanh(deviation / saturation)
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def compose(equation: Equation) -> VADUG:
+    """
+    Resolve a decomposed Equation to a 7D VADUGWI coordinate.
+
+    Args:
+        equation: A decomposed sentence (from engine_v9.decomposer.decompose).
+
+    Returns:
+        VADUG coordinate representing the emotional state of the sentence.
+    """
+    # Step 1: Start at neutral
+    state = list(_NEUTRAL_STATE)  # [V, A, D, U, G, W, I]
+
+    # Step 2: Get nucleus charge and apply operators
+    nucleus_charge_raw = equation.nucleus.root.charge
+    nucleus_charge = _apply_operators(nucleus_charge_raw, equation.operators)
+
+    # Step 3: Accumulate nucleus (full weight)
+    for dim in range(7):
+        state[dim] += nucleus_charge[dim] * EVENT_WEIGHT * FORCE_SCALE
+
+    # Step 4: Accumulate context atoms (reduced weight)
+    for ctx_atom in equation.context:
+        ctx_charge = ctx_atom.root.charge
+        for dim in range(7):
+            state[dim] += ctx_charge[dim] * CONTEXT_WEIGHT * FORCE_SCALE
+
+    # Step 5: Subject modifier — self-reference amplifies deviation from center
+    if equation.subject.root.category == RootCategory.SELF_REF:
+        for dim in range(7):
+            center = 0.0 if dim == 3 else CENTER  # U centers at 0
+            deviation = state[dim] - center
+            state[dim] = center + deviation * SUBJECT_SELF_BONUS
+
+    # Step 6: Tanh saturation
+    for dim in range(7):
+        center = 0.0 if dim == 3 else CENTER  # U centers at 0
+        state[dim] = _tanh_saturate(state[dim], center, SATURATION)
+
+    # Step 7: Clamp to [0, 255] and return
+    clamped = [max(0.0, min(255.0, s)) for s in state]
+    return VADUG(
+        v=int(round(clamped[0])),
+        a=int(round(clamped[1])),
+        d=int(round(clamped[2])),
+        u=int(round(clamped[3])),
+        g=int(round(clamped[4])),
+        w=int(round(clamped[5])),
+        i=int(round(clamped[6])),
+    )
