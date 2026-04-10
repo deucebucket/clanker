@@ -195,8 +195,8 @@ ROOTS: dict[str, Root] = {
 
     # ── Mild emotional roots (for words with |dV| 15-30) ────────────────────
     # These prevent 5x amplification when a dV=-5 word gets rounded to dV=-25
-    "SLIGHT_POS":  _r("SLIGHT_POS",  RootCategory.POSITIVE_QUALITY, (+12,  0,  +5,   0,  +5,  +3,   0)),
-    "SLIGHT_NEG":  _r("SLIGHT_NEG",  RootCategory.NEGATIVE_QUALITY, (-12,  0,  -5,   0,  -5,  -3,   0)),
+    "SLIGHT_POS":  _r("SLIGHT_POS",  RootCategory.POSITIVE_QUALITY, ( +7,  0,  +2,   0,  +2,  +1,   0)),
+    "SLIGHT_NEG":  _r("SLIGHT_NEG",  RootCategory.NEGATIVE_QUALITY, ( -7,  0,  -2,   0,  -2,  -1,   0)),
 
     # ── Domain: Financial ────────────────────────────────────────────────────
     "FIN_POS":     _r("FIN_POS",     RootCategory.FINANCIAL_POS,  (+30,  +10, +25,   0, +20, +20,   0)),
