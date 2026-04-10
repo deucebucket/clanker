@@ -1010,6 +1010,56 @@ WORD_TO_ROOT: dict[str, str] = {
     "quit":        "SLIGHT_NEG",      # V8 dV=-32 — context-dependent
     "trash":       "SLIGHT_NEG",      # V8 dV=-35 — can be evaluative
 
+    # ── V8 inflation BULK fix — 97 descriptive words → FILLER (v9.3) ────
+    # These are objects, activities, descriptors, places that V8 gave
+    # emotional charge to. None are inherently emotional.
+    "tent": "FILLER_WORD", "dragons": "FILLER_WORD", "yoga": "FILLER_WORD",
+    "prayers": "FILLER_WORD", "bang": "FILLER_WORD", "apartment": "FILLER_WORD",
+    "argument": "SLIGHT_NEG", "mandatory": "FILLER_WORD", "jammed": "FILLER_WORD",
+    "student": "FILLER_WORD", "students": "FILLER_WORD", "properties": "FILLER_WORD",
+    "property": "FILLER_WORD", "passionately": "INTENSIFY", "books": "FILLER_WORD",
+    "wisdom": "FILLER_WORD", "dedicated": "FILLER_WORD", "legendary": "FILLER_WORD",
+    "smart": "FILLER_WORD", "loose": "FILLER_WORD", "collection": "FILLER_WORD",
+    "workers": "FILLER_WORD", "wolf": "FILLER_WORD", "cure": "MED_POS",
+    "safety": "FILLER_WORD", "knocked": "FILLER_WORD", "arranged": "FILLER_WORD",
+    "national": "FILLER_WORD", "realistic": "FILLER_WORD", "famous": "FILLER_WORD",
+    "famously": "FILLER_WORD", "perspective": "FILLER_WORD", "independent": "FILLER_WORD",
+    "resilience": "SLIGHT_POS", "combat": "FILLER_WORD", "warm": "FILLER_WORD",
+    "response": "FILLER_WORD", "justice": "FILLER_WORD", "fishing": "FILLER_WORD",
+    "site": "FILLER_WORD", "debit": "FIN_NEG", "caused": "FILLER_WORD",
+    "political": "FILLER_WORD", "boiling": "FILLER_WORD", "financial": "FILLER_WORD",
+    "mixed": "FILLER_WORD", "peace": "FILLER_WORD", "horse": "FILLER_WORD",
+    "birds": "FILLER_WORD", "options": "FILLER_WORD", "math": "FILLER_WORD",
+    "boards": "FILLER_WORD", "board": "FILLER_WORD", "law": "FILLER_WORD",
+    "news": "FILLER_WORD", "efforts": "FILLER_WORD", "project": "FILLER_WORD",
+    "previously": "FILLER_WORD", "major": "FILLER_WORD", "sweaty": "FILLER_WORD",
+    "purely": "FILLER_WORD", "difficult": "SLIGHT_NEG", "otherwise": "FILLER_WORD",
+    "lit": "FILLER_WORD", "disconnected": "SLIGHT_NEG", "ruins": "FILLER_WORD",
+    "ruin": "FILLER_WORD", "insufficient": "SLIGHT_NEG", "dependent": "FILLER_WORD",
+    "controlled": "FILLER_WORD", "absurd": "FILLER_WORD", "lazily": "FILLER_WORD",
+    "aimlessly": "FILLER_WORD", "loud": "FILLER_WORD", "diet": "FILLER_WORD",
+    "recorded": "FILLER_WORD", "escape": "FILLER_WORD", "locked": "FILLER_WORD",
+    "blade": "FILLER_WORD", "ghost": "FILLER_WORD", "cringe": "SLIGHT_NEG",
+    "peacefully": "FILLER_WORD", "safe": "FILLER_WORD", "permanent": "FILLER_WORD",
+    "villain": "FILLER_WORD", "carelessly": "FILLER_WORD", "termination": "CAREER_NEG",
+    "grimly": "FILLER_WORD", "manipulating": "SOC_EVAL_NEG", "irreversible": "FILLER_WORD",
+    "rotting": "FILLER_WORD", "break": "FILLER_WORD", "trap": "FILLER_WORD",
+    "claims": "FILLER_WORD", "crush": "FILLER_WORD", "interested": "FILLER_WORD",
+    "bloody": "FILLER_WORD",
+
+    # Emotional words — keep but at appropriate root charge
+    "defeated": "NEG_QUALITY", "overwhelming": "NEG_QUALITY",
+    "abandoned": "SAD", "powerless": "SAD", "wretched": "SAD",
+    "suffering": "NEG_QUALITY", "trauma": "NEG_QUALITY",
+    "gaslighting": "SOC_EVAL_NEG", "meaninglessness": "SAD",
+    "lifeless": "SAD", "brutal": "NEG_QUALITY", "brutally": "NEG_QUALITY",
+    "crisis": "NEG_QUALITY", "corrupted": "NEG_QUALITY",
+    "doormat": "SOC_EVAL_NEG", "hungry": "SLIGHT_NEG",
+    "headache": "SLIGHT_NEG", "awkward": "SLIGHT_NEG",
+    "boring": "SLIGHT_NEG", "dirty": "SLIGHT_NEG",
+    "waste": "SLIGHT_NEG", "hazardous": "SLIGHT_NEG",
+    "separation": "REL_NEG",
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
