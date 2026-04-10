@@ -240,6 +240,10 @@ def compute_vadug(
     if ctx["sarcasm_inversion"]:
         v += ctx["sarcasm_penalty"]
 
+    # Stage 5.8: Static friction — DROPPED
+    # Tested: kills emotion detection (balanced 0.617 → 0.546).
+    # Was also disabled in V8. The alloy + length scaling handle weak drift.
+
     # ── Stage 6: Force flow ──────────────────────────────────────
     force_flow = resolve_force_flow(word_roles) if word_roles else None
     flow_mods = compute_flow_modifiers(force_flow) if force_flow else {}
