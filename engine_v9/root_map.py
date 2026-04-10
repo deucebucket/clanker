@@ -3026,6 +3026,37 @@ WORD_TO_ROOT: dict[str, str] = {
     # ── Direction words — need DIRECTIONAL bond sites ────────────────────
     # These are FILLER for charge but carry structural bonding potential.
     # Re-mapped to MOTION so they get DIRECTIONAL bond sites from CATEGORY_BONDS.
+    # Financial context words — need charge for sarcasm detection
+    "paying":      "FIN_NEG",         # spending money = financial negative context
+    "pay":         "FIN_NEG",
+    "cost":        "FIN_NEG",
+    "costs":       "FIN_NEG",
+    "spend":       "FIN_NEG",
+    "spending":    "FIN_NEG",
+    "expensive":   "FIN_NEG",
+    "price":       "FIN_NEG",
+    "fee":         "FIN_NEG",
+    "charge":      "FIN_NEG",
+    "dollars":     "FILLER_WORD",     # override V8 dV=+35 (neutral unit of currency)
+    "dollar":      "FILLER_WORD",
+    "money":       "FILLER_WORD",
+
+    # Negative context words for sarcasm detection
+    "delayed":     "SLIGHT_NEG",
+    "delay":       "SLIGHT_NEG",
+    "traffic":     "SLIGHT_NEG",
+    "parking":     "SLIGHT_NEG",
+    "waiting":     "SLIGHT_NEG",
+    "wait":        "SLIGHT_NEG",
+    "forgot":      "NEG_QUALITY",
+    "forgotten":   "NEG_QUALITY",
+    "forget":      "FILLER_WORD",     # imperative "forget it" is different
+    "broke":       "FIN_NEG",
+    "broken":      "NEG_QUALITY",
+    "tiny":        "FILLER_WORD",     # override V8 — "tiny" is descriptive, not emotional
+    "small":       "FILLER_WORD",
+    "empty":       "NEG_QUALITY",
+
     "off":         "MOTION",
     "away":        "MOTION",
     "out":         "MOTION",

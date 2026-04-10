@@ -20,6 +20,7 @@ Public API: compute_vadug(text) → (VADUG, trace_dict)
 from typing import Optional, Tuple
 
 from .shared import VADUG, PersonalityVector
+from .roots import RootCategory
 from .tokenizer import tokenize
 from .word_classifier import classify_sentence
 from .decomposer import decompose
@@ -71,9 +72,49 @@ def compute_vadug(
     # ── Stage 4: Compose equation → raw VADUGWI ──────────────────
     result = compose(equation)
 
-    # ── Stage 4.5: Apply bonding corrections ─────────────────────
-    # If bonding detected sarcasm, invert the composed valence
-    if "sarcasm" in bond_flags or "irony" in bond_flags:
+    # ── Stage 4.5: Sarcasm / contradiction detection ───────────────
+    # Two-level check:
+    # 1. Adjacent-pair bonding flags (from bond_resolve)
+    # 2. Sentence-level: positive nucleus + negative context = sarcasm
+    sarcasm_detected = "sarcasm" in bond_flags or "irony" in bond_flags
+
+    if not sarcasm_detected and len(molecules) >= 2:
+        # Sentence-level contradiction: nucleus charge vs context charge
+        nucleus_v = equation.nucleus.root.charge[0]
+        # Sum context molecule charges (everything except the nucleus word)
+        context_v_sum = 0
+        context_count = 0
+        for mol in molecules:
+            # Skip the nucleus word
+            if equation.nucleus.word in mol.words:
+                continue
+            # Skip zero-charge molecules
+            if mol.surface_charge[0] == 0:
+                continue
+            context_v_sum += mol.surface_charge[0]
+            context_count += 1
+
+        if context_count >= 1:
+            # Only fire sentence-level sarcasm when nucleus is a STRONG positive
+            # evaluation — "love", "cherish", "delighted", "adore" (dV >= 35).
+            # Mild positives ("good", "fine") in negative context = not sarcasm,
+            # just mixed. This prevents false positives on literary narrative.
+            _SARCASM_CATEGORIES = frozenset({
+                RootCategory.POSITIVE_STATE,
+                RootCategory.POSITIVE_EVENT,
+            })
+            nuc_is_strong_pos = (
+                nucleus_v >= 35
+                and equation.nucleus.root.category in _SARCASM_CATEGORIES
+            )
+
+            if nuc_is_strong_pos and context_v_sum < 0:
+                divergence = nucleus_v - context_v_sum
+                if divergence > 45:
+                    sarcasm_detected = True
+                    bond_flags.add("sarcasm_sentence")
+
+    if sarcasm_detected:
         result = VADUG(
             v=max(0, min(255, 256 - result.v)),  # mirror around center
             a=result.a,

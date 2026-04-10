@@ -253,22 +253,35 @@ def bond_resolve(text: str) -> List[Molecule]:
             "bonded": False,
         })
 
-    # Single left-to-right bonding pass
+    # Left-to-right bonding pass with window=3
+    # For each atom, try to bond with right neighbors within window.
+    # Closest compatible match wins. Still O(n) — fixed window.
+    BOND_WINDOW = 3
     molecules = []
     i = 0
     while i < len(atoms):
         left = atoms[i]
 
-        # Try to bond with right neighbor
-        if i + 1 < len(atoms) and not left["bonded"]:
-            right = atoms[i + 1]
-            bond_result = _try_bond(left, right)
+        if not left["bonded"]:
+            # Try to bond with nearest compatible right neighbor (window=3)
+            bond_result = None
+            bond_partner_idx = None
+            for offset in range(1, min(BOND_WINDOW + 1, len(atoms) - i)):
+                right = atoms[i + offset]
+                if right["bonded"]:
+                    continue
+                result = _try_bond(left, right)
+                if result is not None:
+                    bond_result = result
+                    bond_partner_idx = i + offset
+                    break  # closest match wins
 
             if bond_result is not None:
                 molecules.append(bond_result)
                 left["bonded"] = True
-                right["bonded"] = True
-                i += 2
+                atoms[bond_partner_idx]["bonded"] = True
+                # Don't skip to bond_partner_idx — atoms between might still bond elsewhere
+                i += 1
                 continue
 
         # No bond — emit as single-atom molecule
