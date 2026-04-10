@@ -2921,6 +2921,28 @@ WORD_TO_ROOT: dict[str, str] = {
     "spent":       "FILLER_WORD",
     "end":         "FILLER_WORD",
 
+    # ── Narrative/descriptive words that shouldn't carry emotional charge ──
+    "staff":       "FILLER_WORD",     # noun, not emotional
+    "personal":    "FILLER_WORD",     # adjective, descriptive
+    "quick":       "FILLER_WORD",     # speed descriptor
+    "quickly":     "FILLER_WORD",
+    "number":      "FILLER_WORD",     # math/count, not emotional
+    "become":      "FILLER_WORD",     # verb of state change, neutral
+    "becoming":    "FILLER_WORD",
+    "became":      "FILLER_WORD",
+    "wandering":   "FILLER_WORD",     # motion descriptor
+    "wander":      "FILLER_WORD",
+    "spirit":      "FILLER_WORD",     # context-dependent — "team spirit" vs "spiritual"
+    "recognized":  "FILLER_WORD",     # override CAREER_POS — neutral in narrative
+    "fine":        "FILLER_WORD",     # too ambiguous ("I'm fine" = masking OR genuine)
+    "hope":        "SLIGHT_POS",      # override POS_QUALITY — mild, not definitive
+    "hoping":      "SLIGHT_POS",
+    "pay":         "FILLER_WORD",     # override FIN_NEG — "pay" alone is neutral
+    "mean":        "FILLER_WORD",     # override SOC_EVAL_NEG — "what does it mean" is neutral
+    "wound":       "FILLER_WORD",     # override AFRAID — "wound" in narrative is descriptive
+    "drowning":    "FILLER_WORD",     # override AFRAID — often metaphorical in narrative
+    "prison":      "FILLER_WORD",     # setting, not emotion — "he went to prison" is descriptive
+
     # ── Direction words — need DIRECTIONAL bond sites ────────────────────
     # These are FILLER for charge but carry structural bonding potential.
     # Re-mapped to MOTION so they get DIRECTIONAL bond sites from CATEGORY_BONDS.
