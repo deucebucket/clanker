@@ -80,6 +80,57 @@ def compute_vadug(
     # Use molecule-aware decomposition — bonded charges give better gravity
     equation = decompose_molecules(molecules) if molecules else decompose(text)
 
+    # ── Stage 3.5: Bridge — apply interpret_context to equation atoms ──
+    # interpret_context modified word_roles (V8-style forces).
+    # The equation reads from root charges. Bridge the two:
+    # For each word_role that was modified, update the matching equation atom.
+    # SKIP atoms that were already bonded in molecules (bonding already handled them).
+    if word_roles:
+        # Build lookup: word → modified force from interpret_context
+        role_forces = {}
+        for wr in word_roles:
+            if wr.force is not None:
+                role_forces[wr.word] = wr.force
+
+        # Words already bonded in molecules — skip these to avoid double-inversion
+        bonded_words = set()
+        for mol in molecules:
+            if len(mol.words) > 1:
+                for w in mol.words:
+                    bonded_words.add(w)
+
+        # Update equation atoms with modified forces
+        from .roots import Root
+        from .decomposer import _compute_gravity
+
+        for atom in equation.all_atoms:
+            # Get the single word (molecules have space-joined words)
+            word = atom.word.split()[0] if ' ' in atom.word else atom.word
+
+            # Skip if this word was already bonded in a molecule
+            if word in bonded_words:
+                continue
+
+            if word in role_forces:
+                modified_force = role_forces[word]
+                # Extend 5-tuple to 7-tuple (add dW=0, dI=0 if needed)
+                if len(modified_force) == 5:
+                    charge_7d = modified_force + (0, 0)
+                else:
+                    charge_7d = modified_force
+
+                # Only override if interpret_context actually CHANGED it
+                root_5d = atom.root.charge[:5]
+                if modified_force[:5] != root_5d:
+                    new_root = Root(
+                        name=atom.root.name,
+                        category=atom.root.category,
+                        charge=tuple(charge_7d),
+                        phase=atom.root.phase,
+                    )
+                    atom.root = new_root
+                    atom.gravity = _compute_gravity(new_root)
+
     # ── Stage 4: Compose equation → raw VADUGWI ──────────────────
     result = compose(equation)
 
