@@ -32,13 +32,15 @@ CRISIS_PATTERNS = frozenset({
     "FAREWELL", "METHOD_ACQUISITION", "SELF_REMOVAL",
     "EXHAUSTION", "NO_EXIT", "SELF_NULLIFY",
     "SUSPICIOUS_CALM", "BLANKET_APOLOGY", "FINALITY",
+    "DIVESTITURE", "DANGLING_BOND", "MASKING", "RESIGNATION",
+    "WORLD_CONTINUES", "METHOD_FIXATION", "ABANDONMENT",
 })
 
 
 # ── Novel Crisis Sentences ──────────────────────────────────────
 
 NOVEL_CRISIS = [
-    ("i just gave my dog to my neighbor", {"FAREWELL"}),
+    ("i just gave my dog to my neighbor", {"FAREWELL", "DIVESTITURE"}),
     ("i left the keys on the counter for whoever finds them", {"FAREWELL", "FINALITY"}),
     pytest.param(
         "take care of my cat for me", {"FAREWELL"},

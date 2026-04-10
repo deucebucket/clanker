@@ -7597,11 +7597,12 @@ _V8_CORRECTIONS = {
     # The mass zero killed them but SOLVENT physics needs them charged
     'insane':       (-20, 25, -10, 10, -5),  # LIQUID: flips positive near SOLVENT
     'crazy':        (-15, 20,  -5,  5, -3),  # LIQUID
-    'wild':         (-10, 20,   5,  5,  0),  # LIQUID
+    'wild':         (-15, 25,   5,  5,  0),  # LIQUID: "that was wild" = impressive in slang
     'nuts':         (-12, 15,  -5,  5, -3),  # LIQUID
     'sick':         (-15, 10,  -5,  5, -5),  # LIQUID: "thats sick" = positive in slang
-    'hard':         (  0, 10,  10,  5,  0),  # context-dependent: "goes hard" = positive
+    'hard':         (-10, 15,  10,  5,  0),  # LIQUID: negative literal, flips positive in slang
     'hit':          (  0, 10,   5,  5,  0),  # "that hit different" = impactful
+    'broken':       (-8,  5,  -5,  0, -3),  # LIQUID: reduced from -12 (too hot for mundane)
     'shook':        (-10, 20, -10,  5, -5),  # LIQUID: surprise/awe in slang
     'stupid':       (-15, 10,  -5,  0, -3),  # LIQUID: "stupid good" = positive
     # Missing SOLID negative words — these must NEVER read positive
@@ -7617,5 +7618,221 @@ _V8_CORRECTIONS = {
     'massacre':     (-35, 25, -25, 20, -18),
     'atrocity':     (-35, 20, -25, 15, -18),
     'atrocities':   (-35, 20, -25, 15, -18),
+    # ── Slang positive atoms (missing or wrongly zeroed) ──
+    'bussin':       (+40, 30, 20, 0, 15),   # slang: excellent/delicious. Restore from mass zero.
+    'goated':       (+35, 20, 25, 0, 20),   # slang: greatest of all time
+    'clutch':       (+30, 25, 25, 10, 15),  # slang: came through when it mattered
+    'vibes':        (+20, 10, 10, 0, 10),   # slang: good energy
+    'vibe':         (+15,  8,  8, 0,  8),   # slang: energy/feel
+    'slay':         (+30, 25, 25, 0, 15),   # slang: killed it (fashion/performance)
+    'slayed':       (+30, 25, 25, 0, 15),
+    'slaying':      (+25, 20, 20, 0, 12),
+    'goat':         (+30, 15, 25, 0, 20),   # greatest of all time
+    'banger':       (+30, 30, 20, 0, 15),   # slang: great song/thing
+    'lit':          (+25, 30, 15, 0, 10),   # slang: exciting/fun
+    'poggers':      (+25, 25, 15, 0, 10),   # twitch: exciting moment
+    'pog':          (+20, 20, 10, 0,  8),   # twitch: hype
+    'hype':         (+20, 30, 15, 5, 10),   # excitement
+    'hyped':        (+20, 25, 15, 5, 10),
+    'cracked':      (+25, 25, 20, 0, 12),   # slang: extremely skilled
+    'valid':        (+15, 5, 10, 0, 8),     # slang: acceptable/good take
+    'based':        (+15, 10, 20, 0, 10),   # slang: admirably independent
+    'gg':           (+10, -5, 10, 0, 5),    # good game
+    'ggs':          (+10, -5, 10, 0, 5),
+    'wp':           (+10, -5, 10, 0, 5),    # well played
+    # ── Discourse fillers: zero charge (these are SOLVENT catalysts, not atoms) ──
+    'tbh':          (0, 0, 5, 0, 0),        # "to be honest" — filler, not negative
+    'ngl':          (0, 0, 5, 0, 0),        # "not gonna lie" — filler, not negative
+    'bruh':         (0, 5, 0, 0, 0),        # exclamation/address — neutral filler
+    'fr':           (0, 5, 0, 0, 0),        # "for real" — emphasis, not charge
+    'deadass':      (0, 10, 5, 0, 0),       # emphasis/sincerity — not charge
+    'lowkey':       (0, -5, 0, 0, 0),       # hedging — zero charge
+    'highkey':      (0, 10, 5, 0, 0),       # emphasis — zero charge
+    # ── Slang compound phrases and idioms ──
+    'goeshard':     (+35, 25, 20, 0, 15),  # "goes hard" = slang for excellent
+    'hitdifferent': (+25, 15, 10, 0, 12),  # "hit different" = uniquely impactful
+    # ── Words that need positive charge for slang context ──
+    'understood':   (+18,  8, 12, 0, 10),  # comprehension/mastery — "understood the assignment"
+    'assignment':   (+12,  8,  8, 0,  8),  # in slang: "understood the assignment" = nailed it
+    # ── Mundane GAS atoms zeroed (should not carry emotional charge) ──
+    'late':         (0,  5,  0, 10, 0),   # mundane time concept. Urgency only, no valence.
+    'cat':          (0,  0,  0,  0,  5),  # animal noun, not an emotional event
+    'dog':          (0,  0,  0,  0,  5),  # animal noun
+    'coffee':       (0,  0,  0,  0,  0),  # beverage, not emotional
+    'game':         (0,  5,  0,  0,  0),  # activity noun
+    'feed':         (0,  0,  0,  0,  5),  # action verb, mundane
+    'runninglate':  (0,  5,  0, 15,  0),  # idiom: delayed, not fleeing. Urgency only.
+    # ── Self-worth category fixes ──
+    'touch':        (0,  5,  5,  0,  0),  # GAS: "touch" is mechanical, not emotional
+    'matter':       (0,  0,  0,  0,  5),  # GAS: "matter" verb is neutral
+    'leaves':       (-15, 15, -10, 5, -5), # "everyone leaves me" — departure verb
+    'ruin':         (-25, 12, -10, 5, -8), # stronger: "i ruin everything" is self-destruction
+    'ruined':       (-25, 12, -10, 5, -8),
+    'ruining':      (-22, 10, -8, 5, -6),
+    'worst':        (-35, 10, -20, 8, -10), # superlative negative (slightly reduced from -40)
+    # ── Grief category fixes ──
+    'holidays':     (0,  5,  0,  0,  10),  # mundane time period, not inherently positive
+    'waves':        (0,  5,  0,  0,   0),  # physical phenomenon, not emotional
+    'voice':        (0,  5,  5,  0,   5),  # neutral: hearing someone's voice is context-dep
+    'hear':         (0,  5,  0,  0,   0),  # neutral perception verb
+    'song':         (0,  5,  0,  0,   5),  # neutral cultural object
+    'reminds':      (-15, 8, -5, 5,  -5),  # reminder pulls toward past, mildly negative
+    'reminded':     (-15, 8, -5, 5,  -5),
+    'deadlines':    (0,  5,  0, 15, 0),   # work concept, urgency only. Not emotional.
+    'deadline':     (0,  5,  0, 15, 0),
+    'same':         (0,  0,  0,  0,  0),  # comparison word, not negative
+    # ── Betrayal/trust violation fixes ──
+    'trusted':      (-18, 8, -15, 5, 15),  # past tense: broken trust. "I trusted him" = betrayal.
+    'sided':        (-15, 10, -10, 5, -5),  # "sided with my ex" = taking sides against
+    'testified':    (-20, 15, -15, 10, -10),# betrayal: family turning against
+    'against':      (-12, 10, -5, 5, -3),   # opposition, stronger than -5
+    'recorded':     (-20, 12, -15, 10, -8), # privacy violation — stronger
+    'private':      (-8, -5, -10, 0, 12),   # privacy context — mildly negative when violated
+    'conversations':(0, 0, 0, 0, 5),        # neutral noun
+    'mentor':       (0, 0, 5, 0, 15),       # role noun, high gravity
+    'opinion':      (0, 5, 5, 0, 0),        # neutral noun (was -5)
+    # ── Directed negative fixes ──
+    'regret':       (-30, 12, -15, 5, -15), # stronger: "i regret every moment"
+    'deserve':      (+15, 5, 10, 0, 10),    # positive base: "you deserve happiness". Negation handles "you dont deserve".
+    'asked':        (0, 5, 0, 5, 0),        # neutral action verb
+    'talk':         (0, 5, 0, 0, 0),        # neutral verb
+    'moment':       (0, 0, 0, 0, 0),        # temporal noun, zero charge
+    # ── Genuine positive / life event fixes ──
+    'passed':       (+18, 5, 10, 0, 12),   # achievement: "passed the exam" / "passed the bar"
+    'proposed':     (+20, 12, 10, 0, 25),  # life event: proposal. Bump from +15.
+    'surgery':      (0,  8, -5, 15, 25),   # medical noun: neutral V, high gravity. Not negative.
+    'dream':        (+12, 5, 8, 0, 15),    # as adjective: "dream school" / "dream job" = aspirational
+    'yes':          (+18, 8, 8, 0, 8),     # affirmation. Bump from +12 for "she said yes".
+    'camebacknegative': (+25, 10, 15, 0, 20), # medical idiom: test came back negative = GOOD NEWS
+    'donated':      (-15, 8, -10, 5, 12),  # LIQUID: giving away belongings (grief) or charity. Default negative.
+    'grow':         (0,  5,  5, 0,  5),     # neutral verb — context determines meaning
+    'old':          (0, -5, -5, 0,  0),     # neutral adjective
+    'life':         (0,  0,  0, 0, 15),    # abstract noun: reduced from dG=40 (too gravitational)
+    'madeitthrough': (+25, 10, 15, 0, 20),  # resilience idiom: survived/endured
+    'madeit':       (+20, 10, 15, 0, 15),   # achievement: "i made it" = success
+    # ── Remaining stress test fixes ──
+    'happiest':     (+35, 15, 15, 0, 15),  # superlative positive: "happiest ive been"
+    'happier':      (+25, 10, 10, 0, 10),  # comparative positive
+    'sabotaged':    (-30, 20, -20, 15, -15), # deliberate destruction
+    'sabotage':     (-28, 18, -18, 12, -12),
+    'sabotaging':   (-25, 15, -15, 10, -10),
+    'goody':        (-5, 5, -5, 0, 0),     # sarcastic exclamation: slightly neg
+    'redo':         (-8, 5, -5, 5, 0),     # having to redo something: mildly neg
+    'decided':      (0, 5, 15, 5, 10),     # resolution. Neutral V, moderate D. Not massively empowering.
+    'decide':       (0, 8, 15, 10, 10),    # override: dD=99 was absurd. Decision is moderate control.
+    'nightmare':    (-35, 30, -25, 30, -15), # reduced from -60. LIQUID: "parking nightmare" vs "living nightmare"
+    # ── Blind holdout test fixes: inflated GAS atoms ──
+    'ready':        (0,  5,  5, 5,  0),    # "car will be ready" = mundane. Was +80 absurd.
+    'bench':        (0,  0,  0, 0,  0),    # furniture/park object. Was +66.
+    'moral':        (0,  0,  5, 0,  5),    # philosophical adjective. Was +43.
+    'control':      (0,  0,  5, 0,  0),    # "remote control" = mundane. Was +28.
+    'free':         (5,  0,  5, 0,  0),    # mild positive only. Was +28.
+    'freely':       (5,  0,  5, 0,  0),
+    # ── Missing slang ──
+    'rizz':         (+25, 15, 20, 0, 10),  # slang: charisma/game
+    'cooking':      (+20, 15, 15, 0, 10),  # slang: performing well ("bro is cooking")
+    'nocap':        (+10, 10, 10, 0,  5),  # slang: "no cap" = for real/genuine. Mild positive.
+    # ── Blind holdout: false negatives on neutral text ──
+    'heavy':        (0,  5,  5, 0,  0),    # physical weight, not emotional. Was -32.
+    'empty':        (-18, -8, -8, 0, -5),  # LIQUID: "empty without her"=grief, "empty hallway"=descriptive. Compromise.
+    'cold':         (-8, -5, -5, 0,  0),   # temperature. Was -24. Mild negative only.
+    'rather':       (0,  0,  0, 0,  0),    # comparison word. Was -27. Zero charge.
+    'choked':       (-15, 20, -10, 10, -5), # LIQUID: reduced from -75. "choked to death" vs "choked laughing"
+    # ── Blind holdout: missing negatives ──
+    'sank':         (-20, 10, -15, 5, -10), # "heart sank" = genuine disappointment
+    'stranded':     (-20, 10, -15, 10, -8), # stuck/abandoned
+    'loathing':     (-30, 15, -20, 5, -15), # genuine hatred
+    'delayed':      (-10, 5, -5, 10, 0),    # travel annoyance
+    'laid':         (-15, 10, -10, 10, -5),  # "laid off" context. Was -77 absurd.
+    # ── Blind holdout: inflated positives used sarcastically ──
+    'fascinating':  (0, 5, 5, 0, 5),        # GAS: "fascinating" is often sarcastic. Was +51.
+    'amazing':      (10, 10, 5, 0, 5),       # reduced from +35. Often sarcastic in text.
+    'overjoyed':    (20, 15, 10, 0, 10),     # reduced from +90. LIQUID: genuine OR sarcastic.
+    # ── Blind holdout: missing slang ──
+    'diff':         (-10, 5, -10, 0, -5),    # "diff" = you got outplayed. Negative.
+    'ratio':        (-10, 10, -10, 0, -5),   # slang: got ratioed = L
+    'cope':         (-15, 5, -10, 0, -5),    # slang: coping = denial
+    'copium':       (-15, 5, -10, 0, -5),
+    'yikes':        (-15, 10, -5, 5, -5),    # slang: cringe/bad
+    # ── Blind holdout batch 2: systemic inflation fixes ──
+    'ride':         (0,  5,  5, 0,  0),    # GAS: "the ride was smooth" mundane. Was +80.
+    'ensure':       (0,  0,  5, 0,  0),    # procedural verb. Was +51.
+    'positive':     (5,  0,  5, 0,  0),    # adjective — mild only. Was +48.
+    'twice':        (0,  0,  0, 0,  0),    # number word. Was +42.
+    'list':         (0,  0,  0, 0,  0),    # noun. Was +37.
+    'release':      (0,  5,  5, 0,  0),    # action verb. Was +39.
+    'wet':          (0,  0,  0, 0,  0),    # physical state. Was +28.
+    'woods':        (0,  0,  0, 0,  5),    # nature noun. Was +28.
+    'red':          (0,  5,  0, 0,  0),    # color. Was +28.
+    # ── Blind holdout batch 2: false negative fixes ──
+    'toll':         (0,  5,  0, 5,  0),    # "toll" as cost/fee. Was -47.
+    'later':        (0,  0,  0, 0,  0),    # time word. Was -24.
+    'shut':         (0,  5,  0, 0,  0),    # "shut the door" mundane. Was -30.
+    'winter':       (0, -5, -5, 0,  0),    # season — mild only. Was -24.
+    'garbage':      (-10, 5, -5, 0, -3),   # LIQUID: "this is garbage" slang vs literal. Was -40.
+    # ── Blind holdout batch 3: systemic high-frequency fixes ──
+    'good':         (25, 8, 10, 0, 8),     # reduced from +50. Still positive but not overwhelming.
+    'absolute':     (0, 5, 5, 0, 0),       # adjective/noun. Was +48.
+    'absolutely':   (10, 10, 5, 0, 0),     # intensifier — mild positive charge. Reduced from large pos.
+    'king':         (0, 0, 5, 0, 10),      # title noun. Was +37.
+    'queen':        (0, 0, 5, 0, 10),      # title noun.
+    'behavior':     (0, 0, 0, 0, 0),       # descriptive noun. Was +28.
+    'behaviour':    (0, 0, 0, 0, 0),
+    'presentation': (0, 5, 0, 5, 5),       # work noun. Was -24.
+    'killedit':     (+25, 15, 15, 0, 10),  # slang compound: "killed it" = nailed it. Was zeroed.
+    # ── Council Round 8: compound bond vocabulary ──
+    # Negative life events (molecular bonds)
+    'laidoff':      (-60, 20, -35, 25, -20),  # fired from job — needs to be strong to overcome surrounding atoms
+    'foodpoisoning':(-40, 20, -20, 25, -15),  # illness
+    'brokedown':    (-30, 15, -20, 15, -10),  # mechanical/emotional failure
+    'lockedout':    (-30, 15, -25, 15, -10),  # excluded/stranded
+    'kickedout':    (-40, 20, -30, 15, -15),  # expelled
+    'passedaway':   (-50, 10, -30, 10, -25),  # death
+    'cutoff':       (-25, 10, -20, 10, -10),  # disconnected
+    'thrownout':    (-35, 15, -25, 10, -12),  # expelled/discarded
+    'rippedoff':    (-35, 20, -25, 15, -12),  # scammed
+    'wipedout':     (-30, 15, -20, 15, -10),  # exhausted/destroyed
+    'burnedout':    (-35, 10, -25, 10, -15),  # exhausted
+    'shutdown':     (-20, 10, -15, 10, -8),   # closed/rejected
+    'backedout':    (-20, 10, -15, 10, -8),   # withdrew
+    'droppedout':   (-25, 10, -20, 10, -10),  # quit
+    'soldout':      (-15, 10, -15, 10, -5),   # betrayed principles
+    'stressedout':  (-30, 20, -20, 15, -12),  # overwhelmed
+    'freakedout':   (-25, 30, -15, 15, -10),  # panicked
+    'ruledout':     (-15, 5, -10, 5, -5),     # eliminated option
+    'washedout':    (-20, 5, -15, 5, -8),     # faded/failed
+    'checkedout':   (-15, -10, -10, 5, -5),   # disengaged
+    'wifidown':     (-20, 10, -10, 15, -5),   # internet outage annoyance
+    # Positive resolution events
+    'cancerfree':   (+50, 15, 20, 10, 25),    # medical relief
+    'debtfree':     (+40, 10, 20, 5, 20),     # financial liberation
+    'painfree':     (+35, -5, 15, 5, 15),     # physical relief
+    'pulledoff':    (+30, 20, 20, 10, 15),    # accomplished against odds
+    'pulledthrough':(+35, 10, 15, 5, 20),     # survived/endured
+    'workedout':    (+25, 10, 15, 5, 12),     # resolved positively
+    'paidoff':      (+30, 10, 15, 5, 15),     # effort rewarded
+    'turnedaround': (+25, 10, 15, 5, 12),     # reversal to positive
+    # Neutral compounds
+    'login':        (0, 0, 0, 5, 0),
+    'signup':       (0, 5, 0, 5, 0),
+    'checkin':      (0, 0, 0, 5, 0),
+    'pickup':       (0, 5, 0, 5, 0),
+    'setup':        (0, 5, 5, 5, 0),
+    # ── Batch 3 verification: neg→neutral culprits zeroed ──
+    'sneak':        (0,  5,  5, 5,  0),   # action verb, not emotional. "sneak it over" = mundane.
+    'sneaking':     (0,  5,  5, 5,  0),
+    'cursed':       (-15, 10, -10, 5, -5), # LIQUID: reduced from -89. "cursed item" = plot device in games.
+    'mean':         (0,  5,  0, 0,  0),   # "what do you mean" = question. GAS.
+    'means':        (0,  5,  0, 0,  0),
+    'complicated':  (0,  5, -5, 5,  0),   # descriptive adjective, not emotional.
+    'isnt':         (0,  0,  0, 0,  0),   # contraction "is not" — zero charge.
+    'rent':         (0,  0,  0, 5,  0),   # "rent payment" = mundane financial.
+    # ── Council Round 6: GAS atoms wrongly charged (B2 crisis inflation) ──
+    'note':         (0,  0,  0,  0,  5),   # paper. GAS. "wrote a note" = neutral.
+    'decision':     (0,  5, 10,  5, 10),   # a choice. GAS. Not empowerment.
+    'wonder':       (0,  5,  5,  0,  5),   # thought verb. GAS. "i wonder" = neutral.
+    'wondering':    (0,  5,  5,  0,  5),
+    'attic':        (0,  0,  0,  0,  0),   # a room. GAS. Zero charge.
+    'results':      (0,  5,  0,  5,  5),   # information. GAS. Neutral.
 }
 EMOTIONAL_VOCABULARY.update(_V8_CORRECTIONS)

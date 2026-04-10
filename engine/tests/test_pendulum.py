@@ -117,10 +117,10 @@ class TestAmplification:
 class TestStructures:
 
     def test_farewell_detected(self):
-        """'I gave my dog to my neighbor' should detect FAREWELL."""
+        """'I gave my dog to my neighbor' should detect DIVESTITURE (giving away possessions)."""
         trace = _trace("I gave my dog to my neighbor")
         patterns = [s.pattern for s in trace["structures"]]
-        assert "FAREWELL" in patterns, f"Expected FAREWELL, got {patterns}"
+        assert "DIVESTITURE" in patterns or "FAREWELL" in patterns, f"Expected DIVESTITURE or FAREWELL, got {patterns}"
 
     def test_method_acquisition_detected(self):
         """'just bought a bunch of pills' should detect METHOD_ACQUISITION."""

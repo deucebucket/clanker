@@ -288,6 +288,16 @@ class StructureDetector:
             self._rarity_marker,
             self._abandonment,
             self._life_achievement,
+            self._self_insignificance,
+            self._self_replacement,
+            self._persistent_absence,
+            self._directed_dismissal,
+            self._martyrdom_field,
+            self._dangling_bond,
+            self._masking,
+            self._resignation,
+            self._world_continues,
+            self._farewell,
             # self._hollow_agreement,  # REMOVED: was judging tone, not structure. Running state handles this.
         ]
         matches = []
@@ -545,7 +555,13 @@ class StructureDetector:
                            "achieved", "try", "trying", "start", "starting",
                            "again", "learn", "learning"}
         has_positive_verb = any(r.word in _POSITIVE_ACTION for r in roles)
-        if has_acquire or has_positive_verb:
+        # "accepted" + object noun = achievement, not calm acceptance
+        _ACHIEVEMENT_OBJECTS = {"application", "offer", "proposal", "request",
+                               "submission", "entry", "bid", "manuscript",
+                               "paper", "pitch", "resume", "invitation"}
+        words = [r.word for r in roles]
+        has_achievement_object = any(w in _ACHIEVEMENT_OBJECTS for w in words)
+        if has_acquire or has_positive_verb or has_achievement_object:
             return None
 
         # Find closest pair
@@ -3316,6 +3332,28 @@ class StructureDetector:
         """
         from .vocabulary import VOCABULARY as _V
 
+        # Suppress in grief/loss context: mundane objects are the SETTING
+        # not the object of complaint. "the house feels empty without her"
+        # is NOT mundane hyperbole — it's grief using the house as vehicle.
+        _GRIEF_CONTEXT = frozenset({
+            "without", "miss", "missed", "missing", "grief", "grieve",
+            "gone", "lost", "loss", "died", "death", "passed",
+            "funeral", "memorial", "bury", "mourn", "mourning",
+            "remember", "remembered", "remembering", "reminds",
+            "empty", "silence", "silent", "alone",
+            "supposed", "would", "shouldve", "wouldve", "couldve",  # counterfactual grief
+            "donated", "donate",  # disposing of belongings = grief
+            "worst",  # "holidays are the worst now" = grief superlative
+            "keeps", "kept",  # persistence of unwanted state
+        })
+        words = [r.word for r in roles]
+        has_grief_context = any(w in _GRIEF_CONTEXT for w in words)
+        # Also check for absent-person markers (possessive + no active subject)
+        _ABSENT_PERSON = frozenset({"her", "him", "his", "their", "them"})
+        has_absent_person = any(w in _ABSENT_PERSON for w in words)
+        if has_grief_context:
+            return None
+
         # Find crisis-class words (|dV| >= 25)
         crisis_idx = []
         for i, r in enumerate(roles):
@@ -3353,6 +3391,13 @@ class StructureDetector:
             "for", "to", "of", "with", "from", "about",
             "so", "too", "really", "pretty", "quite",
             "long", "short", "big", "small", "new", "old",
+            "everything", "anything", "nothing", "something",  # pronouns, not mundane nouns
+            "be", "being", "become", "became",  # copulas
+            "out", "away", "back", "over", "off",  # particles
+            "a", "an",  # articles
+            "moment", "time", "day", "night", "year",  # temporal nouns
+            "every", "each", "all",  # quantifiers
+            "touch", "run", "walk", "sit", "stand", "look",  # common intransitive verbs
         })
         mundane_idx = []
         for i, r in enumerate(roles):
@@ -3373,6 +3418,28 @@ class StructureDetector:
 
         # Check: mundane noun is structurally the TOPIC (appears as subject
         # or as the object of a complaint). Must be near a crisis word.
+        # BUT: if SELF_REF is the SUBJECT (appears BEFORE the crisis word),
+        # this is self-directed, not mundane hyperbole.
+        # "im the worst person" → SELF_REF before "worst" → suppress
+        # "homework is killing me" → SELF_REF after "killing" → allow
+        # Suppress when SELF_REF is subject AND mundane nouns describe self (not external cause)
+        # "im the worst person" → "person" describes self → suppress
+        # "im drowning in homework" → "homework" is external cause → allow
+        # Person-descriptors near crisis word = self-directed, not mundane cause
+        _PERSON_DESCRIPTORS = frozenset({
+            "person", "human", "guy", "man", "woman", "girl", "boy",
+            "one", "friend", "mother", "father", "parent", "kid",
+            "mentor", "teacher", "boss", "partner", "colleague",
+        })
+        has_self_as_subject = any(roles[j].role == "SELF_REF" for j in range(min(2, len(roles))))
+        if has_self_as_subject:
+            # Check if ALL mundane nouns are person-descriptors
+            all_person_desc = mundane_idx and all(
+                roles[mi].word in _PERSON_DESCRIPTORS for mi in mundane_idx
+            )
+            if all_person_desc:
+                return None
+
         for ci in crisis_idx:
             for mi in mundane_idx:
                 dist = abs(ci - mi)
@@ -3414,19 +3481,34 @@ class StructureDetector:
         return None
 
     def _divestiture(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """SELF_REF + giving away + ALL + possessions = end-of-life preparation."""
+        """SELF_REF + giving away + possessions = end-of-life preparation.
+
+        "i just gave my dog to my neighbor" — SELF + TRANSFER + RELATION/POSSESSION
+        "i gave everything away" — SELF + TRANSFER + universal
+        """
         has_self = any(r.role == "SELF_REF" for r in roles)
         has_transfer = any(r.role == "TRANSFER" for r in roles)
         has_universal = any(r.word in ("all", "everything", "every") for r in roles)
-        if has_self and has_transfer and has_universal:
-            return StructureMatch(
-                pattern="DIVESTITURE",
-                confidence=0.80,
-                matched_indices=list(range(len(roles))),
-                description="Divesting all possessions",
-                v_weight=-35.0, d_weight=-20.0, u_weight=35.0,
-                g_weight=40.0, w_weight=-25.0,
-            )
+        has_relation_or_possession = any(
+            r.role in ("RELATION_REF", "POSSESSION") for r in roles
+        )
+        # Check for recipient: "to/with" + person/relation
+        has_recipient = any(
+            r.word in ("to", "with") and i + 1 < len(roles)
+            and any(roles[j].role in ("OTHER_REF", "RELATION_REF") for j in range(i + 1, min(len(roles), i + 3)))
+            for i, r in enumerate(roles)
+        )
+        if has_self and has_transfer:
+            if has_universal or (has_relation_or_possession and has_recipient):
+                conf = 0.80 if has_universal else 0.65
+                return StructureMatch(
+                    pattern="DIVESTITURE",
+                    confidence=conf,
+                    matched_indices=list(range(len(roles))),
+                    description="Divesting possessions",
+                    v_weight=-35.0, d_weight=-20.0, u_weight=35.0,
+                    g_weight=40.0, w_weight=-25.0,
+                )
         return None
 
     def _method_fixation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -3559,7 +3641,9 @@ class StructureDetector:
         # ── Path 2: Life event verb (no ACQUIRE needed) ──
         _LIFE_EVENT_VERBS = frozenset({
             "born", "proposed", "adopted", "graduated", "married",
-            "engaged", "promoted", "survived", "won",
+            "engaged", "promoted", "survived", "won", "accepted",
+            "passed", "cleared", "nailed",
+            "madeitthrough", "madeit", "survived",
         })
         event_idx = [i for i, r in enumerate(roles) if r.word in _LIFE_EVENT_VERBS]
         if event_idx:
@@ -3592,6 +3676,10 @@ class StructureDetector:
             "house", "apartment", "car",
             "scholarship", "degree", "diploma",
             "citizenship", "visa", "approved",
+            "school", "program", "college", "university",
+            "exam", "bar", "license", "certification",
+            "application", "interview", "audition",
+            "surgery", "treatment", "chemo", "rehab",
         })
 
         achievement_idx = []
@@ -3604,8 +3692,11 @@ class StructureDetector:
                     max_g = g
                 achievement_idx.append(i)
             elif r.role == "POSSESSION":
-                achievement_idx.append(i)
-                max_g = max(max_g, 15)
+                f = r.force or VOCABULARY.get(r.word)
+                g = abs(f[4]) if f else 0
+                if g >= 10:  # Only count high-gravity possessions as achievements
+                    achievement_idx.append(i)
+                    max_g = max(max_g, g)
 
         if not achievement_idx:
             return None
@@ -3642,4 +3733,694 @@ class StructureDetector:
                         v_weight=v_boost, d_weight=15.0, u_weight=10.0,
                         g_weight=15.0, w_weight=15.0,
                     )
+        return None
+
+    def _self_insignificance(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + NEGATOR + {matter, count, belong, deserve, enough, worthy}
+        = "I don't matter" / "I'm not enough" / "I don't belong"
+        Self-worth erosion through negation of significance.
+        """
+        _SIGNIFICANCE_WORDS = frozenset({
+            "matter", "count", "belong", "deserve", "enough",
+            "worthy", "important", "wanted", "needed", "loved",
+            "care", "cared",
+        })
+        self_idx = [i for i, r in enumerate(roles) if r.role == "SELF_REF"]
+        neg_idx = [i for i, r in enumerate(roles) if r.role == "NEGATOR"]
+        sig_idx = [i for i, r in enumerate(roles) if r.word in _SIGNIFICANCE_WORDS]
+
+        if not self_idx or not neg_idx or not sig_idx:
+            return None
+
+        # SELF_REF near NEGATOR near significance word
+        for si in self_idx:
+            for ni in neg_idx:
+                if abs(si - ni) <= 3:
+                    for wi in sig_idx:
+                        if abs(ni - wi) <= 3:
+                            return StructureMatch(
+                                pattern="SELF_INSIGNIFICANCE",
+                                confidence=0.80,
+                                matched_indices=sorted({si, ni, wi}),
+                                description="Self negated significance",
+                                v_weight=-25.0, d_weight=-15.0,
+                                u_weight=0.0, g_weight=-10.0,
+                                w_weight=-30.0,
+                            )
+        return None
+
+    def _self_replacement(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """SELF_REF + wish/want + 'someone else'/'different person'/'anyone but'
+        = wanting to not be oneself. Deep self-worth damage.
+        """
+        _DESIRE_WORDS = frozenset({"wish", "wished", "want", "wanted", "rather"})
+        _REPLACEMENT_WORDS = frozenset({
+            "else", "different", "another", "other",
+        })
+        words = [r.word for r in roles]
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_desire = any(w in _DESIRE_WORDS for w in words)
+        has_replacement = any(w in _REPLACEMENT_WORDS for w in words)
+
+        if has_self and has_desire and has_replacement:
+            idx = [i for i, r in enumerate(roles)
+                   if r.role == "SELF_REF" or r.word in _DESIRE_WORDS or r.word in _REPLACEMENT_WORDS]
+            return StructureMatch(
+                pattern="SELF_REPLACEMENT",
+                confidence=0.75,
+                matched_indices=idx,
+                description="Desire to not be self",
+                v_weight=-20.0, d_weight=-15.0,
+                u_weight=5.0, g_weight=-10.0,
+                w_weight=-35.0,
+            )
+        return None
+
+    def _persistent_absence(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Persistence markers + absent person reference = ongoing grief.
+
+        "i still set two places at the table" — persistence (still) + domestic
+        "every song reminds me of him" — universality (every) + absent person (him)
+        "i keep her voicemail just to hear her voice" — persistence (keep) + ghost possession (her)
+        "i cant go back to that restaurant" — avoidance + place
+        "the holidays will never be the same" — permanence (never) + change (same)
+
+        The grief is in the STRUCTURE: a routine persists, but the person is gone.
+        Or: a universal trigger connects everything to the absent person.
+        """
+        words = [r.word for r in roles]
+
+        _PERSISTENCE = frozenset({
+            "still", "keep", "keeps", "kept", "always", "every",
+            "never", "anymore", "forever",
+            "years", "months", "weeks",  # temporal persistence markers
+        })
+        _ABSENT_MARKERS = frozenset({
+            "her", "him", "his", "their", "them",
+            "without", "gone", "empty", "alone",
+        })
+        _AVOIDANCE = frozenset({
+            "cant", "can't", "wont", "won't", "couldnt", "couldn't",
+            "back", "anymore",
+        })
+        _GRIEF_VOCAB = frozenset({
+            "grief", "grieve", "miss", "missed", "missing",
+            "loss", "lost", "mourn", "mourning",
+            "reminds", "reminded", "remember", "remembered",
+            "donated", "donate", "packed", "cleaned",  # disposing of belongings
+        })
+
+        has_persistence = any(w in _PERSISTENCE for w in words)
+        has_absent = any(w in _ABSENT_MARKERS for w in words)
+        has_avoidance = sum(1 for w in words if w in _AVOIDANCE)
+        has_grief_word = any(w in _GRIEF_VOCAB for w in words)
+
+        # Count persistence markers
+        persistence_count = sum(1 for w in words if w in _PERSISTENCE)
+
+        # Pattern 1: persistence + absent person, OR heavy persistence alone
+        if (has_persistence and has_absent) or persistence_count >= 2:
+            idx = [i for i, r in enumerate(roles) if r.word in _PERSISTENCE or r.word in _ABSENT_MARKERS]
+            return StructureMatch(
+                pattern="PERSISTENT_ABSENCE",
+                confidence=0.70,
+                matched_indices=idx,
+                description="Persistent routine for absent person",
+                v_weight=-25.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=-15.0,
+                w_weight=-10.0,
+            )
+
+        # Pattern 2: avoidance of place/thing (grief avoidance)
+        # "i cant go back to that restaurant" — avoidance even without explicit absent person
+        if has_avoidance >= 2 or (has_avoidance >= 1 and has_absent):
+            idx = [i for i, r in enumerate(roles) if r.word in _AVOIDANCE or r.word in _ABSENT_MARKERS]
+            return StructureMatch(
+                pattern="PERSISTENT_ABSENCE",
+                confidence=0.65,
+                matched_indices=idx,
+                description="Grief avoidance",
+                v_weight=-20.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=-10.0,
+                w_weight=-5.0,
+            )
+
+        # Pattern 3: explicit grief vocabulary
+        if has_grief_word:
+            idx = [i for i, r in enumerate(roles) if r.word in _GRIEF_VOCAB]
+            return StructureMatch(
+                pattern="PERSISTENT_ABSENCE",
+                confidence=0.60,
+                matched_indices=idx,
+                description="Explicit grief reference",
+                v_weight=-20.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=-15.0,
+                w_weight=-5.0,
+            )
+
+        # Pattern 4: counterfactual + togetherness ("supposed to grow old together")
+        _COUNTERFACTUAL = frozenset({"supposed", "would", "shouldve", "wouldve", "couldve"})
+        _TOGETHERNESS = frozenset({"together", "forever", "always"})
+        has_counterfactual = any(w in _COUNTERFACTUAL for w in words)
+        has_togetherness = any(w in _TOGETHERNESS for w in words)
+        if has_counterfactual and has_togetherness:
+            idx = [i for i, r in enumerate(roles) if r.word in _COUNTERFACTUAL or r.word in _TOGETHERNESS]
+            return StructureMatch(
+                pattern="PERSISTENT_ABSENCE",
+                confidence=0.70,
+                matched_indices=idx,
+                description="Counterfactual togetherness grief",
+                v_weight=-25.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=-15.0,
+                w_weight=-10.0,
+            )
+
+        # Pattern 5: "never be the same" / permanence of change
+        if "never" in words and "same" in words:
+            idx = [i for i, r in enumerate(roles) if r.word in ("never", "same")]
+            return StructureMatch(
+                pattern="PERSISTENT_ABSENCE",
+                confidence=0.60,
+                matched_indices=idx,
+                description="Permanent change grief",
+                v_weight=-20.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=-10.0,
+                w_weight=-5.0,
+            )
+
+        return None
+
+    def _directed_dismissal(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """NEGATOR/rejection + OTHER_REF or communication verb = pushing someone away.
+
+        "dont ever talk to me again" — NEGATOR + finality (ever/again) + communication
+        "nobody asked for your opinion" — nobody + OTHER_REF possession
+        "you dont deserve her" — OTHER_REF + NEGATOR + entitlement
+        "youre just like your father" — comparison as insult (OTHER_REF + "like" + RELATION_REF)
+        """
+        words = [r.word for r in roles]
+        has_other = any(r.role == "OTHER_REF" for r in roles)
+        has_negator = any(r.role == "NEGATOR" for r in roles)
+
+        _DISMISSAL_VERBS = frozenset({
+            "talk", "speak", "contact", "call", "text", "message",
+            "come", "show", "bother", "asked", "ask",
+        })
+        _FINALITY_ADVERBS = frozenset({
+            "ever", "again", "anymore", "never",
+        })
+        _COMPARISON_WORDS = frozenset({"like", "same", "just"})
+
+        has_dismissal_verb = any(w in _DISMISSAL_VERBS for w in words)
+        has_finality_adv = any(w in _FINALITY_ADVERBS for w in words)
+        has_relation = any(r.role == "RELATION_REF" for r in roles)
+        has_comparison = any(w in _COMPARISON_WORDS for w in words)
+        has_nobody = "nobody" in words or "noone" in words
+
+        # Pattern 1: "dont [ever] talk/come/bother [again]" — dismissal
+        if has_negator and has_dismissal_verb and (has_finality_adv or has_other):
+            idx = [i for i, r in enumerate(roles) if r.role == "NEGATOR" or r.word in _DISMISSAL_VERBS]
+            return StructureMatch(
+                pattern="DIRECTED_DISMISSAL",
+                confidence=0.75,
+                matched_indices=idx,
+                description="Pushing someone away",
+                v_weight=-25.0, d_weight=20.0,
+                u_weight=5.0, g_weight=0.0,
+                w_weight=0.0,
+            )
+
+        # Pattern 2: "nobody asked/cares" — invalidation
+        if has_nobody and has_dismissal_verb:
+            idx = [i for i, r in enumerate(roles) if r.word == "nobody" or r.word in _DISMISSAL_VERBS]
+            return StructureMatch(
+                pattern="DIRECTED_DISMISSAL",
+                confidence=0.70,
+                matched_indices=idx,
+                description="Invalidation",
+                v_weight=-20.0, d_weight=15.0,
+                u_weight=0.0, g_weight=0.0,
+                w_weight=-10.0,
+            )
+
+        # Pattern 3: "youre just like your father" — comparison as insult
+        # OTHER_REF + comparison + RELATION_REF
+        if has_other and has_comparison and has_relation:
+            idx = [i for i, r in enumerate(roles) if r.role in ("OTHER_REF", "RELATION_REF") or r.word in _COMPARISON_WORDS]
+            return StructureMatch(
+                pattern="DIRECTED_DISMISSAL",
+                confidence=0.65,
+                matched_indices=idx,
+                description="Comparison as insult",
+                v_weight=-20.0, d_weight=15.0,
+                u_weight=0.0, g_weight=0.0,
+                w_weight=-15.0,
+            )
+
+        return None
+
+    def _martyrdom_field(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Surface compliance + self-exclusion/resignation = passive aggression.
+
+        The molecular shape: positive/compliant surface words bonded to
+        self-exclusion or resignation markers. The positive atoms are fake —
+        their charge is inverted by the structural context.
+
+        "no go ahead have fun without me" — permission + exclusion
+        "i said its fine" — compliance + minimization
+        "must be nice to not have to worry" — false compliment + exclusion
+        "forget it it doesnt matter" — dismissal + self-negation
+        "sure whatever makes you happy" — compliance + resignation
+        """
+        words = [r.word for r in roles]
+
+        _COMPLIANCE_SURFACE = frozenset({
+            "fine", "ok", "okay", "sure", "alright", "whatever",
+            "go", "ahead", "fun", "happy", "nice", "great",
+            "good", "glad", "cool", "enjoy",
+            "worries", "mind", "no",  # "no worries", "dont mind me"
+        })
+        _SELF_EXCLUSION = frozenset({
+            "without", "me", "myself", "mine",
+        })
+        _RESIGNATION = frozenset({
+            "whatever", "forget", "doesnt", "dont", "didnt",
+            "matter", "care", "anyway", "anymore", "said",
+            "guess", "suppose", "apparently",
+            "just", "figure", "myself",  # "ill just figure it out myself"
+        })
+        _FALSE_PRAISE = frozenset({
+            "must", "nice", "lucky", "easy",
+        })
+
+        compliance_count = sum(1 for w in words if w in _COMPLIANCE_SURFACE)
+        exclusion_count = sum(1 for w in words if w in _SELF_EXCLUSION)
+        resignation_count = sum(1 for w in words if w in _RESIGNATION)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_false_praise = sum(1 for w in words if w in _FALSE_PRAISE)
+
+        # Pattern 1: compliance + self-exclusion ("go ahead without me")
+        if compliance_count >= 1 and exclusion_count >= 1 and has_self:
+            idx = [i for i, r in enumerate(roles)
+                   if r.word in _COMPLIANCE_SURFACE or r.word in _SELF_EXCLUSION]
+            return StructureMatch(
+                pattern="MARTYRDOM_FIELD",
+                confidence=0.75,
+                matched_indices=idx,
+                description="Surface compliance + self-exclusion",
+                v_weight=-30.0, d_weight=-10.0,
+                u_weight=5.0, g_weight=0.0,
+                w_weight=-15.0,
+            )
+
+        # Pattern 2: compliance + resignation ("fine", "forget it", "doesnt matter")
+        if (compliance_count >= 1 and resignation_count >= 2) or (compliance_count >= 2 and resignation_count >= 1):
+            idx = [i for i, r in enumerate(roles)
+                   if r.word in _COMPLIANCE_SURFACE or r.word in _RESIGNATION]
+            return StructureMatch(
+                pattern="MARTYRDOM_FIELD",
+                confidence=0.70,
+                matched_indices=idx,
+                description="Surface compliance + resignation",
+                v_weight=-25.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=0.0,
+                w_weight=-10.0,
+            )
+
+        # Pattern 3: false praise ("must be nice", "must be easy")
+        if has_false_praise >= 2:
+            idx = [i for i, r in enumerate(roles) if r.word in _FALSE_PRAISE]
+            return StructureMatch(
+                pattern="MARTYRDOM_FIELD",
+                confidence=0.70,
+                matched_indices=idx,
+                description="False praise / envy disguised as compliment",
+                v_weight=-25.0, d_weight=-15.0,
+                u_weight=5.0, g_weight=0.0,
+                w_weight=-10.0,
+            )
+
+        # Pattern 4: heavy resignation without surface ("forget it doesnt matter")
+        if resignation_count >= 3:
+            idx = [i for i, r in enumerate(roles) if r.word in _RESIGNATION]
+            return StructureMatch(
+                pattern="MARTYRDOM_FIELD",
+                confidence=0.65,
+                matched_indices=idx,
+                description="Heavy resignation",
+                v_weight=-25.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=0.0,
+                w_weight=-10.0,
+            )
+
+        # Pattern 5: "i said its fine" — self + said + compliance (reported compliance)
+        has_said = "said" in words or "told" in words
+        if has_self and has_said and compliance_count >= 1:
+            idx = [i for i, r in enumerate(roles)
+                   if r.role == "SELF_REF" or r.word in ("said", "told") or r.word in _COMPLIANCE_SURFACE]
+            return StructureMatch(
+                pattern="MARTYRDOM_FIELD",
+                confidence=0.65,
+                matched_indices=idx,
+                description="Reported compliance (minimization)",
+                v_weight=-20.0, d_weight=-10.0,
+                u_weight=0.0, g_weight=0.0,
+                w_weight=-10.0,
+            )
+
+        return None
+
+    # ── Council Round 6 patterns ──────────────────────────────────
+
+    def _dangling_bond(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Incomplete valence shell — verb expects object/destination but finds vacuum.
+
+        "im going to jump" → SELF_REF + intent + KINETIC_VERB + [NO OBJECT] = crisis void
+        "im going to jump rope" → object present = stable molecule
+        "i have a plan" → SELF_REF + possess + KINETIC_NOUN + [NO OBJECT] = crisis void
+        "i have a plan for dinner" → object present = stable
+
+        The danger is in the ABSENCE of expected bonds, not in the atoms themselves.
+        Council consensus: all 4 brothers agreed on this approach.
+        """
+        words = [r.word for r in roles]
+        text = " ".join(words)
+        n = len(roles)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+
+        # ── Universal checks (don't require SELF_REF) ──
+
+        # Entrapment: "no way out" / "no escape" / "no hope"
+        _ENTRAPMENT = frozenset({"noway", "no", "never", "cant", "cannot"})
+        _EXIT_WORDS = frozenset({"out", "escape", "option", "choice", "hope", "solution", "exit"})
+        has_entrapment = any(w in _ENTRAPMENT for w in words)
+        has_exit = any(w in _EXIT_WORDS for w in words)
+        if has_entrapment and has_exit:
+            idx = [i for i, r in enumerate(roles) if r.word in _ENTRAPMENT or r.word in _EXIT_WORDS]
+            return StructureMatch(
+                pattern="DANGLING_BOND",
+                confidence=0.65,
+                matched_indices=idx,
+                description="Entrapment — no exit",
+                v_weight=-30.0, d_weight=-20.0,
+                u_weight=15.0, g_weight=-15.0,
+                w_weight=-15.0,
+            )
+
+        # Nihilism: "whats the point" / "why bother" — but NOT with concrete objects
+        # "whats the point of this meeting" = genuine question, NOT nihilism
+        _NIHILISM = {"whats the point", "why bother", "none of it matters",
+                     "nothing matters", "who cares", "doesnt matter anymore"}
+        _CONCRETE_AFTER = frozenset({
+            "of", "in", "about", "with", "for",  # preposition = has an object
+        })
+        nihilism_match = None
+        for p in _NIHILISM:
+            idx_p = text.find(p)
+            if idx_p >= 0:
+                after = text[idx_p + len(p):].strip().split()
+                if after and after[0] in _CONCRETE_AFTER:
+                    continue  # has concrete object — genuine question
+                nihilism_match = p
+                break
+        if nihilism_match:
+            return StructureMatch(
+                pattern="DANGLING_BOND",
+                confidence=0.60,
+                matched_indices=[0],
+                description="Nihilism — pointlessness",
+                v_weight=-25.0, d_weight=-15.0,
+                u_weight=5.0, g_weight=-10.0,
+                w_weight=-20.0,
+            )
+
+        # Temporal finality: "tonight is the night" (no emotional atoms but finality frame)
+        _TEMPORAL_FINALITY = frozenset({"tonight", "today", "now", "finally"})
+        _FINALITY_NOUNS = frozenset({"night", "time", "day", "moment", "it"})
+        has_temporal_fin = any(w in _TEMPORAL_FINALITY for w in words)
+        has_finality_noun = any(w in _FINALITY_NOUNS for w in words)
+        # Only fire if sentence is very short AND has no positive/action content
+        _POSITIVE_ACTIONS = frozenset({
+            "celebrate", "party", "dinner", "game", "concert", "show",
+            "meet", "start", "begin", "open", "launch", "fun",
+        })
+        has_positive_action = any(w in _POSITIVE_ACTIONS for w in words)
+        # Require SELF_REF for temporal finality (standalone "tonight is the night" too ambiguous)
+        if has_self and has_temporal_fin and has_finality_noun and len(words) <= 5 and not has_positive_action:
+            return StructureMatch(
+                pattern="DANGLING_BOND",
+                confidence=0.55,
+                matched_indices=[0],
+                description="Temporal finality — ominous brevity",
+                v_weight=-20.0, d_weight=-10.0,
+                u_weight=10.0, g_weight=-10.0,
+                w_weight=-10.0,
+            )
+
+        # ── Self-directed checks (require SELF_REF) ──
+        if not has_self:
+            return None
+
+        # Kinetic verbs that need objects to be stable
+        _KINETIC_VERBS = frozenset({
+            "jump", "leave", "go", "end", "stop", "cut", "hang",
+            "shoot", "drown", "overdose", "slit",
+        })
+        # Intent frames that precede kinetic verbs
+        _INTENT_FRAMES = frozenset({
+            "going", "gonna", "want", "will", "ready", "about",
+            "decided", "planning", "thinking",
+        })
+        # Objects/destinations that stabilize the bond
+        _STABILIZERS = frozenset({
+            "rope", "joy", "ahead", "home", "work", "school", "store",
+            "party", "gym", "bed", "lunch", "dinner", "shopping",
+            "swimming", "running", "hiking", "dancing", "class",
+            "game", "movie", "practice", "meeting", "appointment",
+            "trampoline", "chance", "conclusion", "ball",
+        })
+        # Nouns that indicate a plan WITH an object
+        _PLAN_OBJECTS = frozenset({
+            "for", "about", "to", "regarding",
+        })
+
+        # Check for kinetic verb after intent frame
+        for i, r in enumerate(roles):
+            if r.word in _KINETIC_VERBS:
+                # Was there an intent frame before this verb?
+                has_intent = any(roles[j].word in _INTENT_FRAMES
+                                for j in range(max(0, i - 4), i))
+                if not has_intent and r.word not in ("end", "stop"):
+                    continue
+
+                # Check right side for stabilizing object
+                right_words = [roles[j].word for j in range(i + 1, min(n, i + 5))]
+                has_object = any(w in _STABILIZERS for w in right_words)
+                # Also check: any concrete noun (POSSESSION, RELATION_REF, high-gravity EMOTIONAL)
+                has_concrete = any(
+                    roles[j].role in ("POSSESSION", "RELATION_REF")
+                    or (roles[j].role == "EMOTIONAL" and roles[j].force and abs(roles[j].force[4]) > 15)
+                    for j in range(i + 1, min(n, i + 5))
+                )
+
+                # Check for positive context BEFORE the verb (dark humor/excitement)
+                from .vocabulary import VOCABULARY as _V_DB
+                has_positive_before = any(
+                    (roles[j].force or _V_DB.get(roles[j].word) or (0,))[0] > 15
+                    for j in range(max(0, i - 6), i)
+                )
+                if not has_object and not has_concrete and not has_positive_before:
+                    # DANGLING BOND — vacuum after kinetic verb
+                    return StructureMatch(
+                        pattern="DANGLING_BOND",
+                        confidence=0.75,
+                        matched_indices=[i],
+                        description=f"Incomplete bond: '{r.word}' with no object",
+                        v_weight=-35.0, d_weight=-10.0,
+                        u_weight=15.0, g_weight=-15.0,
+                        w_weight=-20.0,
+                    )
+
+        # Check for "i have a plan" pattern (SELF + possess + abstract noun + no object)
+        if "plan" in words or "plans" in words:
+            plan_idx = words.index("plan") if "plan" in words else words.index("plans")
+            right_words = words[plan_idx + 1:]
+            has_plan_object = any(w in _PLAN_OBJECTS for w in right_words[:3])
+            if not has_plan_object and not any(w in _STABILIZERS for w in right_words[:3]):
+                return StructureMatch(
+                    pattern="DANGLING_BOND",
+                    confidence=0.60,
+                    matched_indices=[plan_idx],
+                    description="Plan with no object — potential crisis",
+                    v_weight=-25.0, d_weight=-10.0,
+                    u_weight=10.0, g_weight=-10.0,
+                    w_weight=-15.0,
+                )
+
+        return None
+
+    def _masking(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Performance verb + compliance state = hiding real emotional state.
+
+        "im tired of pretending im okay" → SELF_REF + FACADE_VERB + EQUILIBRIUM
+        "i keep acting like im fine" → same shape
+        """
+        words = [r.word for r in roles]
+        _FACADE_VERBS = frozenset({
+            "pretending", "acting", "faking", "hiding", "lying",
+            "playing", "performing", "masking",
+        })
+        _EQUILIBRIUM = frozenset({
+            "okay", "ok", "fine", "alright", "happy", "normal",
+            "good", "strong", "together", "better",
+        })
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_facade = any(w in _FACADE_VERBS for w in words)
+        has_equilibrium = any(w in _EQUILIBRIUM for w in words)
+
+        if has_self and has_facade and has_equilibrium:
+            idx = [i for i, r in enumerate(roles)
+                   if r.word in _FACADE_VERBS or r.word in _EQUILIBRIUM]
+            return StructureMatch(
+                pattern="MASKING",
+                confidence=0.80,
+                matched_indices=idx,
+                description="Performed compliance hiding real state",
+                v_weight=-30.0, d_weight=-15.0,
+                u_weight=10.0, g_weight=-10.0,
+                w_weight=-20.0,
+            )
+        return None
+
+    def _resignation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Desire verb + vague pronoun + finality = wanting it to end.
+
+        "i just want it to be over" → DESIRE + PRONOUN_VOID + TERMINATION
+        "i wish this would end" → same
+        "i need it to stop" → same
+        """
+        words = [r.word for r in roles]
+        _DESIRE = frozenset({"want", "wish", "need", "hope", "bother"})
+        _PRONOUN_VOID = frozenset({"it", "this", "everything", "things", "all"})
+        _TERMINATION = frozenset({
+            "over", "done", "end", "stop", "finish", "gone",
+            "ending", "finished", "stopped",
+        })
+        has_self = any(r.role == "SELF_REF" for r in roles)
+        has_desire = any(w in _DESIRE for w in words)
+        has_void = any(w in _PRONOUN_VOID for w in words)
+        has_termination = any(w in _TERMINATION for w in words)
+
+        # Safety: "over with" = completion, not crisis. Skip if followed by manner/speed
+        _COMPLETION_CONTEXT = frozenset({"with", "quickly", "soon", "already", "fast"})
+        over_idx = next((i for i, w in enumerate(words) if w == "over"), -1)
+        if over_idx >= 0 and over_idx + 1 < len(words) and words[over_idx + 1] in _COMPLETION_CONTEXT:
+            has_termination = False
+
+        if has_self and has_desire and has_void and has_termination:
+            idx = [i for i, r in enumerate(roles)
+                   if r.word in _DESIRE or r.word in _TERMINATION]
+            return StructureMatch(
+                pattern="RESIGNATION",
+                confidence=0.75,
+                matched_indices=idx,
+                description="Desire for termination",
+                v_weight=-35.0, d_weight=-15.0,
+                u_weight=10.0, g_weight=-15.0,
+                w_weight=-20.0,
+            )
+        return None
+
+    def _world_continues(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """World/everyone + continues + without self = "they'd be fine without me."
+
+        "the world would keep spinning without me"
+        "everyone would move on"
+        "life goes on without me"
+        """
+        words = [r.word for r in roles]
+        text = " ".join(words)
+        _WORLD = frozenset({"world", "everyone", "life", "people", "things", "they"})
+        _CONTINUATION = frozenset({
+            "keep", "keeps", "go", "goes", "continue", "continues",
+            "move", "carry", "spinning", "moving",
+        })
+        _SELF_ABSENCE = {"without me", "if i were gone", "if i wasnt here",
+                         "when im gone", "after im gone", "if im not here"}
+
+        has_world = any(w in _WORLD for w in words)
+        has_continue = any(w in _CONTINUATION for w in words)
+        has_absence = any(p in text for p in _SELF_ABSENCE)
+
+        if has_world and has_continue and has_absence:
+            return StructureMatch(
+                pattern="WORLD_CONTINUES",
+                confidence=0.75,
+                matched_indices=[0],
+                description="World continues without self",
+                v_weight=-30.0, d_weight=-20.0,
+                u_weight=10.0, g_weight=-15.0,
+                w_weight=-25.0,
+            )
+        return None
+
+    def _farewell(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Imperative + relation + positive emotion = terminal message.
+
+        "tell my kids i love them" — not happiness, it's a last message.
+        "let mom know i cared" — same structure.
+        "make sure they know i tried" — same.
+        """
+        words = [r.word for r in roles]
+        _IMPERATIVE = frozenset({
+            "tell", "let", "remind", "give", "make", "say",
+        })
+        _POSITIVE_EMOTION = frozenset({
+            "love", "loved", "care", "cared", "proud", "sorry",
+            "forgive", "grateful", "thankful", "miss", "tried",
+        })
+
+        has_imperative = any(w in _IMPERATIVE for w in words[:3])
+        has_relation = any(r.role == "RELATION_REF" for r in roles)
+        has_emotion = any(w in _POSITIVE_EMOTION for w in words)
+        has_self = any(r.role == "SELF_REF" for r in roles)
+
+        if has_imperative and has_relation and has_emotion:
+            # Safety: "tell my kids i love pizza" — emotion must not bond to mundane object
+            # Check that the positive emotion word is near a RELATION_REF, not a mundane noun
+            _MUNDANE_AFTER = frozenset({
+                "pizza", "ice", "cream", "cake", "movie", "game",
+                "dog", "cat", "car", "house", "school", "food",
+            })
+            has_mundane_object = any(w in _MUNDANE_AFTER for w in words)
+            if has_mundane_object:
+                return None  # "tell my kids i love pizza" = not farewell
+            return StructureMatch(
+                pattern="FAREWELL",
+                confidence=0.80,
+                matched_indices=[0],
+                description="Terminal message to loved ones",
+                v_weight=-60.0, d_weight=-10.0,
+                u_weight=20.0, g_weight=-20.0,
+                w_weight=-15.0,
+            )
+
+        # Secondary: "i wrote a note" — communication artifact with NO recipient
+        # "i wrote a note to my teacher" has a recipient → mundane
+        _COMM_ARTIFACTS = frozenset({"note", "letter", "message", "goodbye"})
+        _WRITING_VERBS = frozenset({"wrote", "left", "finished", "sealed", "written"})
+        has_writing = any(w in _WRITING_VERBS for w in words)
+        has_artifact = any(w in _COMM_ARTIFACTS for w in words)
+        has_recipient = "to" in words  # "wrote a note TO someone" = mundane
+        if has_self and has_writing and has_artifact and not has_recipient:
+            return StructureMatch(
+                pattern="FAREWELL",
+                confidence=0.65,
+                matched_indices=[0],
+                description="Writing farewell artifact",
+                v_weight=-30.0, d_weight=-10.0,
+                u_weight=15.0, g_weight=-15.0,
+                w_weight=-10.0,
+            )
+
         return None

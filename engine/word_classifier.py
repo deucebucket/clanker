@@ -206,6 +206,24 @@ def classify_word(word: str, position: int, words: List[str],
                 if prev_role == "SELF_REF":
                     return "PEACE"
 
+            # "last" + temporal word = TEMPORAL, not FINALITY
+            # "last night" / "last week" / "last time" = temporal
+            # BUT "my last night" / "his last day" = FINALITY (possessive before)
+            _TEMPORAL_FOLLOWERS = frozenset({
+                "night", "week", "month", "year", "day",
+                "summer", "winter", "spring", "fall", "semester",
+                "tuesday", "wednesday", "thursday", "friday",
+                "saturday", "sunday", "monday",
+            })
+            if w == "last" and role_name == "FINALITY":
+                if position + 1 < len(words):
+                    next_w = _clean(words[position + 1])
+                    prev_role = (roles_so_far[position - 1]
+                                 if position > 0 and position - 1 < len(roles_so_far) else None)
+                    # "my last" / "his last" = possessive → FINALITY stays
+                    if next_w in _TEMPORAL_FOLLOWERS and prev_role not in ("SELF_REF", "POSSESSION", "OTHER_REF"):
+                        return "TEMPORAL"
+
             # "so" before emotional/amplifier = AMPLIFIER, else CONNECTOR
             if w == "so" and role_name == "CONNECTOR":
                 continue  # skip CONNECTOR, AMPLIFIER already matched first
@@ -215,7 +233,7 @@ def classify_word(word: str, position: int, words: List[str],
     # "end" is liquid — "end it" = finality, "end of the table" = spatial
     # Only classify as FINALITY when followed by pronoun/blanket
     _END_FINALITY_FOLLOWERS = {"it", "this", "everything", "things", "all", "myself"}
-    if w == "end" and position + 1 < len(words):
+    if w in ("end", "ending", "stopping", "finishing") and position + 1 < len(words):
         next_w = _clean(words[position + 1])
         if next_w in _END_FINALITY_FOLLOWERS:
             return "FINALITY"

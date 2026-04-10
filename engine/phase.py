@@ -32,6 +32,7 @@ LIQUID_WORDS = frozenset({
     "buried", "devoured", "annihilated",
     "broke", "broken", "shattered",
     "bleeding", "choking", "gagging",
+    "shook", "nuts", "mental", "unreal",
 })
 
 # SOLVENT words: zero charge, dissolve liquid atoms

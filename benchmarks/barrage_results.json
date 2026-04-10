@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-03 20:57:54",
-  "vocabulary": 4475,
+  "timestamp": "2026-04-09 19:41:32",
+  "vocabulary": 4544,
   "ground_truth": {
     "correct": 40,
     "total": 41,
@@ -8,38 +8,41 @@
   },
   "failures": [
     {
-      "text": "she said yes",
-      "expected": "pos",
-      "got": "neutral",
-      "V": 134,
-      "W": 128,
-      "A": 132,
-      "D": 132,
+      "text": "death is awesome im going to jump",
+      "expected": "neutral",
+      "got": "neg",
+      "V": 87,
+      "W": 125,
+      "A": 153,
+      "D": 127,
       "I": 128,
-      "structures": [],
-      "category": "positive"
+      "structures": [
+        "SARCASM_INVERSION",
+        "AMBIGUITY_HOLD"
+      ],
+      "category": "ambiguous"
     }
   ],
   "throughput": {
     "Twitch": {
       "sentences": 43723,
-      "seconds": 7.31,
-      "rate": 5979
+      "seconds": 9.86,
+      "rate": 4434
     },
     "FO76": {
       "sentences": 521,
-      "seconds": 0.18,
-      "rate": 2969
+      "seconds": 0.22,
+      "rate": 2338
     },
     "Novels": {
       "sentences": 163102,
-      "seconds": 62.1,
-      "rate": 2626
+      "seconds": 76.6,
+      "rate": 2129
     },
     "Philosophy": {
       "sentences": 34391,
-      "seconds": 17.2,
-      "rate": 1997
+      "seconds": 20.6,
+      "rate": 1667
     }
   }
 }

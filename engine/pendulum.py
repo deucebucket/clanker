@@ -19,6 +19,7 @@ from .proximity import proximity_coefficient
 from .vocabulary import VOCABULARY
 from .structures import StructureDetector, StructureMatch
 from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_intent
+from .phase import is_solvent, get_phase
 
 
 # ── Physics constants (fixed, never tuned per-sentence) ─────────
@@ -36,11 +37,12 @@ DIRECT_PUSH_TRIGGER = 86.2  # champion v2
 SATURATION = 120.0        # tanh saturation: smooth compression replaces hard clamp
 
 # Mundane dampening: massless context atoms absorb crisis energy
-# D = (G_t + ε) / (G_t + α * |dV|)   -- GPT's equation
-# When G_t ≈ 0: D → ε / (α * |dV|) → near 0 for high |dV| crisis atoms
-# When G_t high: D → 1 → no dampening
+# D = (G_t + ε) / (G_t + α * |dV|)
+# Gemini's improvement: ε decays exponentially with |dV| so strong crisis
+# words near zero-gravity subjects get crushed almost to zero.
+# ε = e^(-λ|dV|)  →  at |dV|=35: ε=0.03, at |dV|=60: ε=0.002
 MUNDANE_ALPHA = 0.04      # sensitivity: how much dV matters
-MUNDANE_EPSILON = 1.0     # floor: avoid division by zero
+MUNDANE_EPSILON = 1.0     # floor: avoid division by zero (council suggested lower but ecosystem is tuned to this)
 MUNDANE_DV_THRESHOLD = 25 # only dampen high-charge atoms (crisis words)
 
 
@@ -83,6 +85,63 @@ _ABSENCE_FOLLOWERS = {"had", "been", "felt", "seen", "gotten", "experienced"}
 _PERSON_ROLES = {"SELF_REF", "OTHER_REF", "RELATION_REF"}
 
 _CHOICE_VERBS = {"choose", "chose", "choosing", "decide", "pick", "picked"}
+
+# ── Trigram compound bonds (Council Round 8) ───────────────────
+_COMPOUND_BONDS_TRI = {
+    ("got", "laid", "off"): "laidoff",
+    ("get", "laid", "off"): "laidoff",
+    ("got", "kicked", "out"): "kickedout",
+    ("got", "locked", "out"): "lockedout",
+    ("got", "ripped", "off"): "rippedoff",
+    ("got", "thrown", "out"): "thrownout",
+    ("got", "cut", "off"): "cutoff",
+    ("got", "burned", "out"): "burnedout",
+    ("got", "wiped", "out"): "wipedout",
+}
+
+# ── Compound bond table (Council Round 8) ──────────────────────
+# Multi-word phrases that form molecular bonds with emergent charge.
+# Resolved in tokenizer → single atom → charge from vocabulary.
+_COMPOUND_BONDS = {
+    # Negative life events
+    ("laid", "off"): "laidoff",
+    ("food", "poisoning"): "foodpoisoning",
+    ("broke", "down"): "brokedown",
+    ("locked", "out"): "lockedout",
+    ("kicked", "out"): "kickedout",
+    ("passed", "away"): "passedaway",
+    ("cut", "off"): "cutoff",
+    ("thrown", "out"): "thrownout",
+    ("ripped", "off"): "rippedoff",
+    ("wiped", "out"): "wipedout",
+    ("burned", "out"): "burnedout",
+    ("shut", "down"): "shutdown",
+    ("backed", "out"): "backedout",
+    ("dropped", "out"): "droppedout",
+    ("sold", "out"): "soldout",
+    ("stressed", "out"): "stressedout",
+    ("freaked", "out"): "freakedout",
+    ("ruled", "out"): "ruledout",
+    ("washed", "out"): "washedout",
+    ("checked", "out"): "checkedout",
+    # Positive resolution events
+    ("cancer", "free"): "cancerfree",
+    ("debt", "free"): "debtfree",
+    ("pain", "free"): "painfree",
+    ("pulled", "off"): "pulledoff",
+    ("pulled", "through"): "pulledthrough",
+    ("worked", "out"): "workedout",
+    ("paid", "off"): "paidoff",
+    ("turned", "around"): "turnedaround",
+    # Neutral/procedural compounds
+    ("log", "in"): "login",
+    ("sign", "up"): "signup",
+    ("check", "in"): "checkin",
+    ("pick", "up"): "pickup",
+    ("set", "up"): "setup",
+    ("WiFi", "down"): "wifidown",
+    ("wifi", "down"): "wifidown",
+}
 
 
 # ── Stage 1: Tokenize ──────────────────────────────────────────
@@ -151,6 +210,30 @@ def tokenize(context: dict) -> dict:
         elif w_low == "goes" and next_low == "hard":
             resolved.append("goeshard")
             i += 2
+        elif w_low == "hit" and next_low == "different":
+            resolved.append("hitdifferent")
+            i += 2
+        elif w_low == "running" and next_low == "late":
+            resolved.append("runninglate")
+            i += 2
+        elif w_low == "made" and next_low == "it":
+            # "made it" → achievement compound
+            next_after = words[i + 2].lower() if i + 2 < len(words) else ""
+            if next_after == "through":
+                resolved.append("madeitthrough")
+                i += 3
+            else:
+                resolved.append("madeit")
+                i += 2
+        elif w_low == "came" and next_low == "back":
+            # Look ahead for "negative" → medical idiom (good news)
+            next_after = words[i + 2].lower() if i + 2 < len(words) else ""
+            if next_after == "negative":
+                resolved.append("camebacknegative")
+                i += 3
+            else:
+                resolved.append(words[i])
+                i += 1
         elif w_low == "closed" and next_low == "on":
             resolved.append("closedon")
             i += 2
@@ -161,8 +244,25 @@ def tokenize(context: dict) -> dict:
             resolved.append("noway")
             i += 2
         else:
-            resolved.append(words[i])
-            i += 1
+            # Council Round 8: compound bond resolution (bigram + trigram)
+            w_clean = w_low.rstrip(".,!?;:'\"")
+            n_clean = next_low.rstrip(".,!?;:'\"")
+            # Trigram check first
+            if i + 2 < len(words):
+                n2_clean = words[i + 2].lower().rstrip(".,!?;:'\"")
+                tri = (w_clean, n_clean, n2_clean)
+                if tri in _COMPOUND_BONDS_TRI:
+                    resolved.append(_COMPOUND_BONDS_TRI[tri])
+                    i += 3
+                    continue
+            # Bigram check
+            bi = (w_clean, n_clean)
+            if bi in _COMPOUND_BONDS:
+                resolved.append(_COMPOUND_BONDS[bi])
+                i += 2
+            else:
+                resolved.append(words[i])
+                i += 1
     words = resolved
 
     context["words"] = words
@@ -342,41 +442,65 @@ def interpret_context(context: dict) -> dict:
             roles[0].role = "AMPLIFIER"
             roles[0].force = None  # strip negative charge
 
-    # ── 3. Register detection ─────────────────────────────────
-    # CONVERSATIONAL = full force (emotional register)
-    # LITERARY = reduced force (narration, not expression)
-    # EXPOSITORY = heavily dampened (procedural text)
-    # Claude: "Quoted dialogue inside literary = CONVERSATIONAL override"
+    # ── 3. Register detection (Council Round 7) ────────────────
+    # CONVERSATIONAL = full force (speaker emitting charge)
+    # LITERARY = dampened force (charge is described/reported, not felt)
+    # EXPOSITORY = heavily dampened (procedural/instructional text)
+    #
+    # Detection via Dielectric Index (Gemini) + agency structure (GPT):
+    # High article/3rd-person density + no 1st/2nd person + no casual markers = narration
+    # The medium is dense — weak atoms scatter, strong atoms punch through dampened.
     instructional_count = sum(1 for w in words if w in _INSTRUCTIONAL_CUES)
 
-    # Detect conversational signals
-    _CASUAL_SIGNALS = {"im", "i'm", "ive", "youre", "dont", "cant", "wont",
+    _CASUAL_SIGNALS = {"im", "ive", "youre", "dont", "cant", "wont",
                        "gonna", "wanna", "gotta", "lol", "lmao", "bruh", "bro",
-                       "dude", "omg", "tbh", "ngl", "fr"}
+                       "dude", "omg", "tbh", "ngl", "fr", "nah", "yeah", "yep",
+                       "hey", "yo", "haha", "ok", "okay"}
+    _ARTICLES = {"the", "a", "an", "this", "these", "those"}
+    _THIRD_PERSON = {"he", "she", "they", "it", "his", "her", "its", "their",
+                     "him", "them"}
+    _FIRST_PERSON = {"i", "im", "ive", "my", "me", "we", "us", "our"}
+    _SECOND_PERSON = {"you", "your", "youre"}
+    _LITERARY_VERBS = {"seized", "seizing", "walked", "strode", "gazed",
+                       "muttered", "exclaimed", "remarked", "observed",
+                       "whispered", "cried", "replied", "declared"}
+
     casual_count = sum(1 for w in words if w in _CASUAL_SIGNALS)
     has_exclamation = any(w.endswith('!') for w in words)
     has_quotes = context["text"].count('"') >= 2
+    c_art = sum(1 for w in words if w in _ARTICLES)
+    c_3rd = sum(1 for w in words if w in _THIRD_PERSON)
+    c_1st = sum(1 for w in words if w in _FIRST_PERSON)
+    c_2nd = sum(1 for w in words if w in _SECOND_PERSON)
+    c_lit_verb = sum(1 for w in words if w in _LITERARY_VERBS)
+    past_count = sum(1 for w in words if w.endswith("ed") or w in {"was", "were", "had", "been"})
 
-    # Detect literary signals (3rd person past tense narration)
-    _LITERARY_SIGNALS = {"he", "she", "they", "him", "her", "said", "replied",
-                        "remarked", "observed", "continued", "exclaimed"}
-    literary_count = sum(1 for w in words if w in _LITERARY_SIGNALS)
-    _SUBORDINATORS = {"whether", "although", "because", "while", "since",
-                     "unless", "whereas", "though", "whereby", "wherein",
-                     "notwithstanding", "inasmuch"}
-    subordinate_count = sum(1 for w in words if w in _SUBORDINATORS)
+    # Dielectric Index: (articles + 3rd person) / total tokens
+    dx = (c_art + c_3rd) / max(1, n)
+    past_ratio = past_count / max(1, n)
+    # Observation score (GPT): agency-based
+    obs_score = dx + 0.3 * past_ratio + (0.1 if casual_count == 0 else 0)
+    # Literary verb bonus (Claude)
+    if c_lit_verb >= 1:
+        obs_score += 0.2
 
+    # Decision hierarchy:
+    # 1. Instructional cues → EXPOSITORY (strongest override)
+    # 2. Casual markers or exclamation or quotes → CONVERSATIONAL
+    # 3. High observation score + no 1st/2nd person + length >= 5 → LITERARY
+    # 4. Default → CONVERSATIONAL
     if instructional_count >= 1:
         register = "EXPOSITORY"
         context["register_dampener"] = 0.35
     elif casual_count >= 1 or has_exclamation or has_quotes:
         register = "CONVERSATIONAL"
         context["register_dampener"] = 1.0
-    elif (literary_count >= 2 and n > 10) or (n > 15 and subordinate_count >= 1):
+    elif obs_score >= 0.50 and c_1st == 0 and c_2nd == 0 and casual_count == 0 and n >= 10:
         register = "LITERARY"
-        context["register_dampener"] = 0.65
+        # Gemini's mass-dependent scattering: applied per-word in accumulate_forces
+        context["register_dampener"] = 0.55
     else:
-        register = "CONVERSATIONAL"  # default to full force
+        register = "CONVERSATIONAL"
         context["register_dampener"] = 1.0
 
     context["register"] = register
@@ -396,15 +520,110 @@ def interpret_context(context: dict) -> dict:
         if wr.role == "NEGATOR":
             for j in range(i+1, min(n, i+4)):
                 jr = roles[j]
-                if jr.force and jr.force[0] > 25:
+                f = jr.force or VOCABULARY.get(jr.word)
+                if f and f[0] > 25:
                     # Full inversion: flip the positive word's dV
-                    old_f = jr.force
+                    old_f = f
                     jr.force = (-old_f[0], old_f[1], -old_f[2], old_f[3], old_f[4])
                     negators_consumed.add(i)
                     break
+            # Also consume negators that precede a communication/action verb
+            # before distant emotional content.
+            # "nobody tells you grief" → "nobody" negates "tells", not "grief"
+            # "nobody loves me" → "nobody" SHOULD negate "loves" → don't consume
+            # Key: consume only when intervening word is a low-charge comm verb
+            _COMM_VERBS = frozenset({
+                "tells", "told", "says", "said", "asks", "asked",
+                "knows", "knew", "thinks", "thought", "warns", "warned",
+                "prepares", "prepared", "expects", "expected",
+                "mentions", "mentioned", "explains", "explained",
+            })
+            if i not in negators_consumed:
+                for j in range(i+1, min(n, i+3)):
+                    if roles[j].word in _COMM_VERBS:
+                        negators_consumed.add(i)
+                        break
     # Consumed negators become FILLER so proximity doesn't double-apply
     for i in negators_consumed:
         roles[i].role = "FILLER"
+
+    # ── 6. SOLVENT dissolution ────────────────────────────────
+    # SOLVENT words (bruh, lol, lmao, dude, etc.) dissolve LIQUID atoms
+    # "bruh im shook" → SOLVENT(bruh) flips LIQUID(shook) from negative to positive
+    # "bruh he got murdered" → SOLVENT can't dissolve SOLID(murdered)
+    has_solvent = any(is_solvent(wr.word) for wr in roles)
+    if has_solvent:
+        for wr in roles:
+            if get_phase(wr.word) == "LIQUID":
+                # Get the force (may be on wr.force or in VOCABULARY)
+                f = wr.force or VOCABULARY.get(wr.word)
+                if f and f[0] < -5:
+                    # Flip dV sign, keep arousal (the energy stays, charge flips)
+                    flipped = (-f[0], f[1], abs(f[2]), f[3], abs(f[4]))
+                    wr.force = flipped
+        context["solvent_active"] = True
+    else:
+        context["solvent_active"] = False
+
+    # ── 7. Sarcasm inversion field (Council Round 6) ────────────
+    # Genuine enthusiasm radiates amplification energy. Sarcasm is a
+    # cold molecule — positive surface with zero kinetic energy.
+    # Ironic onset + tepid positive + zero amplifiers → invert.
+    _IRONIC_ONSETS = frozenset({
+        "clearly", "oh", "wow", "sure", "right", "great",
+        "nice", "yeah", "gee", "wonderful", "brilliant", "lovely",
+    })
+    _AMPLIFIERS = frozenset({
+        "so", "really", "very", "super", "extremely", "absolutely",
+        "honestly", "seriously", "genuinely", "totally",
+    })
+    first_word = words[0] if words else ""
+    two_word = " ".join(words[:2]) if len(words) >= 2 else ""
+    has_ironic_onset = first_word in _IRONIC_ONSETS or two_word in ("what a", "oh great", "oh cool", "oh nice")
+    has_amplifier = any(w in _AMPLIFIERS for w in words) or any(w.endswith("!") for w in words)
+
+    if has_ironic_onset and not has_amplifier and not has_solvent:
+        # Count all charged atoms
+        total_charge = 0
+        pos_count = 0
+        neg_count = 0
+        for wr in roles:
+            f = wr.force or VOCABULARY.get(wr.word)
+            if f:
+                total_charge += f[0]
+                if f[0] > 0:
+                    pos_count += 1
+                elif f[0] < 0:
+                    neg_count += 1
+
+        # Flat affect: ironic onset + mostly near-zero/mildly negative atoms
+        # + no strong positive to anchor genuine enthusiasm
+        # This catches: "clearly this was well thought out" (all atoms -5 or 0)
+        # "oh cool cant wait for that" (all atoms -5 to -10)
+        if neg_count >= pos_count and total_charge < 0 and neg_count >= 1:
+            # All atoms weakly negative + ironic onset = sarcasm
+            # Apply a structural V penalty
+            context["sarcasm_inversion"] = True
+            context["sarcasm_penalty"] = -15.0  # applied in apply_structures
+
+    # ── 7b. Contrast sarcasm: strong positive + negative in same sentence ──
+    # "I am just overjoyed to clean up your mess" — "overjoyed" near "mess"
+    # "Thanks for that incredibly useless advice" — "thanks" near "useless"
+    # The CONTRAST between positive and negative in a short span = sarcasm
+    if not context.get("sarcasm_inversion") and not has_solvent:
+        strong_pos = []
+        strong_neg = []
+        for wr in roles:
+            f = wr.force or VOCABULARY.get(wr.word)
+            if f:
+                if f[0] >= 15:
+                    strong_pos.append(wr.word)
+                elif f[0] <= -15:
+                    strong_neg.append(wr.word)
+        # Both strong positive AND strong negative = contrast sarcasm
+        if strong_pos and strong_neg and len(words) <= 15:
+            context["sarcasm_inversion"] = True
+            context["sarcasm_penalty"] = -12.0
 
     context["roles"] = roles
     return context
@@ -492,12 +711,23 @@ def accumulate_forces(context: dict) -> dict:
 
         dv, da, dd, du, dg = word_force
 
-        # ── REGISTER DAMPENING: instructional text → reduced forces ──
+        # ── REGISTER DAMPENING ──
+        # LITERARY: Gemini's mass-dependent scattering — weak atoms scatter,
+        # strong atoms punch through dampened. dV_eff = dV * (1 - e^(-k|dV|)) * ε
+        # EXPOSITORY: flat dampening (instructional text)
         reg_damp = context.get("register_dampener", 1.0)
         if reg_damp < 1.0:
-            dv = int(dv * reg_damp)
-            da = int(da * reg_damp)
-            dd = int(dd * reg_damp)
+            if context.get("register") == "LITERARY":
+                # Mass-dependent scattering: weak atoms crushed, strong survive
+                scatter = 1.0 - exp(-0.05 * abs(dv))  # approaches 1.0 for strong atoms
+                dv = int(dv * scatter * reg_damp)
+                da = int(da * scatter * reg_damp)
+                dd = int(dd * scatter * reg_damp)
+            else:
+                # Flat dampening for EXPOSITORY
+                dv = int(dv * reg_damp)
+                da = int(da * reg_damp)
+                dd = int(dd * reg_damp)
 
         # ── COUNTERFACTUAL INVERSION: positive in past/counterfactual → grief ──
         if context.get("counterfactual") and dv > 10:
@@ -633,6 +863,33 @@ def accumulate_forces(context: dict) -> dict:
             "w": round(state_w),
         })
 
+    # ── BIDIRECTIONAL CORRECTION (sentence-level A+B=C) ─────────────
+    # Instead of a full backward pass, pre-scan for the strongest emotional
+    # atom. If it's in the second half of the sentence AND the forward pass
+    # didn't reach its polarity, apply a correction push.
+    # This fixes "I just got laid off from work" where the event "laidoff"
+    # is in the middle but momentum recovery from trailing neutral words
+    # erases its charge.
+    strongest_dv = 0
+    strongest_pos = 0
+    mid = len(roles) // 2
+    for i, wr in enumerate(roles):
+        f = wr.force or VOCABULARY.get(wr.word)
+        if f and abs(f[0]) > abs(strongest_dv):
+            strongest_dv = f[0]
+            strongest_pos = i
+
+    # If strongest atom is past midpoint and forward V disagrees with its polarity
+    if strongest_pos >= mid and abs(strongest_dv) >= 20:
+        fwd_dev = state_v - CENTER
+        atom_direction = 1 if strongest_dv > 0 else -1
+        fwd_direction = 1 if fwd_dev > 0 else -1 if fwd_dev < 0 else 0
+
+        if atom_direction != fwd_direction or abs(fwd_dev) < abs(strongest_dv) * 0.3:
+            # Forward pass didn't capture the event's polarity — apply correction
+            correction = strongest_dv * 0.3 * FORCE_SCALE
+            state_v += correction
+
     context["state_v"] = state_v
     context["state_a"] = state_a
     context["state_d"] = state_d
@@ -727,12 +984,72 @@ def apply_structures(context: dict) -> dict:
         state_g += sm.g_weight * sm.confidence * FORCE_SCALE
         state_w += sm.w_weight * sm.confidence * FORCE_SCALE
 
+    # Compound bond event anchoring (Council Round 8)
+    # If a compound bond exists, it's the EVENT NUCLEUS — anchor V toward its charge
+    _COMPOUND_VOCAB_KEYS = set(_COMPOUND_BONDS.values()) | set(_COMPOUND_BONDS_TRI.values())
+    for wr in roles:
+        if wr.word in _COMPOUND_VOCAB_KEYS:
+            f = wr.force or VOCABULARY.get(wr.word)
+            if f and abs(f[0]) >= 25:
+                # Anchor: push V toward the compound's charge direction
+                anchor_push = f[0] * 0.4 * FORCE_SCALE
+                state_v += anchor_push
+
+    # Sarcasm inversion penalty (from interpret_context step 7)
+    sarcasm_penalty = context.get("sarcasm_penalty", 0.0)
+    if sarcasm_penalty != 0.0:
+        state_v += sarcasm_penalty * FORCE_SCALE
+
     context["state_v"] = state_v
     context["state_a"] = state_a
     context["state_d"] = state_d
     context["state_u"] = state_u
     context["state_g"] = state_g
     context["state_w"] = state_w
+    return context
+
+
+# ── Stage 5b: Static Friction (Council Round 7) ──────────────────
+# Gemini's model: if no atom has |dV| > threshold, the sentence lacks
+# emotional conviction. The pendulum can't overcome static friction.
+# V deviation from center is dampened by (|dV_max| / threshold)².
+
+STATIC_FRICTION_THRESHOLD = 20  # minimum |dV| to overcome friction (15 was too aggressive)
+
+def apply_static_friction(context: dict) -> dict:
+    """Prevent weak negative/positive drift from accumulated noise.
+
+    If no word in the sentence has |dV| > threshold, the total V deviation
+    is dampened by a squared ratio. Stronger max atoms = less dampening.
+
+    Exempted when crisis structures fire (dangling bonds etc. have zero-charge
+    atoms but structural signals that override).
+    """
+    state_v = context["state_v"]
+    roles = context.get("roles", [])
+    structures = context.get("structures", [])
+
+    # Find max absolute dV in the sentence
+    max_abs_dv = 0
+    for wr in roles:
+        f = wr.force or VOCABULARY.get(wr.word)
+        if f:
+            max_abs_dv = max(max_abs_dv, abs(f[0]))
+
+    # Exempt if crisis structures fired
+    _CRISIS_STRUCTS = {"DANGLING_BOND", "FAREWELL", "MASKING", "RESIGNATION",
+                       "WORLD_CONTINUES", "FINALITY", "METHOD_ACQUISITION",
+                       "SELF_REMOVAL", "SUSPICIOUS_CALM", "SELF_HARM_INTENT",
+                       "EXHAUSTION", "NO_EXIT"}
+    has_crisis_struct = any(sm.pattern in _CRISIS_STRUCTS for sm in structures)
+
+    if max_abs_dv < STATIC_FRICTION_THRESHOLD and not has_crisis_struct:
+        # Squared ratio: smooth transition, harder to move with weaker atoms
+        friction = (max_abs_dv / STATIC_FRICTION_THRESHOLD) ** 2
+        deviation = state_v - CENTER
+        state_v = CENTER + deviation * friction
+
+    context["state_v"] = state_v
     return context
 
 
@@ -885,6 +1202,7 @@ class Pipeline:
             compute_coefficients,
             accumulate_forces,
             apply_structures,
+            # apply_static_friction,  # Council R7: needs higher threshold tuning, disabled for now
             apply_w_coefficient,
             apply_personality,
             saturate_and_clamp,
