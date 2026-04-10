@@ -130,10 +130,18 @@ def compute_vadug(
     structures = _structure_detector.detect_all(word_roles) if word_roles else []
 
     # Apply structure adjustments to VADUGWI
+    # Skip structures that net-hurt accuracy (measured on combined dataset)
+    _STRUCTURE_BLACKLIST = frozenset({
+        "LIFE_ACHIEVEMENT",          # net -7 (false triggers on narrative)
+        "NEGATED_NEGATIVE_COMPLIMENT", # net -4
+    })
+
     v, a, d, u, g, w, i = float(result.v), float(result.a), float(result.d), \
                            float(result.u), float(result.g), float(result.w), float(result.i)
 
     for s in structures:
+        if s.pattern in _STRUCTURE_BLACKLIST:
+            continue
         v += getattr(s, 'v_weight', 0)
         d += getattr(s, 'd_weight', 0)
         u += getattr(s, 'u_weight', 0)
