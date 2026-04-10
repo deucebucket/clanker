@@ -23,8 +23,10 @@ SOLID_WORDS = frozenset({
 })
 
 LIQUID_WORDS = frozenset({
-    # These FLIP in casual/slang register
-    "crying", "screaming", "dying", "dead", "died",
+    # These DEFAULT negative but CAN flip positive in context.
+    # "Crying" = presumed negative. "Happy crying" = positive.
+    # The human's first instinct is the default. Context overrides.
+    "crying", "cried", "screaming", "screamed", "dying", "dead", "died",
     "stupid", "insane", "crazy", "wild", "sick",
     "fire", "killer", "killed", "killing",
     "slaps", "hits", "bangs", "hard",
@@ -33,6 +35,13 @@ LIQUID_WORDS = frozenset({
     "broke", "broken", "shattered",
     "bleeding", "choking", "gagging",
     "shook", "nuts", "mental", "unreal",
+    # Additional LIQUID words — default negative, context can flip
+    "fell", "falling", "dropped", "lost",
+    "gone", "left", "leaving",
+    "end", "ended", "ending",
+    "strange", "odd", "weird",
+    "alone", "empty", "dark",
+    "nothing", "never", "nobody",
 })
 
 # SOLVENT words: zero charge, dissolve liquid atoms

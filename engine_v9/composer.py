@@ -125,30 +125,67 @@ def compose(equation: Equation) -> VADUG:
     word_count = max(1, len(equation.all_atoms))
     effective_fs = FORCE_SCALE / (word_count ** LENGTH_EXPONENT)
 
-    # Step 2: Collect ALL charged atoms with their gravity weights
+    # Step 2: Phase-aware charge resolution
+    # LIQUID words default to their charge but can flip in context.
+    # SOLID words never change. GAS words take whatever charge they have.
+    # Check: does the sentence have positive context that would flip a LIQUID?
+    from .phase import get_phase, is_solvent
+
+    all_atoms_list = [equation.nucleus] + equation.context
+    if equation.subject is not equation.nucleus:
+        all_atoms_list.append(equation.subject)
+
+    has_positive_context = any(a.root.charge[0] > 15 for a in all_atoms_list)
+    has_solvent = any(is_solvent(a.word) for a in equation.all_atoms)
+
+    # Step 3: Collect ALL charged atoms with their gravity weights
     # Every atom contributes to the alloy proportional to its mass.
-    # The nucleus gets operator modifications applied first.
     weighted_charges = []
     total_gravity = 0.0
 
-    # Nucleus — apply operators first, then add with its gravity
-    nucleus_charge = list(_apply_operators(equation.nucleus.root.charge, equation.operators))
+    def _resolve_charge(atom, is_nucleus=False):
+        """Resolve an atom's charge considering phase state."""
+        charge = list(atom.root.charge)
+        if is_nucleus:
+            charge = list(_apply_operators(atom.root.charge, equation.operators))
+
+        phase = get_phase(atom.word)
+
+        if phase == "LIQUID":
+            if has_solvent and charge[0] < 0:
+                # SOLVENT dissolves LIQUID negative → flip to positive
+                charge = [-c for c in charge]
+            elif has_positive_context and charge[0] < 0:
+                # Positive context near LIQUID negative → dampen (not full flip)
+                charge = [c // 2 for c in charge]
+            elif charge[0] == 0:
+                # LIQUID with zero mapped charge → apply negative presumption
+                # "Crying" maps to some root — if that root is zero, give it
+                # a default negative lean because LIQUID defaults negative
+                charge[0] = -10
+                charge[4] = -5  # slight gravity weight
+
+        return charge
+
+    # Nucleus
+    nucleus_charge = _resolve_charge(equation.nucleus, is_nucleus=True)
     nucleus_gravity = equation.nucleus.gravity
     if nucleus_gravity > 0:
         weighted_charges.append((nucleus_charge, nucleus_gravity))
         total_gravity += nucleus_gravity
 
-    # All other charged atoms — contribute at their own gravity
+    # Context atoms
     for atom in equation.context:
-        charge = list(atom.root.charge)
+        charge = _resolve_charge(atom)
         gravity = atom.gravity
         if gravity > 0:
             weighted_charges.append((charge, gravity))
             total_gravity += gravity
 
-    # Subject contributes too (if it has charge)
+    # Subject
     if equation.subject.gravity > 0 and equation.subject is not equation.nucleus:
-        weighted_charges.append((list(equation.subject.root.charge), equation.subject.gravity))
+        charge = _resolve_charge(equation.subject)
+        weighted_charges.append((charge, equation.subject.gravity))
         total_gravity += equation.subject.gravity
 
     # Step 3: Compute the alloy — gravity-weighted average of all elements
