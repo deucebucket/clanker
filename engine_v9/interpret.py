@@ -220,20 +220,11 @@ def interpret_context(word_roles, text=""):
             sarcasm_inversion = True
             sarcasm_penalty = -15.0
 
-    # 7b. Contrast sarcasm
-    if not sarcasm_inversion and not has_solvent:
-        strong_pos = []
-        strong_neg = []
-        for wr in roles:
-            f = wr.force or VOCABULARY.get(wr.word)
-            if f:
-                if f[0] >= 15:
-                    strong_pos.append(wr.word)
-                elif f[0] <= -15:
-                    strong_neg.append(wr.word)
-        if strong_pos and strong_neg and len(words) <= 15:
-            sarcasm_inversion = True
-            sarcasm_penalty = -12.0
+    # 7b. Contrast sarcasm — DISABLED
+    # Tested: fires on genuine sentences like "I finally found my lost ring"
+    # because both positive and negative words coexist naturally.
+    # The ironic onset detector (7) is more precise.
+    # Re-enable when bonding layer can distinguish genuine contrast from sarcasm.
 
     # ── 8. Absence scope ──────────────────────────────────────────
     # "haven't felt happy" → "happy" is in absence scope → dampen

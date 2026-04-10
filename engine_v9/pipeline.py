@@ -238,9 +238,14 @@ def compute_vadug(
     if ctx["counterfactual"] and v > CENTER:
         v = CENTER - (v - CENTER) * 0.75  # invert 75% toward negative
 
-    # Sarcasm from interpret_context (ironic onset field)
+    # Sarcasm from interpret_context (ironic onset / contrast field)
+    # When detected AND V is positive, do a full inversion — not just a penalty.
+    # "Another fantastic decision" with sarcasm flag should flip, not nudge.
     if ctx["sarcasm_inversion"]:
-        v += ctx["sarcasm_penalty"]
+        if v > CENTER:
+            v = CENTER - (v - CENTER) * 0.8  # full inversion
+        else:
+            v += ctx["sarcasm_penalty"]  # already negative, just nudge
 
     # Stage 5.8: Static friction — DROPPED
     # Tested: kills emotion detection (balanced 0.617 → 0.546).
