@@ -48,6 +48,22 @@ COMPOUND_BONDS = {
     ("paid", "off"): "paidoff",
     ("turned", "around"): "turnedaround",
     ("broke", "up"): "brokeup",
+    # Relationship events
+    ("left", "me"): "leftme",
+    ("left", "him"): "lefthim",
+    ("left", "her"): "lefther",
+    ("left", "us"): "leftus",
+    ("dumped", "me"): "dumpedme",
+    ("dumped", "him"): "dumpedhim",
+    ("dumped", "her"): "dumpedher",
+    # Additional negative life events
+    ("gave", "up"): "gaveup",
+    ("given", "up"): "givenup",
+    ("let", "down"): "letdown",
+    ("messed", "up"): "messedup",
+    ("screwed", "up"): "screwedup",
+    ("ran", "away"): "ranaway",
+    ("moved", "on"): "movedon",
 }
 
 # Special pairs

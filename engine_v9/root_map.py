@@ -580,6 +580,95 @@ WORD_TO_ROOT: dict[str, str] = {
     "treacherous": "NEG_QUALITY",     # keep negative but not DEVASTATED
     "repulsive":   "NEG_QUALITY",     # keep negative but not ANGRY
 
+    # Casual/slang that strips to negative stems
+    "chilling":    "FILLER_WORD",     # "just chilling" = relaxing, not crisis
+    "chill":       "FILLER_WORD",     # V8: dV=-70 — absurd for "chill out"
+    "chills":      "FILLER_WORD",
+    "hanging":     "FILLER_WORD",     # "hanging out" is neutral
+    "hang":        "FILLER_WORD",
+    "killing":     "FILLER_WORD",     # "killing it" = doing great (LIQUID)
+    "tripping":    "FILLER_WORD",     # "tripping" = overreacting (slang)
+    "trip":        "FILLER_WORD",
+
+    # V8 auto-import overrides — words wrongly mapped by charge bucketing
+    "lay":         "FILLER_WORD",     # V8: dV=+55 — "lay down" is neutral
+    "became":      "FILLER_WORD",     # V8: dV=+25 — past tense of become, neutral
+    "trees":       "FILLER_WORD",     # V8: dV=+25 — a tree is not emotional
+    "tree":        "FILLER_WORD",
+    "woke":        "FILLER_WORD",     # ambiguous slang, not emotional
+    "career":      "FILLER_WORD",     # strips to "care" → POS_QUALITY (wrong)
+    "remain":      "FILLER_WORD",     # V8: dV=+35 — "remained" is neutral
+    "remaining":   "FILLER_WORD",
+    "remained":    "FILLER_WORD",
+    "remains":     "FILLER_WORD",
+    "kiss":        "SLIGHT_POS",      # emotional but too strong as HAPPY nucleus
+    "kissed":      "SLIGHT_POS",
+    "smile":       "SLIGHT_POS",      # emotional coloring, not nucleus material
+    "smiled":      "SLIGHT_POS",
+    "smiling":     "SLIGHT_POS",
+    "laugh":       "SLIGHT_POS",
+    "laughed":     "SLIGHT_POS",
+    "laughing":    "SLIGHT_POS",
+    "swim":        "FILLER_WORD",     # V8: dV=+90 — swimming is not ecstatic
+    "swimming":    "FILLER_WORD",
+    "bacon":       "FILLER_WORD",     # V8: dV=+66 — bacon is not emotional
+    "candy":       "FILLER_WORD",     # V8: dV=+62
+    "cash":        "FILLER_WORD",     # V8: dV=+80
+    "basic":       "FILLER_WORD",     # V8: dV=-77
+    "taste":       "FILLER_WORD",     # V8: dV=+71
+    "profit":      "FILLER_WORD",     # V8: dV=+66
+    "lift":        "FILLER_WORD",     # V8: dV=+62
+    "bid":         "FILLER_WORD",     # V8: dV=+58
+    "bout":        "FILLER_WORD",     # V8: dV=+62
+
+    # Narrative words — neutral in literary text
+    "passing":     "FILLER_WORD",     # "passing by" is neutral, not SAD
+    "ended":       "FILLER_WORD",     # "the chapter ended" is neutral
+    "thrown":      "FILLER_WORD",     # "thrown into the mix" is neutral
+    "cried":       "SLIGHT_NEG",      # emotional but often neutral in narrative
+
+    # -less words that strip wrong or need explicit mapping
+    "heartless":   "SOC_EVAL_NEG",   # "heart" overridden to FILLER, but "heartless" = cruel
+    "painless":    "SLIGHT_POS",     # strips to "pain" → HARM (wrong! painless = good)
+    "jobless":     "SLIGHT_NEG",     # not in V8
+    "homeless":    "NEG_QUALITY",    # override V8's mapping through "home"
+    "blameless":   "SLIGHT_POS",     # innocent
+    "flawless":    "POS_QUALITY",    # perfect
+
+    # Words missing from V8 entirely
+    "fatal":       "NEG_QUALITY",
+    "ecstasy":     "EXCITED",
+    "reckless":    "NEG_QUALITY",
+    "speechless":  "SURPRISE",
+    "ruthless":    "SOC_EVAL_NEG",
+    "relentless":  "NEG_QUALITY",
+    "senseless":   "NEG_QUALITY",
+    "mindless":    "NEG_QUALITY",
+    "listless":    "EXHAUSTED",
+    "numb":        "EXHAUSTED",
+    "stuck":       "FRUSTRATED",
+    "trapped":     "AFRAID",
+    "empty":       "SAD",
+    "pointless":   "NEG_QUALITY",
+    "hollow":      "SAD",
+    "drained":     "EXHAUSTED",
+    "suffocating": "AFRAID",
+    "drowning":    "AFRAID",
+    "spiraling":   "ANXIOUS",
+    "overwhelmed": "ANXIOUS",
+    "overthinking":"ANXIOUS",
+    "ghosting":    "SLIGHT_NEG",
+    "ghosted":     "SLIGHT_NEG",
+
+    # Relationship verbs — need structural context to determine meaning
+    "left":        "SLIGHT_NEG",      # "she left me" = abandonment, "I left the room" = neutral
+    "leave":       "SLIGHT_NEG",
+    "leaving":     "SLIGHT_NEG",
+    "gone":        "SLIGHT_NEG",      # "she's gone" = loss context
+    "lost":        "LOSS",            # override auto-map — this IS loss
+    "miss":        "SLIGHT_NEG",      # "I miss her" vs "I missed the bus"
+    "missing":     "SLIGHT_NEG",
+
     # ── Compound events (pre-joined tokens) ──────────────────────────────────
     "laidoff":      "EMPLOYMENT_LOSS",
     "firedoff":     "EMPLOYMENT_LOSS",
@@ -595,6 +684,23 @@ WORD_TO_ROOT: dict[str, str] = {
     "paidoff":      "RECOVERY",
     "turnedaround": "RECOVERY",
     "pulledoff":    "ACHIEVEMENT",
+
+    # Relationship compounds
+    "leftme":       "ABANDONMENT",
+    "lefthim":      "ABANDONMENT",
+    "lefther":      "ABANDONMENT",
+    "leftus":       "ABANDONMENT",
+    "dumpedme":     "ABANDONMENT",
+    "dumpedhim":    "ABANDONMENT",
+    "dumpedher":    "ABANDONMENT",
+    # Failure/surrender compounds
+    "gaveup":       "SURRENDER",
+    "givenup":      "SURRENDER",
+    "letdown":      "LETDOWN",
+    "messedup":     "FAILURE",
+    "screwedup":    "FAILURE",
+    "ranaway":      "SLIGHT_NEG",
+    "movedon":      "MOVING_ON",
 
 
     # ── Auto-mapped from V8 forces_curated.py ──────────────────────────

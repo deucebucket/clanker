@@ -192,4 +192,9 @@ ROOTS: dict[str, Root] = {
     "BREAKDOWN":         _r("BREAKDOWN",         CE, (-45, 40, -40,  30, -30, -20, -10)),
     "RECOVERY":          _r("RECOVERY",          CE, ( 40, 10,  20, -10,  25,  20,  15)),
     "BURNOUT":           _r("BURNOUT",            CE, (-40,-30, -50,  20, -35, -25, -20)),
+    "ABANDONMENT":       _r("ABANDONMENT",       CE, (-50, 40, -40,  30, -30, -40, -30), phase="SOLID"),
+    "SURRENDER":         _r("SURRENDER",         CE, (-35, -10, -50,  10, -20, -20, -30)),
+    "FAILURE":           _r("FAILURE",           CE, (-40, 30, -40,  20, -25, -35, -15)),
+    "LETDOWN":           _r("LETDOWN",           CE, (-35, 20, -30,  15, -20, -20, -15)),
+    "MOVING_ON":         _r("MOVING_ON",         CE, (-20, 10, +10,  10, -10, -10,  +10)),
 }
