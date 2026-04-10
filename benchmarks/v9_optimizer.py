@@ -155,7 +155,7 @@ def run_optimizer(population_size=100, generations=50, elite_frac=0.1):
     datasets = load_datasets()
     print(f"V9 GPU Optimizer — {len(datasets)} sentences")
     print(f"Population: {population_size}, Generations: {generations}")
-    print("=" * 70)
+    print("=" * 70); sys.stdout.flush()
 
     # Initialize population
     population = [random_genome() for _ in range(population_size)]
@@ -193,7 +193,7 @@ def run_optimizer(population_size=100, generations=50, elite_frac=0.1):
         pos_r = best[2]['pos'][1] / best[2]['pos'][0] * 100 if best[2]['pos'][0] else 0
         neg_r = best[2]['neg'][1] / best[2]['neg'][0] * 100 if best[2]['neg'][0] else 0
         neu_r = best[2]['neutral'][1] / best[2]['neutral'][0] * 100 if best[2]['neutral'][0] else 0
-        print(f"Gen {gen+1:3d}/{generations} | bal={best[0]:.3f} raw={best[1]:.3f} | "
+        sys.stdout.flush(); print(f"Gen {gen+1:3d}/{generations} | bal={best[0]:.3f} raw={best[1]:.3f} | "
               f"pos={pos_r:.0f}% neg={neg_r:.0f}% neu={neu_r:.0f}% | "
               f"{elapsed:.1f}s | FS={best[3]['FORCE_SCALE']:.2f} CW={best[3]['CONTEXT_WEIGHT']:.2f} "
               f"SAT={best[3]['SATURATION']:.0f}")

@@ -2963,6 +2963,22 @@ WORD_TO_ROOT: dict[str, str] = {
     "race":        "FILLER_WORD",
     "crumbs":      "FILLER_WORD",     # slang: "left no crumbs" = did well
 
+    # ── Negative event/situation words (novel-500 gap) ───────────────────
+    "cancelled":   "NEG_QUALITY",
+    "canceled":    "NEG_QUALITY",
+    "sideswiped":  "NEG_QUALITY",
+    "leaking":     "NEG_QUALITY",
+    "scratched":   "SLIGHT_NEG",
+    "dropped":     "SLIGHT_NEG",
+    "audited":     "NEG_QUALITY",
+    "blocked":     "NEG_QUALITY",
+    "soaked":      "SLIGHT_NEG",
+    "bleeding":    "NEG_QUALITY",
+    "failing":     "ACAD_NEG",
+    "poison":      "MED_NEG",
+    "closed":      "SLIGHT_NEG",
+    "backed":      "SLIGHT_NEG",
+
     # ── Direction words — need DIRECTIONAL bond sites ────────────────────
     # These are FILLER for charge but carry structural bonding potential.
     # Re-mapped to MOTION so they get DIRECTIONAL bond sites from CATEGORY_BONDS.
