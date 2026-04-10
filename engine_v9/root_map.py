@@ -2999,6 +2999,29 @@ WORD_TO_ROOT: dict[str, str] = {
     "reconnected": "REL_POS",
     "divorced": "REL_NEG", "dumped": "REL_NEG", "ghosted": "REL_NEG",
     "rejected": "REL_NEG", "cheated": "REL_NEG", "separated": "REL_NEG",
+
+    # ── Promoted from SLIGHT_NEG — too weak for negative sentences ───────
+    "grave":       "NEG_QUALITY",
+    "disease":     "MED_NEG",
+    "sick":        "MED_NEG",
+    "illness":     "MED_NEG",
+    "divorce":     "REL_NEG",
+    "stupid":      "SOC_EVAL_NEG",
+    "lying":       "SOC_EVAL_NEG",
+    "screaming":   "NEG_QUALITY",
+    "screams":     "NEG_QUALITY",
+    "battle":      "NEG_QUALITY",
+    "fight":       "NEG_QUALITY",
+    "fighting":    "NEG_QUALITY",
+    "solitude":    "LONELY",
+    "pretended":   "NEG_QUALITY",
+    "pretending":  "NEG_QUALITY",
+    "threw":       "FILLER_WORD",
+    "muffled":     "FILLER_WORD",
+    "judgment":    "NEG_QUALITY",
+    "tempted":     "NEG_QUALITY",
+    "spent":       "FILLER_WORD",
+    "end":         "FILLER_WORD",
 }
 
 # ---------------------------------------------------------------------------

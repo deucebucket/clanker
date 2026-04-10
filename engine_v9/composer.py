@@ -30,7 +30,7 @@ CENTER = 128.0
 
 FORCE_SCALE = 1.0          # 1:1 — root charge = displacement. Tuned: 1.4→1.0 gained 2.3%
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
-CONTEXT_WEIGHT = 0.3       # context atoms color, don't drive
+CONTEXT_WEIGHT = 0.9       # tuned: 0.3 too weak, context carries real signal
 SATURATION = 120.0         # tanh compression range
 
 NEGATOR_FACTOR = -1.0      # full inversion
@@ -38,7 +38,7 @@ INTENSIFIER_FACTOR = 1.5   # 50% amplification
 HEDGE_FACTOR = 0.5         # 50% dampening
 COMPRESSOR_FACTOR = 0.7    # compression
 
-SUBJECT_SELF_BONUS = 1.2   # self-reference amplifies deviation from center
+SUBJECT_SELF_BONUS = 1.0   # tuned: 1.2 over-amplified first-person literary text
 
 # Neutral starting state — U starts at 0, not 128
 _NEUTRAL_STATE = [128.0, 128.0, 128.0, 0.0, 128.0, 128.0, 128.0]
