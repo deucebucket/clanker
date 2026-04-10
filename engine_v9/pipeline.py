@@ -154,6 +154,27 @@ def compute_vadug(
     if force_flow:
         i = compute_intent(force_flow)
 
+    # ── Stage 6.5: Perspective dampening ─────────────────────────
+    # When the subject is OTHER_REF and the emotion is NOT directed at SELF,
+    # dampen the valence — it's narrative about someone else, not the speaker.
+    # But when force_flow shows OTHER → SELF, keep full charge (speaker feels it).
+    _SELF_WORDS = frozenset({"i", "me", "my", "myself", "im", "ive", "<implicit>"})
+    subj_word = equation.subject.word.lower()
+    is_other_subject = subj_word not in _SELF_WORDS
+
+    if is_other_subject:
+        # Check force flow — if directed at SELF, keep full charge
+        directed_at_self = (
+            force_flow is not None
+            and force_flow.target_role == "SELF_REF"
+        )
+        if not directed_at_self:
+            # Dampen: pull V toward center by 60%
+            PERSPECTIVE_DAMPEN = 0.6  # tuned: 0.4 too aggressive, 0.7 too mild
+            v = CENTER + (v - CENTER) * PERSPECTIVE_DAMPEN
+            # Also dampen W (self-worth shouldn't move from others' emotions)
+            w = CENTER + (w - CENTER) * PERSPECTIVE_DAMPEN
+
     # ── Stage 7: Personality ─────────────────────────────────────
     if personality is not None:
         sensitivity = personality.emotional_sensitivity
