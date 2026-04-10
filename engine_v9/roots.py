@@ -109,7 +109,7 @@ FL = RootCategory.FILLER
 ROOTS: dict[str, Root] = {
 
     # ── Positive states ──────────────────────────────────────────────────────
-    "HAPPY":     _r("HAPPY",     P,  ( 35, -5,  15,   0,  25,  15,   0)),
+    "HAPPY":     _r("HAPPY",     P,  ( 18, -5,   9,   0,  13,   6,   0)),
     "EXCITED":   _r("EXCITED",   P,  ( 40, 60,  20,  15,  30,  10,   0)),
     "GRATEFUL":  _r("GRATEFUL",  P,  ( 45,-10,  -5,   0,  20,  20,  30)),
     "RELIEVED":  _r("RELIEVED",  P,  ( 35,-30,  10, -20,  30,  15,   0)),
@@ -135,12 +135,12 @@ ROOTS: dict[str, Root] = {
     "DESPAIR":     _r("DESPAIR",     N,  (-110,40,-120,  50, -80, -60, -40), phase="SOLID"),
 
     # ── Positive qualities ───────────────────────────────────────────────────
-    "POS_QUALITY": _r("POS_QUALITY", PQ, ( 25,  0,  10,   0,  10,   5,   0)),
+    "POS_QUALITY": _r("POS_QUALITY", PQ, ( 15,  0,   5,   0,   5,   3,   0)),
     "BEAUTIFUL":   _r("BEAUTIFUL",   PQ, ( 35, 10,   5,   0,  20,   5,   0)),
     "STRONG":      _r("STRONG",      PQ, ( 20, 15,  40,   0,  15,  20,   0)),
 
     # ── Negative qualities ───────────────────────────────────────────────────
-    "NEG_QUALITY": _r("NEG_QUALITY", NQ, (-25,  0, -10,   0, -10,  -5,   0)),
+    "NEG_QUALITY": _r("NEG_QUALITY", NQ, (-15,  0,  -5,   0,  -5,  -3,   0)),
     "UGLY":        _r("UGLY",        NQ, (-30, 10, -10,   0, -15, -15,   0)),
     "WEAK":        _r("WEAK",        NQ, (-15,-10, -40,   0, -15, -25,   0)),
 
