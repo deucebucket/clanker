@@ -28,18 +28,18 @@ from engine_v9.roots import RootCategory
 
 CENTER = 128.0
 
-FORCE_SCALE = 1.79         # optimizer gen10 champion (bal=0.581)
+FORCE_SCALE = 2.0          # optimizer gen50 champion (bal=0.622)
 EVENT_WEIGHT = 1.0         # nucleus gets full weight
-CONTEXT_WEIGHT = 0.81      # optimizer gen10
-SATURATION = 129.0         # optimizer gen10
+CONTEXT_WEIGHT = 0.53      # optimizer gen50
+SATURATION = 97.0          # optimizer gen50 — tight compression
 
-NEGATOR_FACTOR = -1.0      # clean inversion
-INTENSIFIER_FACTOR = 1.5   # standard
-HEDGE_FACTOR = 0.5         # standard
+NEGATOR_FACTOR = -0.81     # optimizer: partial negation, not full flip
+INTENSIFIER_FACTOR = 2.25  # optimizer: strong amplification
+HEDGE_FACTOR = 0.44        # optimizer gen50
 COMPRESSOR_FACTOR = 0.7    # compression
 
-SUBJECT_SELF_BONUS = 1.0   # tuned: 1.2 over-amplified first-person literary text
-LENGTH_EXPONENT = 0.35     # adaptive FS = FORCE_SCALE / (word_count ** this)
+SUBJECT_SELF_BONUS = 1.0   # no self-amplification
+LENGTH_EXPONENT = 0.2      # optimizer: gentle length scaling
 
 # Neutral starting state — U starts at 0, not 128
 _NEUTRAL_STATE = [128.0, 128.0, 128.0, 0.0, 128.0, 128.0, 128.0]

@@ -109,7 +109,7 @@ FL = RootCategory.FILLER
 ROOTS: dict[str, Root] = {
 
     # ── Positive states ──────────────────────────────────────────────────────
-    "HAPPY":     _r("HAPPY",     P,  ( 23, -5,  11,   0,  17,   7,   0)),
+    "HAPPY":     _r("HAPPY",     P,  ( 14, -5,   7,   0,  10,   4,   0)),
     "EXCITED":   _r("EXCITED",   P,  ( 40, 60,  20,  15,  30,  10,   0)),
     "GRATEFUL":  _r("GRATEFUL",  P,  ( 45,-10,  -5,   0,  20,  20,  30)),
     "RELIEVED":  _r("RELIEVED",  P,  ( 35,-30,  10, -20,  30,  15,   0)),
@@ -135,12 +135,12 @@ ROOTS: dict[str, Root] = {
     "DESPAIR":     _r("DESPAIR",     N,  (-110,40,-120,  50, -80, -60, -40), phase="SOLID"),
 
     # ── Positive qualities ───────────────────────────────────────────────────
-    "POS_QUALITY": _r("POS_QUALITY", PQ, ( 30,  0,  10,   0,  10,   6,   0)),
+    "POS_QUALITY": _r("POS_QUALITY", PQ, ( 26,  0,   8,   0,   8,   5,   0)),
     "BEAUTIFUL":   _r("BEAUTIFUL",   PQ, ( 35, 10,   5,   0,  20,   5,   0)),
     "STRONG":      _r("STRONG",      PQ, ( 20, 15,  40,   0,  15,  20,   0)),
 
     # ── Negative qualities ───────────────────────────────────────────────────
-    "NEG_QUALITY": _r("NEG_QUALITY", NQ, (-19,  0,  -6,   0,  -6,  -3,   0)),
+    "NEG_QUALITY": _r("NEG_QUALITY", NQ, (-27,  0,  -9,   0,  -9,  -5,   0)),
     "UGLY":        _r("UGLY",        NQ, (-30, 10, -10,   0, -15, -15,   0)),
     "WEAK":        _r("WEAK",        NQ, (-15,-10, -40,   0, -15, -25,   0)),
 
@@ -195,8 +195,8 @@ ROOTS: dict[str, Root] = {
 
     # ── Mild emotional roots (for words with |dV| 15-30) ────────────────────
     # These prevent 5x amplification when a dV=-5 word gets rounded to dV=-25
-    "SLIGHT_POS":  _r("SLIGHT_POS",  RootCategory.POSITIVE_QUALITY, ( +7,  0,  +2,   0,  +2,  +1,   0)),
-    "SLIGHT_NEG":  _r("SLIGHT_NEG",  RootCategory.NEGATIVE_QUALITY, ( -7,  0,  -2,   0,  -2,  -1,   0)),
+    "SLIGHT_POS":  _r("SLIGHT_POS",  RootCategory.POSITIVE_QUALITY, (+15,  0,  +5,   0,  +5,  +3,   0)),
+    "SLIGHT_NEG":  _r("SLIGHT_NEG",  RootCategory.NEGATIVE_QUALITY, (-15,  0,  -5,   0,  -5,  -3,   0)),
 
     # ── Domain: Financial ────────────────────────────────────────────────────
     "FIN_POS":     _r("FIN_POS",     RootCategory.FINANCIAL_POS,  (+30,  +10, +25,   0, +20, +20,   0)),
