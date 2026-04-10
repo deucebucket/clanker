@@ -24,6 +24,7 @@ from .tokenizer import tokenize
 from .word_classifier import classify_sentence
 from .decomposer import decompose
 from .composer import compose
+from .bonding import bond_resolve
 from .structures import StructureDetector, StructureMatch
 from .force_flow import resolve_force_flow, compute_flow_modifiers, compute_intent
 from .zones import ZoneClassifier
@@ -55,6 +56,12 @@ def compute_vadug(
     # ── Stage 1: Tokenize ────────────────────────────────────────
     tokens = tokenize(text)
 
+    # ── Stage 1.5: Molecular bonding pass ────────────────────────
+    molecules = bond_resolve(text)
+    bond_flags = set()
+    for mol in molecules:
+        bond_flags |= mol.flags
+
     # ── Stage 2: Classify structural roles ───────────────────────
     word_roles = classify_sentence(tokens) if tokens else []
 
@@ -63,6 +70,19 @@ def compute_vadug(
 
     # ── Stage 4: Compose equation → raw VADUGWI ──────────────────
     result = compose(equation)
+
+    # ── Stage 4.5: Apply bonding corrections ─────────────────────
+    # If bonding detected sarcasm, invert the composed valence
+    if "sarcasm" in bond_flags or "irony" in bond_flags:
+        result = VADUG(
+            v=max(0, min(255, 256 - result.v)),  # mirror around center
+            a=result.a,
+            d=result.d,
+            u=result.u,
+            g=result.g,
+            w=result.w,
+            i=result.i,
+        )
 
     # ── Stage 5: Detect structural patterns ──────────────────────
     structures = _structure_detector.detect_all(word_roles) if word_roles else []
@@ -128,6 +148,8 @@ def compute_vadug(
             "context": [a.word for a in equation.context],
         },
         "structures": [s.pattern for s in structures],
+        "bonds": [{"words": m.words, "v": m.surface_charge[0]} for m in molecules if len(m.words) > 1],
+        "bond_flags": list(bond_flags),
         "force_flow": {
             "actor": force_flow.actor_role if force_flow else None,
             "target": force_flow.target_role if force_flow else None,

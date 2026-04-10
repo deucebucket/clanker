@@ -3022,6 +3022,18 @@ WORD_TO_ROOT: dict[str, str] = {
     "tempted":     "NEG_QUALITY",
     "spent":       "FILLER_WORD",
     "end":         "FILLER_WORD",
+
+    # ── Direction words — need DIRECTIONAL bond sites ────────────────────
+    # These are FILLER for charge but carry structural bonding potential.
+    # Re-mapped to MOTION so they get DIRECTIONAL bond sites from CATEGORY_BONDS.
+    "off":         "MOTION",
+    "away":        "MOTION",
+    "out":         "MOTION",
+    "back":        "MOTION",
+    "down":        "MOTION",          # override the earlier FILLER_WORD
+    "up":          "MOTION",
+    "over":        "MOTION",
+    "through":     "MOTION",
 }
 
 # ---------------------------------------------------------------------------
