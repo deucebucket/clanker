@@ -2978,6 +2978,15 @@ WORD_TO_ROOT: dict[str, str] = {
     "poison":      "MED_NEG",
     "closed":      "SLIGHT_NEG",
     "backed":      "SLIGHT_NEG",
+    "refuses":     "NEG_QUALITY",
+    "refuse":      "NEG_QUALITY",
+    "refused":     "NEG_QUALITY",
+    "tolerate":    "SLIGHT_NEG",
+    "another":     "SLIGHT_NEG",      # "another X" = repetition frustration in context
+    "flop":        "NEG_QUALITY",
+    "dark":        "SLIGHT_NEG",
+    "terrible":    "SAD",             # already mapped but ensure override
+    "extra":       "FILLER_WORD",     # override if auto-imported
 
     # ── Direction words — need DIRECTIONAL bond sites ────────────────────
     # These are FILLER for charge but carry structural bonding potential.

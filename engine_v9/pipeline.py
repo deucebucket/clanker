@@ -96,22 +96,22 @@ def compute_vadug(
             context_count += 1
 
         if context_count >= 1:
-            # Only fire sentence-level sarcasm when nucleus is a STRONG positive
-            # evaluation — "love", "cherish", "delighted", "adore" (dV >= 35).
-            # Mild positives ("good", "fine") in negative context = not sarcasm,
-            # just mixed. This prevents false positives on literary narrative.
+            # Sentence-level sarcasm: positive nucleus + negative context
+            # Expanded: any positive root category with dV >= 14 qualifies
             _SARCASM_CATEGORIES = frozenset({
                 RootCategory.POSITIVE_STATE,
                 RootCategory.POSITIVE_EVENT,
+                RootCategory.POSITIVE_QUALITY,
+                RootCategory.SOCIAL_EVAL_POS,
             })
-            nuc_is_strong_pos = (
-                nucleus_v >= 35
+            nuc_is_positive = (
+                nucleus_v >= 14
                 and equation.nucleus.root.category in _SARCASM_CATEGORIES
             )
 
-            if nuc_is_strong_pos and context_v_sum < 0:
+            if nuc_is_positive and context_v_sum < 0:
                 divergence = nucleus_v - context_v_sum
-                if divergence > 45:
+                if divergence > 25:
                     sarcasm_detected = True
                     bond_flags.add("sarcasm_sentence")
 
