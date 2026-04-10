@@ -1,0 +1,663 @@
+{
+  "description": "Sentences where majority agrees but not unanimous \u2014 probable but not certain",
+  "sentences": [
+    {
+      "id": 1,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 2,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 3,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 8,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 10,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 13,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 14,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 29,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 31,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 40,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 42,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 44,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 46,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 49,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 52,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 53,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 54,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 66,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 67,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 75,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 78,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 88,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 91,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 97,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 100,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 102,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 103,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 104,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 109,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 114,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 115,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 120,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 121,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 125,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 126,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 129,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 134,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 136,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 137,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 139,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 144,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 146,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 148,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 150,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 153,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 154,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 156,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 158,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 162,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 165,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 166,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 169,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 170,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 173,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 174,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 175,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 180,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 181,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 182,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 183,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 187,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 188,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 189,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 191,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 192,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 195,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 197,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 198,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 206,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 208,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 209,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 212,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 220,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 222,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 225,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 226,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 239,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 241,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 243,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 246,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 249,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 252,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 254,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 260,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 263,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 268,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 271,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 275,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 277,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 280,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 287,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 290,
+      "label": "neg",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 292,
+      "label": "pos",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    },
+    {
+      "id": 298,
+      "label": "neutral",
+      "models": 4,
+      "agreement": 3,
+      "confidence": "majority"
+    }
+  ]
+}

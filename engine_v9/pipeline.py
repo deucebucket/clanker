@@ -327,6 +327,49 @@ def compute_vadug(
     # ── Zone classification ──────────────────────────────────────
     zone_result = _zone_classifier.classify(result)
 
+    # ── Confidence scoring ───────────────────────────────────────
+    # How confident is the engine in this reading?
+    # Low confidence = engine is guessing, caller should treat with caution.
+    #
+    # Confidence factors:
+    # 1. Nucleus gravity — weak nucleus = low signal
+    # 2. V distance from thresholds — borderline = uncertain
+    # 3. Number of charged atoms — fewer = less evidence
+    # 4. Contradictions — sarcasm flags, mixed signals
+    confidence = 1.0
+
+    # Factor 1: nucleus gravity (max 0.3 penalty)
+    max_gravity = max((a.gravity for a in equation.all_atoms), default=0)
+    if max_gravity < 5:
+        confidence -= 0.3  # no charged atoms at all
+    elif max_gravity < 15:
+        confidence -= 0.15  # weak signal
+
+    # Factor 2: distance from classification thresholds (max 0.3 penalty)
+    v_final = result.v
+    dist_to_pos = abs(v_final - 145)
+    dist_to_neg = abs(v_final - 110)
+    min_dist = min(dist_to_pos, dist_to_neg)
+    if min_dist < 5:
+        confidence -= 0.3  # right on the boundary
+    elif min_dist < 15:
+        confidence -= 0.15  # near the boundary
+
+    # Factor 3: charged atom count (max 0.2 penalty)
+    charged_count = sum(1 for a in equation.all_atoms if a.gravity > 5)
+    if charged_count == 0:
+        confidence -= 0.2
+    elif charged_count == 1:
+        confidence -= 0.1
+
+    # Factor 4: contradictions (max 0.2 penalty)
+    if bond_flags:
+        confidence -= 0.1  # sarcasm/irony detected = uncertain
+    if ctx.get("sarcasm_inversion"):
+        confidence -= 0.1
+
+    confidence = max(0.0, min(1.0, confidence))
+
     # ── Build trace ──────────────────────────────────────────────
     trace = {
         "tokens": tokens,
@@ -352,6 +395,7 @@ def compute_vadug(
         "zone": zone_result.zone,
         "zone_confidence": zone_result.confidence,
         "word_count": len(tokens),
+        "confidence": round(confidence, 2),
     }
 
     return result, trace

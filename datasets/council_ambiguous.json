@@ -1,0 +1,1105 @@
+{
+  "description": "Sentences where models disagree \u2014 engine should flag low confidence",
+  "sentences": [
+    {
+      "id": 9,
+      "labels": {
+        "neutral": 2,
+        "neg": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 16,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 17,
+      "labels": {
+        "neg": 2,
+        "pos": 1,
+        "neutral": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 21,
+      "labels": {
+        "neutral": 2,
+        "neg": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 24,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 30,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 35,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 48,
+      "labels": {
+        "neutral": 2,
+        "neg": 1,
+        "pos": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 50,
+      "labels": {
+        "neutral": 2,
+        "neg": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 63,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 73,
+      "labels": {
+        "neutral": 1,
+        "pos": 2,
+        "neg": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 76,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 79,
+      "labels": {
+        "neutral": 2,
+        "neg": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 82,
+      "labels": {
+        "pos": 2,
+        "neutral": 1,
+        "neg": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 84,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 87,
+      "labels": {
+        "neg": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 95,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 106,
+      "labels": {
+        "neutral": 2,
+        "neg": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 127,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 128,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 131,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 151,
+      "labels": {
+        "neutral": 2,
+        "pos": 1,
+        "neg": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 152,
+      "labels": {
+        "pos": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 157,
+      "labels": {
+        "neutral": 2,
+        "pos": 1,
+        "neg": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 171,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 172,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 176,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 179,
+      "labels": {
+        "neutral": 2,
+        "neg": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 184,
+      "labels": {
+        "neg": 2,
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 185,
+      "labels": {
+        "neutral": 1,
+        "pos": 2,
+        "neg": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 186,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 190,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 193,
+      "labels": {
+        "pos": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 199,
+      "labels": {
+        "neutral": 1,
+        "neg": 2,
+        "pos": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 211,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 219,
+      "labels": {
+        "neg": 2,
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 224,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 235,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 238,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 250,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 251,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 258,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 264,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 265,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 272,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 278,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 284,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 289,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 291,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 294,
+      "labels": {
+        "neutral": 2,
+        "pos": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 297,
+      "labels": {
+        "neg": 2,
+        "neutral": 2
+      },
+      "models": 4,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 301,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 303,
+      "labels": {
+        "neg": 1,
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 304,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 305,
+      "labels": {
+        "neutral": 2,
+        "neg": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 310,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 313,
+      "labels": {
+        "pos": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 315,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 317,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 318,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 320,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 321,
+      "labels": {
+        "neutral": 1,
+        "pos": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 325,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 327,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 329,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 335,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 338,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 344,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 348,
+      "labels": {
+        "pos": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 355,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 357,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 358,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 360,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 361,
+      "labels": {
+        "pos": 2,
+        "neg": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 363,
+      "labels": {
+        "neutral": 1,
+        "pos": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 364,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 366,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 367,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 369,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 376,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 377,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 378,
+      "labels": {
+        "neg": 2,
+        "neutral": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 379,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 381,
+      "labels": {
+        "neg": 1,
+        "neutral": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 385,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 388,
+      "labels": {
+        "neutral": 1,
+        "pos": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 390,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 391,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 394,
+      "labels": {
+        "neutral": 2,
+        "pos": 1
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 395,
+      "labels": {
+        "neutral": 1,
+        "pos": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 397,
+      "labels": {
+        "neutral": 1,
+        "pos": 2
+      },
+      "models": 3,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 402,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 404,
+      "labels": {
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 406,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 409,
+      "labels": {
+        "pos": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 413,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 415,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 424,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 427,
+      "labels": {
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 433,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 435,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 436,
+      "labels": {
+        "pos": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 438,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 439,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 441,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 442,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 445,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 452,
+      "labels": {
+        "pos": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 457,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 461,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 471,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 472,
+      "labels": {
+        "pos": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 473,
+      "labels": {
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 474,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 475,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 476,
+      "labels": {
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 478,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 486,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 488,
+      "labels": {
+        "neutral": 1,
+        "pos": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 495,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    },
+    {
+      "id": 496,
+      "labels": {
+        "neg": 1,
+        "neutral": 1
+      },
+      "models": 2,
+      "confidence": "ambiguous"
+    }
+  ]
+}
