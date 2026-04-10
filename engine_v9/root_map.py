@@ -1083,6 +1083,45 @@ WORD_TO_ROOT: dict[str, str] = {
     "free": "SLIGHT_POS",          # "for free" = positive context
     "back": "FILLER_WORD",         # directional, not positive on its own
 
+    # ── Positive vocabulary gap (Gemini-4350 pos→neutral analysis) ───────
+    "favorite":    "POS_QUALITY",
+    "favourite":   "POS_QUALITY",
+    "anticipation":"EXCITED",
+    "thrill":      "EXCITED",
+    "thrilling":   "EXCITED",
+    "genuine":     "POS_QUALITY",
+    "genuinely":   "INTENSIFY",
+    "spark":       "SLIGHT_POS",
+    "profound":    "SLIGHT_POS",
+    "protect":     "SOC_EVAL_POS",
+    "protecting":  "SOC_EVAL_POS",
+    "clean":       "SLIGHT_POS",
+    "cleaned":     "SLIGHT_POS",
+    "rush":        "EXCITED",
+
+    # Intensifiers missing from V9
+    "absolute":    "INTENSIFY",
+    "utterly":     "INTENSIFY",
+    "fiercely":    "INTENSIFY",
+    "highly":      "INTENSIFY",
+    "literally":   "INTENSIFY",       # override — solvent in phase but also intensifier
+
+    # Neutral words bleeding into pos sentences
+    "right":       "FILLER_WORD",     # "you're right" is agreement, not positive charge
+    "tonight":     "FILLER_WORD",
+    "night":       "FILLER_WORD",
+    "coffee":      "FILLER_WORD",
+    "bass":        "FILLER_WORD",
+    "movie":       "FILLER_WORD",
+    "song":        "FILLER_WORD",
+    "sword":       "FILLER_WORD",
+    "ancient":     "FILLER_WORD",
+    "deep":        "FILLER_WORD",
+    "heavy":       "FILLER_WORD",
+    "final":       "FILLER_WORD",
+    "team":        "FILLER_WORD",
+    "vocal":       "FILLER_WORD",
+
     # ── Domain overrides (AFTER auto-import — last-write-wins) ───────────
     # These override coarse auto-mappings with domain-specific roots.
     # Must be LAST in the dict to take priority over auto-import.
