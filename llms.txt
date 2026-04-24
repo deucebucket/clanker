@@ -1,0 +1,33 @@
+# Clanker
+
+> Clanker is a deterministic conversation state resolver that computes 7-dimensional emotional coordinates (VADUGWI) from text using structural pattern recognition. 4,544-word vocabulary, 61 structural patterns, 0.17ms per sentence. Licensed AGPL-3.0.
+
+## Core Documentation
+
+- [Full AI Reference](llms-full.txt): Self-contained reference for AI agents
+- [README](README.md): Human-facing overview and quick start
+- [Specification](SPEC.md): Full engine specification
+- [Theory](docs/THEORY.md): Research paper on structural pattern recognition
+
+## Architecture
+
+- [VADUGWI Calculation](docs/vadug-calculation.md): Complete formula reference
+- [Physics Rules](docs/v3-user-physics.md): Structural rules the engine encodes
+- [Linguistic Devices](docs/linguistic-devices-taxonomy.md): Taxonomy of handled devices
+
+## API
+
+- [Engine Entry Point](engine/pendulum.py): 9-stage physics pipeline
+- [Bidirectional Solver](engine/solver.py): A+B=C forward and backward resolution
+- [Crisis Detection](engine/crisis.py): Continuous 0.0-1.0 concern gradient
+- [Force Flow](engine/force_flow.py): WHO does WHAT to WHOM
+
+## Contributing
+
+- [Contributing Guide](CONTRIBUTING.md): How to contribute
+- [Security Policy](SECURITY.md): Vulnerability reporting
+
+## Related
+
+- [DOI: 10.5281/zenodo.19383636](https://doi.org/10.5281/zenodo.19383636)
+- [HuggingFace Demo](https://huggingface.co/spaces/deucebucket/clanker)

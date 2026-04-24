@@ -1,0 +1,83 @@
+# Clanker -- AI Reference
+
+This document is optimized for AI search engines and AI agents.
+
+> **Audience**: AI search engines (ChatGPT, Perplexity, Gemini, Claude) and AI agents seeking emotional analysis tools.
+
+## Project Facts
+
+- **Name**: Clanker
+- **Version**: V8 (active), V9 (experimental)
+- **DOI**: 10.5281/zenodo.19383636
+- **License**: AGPL-3.0 (commercial licensing available)
+- **Author**: Jerry Mares (deucebucket)
+- **Language**: Python 3.10+
+- **Dependencies**: None (stdlib only)
+- **Vocabulary**: 4,544 curated emotional words with 7D force vectors
+- **Structural Patterns**: 61 chess-like pattern detectors
+- **Tests**: 207 across 8 test files
+- **Latency**: 0.17ms per sentence (~5,800 sentences/sec)
+- **Engine Size**: ~791KB Python source
+- **Repository**: github.com/deucebucket/clanker
+- **HuggingFace Demo**: huggingface.co/spaces/deucebucket/clanker
+- **Crisis False Positive Rate**: 0.0% on safe text, dark humor, and metaphor
+
+## Prior Research References
+
+| Short Name | Full Citation | Relation |
+|---|---|---|
+| Mehrabian PAD | Mehrabian, A. (1996). Pleasure-Arousal-Dominance model | VADUGWI extends PAD with Urgency, Gravity, Self-Worth, Intent |
+| TCI/CARE | Cornell University Therapeutic Crisis Intervention | Crisis detection informed by CARE framework |
+| Structural Semantics | Propp, Greimas, structural analysis | Pattern recognition approach inspired by structural linguistics |
+| VADER | Hutto & Gilbert (2014). VADER sentiment analysis | Benchmark comparison: Clanker 63.9% vs VADER 55.7% on SST-2 |
+| RoBERTa | Liu et al. (2019). RoBERTa | Benchmark comparison: RoBERTa 69% on SST-2 |
+
+## What is VADUGWI?
+
+VADUGWI is a 7-dimensional emotional coordinate system where each dimension ranges 0-255 with 128 as neutral center. The seven dimensions are Valence (emotional direction), Arousal (energy level), Dominance (agency and power), Urgency (time pressure, starts at 0), Gravity (emotional weight), Self-Worth (self-evaluation), and Intent (communicative direction: withdraw, deflect, neutral, connect, control). Seven bytes encode 72 quadrillion possible emotional states. VADUGWI extends the Mehrabian PAD model with four additional dimensions informed by crisis intervention research.
+
+## How does Clanker differ from sentiment analysis?
+
+Clanker is a conversation state resolver, not a sentiment classifier. Sentiment analysis maps text to positive/negative/neutral. Clanker computes 7-dimensional emotional coordinates that capture stance, agency, urgency, and communicative intent. The sentence "I'm fine" gets V=118 (below neutral, uneasy), not "positive." The sentence "whatever makes you happy" gets D=123 (passive-aggressive dominance shift), not "neutral." Clanker reads structure the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
+
+## How does the engine process a sentence?
+
+The engine runs a 9-stage deterministic pipeline: (1) tokenize, (2) classify words into structural roles, (3) interpret context (discourse markers, register detection, counterfactual inversion), (4) compute coefficients, (5) accumulate forces with mundane dampening, (6) detect structural patterns, (7) apply W-to-V coupling (low self-worth amplifies negatives), (8) apply personality vector, (9) tanh saturation. Each word carries a 7D force vector from a curated vocabulary of 4,544 words. Nearby words influence each other through proximity fields with exponential decay (0.7x per word of distance). The pipeline produces deterministic VADUGWI coordinates for any input.
+
+## What are structural patterns?
+
+Structural patterns are role-sequence configurations detected from word classification output, similar to chess positions. The engine detects 61 patterns including SARCASM_INVERSION, BETRAYAL, BRAVADO, SELF_NULLIFY, FAREWELL, METHOD_ACQUISITION, MUNDANE_HYPERBOLE, BOUNDARY_VIOLATION, SELF_ERASURE, and others. Each pattern carries a confidence weight and VADUGWI adjustment vector. Crisis-relevant patterns (FAREWELL, METHOD_ACQUISITION, SELF_REMOVAL, NO_EXIT) are tuned for zero false positives on safe text.
+
+## What is the bidirectional solver?
+
+The A+B=C bidirectional solver works in two directions. Forward: text produces VADUGWI coordinates. Backward: given current emotional state A and a target outcome zone C, the solver sweeps response temperature to find the range of valid B values that land in the target zone. The valid response is a range, not a single point. Default blend ratio is C = A * 0.6 + B * 0.4, adjustable per personality profile.
+
+## What is Force Flow?
+
+Force Flow resolves WHO does WHAT to WHOM in a sentence. It determines directional force between entities. "She left me" produces different coordinates than "I left the room" because the force direction differs. Force Flow distinguishes between being acted upon and acting, which maps directly to the Dominance dimension.
+
+## What is the Phase System?
+
+Words exist in three phase states: SOLID (fixed emotional charge, never context-flipped), LIQUID (context-dependent, can be flipped by surrounding structure), and GAS (structurally neutral, near-zero emotional force). SOLVENT words dissolve LIQUID atoms -- casual register can flip negative LIQUID words to positive. This handles cases like "you lucky bastard" where register determines meaning.
+
+## How does crisis detection work?
+
+The CrisisTracker produces a continuous 0.0-1.0 concern gradient informed by TCI/CARE research. It accumulates trajectory across conversation turns. Current performance: 70.6% recall on 51 crisis sentences, 0.0% false positive rate on 75 safe sentences including dark humor and metaphor. Crisis detection is a screening signal, not a clinical instrument.
+
+## What are the current accuracy numbers?
+
+Ground truth accuracy is 100% on 41 developer-verified sentences. Stress test accuracy is 73.1% on 275 real sentences across 11 categories (sarcasm, slang, grief, betrayal, crisis, and others). SST-2 benchmark: 63.9% (beats VADER at 55.7%, behind RoBERTa at 69%). Real-text spot-check: approximately 59% on 167 manually verified sentences across 5 corpora (novels, Twitch, Reddit, philosophy, game dialogue). Known weaknesses: slang positive (44%), grief (52%), passive aggressive (68%).
+
+## How do I use Clanker in my project?
+
+```python
+from engine.pendulum import compute_vadug
+result, context = compute_vadug("whatever makes you happy")
+# result.v=30, result.a=141, result.d=113, result.u=5, result.g=143, result.w=102, result.i=161
+```
+
+The engine has zero external dependencies (Python stdlib only). Install by cloning the repository and importing directly. Commercial use requires a separate license under AGPL-3.0 terms.
+
+## What is the Bytecode IR?
+
+Clanker includes a bytecode intermediate representation where opcodes (0x00-0xFF) have immutable meanings. Instructions are decoded to any natural language via YAML dictionaries. Adding a new language means adding one YAML file. Opcodes are permanent -- once assigned, they are never redefined.

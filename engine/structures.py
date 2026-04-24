@@ -902,7 +902,7 @@ class StructureDetector:
         # Hollow affirm + positive word + short sentence = the compression
         # itself IS the contradiction. "oh joy", "oh wonderful", "oh how lovely"
         # EXCEPTION: hollow + permission verb + no negative = genuine permission
-        # "sure go ahead" without friction = NOT sarcasm (Jerry rule)
+        # "sure go ahead" without friction = NOT sarcasm
         compressed = 0.0
         is_genuine_permission = (has_permission and not has_negative_context
                                  and not has_mundane)

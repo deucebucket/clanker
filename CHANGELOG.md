@@ -1,5 +1,62 @@
 # Changelog
 
+## V9 (2026-04-15 -- present) -- Experimental Structural Decomposition
+- Structural pendulum: decomposes sentence into equation (SUBJECT+EVENT+CONTEXT) before force accumulation
+- Lemma root system: collapses 4,544 words to ~500 emotional roots
+- Molecular bonding layer: 8 bond types, reaction table, two-layer molecules
+- Star-to-star gravity: heavier emotional atoms pull lighter ones
+- Phase-aware alloy composition: LIQUID words default to presumed charge
+- Ported all V8 systems: structures, force flow, zones, crisis, anomaly, solver, battleship
+- W→V coupling: low self-worth amplifies negatives, suppresses positives
+- Absence scope + forced choice cancellation in interpret_context
+- Genetic optimizer: champion knobs tuned across 50+ generations
+- Perspective dampening: OTHER_REF emotions dampened unless directed at SELF
+- 4-model council consensus (Claude, Gemini, GPT, Grok) on 500+ sentences
+- Confidence scoring: certain/majority/ambiguous truth split
+- Status: experimental, ~10pts behind V8 on stress tests
+
+## V8.3 (2026-04-10)
+- Conversational accuracy: 73.1% → 98.5% on conversational sentences
+- Crisis recall: 80.4%
+- 3,646 verified sentences accumulated
+
+## V8.2 (2026-04-08) -- Council Consensus
+- Full 4-LLM council consensus applied
+- Complexity dampening for literary register
+- Real-text spot-check: ~59% on 167 manually verified sentences across 5 corpora
+
+## V8.1 (2026-04-06) -- Interpret Context Layer
+- Discourse markers: "actually", "honestly", "I mean" as register signals
+- Negator inversion in context
+- Register dampening for casual text
+- Counterfactual detection
+
+## V8 (2026-04-04) -- Mass Zero + Real-Data Audit
+- Mass-zeroed 646 GAS atoms (inflated neutral words neutralized)
+- 275-sentence stress test: 73.1% (201/275 across 11 categories)
+- 126-sentence crisis benchmark: 70.6% recall, 0% false positive
+- Real-data audit: 59% accuracy on 167 sentences from 5 corpora (novels, Twitch, Reddit, philosophy, game dialogue)
+- 6 physics problems identified and documented
+- Vocabulary: 4,544 curated words (up from 4,108)
+- Structural patterns: 45+ (up from 26)
+- New patterns: MUNDANE_HYPERBOLE, BOUNDARY_VIOLATION, SELF_ERASURE, DIVESTITURE, METHOD_FIXATION, RARITY_MARKER, ABANDONMENT, LIFE_ACHIEVEMENT
+- SOLVENT dissolution: casual register flips LIQUID negative to positive
+- Mundane dampening: inert gas absorption of crisis energy
+- interpret_context layer: discourse markers, register detection, counterfactual inversion
+- Tests: 207 (up from 167)
+
+## V7 (2026-04-02) -- SOLVENT Physics
+- SOLVENT word role: REGISTER_CASUAL dissolves LIQUID atoms via phase physics
+- Pure physics solutions for context-dependent meaning
+
+## V6 (2026-04-01) -- Physics Upgrade
+- Contradiction sarcasm detection
+- Atmospheric grief handling
+- Adaptive momentum
+- Pipeline refactor: pendulum.py split into 8 pluggable stages
+- Port V2 anomaly detector: trajectory analysis for conversations
+- Pipeline trace module added
+
 ## V5.5 (2026-03-31) -- 7D VADUGWI, Force Flow, Phi-4 LoRA, Bayesian Corrections
 
 ### Engine

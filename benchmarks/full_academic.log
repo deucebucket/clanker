@@ -1,52 +1,0 @@
-
-################################################################################
-  ACADEMIC BENCHMARK — V5.5 engine, 4428 words
-################################################################################
-  Loading RoBERTa...
-Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 45119.35it/s]
-[1mRobertaForSequenceClassification LOAD REPORT[0m from: cardiffnlp/twitter-roberta-base-sentiment-latest
-Key                             | Status     |  | 
---------------------------------+------------+--+-
-roberta.pooler.dense.bias       | UNEXPECTED |  | 
-roberta.embeddings.position_ids | UNEXPECTED |  | 
-roberta.pooler.dense.weight     | UNEXPECTED |  | 
-
-Notes:
-- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
-You seem to be using the pipelines sequentially on GPU. In order to maximize efficiency please use a dataset
-  500/872...
-  SST-2 (872 examples)
-  Engine                Acc       F1  Neutral%     ms/s
-  -------------------------------------------------------
-  VADER               55.7%    39.6%     18.1%    0.06
-  TextBlob            53.8%    39.0%     22.7%    0.18
-  ClankerV5.5         67.5%    44.8%      0.0%    0.29
-  RoBERTa             69.0%    52.3%     24.1%    6.93
-  500/5427...  1000/5427...  1500/5427...  2000/5427...  2500/5427...  3000/5427...  3500/5427...  4000/5427...  4500/5427...  5000/5427...
-  GoEmotions (5427 examples)
-  Engine                Acc       F1  Neutral%     ms/s
-  -------------------------------------------------------
-  VADER               61.3%    59.6%     21.7%    0.05
-  TextBlob            57.1%    55.8%     34.6%    0.16
-  ClankerV5.5         46.2%    45.8%     23.1%    0.24
-  RoBERTa             61.4%    61.4%     27.9%    5.06
-  500/1421...  1000/1421...
-  TweetEval (1421 examples)
-  Engine                Acc       F1  Neutral%     ms/s
-  -------------------------------------------------------
-  VADER               74.1%    50.9%      9.0%    0.07
-  TextBlob            49.0%    38.8%     31.5%    0.16
-  ClankerV5.5         64.3%    41.6%      0.0%    0.26
-  RoBERTa             76.6%    54.0%     17.4%    4.95
-
-################################################################################
-  Dataset                       VADER       TextBlob    ClankerV5.5        RoBERTa
-  ---------------------------------------------------------------------------
-  SST-2                        55.7%         53.8%         67.5%         69.0%
-  GoEmotions                   61.3%         57.1%         46.2%         61.4%
-  TweetEval                    74.1%         49.0%         64.3%         76.6%
-  ---------------------------------------------------------------------------
-  WEIGHTED AVG                 63.0%         55.2%         51.9%         65.0%
-################################################################################
-
-  Results saved to /var/home/deucebucket/ai-drive/clanker-lang/benchmarks/academic_results.json

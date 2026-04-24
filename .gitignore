@@ -10,32 +10,43 @@ build/
 .venv/
 venv/
 
-# NRC VAD Lexicon data files (downloaded, not committed)
-benchmarks/nrc_vad_lexicon_v1.txt
-benchmarks/nrc_vad_lexicon_v2.txt
-benchmarks/english_words.txt
-benchmarks/nrc_forces_preview.txt
-benchmarks/generated_forces.py
-benchmarks/synthesized_forces.py
-benchmarks/synthesis_report.txt
-benchmarks/gutenberg_sentences.jsonl
-benchmarks/tuning_data.jsonl
-benchmarks/emobank.csv
-training/checkpoints/
-training/data/discovered_idioms.jsonl
-training/data/empathetic_dialogues.jsonl
-
-# Training data — raw files stay local, not in git
-# Versioned backups: training/data/archive_v1_2026-03-30.zip etc.
-training/data/*.jsonl
-training/data/*.txt
-training/data/*.zip
-training/data/*.json
-
-# Benchmark data files (generated/downloaded)
-benchmarks/misses_full.json
-benchmarks/gpu_optimal.json
-benchmarks/gpu_optimal_v2.json
-benchmarks/experiment_baseline.json
-archive/
+# Internal / development
+CLAUDE.md
 CLAUDE.md.bak
+.claude/
+docs/superpowers/
+
+# Everything outside the engine
+training/
+benchmarks/
+demo/
+decoder/
+tokenizer/
+opcodes/
+dictionaries/
+datasets/
+archive/
+space/
+rules/
+engine_v9/
+scripts/
+tools/
+clanker_engine.py
+MODEL_CARD.md
+shape_traces.json
+transition_map.json
+generate_transition_map.py
+
+# Internal docs (keep only THEORY.md and vadug-calculation.md)
+docs/council_*
+docs/llm_reviews/
+docs/pipeline_refactor.md
+docs/v7_physics_spec.md
+docs/v8_audit_log.md
+docs/why-clank.md
+docs/adding-a-language.md
+docs/adding-opcodes.md
+docs/tci-cares-research.md
+docs/tuning-notes.md
+docs/linguistic-devices-taxonomy.md
+docs/v3-user-physics.md

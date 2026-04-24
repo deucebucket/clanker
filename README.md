@@ -1,14 +1,11 @@
 # Clanker
 
-**A control layer for language models.** Computes 7-dimensional emotional coordinates (VADUGWI) from text using structural pattern recognition. Every output can be traced through explicit, deterministic transformations. You can ask WHY and get a real answer.
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19383636.svg)](https://doi.org/10.5281/zenodo.19383636)
 
-Transformers give fluency. Rule systems give control. Clanker is the bridge -- fluency, control, and explainability without choosing one.
+A conversation state resolver that detects emotional stance through structural pattern recognition. Computes 7-dimensional emotional coordinates (VADUGWI) from text using deterministic, explainable transformations. Every output can be traced through explicit math. You can ask WHY and get a real answer.
 
-"Whatever" alone reads as resignation. "Whatever makes you happy" reads as passive-aggressive. "Do whatever" reads as permission. Same word -- context changes the Dominance dimension. A sentiment classifier says "neutral" for all three. Clanker tells you which, and why.
-
-~300KB engine. 0.15ms per sentence. 4,000+ words. 26 patterns. 167 tests. 100% on 630 sentences. Fully deterministic and auditable.
-
-Tested against consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok) on 521 game dialogue lines. Agrees with strong consensus 76.3% of the time. Aligns most closely with Gemini and Claude Opus -- the models that read emotional subtext rather than defaulting neutral.
+"Whatever" alone reads as resignation (V=93, D=97). "Whatever makes you happy" reads as passive-aggressive (V=30, D=113). "Do whatever" reads as dismissive permission (V=93, D=97). Same word -- context changes the coordinates. A sentiment classifier says "neutral" for all three.
 
 ## VADUGWI Coordinates
 
@@ -30,89 +27,132 @@ Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
 
 | Input | V | Notes |
 |-------|---|-------|
-| "I'm fine" | 118 | Below neutral -- uneasy, not positive |
-| "haha yeah im totally okay" | 93 | Forced composure, low valence despite positive words |
-| "oh joy" | 113 | Positive word, negative reading |
-| "do you even love me" | 120 | Positive word weaponized as challenge |
-| "my wife cheated on me with my best friend" | 49 | V=49, A=170, D=56 -- deep negative, high intensity, low control |
-| "I love my mom" | 179 | Genuine positive, no false alarm |
+| "I'm fine" | 83 | Below neutral -- uneasy, not positive |
+| "haha yeah im totally okay" | 15 | Forced composure, bravado mask detected |
+| "oh joy" | 29 | Positive word, negative reading |
+| "do you even love me" | 152 | Positive word, but A=154 D=133 -- challenge energy |
+| "my wife cheated on me with my best friend" | 14 | V=14, A=151, D=56 -- deep negative, high intensity, low control |
+| "I love my mom" | 184 | Genuine positive, no false alarm |
 | "the meeting is at three" | 128 | Neutral -- no emotional content detected |
 
 ## How It Works
 
 Four processing layers run in sequence:
 
-1. **Word Classification** -- each word is assigned one of 23 structural roles (SELF_REF, EMOTIONAL, NEGATOR, AMPLIFIER, CONNECTOR, CHOPPER, etc.)
+1. **Word Classification** -- each word is assigned structural roles (SELF_REF, EMOTIONAL, NEGATOR, AMPLIFIER, CONNECTOR, CHOPPER, etc.)
 2. **Proximity Weighting** -- nearby words influence each other with exponential decay (0.7x per word of distance)
-3. **Structure Detection** -- role sequences are matched against 26 defined patterns
-4. **Physics** -- momentum-based blending (0.82 persistence) produces final VADUGWI coordinates
+3. **Structure Detection** -- 61 chess-like patterns detected from role sequences
+4. **Physics** -- 9-stage pipeline: tokenize, classify, interpret context, coefficients, accumulate forces, structure adjustment, W-V coupling, personality, tanh saturation
 
-The core equations are documented in `docs/vadug-calculation.md`. In brief:
+Additional systems:
+- **Force Flow** -- WHO does WHAT to WHOM directional analysis
+- **Phase System** -- SOLID (never flips), LIQUID (context-dependent), GAS (neutral) word states
+- **Crisis Detection** -- continuous 0.0-1.0 concern gradient, zero false positives on safe text
+- **Anomaly Detection** -- deflection, masking, velocity, resonance patterns
+- **Bidirectional Solver** -- given state A and target zone C, find valid response range B
 
-- **State update**: each word blends into a running state at 0.82/0.18 momentum ratio
-- **Proximity field**: modifiers (negators, amplifiers, hedges) apply force scaled by distance
-- **Impulse override**: high-magnitude words push directly past the momentum filter
-- **Structure adjustment**: detected patterns shift the physics result by weighted confidence
+The core equations are documented in `docs/vadug-calculation.md`.
+
+## Quick Start
+
+```bash
+git clone https://github.com/deucebucket/clanker.git
+cd clanker
+pip install -r requirements.txt
+python3 -m pytest engine/tests/ -v
+```
+
+```python
+from engine.pendulum import compute_vadug
+
+result, context = compute_vadug("whatever makes you happy")
+print(f"V={result.v}, A={result.a}, D={result.d}, U={result.u}, G={result.g}, W={result.w}, I={result.i}")
+# V=30, A=141, D=113, U=5, G=143, W=102, I=161
+```
 
 ## Current Numbers
 
 | Metric | Value |
 |--------|-------|
-| Accuracy on permanent suite | 100% on 630 sentences |
-| Crisis recall | 97.3% |
-| False positives on safe text | 0% |
-| Latency | 0.15ms per sentence |
-| Engine size | ~300KB |
-| Vocabulary | 4,000+ words |
-| Structural patterns | 26 |
-| Word roles | 23 |
-| Tests | 167 |
+| Ground truth (developer-verified) | 41/41 (100%) |
+| Stress test (275 real sentences, 11 categories) | 201/275 (73.1%) |
+| Crisis recall | 70.6% (36/51) |
+| Crisis false positive (safe + dark humor + metaphor) | 0/75 (0.0%) |
+| SST-2 benchmark | 63.9% (VADER: 55.7%, RoBERTa: 69%) |
+| Real-text spot-check (5 corpora) | ~59% on 167 sentences |
+| Throughput | 2,000-6,000 sentences/sec |
+| Latency | 0.17ms per sentence |
+| Vocabulary | 4,544 curated words |
+| Structural patterns | 61 |
+| Tests | 207 |
 
-## 26 Structural Patterns
+Tested against consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok).
 
-These are role-sequence patterns detected from word classification output:
+## Known Weaknesses
 
-BETRAYAL, BLANKET_APOLOGY, BRAVADO, CALLING_OUT, CHOPPER_SPLIT, D_INVERSION, DIRECTED_POSITIVE, EXCLUDED_POSITIVE, EXHAUSTION, FAREWELL, FINALITY, FLEEING, METHOD_ACQUISITION, MINIMIZER, NO_EXIT, POWER_OVER_SELF, PURSUIT_OF_METHOD, RELIEF_ABSENCE, SARCASM_INVERSION, SELF_EXCLUDED, SELF_NULLIFY, SELF_REMOVAL, SELF_SUBMISSION, SUSPICIOUS_CALM, VICTIMIZATION, WITHHELD_POSITIVE
+| Category | Accuracy |
+|----------|----------|
+| Slang positive | 44% |
+| Grief | 52% |
+| Passive aggressive | 68% |
 
-Each pattern carries a confidence weight and VADUGWI adjustment vector. Crisis-relevant patterns (FAREWELL, METHOD_ACQUISITION, SELF_REMOVAL, NO_EXIT) are tuned for zero false positives on safe text.
+Positive inflation reduced but not eliminated. These are areas of active development.
 
-## Bidirectional Solver
+## File Structure
 
-**Forward**: text produces VADUGWI coordinates.
+```
+engine/              V8 engine
+  pendulum.py          Physics layer -- 9-stage pipeline
+  word_classifier.py   Structural role classification
+  proximity.py         Proximity field computation
+  structures.py        Pattern detection (61 patterns)
+  solver.py            Bidirectional A+B=C solver
+  force_flow.py        WHO does WHAT to WHOM
+  forces_curated.py    4,544 word force tuples (7D VADUGWI)
+  crisis.py            Crisis detection (0.0-1.0 gradient)
+  phase.py             SOLID/LIQUID/GAS word states
+  anomaly.py           Anomaly detection (4 detectors)
+  shared.py            VADUGWI dataclass
+  vocabulary.py        Vocabulary loader
 
-**Backward**: given current state A and a target outcome zone C, the solver sweeps response temperature to find the range of valid B values that land in the target zone. The valid response is a range, not a single point.
+engine_v9/           V9 engine (experimental)
 
-Default blend: `C = A * 0.6 + B * 0.4` -- 60% of current mood persists, 40% of the response gets through. This ratio is adjustable per personality profile.
-
-## SmolLM2 / Llama Integration
-
-The engine pairs with a small language model for emotionally coherent dialogue generation. The model generates candidate responses; the engine scores each candidate's emotional impact using the forward solver. Responses that land outside the target zone are rejected. The model speaks, the engine scores the impact.
+docs/                Reference
+  vadug-calculation.md   Full equation reference
+  THEORY.md              Theory document
+  v3-user-physics.md     Structural rules
+  SPEC.md                Full engine specification
+```
 
 ## Running Tests
 
 ```bash
+# V8 engine tests
 python3 -m pytest engine/tests/ -v
+
+# Full barrage (ground truth + stress + crisis + throughput)
+python3 benchmarks/full_barrage.py
+
+# Crisis benchmark
+python3 benchmarks/crisis_benchmark.py
+
+# Academic benchmark (vs VADER, TextBlob, RoBERTa)
+python3 benchmarks/academic_benchmark.py --quick
 ```
 
 ## Links
 
 - **Live demo**: [huggingface.co/spaces/deucebucket/clanker](https://huggingface.co/spaces/deucebucket/clanker)
 - **Browser demo**: [deucebucket.github.io/clanker-demo](https://deucebucket.github.io/clanker-demo)
+- **Theory**: [docs/THEORY.md](docs/THEORY.md)
+- **Full specification**: [SPEC.md](SPEC.md)
 
-## File Structure
+## License
 
-```
-engine/              V5.5 engine (~300KB)
-  pendulum.py          Physics layer -- momentum blending
-  word_classifier.py   Word role classification (23 roles)
-  proximity.py         Proximity field computation
-  structures.py        Pattern detection (26 patterns)
-  solver.py            Bidirectional A+B=C solver
-  forces_curated.py    4,000+ word force tuples (7D VADUGWI)
-  shared.py            VADUGWI dataclass
+Licensed under [AGPL-3.0](LICENSE). Commercial licensing available -- contact jerrymares@gmail.com.
 
-docs/                Reference
-  vadug-calculation.md   Full equation reference
-  v3-user-physics.md     Structural rules
-  THEORY.md              Theory document
-```
+## Author
+
+Jerry Mares ([deucebucket](https://github.com/deucebucket))
+
+DOI: [10.5281/zenodo.19383636](https://doi.org/10.5281/zenodo.19383636)
