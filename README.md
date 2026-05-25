@@ -1,6 +1,6 @@
 # Clanker
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19383636.svg)](https://doi.org/10.5281/zenodo.19383636)
 
 A conversation state resolver that detects emotional stance through structural pattern recognition. Computes 7-dimensional emotional coordinates (VADUGWI) from text using deterministic, explainable transformations. Every output can be traced through explicit math. You can ask WHY and get a real answer.
@@ -149,7 +149,7 @@ python3 benchmarks/academic_benchmark.py --quick
 
 ## License
 
-Licensed under [AGPL-3.0](LICENSE). Commercial licensing available -- contact jerrymares@gmail.com.
+Licensed under the [MIT License](LICENSE).
 
 ## Author
 
