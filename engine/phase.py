@@ -38,7 +38,7 @@ LIQUID_WORDS = frozenset({
     # "sheesh" = exasperation OR awe. "snapped" = lost temper OR performed
     # brilliantly. Stored charge is the safer (negative) reading; SOLVENT
     # dissolution flips it in casual register.
-    "cooked", "sheesh", "snapped",
+    "cooked", "sheesh", "snapped", "obsessed",
 })
 
 # Neutralizer demotions (2026-06-11, datasets/bias_audit.json):
@@ -63,7 +63,7 @@ SOLVENT_WORDS = frozenset({
     "omg", "istg", "fr", "ngl", "tbh",
     "lowkey", "highkey", "deadass",
     "literally", "actually",
-    "nocap",
+    "nocap", "frfr",
 })
 
 

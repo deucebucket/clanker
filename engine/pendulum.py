@@ -10,6 +10,7 @@ that reads from and writes to a shared context dict. Stages can be chained,
 bypassed, or swapped.
 """
 
+import re
 from math import tanh, exp, log
 from typing import List, Optional, Tuple
 
@@ -141,7 +142,43 @@ _COMPOUND_BONDS = {
     ("set", "up"): "setup",
     ("WiFi", "down"): "wifidown",
     ("wifi", "down"): "wifidown",
+    # Hype/intensifier compounds (slang batch 1)
+    ("lets", "go"): "letsgo",
+    ("let's", "go"): "letsgo",
+    ("as", "hell"): "ashell",
+    ("so", "back"): "soback",
 }
+
+# "w" reads as WIN only after these or sentence-finally; otherwise it's "with"
+_W_WIN_PRECEDERS = frozenset({
+    "a", "the", "big", "massive", "huge", "major", "another",
+    "certified", "what",
+})
+
+_ELONG_RUN = re.compile(r"([a-zA-Z])\1{2,}")
+
+_TRAP_GENRE_FOLLOWERS = frozenset({
+    "remix", "beat", "beats", "music", "song", "songs", "mix",
+    "playlist", "banger", "instrumental", "album", "track", "tracks",
+})
+
+_FIRE_HAZARD_PRECEDERS = frozenset({"a", "the"})
+_FIRE_HAZARD_FOLLOWERS = frozenset({
+    "in", "at", "on", "alarm", "department", "drill", "spread", "broke",
+})
+_FIRE_PRAISE_PRECEDERS = frozenset({
+    "is", "was", "its", "it's", "thats", "that's", "so", "straight",
+    "absolute", "be",
+})
+
+_FILTHY_SPORTS_NOUNS = frozenset({
+    "play", "move", "pitch", "dunk", "goal", "crossover", "mixtape", "beat",
+})
+
+_MID_TEMPORAL_FOLLOWERS = frozenset({
+    "morning", "afternoon", "evening", "day", "week", "month", "year",
+    "semester", "summer", "winter", "spring", "fall", "season",
+})
 
 
 # ── Stage 1: Tokenize ──────────────────────────────────────────
@@ -176,12 +213,67 @@ def tokenize(context: dict) -> dict:
     words = collapsed
 
     # Double negation compounds and special pairs
+    sentence_cleaned = {w.lower().rstrip(".,!?;:'\"") for w in words}
     resolved = []
     i = 0
+    context.setdefault("elongation", False)
     while i < len(words):
         w_low = words[i].lower()
         next_low = words[i + 1].lower() if i + 1 < len(words) else ""
         pair = (w_low, next_low)
+
+        # "w" sense split: WIN keeps its vocab charge; "with" carries no
+        # force at all (a zero-force atom would still drain V toward center)
+        if w_low.rstrip(".,!?;:'\"") == "w":
+            prev_clean = words[i - 1].lower().rstrip(".,!?;:'\"") if i > 0 else ""
+            if prev_clean in _W_WIN_PRECEDERS or i == len(words) - 1:
+                resolved.append(words[i])
+            i += 1
+            continue
+
+        # "extra" sense split: prenominal quantity ("extra cheese") carries
+        # no charge; the slang sense ("she's so extra") keeps its vocab force
+        if w_low.rstrip(".,!?;:'\"") == "extra" and next_low:
+            nf = VOCABULARY.get(next_low.rstrip(".,!?;:'\""))
+            if nf is None or abs(nf[0]) < 10:
+                i += 1
+                continue
+
+        # "trap" sense split: music genre ("trap remix") is inert; the
+        # entrapment sense keeps its vocab force
+        if (w_low.rstrip(".,!?;:'\"") == "trap"
+                and next_low.rstrip(".,!?;:'\"") in _TRAP_GENRE_FOLLOWERS):
+            i += 1
+            continue
+
+        # "fire" sense split: literal hazard vs predicate slang praise;
+        # anything else keeps the (mild) stored vocab tuple
+        if w_low.rstrip(".,!?;:'\"") == "fire":
+            prev_clean = words[i - 1].lower().rstrip(".,!?;:'\"") if i > 0 else ""
+            nxt_clean = next_low.rstrip(".,!?;:'\"")
+            if prev_clean in _FIRE_HAZARD_PRECEDERS or nxt_clean in _FIRE_HAZARD_FOLLOWERS:
+                resolved.append("firehazard")
+                i += 1
+                continue
+            if prev_clean in _FIRE_PRAISE_PRECEDERS:
+                resolved.append("firepraise")
+                i += 1
+                continue
+
+        # "filthy" sense split: sports/performance praise when a sports
+        # noun appears anywhere in the sentence
+        if (w_low.rstrip(".,!?;:'\"") == "filthy"
+                and not _FILTHY_SPORTS_NOUNS.isdisjoint(sentence_cleaned)):
+            resolved.append("filthypraise")
+            i += 1
+            continue
+
+        # "mid" sense split: temporal compound ("mid morning") is inert;
+        # the dismissive slang sense keeps its vocab force
+        if (w_low.rstrip(".,!?;:'\"") == "mid"
+                and next_low.rstrip(".,!?;:'\"") in _MID_TEMPORAL_FOLLOWERS):
+            i += 1
+            continue
 
         if pair in _CONTINUATION_PAIRS:
             has_negative_before = any(
@@ -247,6 +339,21 @@ def tokenize(context: dict) -> dict:
             # Council Round 8: compound bond resolution (bigram + trigram)
             w_clean = w_low.rstrip(".,!?;:'\"")
             n_clean = next_low.rstrip(".,!?;:'\"")
+
+            # Elongation collapse: "GOOOOOO" -> "go" for vocab-missing tokens
+            # so compound bonds and vocab lookups still land. Doubled form
+            # is tried first because runs hide geminates: "GOOOOOD" must
+            # collapse to "good", not "god"
+            def _alt(tok):
+                if tok and tok not in VOCABULARY and _ELONG_RUN.search(tok):
+                    two = _ELONG_RUN.sub(r"\1\1", tok)
+                    if two in VOCABULARY:
+                        return two
+                    return _ELONG_RUN.sub(r"\1", tok)
+                return tok
+            w_alt = _alt(w_clean)
+            n_alt = _alt(n_clean)
+
             # Trigram check first
             if i + 2 < len(words):
                 n2_clean = words[i + 2].lower().rstrip(".,!?;:'\"")
@@ -255,11 +362,27 @@ def tokenize(context: dict) -> dict:
                     resolved.append(_COMPOUND_BONDS_TRI[tri])
                     i += 3
                     continue
+                n2_alt = _alt(n2_clean)
+                tri_alt = (w_alt, n_alt, n2_alt)
+                if tri_alt != tri and tri_alt in _COMPOUND_BONDS_TRI:
+                    resolved.append(_COMPOUND_BONDS_TRI[tri_alt])
+                    context["elongation"] = True
+                    i += 3
+                    continue
             # Bigram check
             bi = (w_clean, n_clean)
+            bi_alt = (w_alt, n_alt)
             if bi in _COMPOUND_BONDS:
                 resolved.append(_COMPOUND_BONDS[bi])
                 i += 2
+            elif bi_alt != bi and bi_alt in _COMPOUND_BONDS:
+                resolved.append(_COMPOUND_BONDS[bi_alt])
+                context["elongation"] = True
+                i += 2
+            elif w_alt != w_clean and w_alt in VOCABULARY:
+                resolved.append(w_alt)
+                context["elongation"] = True
+                i += 1
             else:
                 resolved.append(words[i])
                 i += 1
@@ -373,6 +496,12 @@ _DISCOURSE_LOOKAHEAD_POS = frozenset({
     "good", "fine", "right", "great", "cool", "ok", "okay",
     "way", "cap", "doubt", "kidding", "worries",
 })
+_DISCOURSE_SELF_TOKENS = frozenset({"i", "im", "i'm", "ive", "i've"})
+_LIQUID_LITERAL_FOLLOWERS = {
+    "cooked": frozenset({"dinner", "breakfast", "lunch", "food", "meal",
+                         "meals", "rice", "chicken", "steak", "pasta",
+                         "eggs"}),
+}
 _EXPLETIVE_WORDS = frozenset({"shit", "fuck", "damn", "hell", "goddamn"})
 _COUNTERFACTUAL_MARKERS = frozenset({
     "supposed", "would", "should", "could", "wished", "hoped",
@@ -423,6 +552,12 @@ def interpret_context(context: dict) -> dict:
                 # Reclassify: this "no" is discourse, not negation
                 wr.role = "FILLER"
                 wr.base_role = "FILLER"
+            elif i == 0 and n > 1 and roles[1].word in _DISCOURSE_SELF_TOKENS:
+                # "no, i'm sick" — sentence-initial answer-marker before a
+                # self-statement negates the (implied) question, not the
+                # clause that follows
+                wr.role = "FILLER"
+                wr.base_role = "FILLER"
 
     # ── 2. Expletive-as-intensifier ───────────────────────────
     # "shit you are right" — sentence-initial expletive + positive/affirm content
@@ -430,17 +565,40 @@ def interpret_context(context: dict) -> dict:
         "right", "true", "yes", "exactly", "correct", "agreed",
         "good", "great", "nice", "thanks", "thank",
     })
-    if roles[0].word in _EXPLETIVE_WORDS:
+    # Rescue sites: sentence-initial, or right after a demonstrative
+    # ("This shit slaps" — the demonstrative marks the expletive as subject
+    # stand-in, not invective)
+    _DEMONSTRATIVES = frozenset({"this", "that", "the"})
+    for idx in range(n):
+        if roles[idx].word not in _EXPLETIVE_WORDS:
+            continue
+        if idx != 0 and roles[idx - 1].word not in _DEMONSTRATIVES:
+            continue
         # Check if next clause has positive content OR affirmative words
         pos_ahead = sum(
-            1 for j in range(1, min(6, n))
+            1 for j in range(idx + 1, min(idx + 6, n))
             if (roles[j].force and roles[j].force[0] > 10)
             or roles[j].word in _AFFIRM_WORDS
         )
         if pos_ahead > 0:
-            # Convert expletive to amplifier
-            roles[0].role = "AMPLIFIER"
-            roles[0].force = None  # strip negative charge
+            # Convert expletive to amplifier. The explicit zero tuple (not
+            # None) blocks every downstream `force or VOCABULARY.get(word)`
+            # fallback from re-resolving the expletive's negative charge
+            roles[idx].role = "AMPLIFIER"
+            roles[idx].force = (0, 0, 0, 0, 0)
+
+    # ── 2b. Degree-adverb slang ───────────────────────────────
+    # "stupid good" / "insanely talented" — the negative adjective is a
+    # degree marker on the positive word, not its own charge
+    _DEGREE_SLANG = frozenset({"stupid", "dumb", "insanely", "ridiculously",
+                               "stupidly"})
+    for idx in range(n - 1):
+        if roles[idx].word not in _DEGREE_SLANG:
+            continue
+        nf = roles[idx + 1].force or VOCABULARY.get(roles[idx + 1].word)
+        if nf and nf[0] >= 20:
+            roles[idx].role = "AMPLIFIER"
+            roles[idx].force = (0, 0, 0, 0, 0)
 
     # ── 3. Register detection (Council Round 7) ────────────────
     # CONVERSATIONAL = full force (speaker emitting charge)
@@ -551,6 +709,19 @@ def interpret_context(context: dict) -> dict:
     # SOLVENT words (bruh, lol, lmao, dude, etc.) dissolve LIQUID atoms
     # "bruh im shook" → SOLVENT(bruh) flips LIQUID(shook) from negative to positive
     # "bruh he got murdered" → SOLVENT can't dissolve SOLID(murdered)
+
+    # Literal-verb guard: a LIQUID slang verb followed by its concrete
+    # object ("cooked dinner") or preceded by "home" is the literal sense
+    # — neutral, not the stored slang-doom charge, and not dissolvable
+    for idx, wr in enumerate(roles):
+        followers = _LIQUID_LITERAL_FOLLOWERS.get(wr.word)
+        if not followers:
+            continue
+        nxt = roles[idx + 1].word if idx + 1 < n else ""
+        prev = roles[idx - 1].word if idx > 0 else ""
+        if nxt in followers or prev == "home":
+            wr.force = (0, 0, 0, 0, 0)
+
     has_solvent = any(is_solvent(wr.word) for wr in roles)
     if has_solvent:
         for wr in roles:
@@ -694,6 +865,31 @@ def accumulate_forces(context: dict) -> dict:
                 matched = fuzzy_match(wr.word)
                 if matched:
                     word_force = VOCABULARY.get(matched)
+            # A zero-charge tuple on a connector/temporal/amplifier word
+            # carries no information — treating it as a hit would drain
+            # accumulated deviation back toward center, punishing sentences
+            # for containing function words. Only above center: positive
+            # deviation is protected from erosion, while below center the
+            # drain keeps safe text neutral (mirrors M_NEGATIVITY_BIAS /
+            # M_POSITIVITY_EASE asymmetry).
+            _INERT_ZERO_ROLES = {"CONNECTOR", "TEMPORAL", "FILLER",
+                                 "AMPLIFIER"}
+            if (word_force is not None
+                    and state_v >= CENTER
+                    and wr.role in _INERT_ZERO_ROLES
+                    and word_force[0] == 0 and word_force[1] == 0
+                    and word_force[2] == 0 and word_force[3] == 0
+                    and abs(word_force[4]) <= 5):
+                word_force = None
+            # Same protection for near-zero register markers: a trailing
+            # "ngl"/"fr"/"tbh" is punctuation-grade, not a counter-force
+            if (word_force is not None
+                    and state_v >= CENTER
+                    and (wr.role == "REGISTER_CASUAL" or is_solvent(wr.word))
+                    and abs(word_force[0]) <= 5 and abs(word_force[1]) <= 5
+                    and abs(word_force[2]) <= 5 and word_force[3] == 0
+                    and abs(word_force[4]) <= 5):
+                word_force = None
 
         if word_force is None:
             trace_entries.append({
@@ -1113,7 +1309,10 @@ def apply_w_coefficient(context: dict) -> dict:
 
     Low W amplifies negative V (validation of broken state).
     Low W suppresses positive V (rejection of contradictory energy).
-    At W=128 (neutral), no effect. At W=50, negatives amplified ~1.8x.
+    At W=128 (neutral), negatives are amplified 1.5x (calibrated
+    negativity bias — the whole benchmark suite is fitted around it;
+    making neutral-W a no-op was tested 2026-06-11 and regressed
+    stress 271→263, crisis recall 49→46). At W=50, ~1.8x (capped).
 
     GPT's equation:
       w = (W - 128) / 128  → normalized: -1 (broken) to +1 (strong)

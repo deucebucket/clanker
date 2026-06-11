@@ -199,8 +199,15 @@ def _edit_distance_match(word):
 # "hates" -> "hate", "loving" -> "love", "cries" -> "cry"
 # NOT a full linguistic stemmer -- just common patterns that matter.
 
+# Words whose surface form coincidentally contains an emotional root —
+# stemming them injects false charge ("number" -> "numb" grief forces).
+STEM_BLOCKLIST = frozenset({"number"})
+
+
 def _stem_match(word):
     """Try stripping common suffixes to find a vocabulary match."""
+    if word in STEM_BLOCKLIST:
+        return None
     if len(word) < 4:
         return None
     

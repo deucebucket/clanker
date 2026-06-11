@@ -7893,3 +7893,39 @@ _SLANG_RERATE_2026_06 = {
     # fr (0,5,0,0,0), goated (+35), bussin (+40) already correct via _V8_CORRECTIONS — no change.
 }
 EMOTIONAL_VOCABULARY.update(_SLANG_RERATE_2026_06)
+
+# ── SLANG BATCH 1 2026-06-11: register coverage + literal-sense regrades ──
+_SLANG_BATCH1_2026_06 = {
+    'dope':        ( 45, 30,  20,  0,  12),
+    'rad':         ( 40, 28,  18,  0,  10),
+    'gnarly':      ( 30, 30,  12,  0,   8),
+    'elite':       ( 38, 22,  28,  0,  18),
+    'iconic':      ( 40, 22,  22,  0,  20),
+    'unreal':      ( 38, 30,  15,  0,  12),
+    'legend':      ( 38, 20,  25,  0,  20),
+    'masterclass': ( 45, 20,  25,  0,  22),
+    'ggs':         ( 25, 10,  10,  0,   8),  # was (10,-5,10,0,5). Sportsmanship closer, warmer than a shrug.
+    'dogwater':    (-45, 20, -15,  0, -10),
+    'washed':      (-35, 10, -20,  0, -15),  # was (0,5,0,0,3). "he's washed" = past his prime.
+    'frfr':        (  0,  8,   2,  0,   0),
+    'letsgo':      ( 40, 45,  25,  5,  10),  # hype compound atom from "lets go"/"let's go" (pendulum tokenize).
+    'clean':       ( 20, -5,  12,  0,  12),  # was (0,-5,0,0,15) last-wins. Zeroed valence killed the praise sense ("that was clean").
+    'extra':       (-12, 25,  -8,  5,   0),  # was (-52,74,-44,15,9). Slang prior nuked literal quantity use ("extra cheese").
+    'trap':        (-15, 20, -10, 10,  -8),  # was (-77,74,-127,77,-48) freq=13. Entrapment grade destroyed music-genre sentences ("trap remix").
+}
+EMOTIONAL_VOCABULARY.update(_SLANG_BATCH1_2026_06)
+
+# ── SLANG BATCH 2 2026-06-11: sense-split atoms + register regrades ──
+_SLANG_BATCH2_2026_06 = {
+    'fam':          ( 12,  8,   5,  0,  10),  # was (40,15,20,0,25). SOLVENT contract (phase.py) says register markers carry near-zero charge; +40 stacked on dissolution double-counted the warmth.
+    'mid':          (-28,  5,  -5,  0, -10),  # was (-18,5,0,0,-8). Dismissive slang reads harder than the old grade; temporal "mid morning" is split off in tokenize.
+    'firehazard':   (-40, 40, -10, 50, -20),  # tokenize sense-split atom: literal fire ("a fire in my kitchen").
+    'firepraise':   ( 45, 30,  15,  0,  15),  # tokenize sense-split atom: predicate slang ("it's fire").
+    'filthypraise': ( 35, 25,  10,  0,  10),  # tokenize sense-split atom: sports praise ("that play was filthy").
+    'soback':       ( 35, 35,  15,  0,  10),  # hype compound atom from "so back" ("WE ARE SO BACK").
+    'obsessed':     (-15, 30, -12, 10,  12),  # new. LIQUID (phase.py): fixation by default, fandom praise under SOLVENT ("lowkey obsessed").
+    'helluva':      ( 15, 10,   5,  0,   5),  # new. "one helluva X" = awe-leaning intensifier.
+    'recommend':    ( 26,  8,  12,  0,  10),  # new. Endorsement; dV > 25 so hard-negator inversion binds "wouldn't recommend" forward instead of proximity sign-flipping earlier words.
+    'bite':         (-15, 30,  10, 25,   5),  # was (-52,74,44,65,9) freq=46. Attack-grade charge for a word whose common uses ("grab a bite", game/song titles) are mundane; alarm kept in A/U.
+}
+EMOTIONAL_VOCABULARY.update(_SLANG_BATCH2_2026_06)

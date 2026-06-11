@@ -87,14 +87,14 @@ All measured 2026-06-11 against the current engine.
 | Stress test (275 real sentences, 11 categories) | 271/275 (98.5%) |
 | Crisis recall | 49/51 (96.1%) |
 | Crisis false positive (safe + dark humor + metaphor) | 0/75 (0.0%) |
-| Held-out probes (45 sentences, never tuned on) | 30/45 (66.7%) |
+| Held-out probes (45 sentences, never tuned on) | 28/45 (62.2%) |
 | SST-2 validation (872 sentences, default constants) | 542/872 (62.2%) |
 | Throughput (real corpora: Twitch, novels, philosophy) | 1,000-2,450 sentences/sec |
 | Latency (conversational sentences, single core) | 0.45ms per sentence (~2,200/sec) |
-| Vocabulary | 4,545 curated words |
+| Vocabulary | 4,563 curated words |
 | Structural patterns | 66 |
-| Tests | 286 (+2 xfail) |
-| Engine size | 868 KB, 17,655 lines, stdlib only |
+| Tests | 333 (+2 xfail) |
+| Engine size | 880 KB, 17,871 lines, stdlib only |
 
 Truth labels for ambiguous sentences come from a consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok).
 
@@ -106,7 +106,7 @@ they overestimate accuracy. `benchmarks/holdout_probes.json` is a 45-sentence
 set the engine has **never** been tuned on (protocol in
 `benchmarks/HOLDOUT_PROTOCOL.md`): when a holdout category needs work, new
 training sentences are sourced; the holdout set itself is evaluation-only.
-Both numbers are reported: 98.5% in-repo, 66.7% held-out. The gap is the
+Both numbers are reported: 98.5% in-repo, 62.2% held-out. The gap is the
 honest one.
 
 ## Known Weaknesses
@@ -115,12 +115,14 @@ Held-out per-category scores (never tuned on, measured 2026-06-11):
 
 | Category | Held-out accuracy |
 |----------|-------------------|
-| Slang positive | 6/15 (40%) |
-| Grief | 11/15 (73%) |
+| Slang positive | 5/15 (33%) |
+| Grief | 10/15 (67%) |
 | Passive aggressive | 13/15 (87%) |
 
-Current-generation slang ("we stay winning", "peak cinema") remains the
-weakest area. Two crisis sentences with zero lexical signal ("tonight is the
+Current-generation slang remains the weakest area. The 2026-06-11 slang
+batch lifted an independent 80-sentence real-corpus pool from 65% to 96%
+but did not transfer to the held-out slang probes (6/15 before, 5/15
+after) -- the register gap is wider than any one vocabulary pass. Two crisis sentences with zero lexical signal ("tonight is the
 night", "ive made my decision") are still missed -- they need conversation
 context, not sentence physics.
 

@@ -1,5 +1,43 @@
 # Changelog
 
+## V8.5 (2026-06-11) -- Slang register overhaul
+
+- Vocabulary: 12 net-new slang entries (dope, rad, gnarly, elite, iconic,
+  unreal, legend, masterclass, ggs, dogwater, frfr, letsgo) + regrades for
+  clean, extra, trap, fam, mid, washed, obsessed, bite, helluva, recommend
+- Sense splits in tokenize (same pattern as compound bonds): w (win vs
+  "with"), extra (drama vs quantity), trap (entrapment vs music genre),
+  fire (hazard vs praise -- "theres a fire in my kitchen" V=108 U=58,
+  "it's fire" V=135), filthy (grime vs sports praise), mid (slang
+  mediocre vs temporal)
+- Compounds: "lets go"/"let's go" -> hype atom, "so back" -> revival atom,
+  "as hell" -> amplifier (no longer injects literal hell charge)
+- Elongation: 3+ letter runs collapse for compound/vocab matching
+  ("LETS GOOOOOO", "GOOOOOD"), context["elongation"] flag set
+- Discourse "no": sentence-initial no/nah/nope before a SELF_REF token is
+  an answer-marker, not negation ("no i'm sick with a sore throat" V=77,
+  was 152)
+- SOLVENT literal-verb guard: LIQUID verbs with literal direct objects no
+  longer flip ("i cooked dinner for the fam tonight" V=137, was 183)
+- Degree-adverb slang: stupid/dumb/insanely/ridiculously before a positive
+  word reclassify as AMPLIFIER ("stupid good" V=175)
+- Zero-charge function/register words no longer drain accumulated positive
+  V toward center (above-center only, preserving the negativity asymmetry)
+- DIRECTED_POSITIVE guard: slang praise nouns and casual-register hype are
+  compliments, not passive aggression ("you the goat fr" V=182, was 97);
+  copula-chain self-state rescue ("I am so happy for you" V=174, was 106)
+- Stemmer blocklist: "number" no longer stems to "numb"
+- W-coupling formula investigated: the 1.5x neutral-W negative amplification
+  contradicts its docstring but is a calibrated negativity bias -- removing
+  it regressed stress 271->263 and crisis recall 49->46; reverted, docstring
+  corrected
+- Measured: tests 333 (+2 xfail); stress 271/275 (98.5%); ground truth
+  40/41 (97.6%); crisis recall 49/51 (96.1%), FP 0/75; fresh 80-sentence
+  slang pool (datasets/slang_training_candidates.json, holdout-independent)
+  65% -> 96%; held-out probes 28/45 (62.2%) -- slang 5/15, grief 10/15,
+  PA 13/15: the slang fixes did NOT transfer to holdout and cost one grief
+  probe; vocabulary 4,563
+
 ## V8.4 (2026-06-11/12) -- W/I channels, neutralizer, tier-1 PA
 
 All numbers below re-measured 2026-06-11 against the shipped engine.

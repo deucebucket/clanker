@@ -75,6 +75,7 @@ ROLE_WORDS = {
         "hella", "so", "fucking", "freaking", "damn", "too",
         "everything", "everyone", "everybody", "everywhere",
         "all", "whole", "entire", "entirely",
+        "ashell", "massive",
     }),
     "NEGATOR": frozenset({
         "not", "no", "never", "nobody", "nothing", "nowhere",

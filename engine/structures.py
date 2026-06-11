@@ -1361,6 +1361,26 @@ class StructureDetector:
         if all(roles[i].word in _INCLUSIVE_PRONOUNS for i in other_indices):
             return None
 
+        # Slang praise nouns are compliments AT the other person
+        # ("you the goat"), not dismissive state attribution ("good for you")
+        _PRAISE_NOUNS = {"goat", "legend", "beast", "king", "queen",
+                         "goated", "icon"}
+        if any(roles[i].word in _PRAISE_NOUNS for i in pos_indices):
+            return None
+
+        # Casual register + strong positive + no grievance marker = hype
+        # compliment, not passive aggression
+        from .phase import is_solvent
+        _GRIEVANCE_WORDS = {"but", "though", "tho", "yet", "although",
+                            "must", "hope", "wish", "nice", "fine",
+                            "whatever", "guess", "least", "atleast",
+                            "finally"}
+        if (any(is_solvent(r.word) for r in roles)
+                and not any(r.word in _GRIEVANCE_WORDS for r in roles)
+                and any(roles[i].force and roles[i].force[0] >= 25
+                        for i in pos_indices)):
+            return None
+
         # Check if SELF is genuinely positive (not just directing at other)
         # "im so proud of you" = SELF feels proud (self-state word near SELF)
         # "i hope youre happy" = SELF directs hope at OTHER (not self-state)
@@ -1371,6 +1391,21 @@ class StructureDetector:
                            "thrilled", "amazed", "impressed", "blessed",
                            "lucky", "honored"}
         self_has_state = any(r.word in self_state_words for r in roles)
+
+        # Copula attribution: "i am so happy for you" — the positive word
+        # sits in a SELF copula chain, so it describes SELF's state (genuine),
+        # unlike "i hope youre happy" where OTHER owns the state word
+        _COPULA_CHAIN = {"am", "im", "is", "are", "was", "be", "been",
+                        "being", "feel", "feels", "feeling", "felt"}
+        if not self_has_state:
+            for pi in pos_indices:
+                j = pi - 1
+                while j >= 0 and (roles[j].word in _COPULA_CHAIN
+                                  or roles[j].role in ("AMPLIFIER", "FILLER")):
+                    j -= 1
+                if j >= 0 and roles[j].role == "SELF_REF":
+                    self_has_state = True
+                    break
 
         # "you make ME happy" -- self benefits from other
         self_benefits = any(r.word in ("me", "my", "mine") and
@@ -3272,6 +3307,7 @@ class StructureDetector:
             "game", "games", "gaming", "bungee", "skydiving",
             "roller", "coaster", "movie", "film", "show",
             "song", "music", "book", "story", "video",
+            "roblox",
         })
         _CRISIS_DISAMBIG = frozenset({
             "help", "please", "cant", "dont", "stop",
