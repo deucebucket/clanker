@@ -909,6 +909,11 @@ class StructureDetector:
         v_values = []
         for r in roles:
             if r.role == "EMOTIONAL" and r.force:
+                # A directly negated emotion word is not live valence:
+                # "dont worry youll do great" has no real neg->pos swing --
+                # the negator flips "worry" out of the negative pole.
+                if r.position > 0 and roles[r.position - 1].role == "NEGATOR":
+                    continue
                 v_values.append((r.position, r.force[0]))
         if len(v_values) >= 2:
             max_swing = 0.0
@@ -1174,6 +1179,11 @@ class StructureDetector:
         neg_verb_indices = []
         for r in roles:
             if r.role == "EMOTIONAL" and r.force and r.force[0] < -20:
+                # Negated emotion is not an act done to the user:
+                # "dont worry" / "never cried" -- the negator cancels the
+                # verb as victimization evidence.
+                if r.position > 0 and roles[r.position - 1].role == "NEGATOR":
+                    continue
                 neg_verb_indices.append(r.position)
             elif r.role in ("TRANSFER", "PULL_AWAY"):
                 v_force = VOCABULARY.get(r.word)
@@ -2450,20 +2460,97 @@ class StructureDetector:
                 g_weight=0.0, w_weight=-15.0,
             )
 
-        # Pattern 3: "i guess" / "i suppose" + anything
+        # Pattern 3: "i guess" / "i suppose" + corroborating resignation evidence
         # "i guess i deserved it" "i suppose youre right"
-        # The hedge signals the speaker doesn't believe it but won't fight.
-        for i in range(n - 1):
-            if words_lower[i] == "i" and words_lower[i + 1] in ("guess", "suppose"):
-                matched = [i, i + 1]
+        # The hedge alone is just diffidence ("work was fine today i guess",
+        # "the movie was okay i guess") -- it DAMPS positivity but is not
+        # resignation. Genuine resignation needs a second signal: surrender
+        # or futility words, self-blame, negation, a negative emotional core,
+        # or explicit concession to the other party.
+        hedge_i = next(
+            (i for i in range(n - 1)
+             if words_lower[i] == "i" and words_lower[i + 1] in ("guess", "suppose")),
+            None,
+        )
+        if hedge_i is not None:
+            from .vocabulary import VOCABULARY as _V_DB
+            _SURRENDER = frozenset({
+                "whatever", "anymore", "pointless", "hopeless", "useless",
+                "quit", "lose", "lost", "losing", "deserved", "deserve",
+                "fault", "stuck", "trapped",
+            })
+            _CONCESSION = frozenset({"right", "win", "won", "wins"})
+            has_surrender = any(w in _SURRENDER for w in words_lower)
+            has_give_up = any(
+                words_lower[j] in ("give", "giving", "gave") and words_lower[j + 1] == "up"
+                for j in range(n - 1)
+            )
+            has_negator = any(r.role == "NEGATOR" for r in roles)
+            # Concession: yielding the point to the addressee ("youre right")
+            has_concession = has_other and any(w in _CONCESSION for w in words_lower)
+            # Negative core: a genuinely negative word OUTSIDE the hedge itself
+            has_neg_core = False
+            for j, r in enumerate(roles):
+                if j in (hedge_i, hedge_i + 1) or r.role == "HEDGE":
+                    continue
+                f = r.force or _V_DB.get(r.word.lower() if hasattr(r.word, "lower") else r.word)
+                if f and f[0] <= -15:
+                    has_neg_core = True
+                    break
+            if (has_surrender or has_give_up or has_negator
+                    or has_concession or has_neg_core):
                 return StructureMatch(
                     pattern="PASSIVE_RESIGNATION",
                     confidence=0.75,
-                    matched_indices=matched,
+                    matched_indices=[hedge_i, hedge_i + 1],
                     description="Passive resignation: 'I guess/suppose' = yielding without believing",
                     v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
                     g_weight=0.0, w_weight=-15.0,
                 )
+            # Hedge-only: mild diffidence. Damp positivity, don't invert it.
+            return StructureMatch(
+                pattern="HEDGED_ASSESSMENT",
+                confidence=0.60,
+                matched_indices=[hedge_i, hedge_i + 1],
+                description="Hedged assessment: 'i guess/suppose' damps conviction",
+                v_weight=-8.0, d_weight=-5.0, u_weight=0.0,
+                g_weight=0.0, w_weight=-3.0,
+            )
+
+        # Pattern 3b: explicit surrender verb -- "i give up" "i quit"
+        # First-person surrender is resignation even without a hedge.
+        # Negated forms ("didnt give up", "never give up", "wont quit")
+        # are perseverance and must NOT fire.
+        _NEG_BEFORE = frozenset({"not", "dont", "didnt", "wont", "never",
+                                 "cant", "couldnt", "wouldnt", "don't",
+                                 "didn't", "won't", "can't", "couldn't",
+                                 "wouldn't"})
+        for j in range(n):
+            is_give_up = (j + 1 < n
+                          and words_lower[j] in ("give", "giving", "gave")
+                          and words_lower[j + 1] == "up")
+            is_quit = words_lower[j] == "quit" and j > 0 and words_lower[j - 1] == "i"
+            if not (is_give_up or is_quit):
+                continue
+            # Negation guard: perseverance, not surrender
+            if any(words_lower[k] in _NEG_BEFORE
+                   for k in range(max(0, j - 2), j)):
+                continue
+            # Require a first-person subject shortly before the verb
+            has_self_subj = any(
+                roles[k].role == "SELF_REF" and roles[k].word.lower() in ("i", "ive", "im")
+                for k in range(max(0, j - 3), j)
+            )
+            if not has_self_subj:
+                continue
+            return StructureMatch(
+                pattern="PASSIVE_RESIGNATION",
+                confidence=0.80,
+                matched_indices=[j, min(j + 1, n - 1)],
+                description="Explicit surrender: first-person 'give up/quit'",
+                v_weight=-25.0, d_weight=-20.0, u_weight=0.0,
+                g_weight=0.0, w_weight=-15.0,
+            )
 
         # Pattern 4: "its not like i care/matter"
         # Negation + "like" + SELF_REF + positive verb = denial masking hurt
@@ -3524,6 +3611,8 @@ class StructureDetector:
 
         "i just gave my dog to my neighbor" — SELF + TRANSFER + RELATION/POSSESSION
         "i gave everything away" — SELF + TRANSFER + universal
+        "ive been giving my stuff away" — SELF + TRANSFER + my-POSSESSION + "away"
+        "i gave away my records yesterday" — both particle orders count
         """
         has_self = any(r.role == "SELF_REF" for r in roles)
         has_transfer = any(r.role == "TRANSFER" for r in roles)
@@ -3537,8 +3626,34 @@ class StructureDetector:
             and any(roles[j].role in ("OTHER_REF", "RELATION_REF") for j in range(i + 1, min(len(roles), i + 3)))
             for i, r in enumerate(roles)
         )
+        # "away" particle marks divestment direction in either order:
+        # "giving away my stuff" / "giving my stuff away". Progressive and
+        # perfect forms ("ive been giving", "i gave") all surface as
+        # TRANSFER, so tense is already covered.
+        has_away = any(r.word == "away" for r in roles)
+        # First-person possession: "my/mine" directly heading a thing-noun
+        # (POSSESSION role, or a generic plural like "records"). Excludes
+        # people ("my parents", RELATION_REF) and non-possessed objects
+        # ("free samples", "the bride", "prizes").
+        fp_possession = False
+        for i, r in enumerate(roles):
+            if r.word not in ("my", "mine"):
+                continue
+            for j in (i + 1, i + 2):
+                if j < len(roles):
+                    rj = roles[j]
+                    if rj.role == "POSSESSION" or (
+                        rj.role == "NEUTRAL"
+                        and rj.word.endswith("s")
+                        and len(rj.word) > 3
+                    ):
+                        fp_possession = True
+                        break
+            if fp_possession:
+                break
         if has_self and has_transfer:
-            if has_universal or (has_relation_or_possession and has_recipient):
+            if has_universal or (has_relation_or_possession and has_recipient) \
+                    or (fp_possession and (has_away or has_recipient)):
                 conf = 0.80 if has_universal else 0.65
                 return StructureMatch(
                     pattern="DIVESTITURE",
@@ -4349,7 +4464,66 @@ class StructureDetector:
                 u_weight=10.0, g_weight=-10.0,
                 w_weight=-20.0,
             )
-        return None
+
+        # Variant: self-status claim + dismissive deflection imperative.
+        # "im fine dont worry about it" / "im okay seriously dont worry"
+        # / "its nothing forget about it". The claim of okay-ness paired
+        # with an order to disengage is deflection, not reassurance --
+        # the speaker is closing the topic, not opening one. Genuine
+        # helper reassurance ("dont worry ill handle it", "dont worry
+        # youll do great") has NO self-status claim and must not fire.
+        n = len(words)
+        claim_idx = None
+        for i, w in enumerate(words):
+            # "im fine" / "im totally fine" / "i am okay"
+            if w in ("im", "i'm"):
+                if (i + 1 < n and words[i + 1] in _EQUILIBRIUM) or \
+                   (i + 2 < n and words[i + 2] in _EQUILIBRIUM):
+                    claim_idx = i
+                    break
+            if w == "i" and i + 2 < n and words[i + 1] == "am" \
+                    and words[i + 2] in _EQUILIBRIUM:
+                claim_idx = i
+                break
+            # "its nothing"
+            if w in ("its", "it's") and i + 1 < n and words[i + 1] == "nothing":
+                claim_idx = i
+                break
+        if claim_idx is None:
+            return None
+
+        deflect_idx = None
+        for i, w in enumerate(words):
+            if i == claim_idx:
+                continue
+            # "dont worry (about it/me)"
+            if w in ("dont", "don't") and i + 1 < n and words[i + 1] == "worry":
+                deflect_idx = i
+                break
+            # "forget it" / "forget about it"
+            if w == "forget" and i + 1 < n and words[i + 1] in ("it", "about"):
+                deflect_idx = i
+                break
+            # "(it) doesnt matter"
+            if w in ("doesnt", "doesn't") and i + 1 < n and words[i + 1] == "matter":
+                deflect_idx = i
+                break
+            # "drop it"
+            if w == "drop" and i + 1 < n and words[i + 1] == "it":
+                deflect_idx = i
+                break
+        if deflect_idx is None:
+            return None
+
+        return StructureMatch(
+            pattern="MASKING",
+            confidence=0.75,
+            matched_indices=sorted({claim_idx, deflect_idx}),
+            description="Self-status claim + deflection: closing the topic, not reassurance",
+            v_weight=-30.0, d_weight=-15.0,
+            u_weight=10.0, g_weight=-10.0,
+            w_weight=-20.0,
+        )
 
     def _resignation(self, roles: List[WordRole]) -> Optional[StructureMatch]:
         """Desire verb + vague pronoun + finality = wanting it to end.

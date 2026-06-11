@@ -606,3 +606,141 @@ class TestMundaneHyperbole:
         """'i want to die this traffic is insane' -- complaint, not crisis."""
         matches = _detect("i want to die this traffic is insane")
         assert _has_pattern(matches, "MUNDANE_HYPERBOLE")
+
+
+# ── Governor heartbeat fixes (2026-06-11) ────────────────────────
+# Three misfires from a live masked-collapse conversation:
+#   1. hedge over-fire: "i guess" alone inverted mild positives into
+#      PASSIVE_RESIGNATION
+#   2. masking miss: "im fine dont worry about it" read POSITIVE
+#   3. DIVESTITURE silent on "giving my stuff away" particle order
+
+class TestHedgeDamping:
+    """'i guess/suppose' alone damps positivity -- it is NOT resignation."""
+
+    def test_hedge_only_does_not_fire_resignation(self):
+        """Mildly deflated assessments with a trailing hedge must not
+        read as passive resignation."""
+        for text in (
+            "work was fine today i guess",
+            "the movie was okay i guess",
+            "it went alright i suppose",
+            "dinner was decent i guess",
+        ):
+            matches = _detect(text)
+            assert not _has_pattern(matches, "PASSIVE_RESIGNATION"), \
+                f"PASSIVE_RESIGNATION over-fired on hedge-only: {text!r}"
+            assert _has_pattern(matches, "HEDGED_ASSESSMENT"), \
+                f"HEDGED_ASSESSMENT should damp: {text!r}"
+
+    def test_hedge_only_v_lands_mild_neutral(self):
+        """Hedged positive must land mild-neutral, not collapse-grade."""
+        from engine.pendulum import compute_vadug
+        for text in (
+            "work was fine today i guess",
+            "the movie was okay i guess",
+            "it went alright i suppose",
+        ):
+            r, _ = compute_vadug(text)
+            assert 100 <= r.v <= 135, \
+                f"V={r.v} should be mild-neutral for hedged positive: {text!r}"
+
+    def test_hedge_with_resignation_evidence_still_fires(self):
+        """Hedge + genuine resignation signal must still fire."""
+        for text in (
+            "i guess i deserved it",
+            "i suppose youre right",
+            "i guess nothing matters anymore",
+            "i guess some people just dont get it",
+        ):
+            matches = _detect(text)
+            assert _has_pattern(matches, "PASSIVE_RESIGNATION"), \
+                f"PASSIVE_RESIGNATION should fire with evidence: {text!r}"
+
+    def test_explicit_surrender_fires(self):
+        """First-person surrender verbs are resignation, hedge or not."""
+        for text in ("whatever happens happens i give up", "i give up", "i quit"):
+            matches = _detect(text)
+            assert _has_pattern(matches, "PASSIVE_RESIGNATION"), \
+                f"PASSIVE_RESIGNATION should fire on surrender: {text!r}"
+
+    def test_negated_surrender_is_perseverance(self):
+        """Negated give-up is perseverance and must not fire."""
+        for text in (
+            "she didnt give up on me",
+            "i wont give up on this",
+            "never give up on your dreams",
+        ):
+            matches = _detect(text)
+            assert not _has_pattern(matches, "PASSIVE_RESIGNATION"), \
+                f"PASSIVE_RESIGNATION misfired on perseverance: {text!r}"
+
+
+class TestMaskingDeflection:
+    """Self-status claim + dismissive deflection = MASKING, not reassurance."""
+
+    def test_claim_plus_deflection_fires_masking(self):
+        for text in (
+            "im fine dont worry about it",
+            "im okay seriously dont worry",
+            "its nothing forget about it",
+            "im good it doesnt matter",
+            "im fine just drop it",
+        ):
+            matches = _detect(text)
+            assert _has_pattern(matches, "MASKING"), \
+                f"MASKING should fire on claim+deflection: {text!r}"
+
+    def test_claim_plus_deflection_reads_uneasy(self):
+        """V must land uneasy (below neutral), W must dip -- the deflection
+        is masking evidence, not reassurance."""
+        from engine.pendulum import compute_vadug
+        r, _ = compute_vadug("im fine dont worry about it")
+        assert 70 <= r.v <= 115, f"V={r.v} should be uneasy"
+        assert r.w < 128, f"W={r.w} should dip below neutral"
+
+    def test_helper_reassurance_does_not_fire_masking(self):
+        """Reassurance directed at someone else has no self-status claim."""
+        for text in (
+            "dont worry ill handle it",
+            "dont worry youll do great",
+            "forget it ill take care of everything",
+        ):
+            matches = _detect(text)
+            assert not _has_pattern(matches, "MASKING"), \
+                f"MASKING misfired on helper reassurance: {text!r}"
+
+    def test_negated_emotion_is_not_victimization(self):
+        """'dont worry' is a negated emotion -- not an act done to the
+        user. VICTIMIZATION must not fire on it."""
+        for text in ("im fine dont worry about it", "dont worry ill handle it"):
+            matches = _detect(text)
+            assert not _has_pattern(matches, "VICTIMIZATION"), \
+                f"VICTIMIZATION misfired on negated emotion: {text!r}"
+
+
+class TestDivestitureParticleOrder:
+    """DIVESTITURE must catch both particle orders and progressive/perfect."""
+
+    def test_divestiture_fires_both_particle_orders(self):
+        for text in (
+            "ive been giving my stuff away",
+            "i gave away my records yesterday",
+            "been giving my things away lately",
+            "im giving away all my stuff",
+        ):
+            matches = _detect(text)
+            assert _has_pattern(matches, "DIVESTITURE"), \
+                f"DIVESTITURE should fire: {text!r}"
+
+    def test_divestiture_benign_does_not_fire(self):
+        """No first-person possession = no crisis signal."""
+        for text in (
+            "giving away free samples",
+            "the store is giving away prizes",
+            "giving away the bride",
+            "they are giving away tickets at the door",
+        ):
+            matches = _detect(text)
+            assert not _has_pattern(matches, "DIVESTITURE"), \
+                f"DIVESTITURE misfired on benign giveaway: {text!r}"

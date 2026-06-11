@@ -979,7 +979,28 @@ def apply_structures(context: dict) -> dict:
         elif sm.pattern == "RECOVERY_MILESTONE":
             # Recovery milestone: apply v_weight as direct positive boost
             state_v += sm.v_weight * sm.confidence * FORCE_SCALE
-        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION") and state_v > CENTER:
+        elif sm.pattern == "HEDGED_ASSESSMENT":
+            # A trailing hedge ("i guess", "i suppose") DAMPS conviction;
+            # it does not add negative content. The hedge word's raw vocab
+            # force (e.g. "guess" V-21) already accumulated as if it were
+            # content -- refund it (1.3x for momentum amplification), then
+            # apply the structure's mild damp.
+            hedge_dv = 0.0
+            hedge_dw = 0.0
+            for idx in sm.matched_indices:
+                if idx < len(roles):
+                    hf = roles[idx].force or VOCABULARY.get(roles[idx].word)
+                    if hf:
+                        if hf[0] < 0:
+                            hedge_dv += hf[0]
+                        if len(hf) > 4 and hf[4] < 0:
+                            hedge_dw += hf[4]
+            if hedge_dv < 0:
+                state_v += 1.3 * abs(hedge_dv) * FORCE_SCALE
+            if hedge_dw < 0:
+                state_w += 1.3 * abs(hedge_dw) * FORCE_SCALE
+            state_v += sm.v_weight * sm.confidence * FORCE_SCALE
+        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION", "MASKING") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
             state_v += pull
