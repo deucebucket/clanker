@@ -34,6 +34,19 @@ STRUCTURE_WEIGHTS = {
     "PURSUIT_OF_METHOD": 0.25,
 
     # Strong signals
+    # SUSPICIOUS_CALM: pre-suicide calm ("i feel calm now that ive decided").
+    # Clinically one of the strongest warning signs — sits between the
+    # acquisition tier (0.25) and explicit intent (0.40). The detector
+    # already guards against relief/achievement readings ("finally at
+    # peace", acquiring a job/house), so high weight is safe.
+    "SUSPICIOUS_CALM": 0.30,
+    # MASKING: performed okay-ness ("im tired of pretending im okay").
+    # Stronger than the generic strong-signal tier because it explicitly
+    # signals a hidden negative state, but weaker than method/plan signals.
+    "MASKING": 0.20,
+    # RESIGNATION: desire for termination ("i just want it to be over").
+    # Same tier as NO_EXIT / FAREWELL — passive ideation without method.
+    "RESIGNATION": 0.15,
     "SELF_NULLIFY": 0.15,
     "SELF_REMOVAL": 0.15,
     "EXISTENTIAL_NEGATION": 0.12,
