@@ -254,7 +254,7 @@ class StructureDetector:
         }
 
         detectors = [
-            self._farewell,
+            
             self._method_acquisition,
             self._finality,
             self._blanket_apology,
@@ -359,73 +359,6 @@ class StructureDetector:
         return matches
 
     # ── Individual detectors ─────────────────────────────────────
-
-    def _farewell(self, roles: List[WordRole]) -> Optional[StructureMatch]:
-        """TRANSFER + (POSSESSION or RELATION_REF) + recipient nearby.
-
-        "I gave my dog to my neighbor" -- giving away before exit.
-        Dog is RELATION_REF (relationship), neighbor is RELATION_REF (recipient).
-        """
-        # "back" flips direction: "give back my stuff" = reclamation, not farewell
-        if any(r.word == "back" for r in roles):
-            return None
-
-        # Find TRANSFER + POSSESSION pairs
-        pairs = find_role_pairs(roles, "TRANSFER", "POSSESSION")
-
-        # Also check TRANSFER near RELATION_REF (dog/cat are relationships now)
-        if not pairs:
-            transfer_idx = [r.position for r in roles if r.role == "TRANSFER"]
-            rel_idx = [r.position for r in roles if r.role == "RELATION_REF"]
-            if not transfer_idx or len(rel_idx) < 2:
-                return None
-            # Need at least 2 RELATION_REFs (thing + recipient)
-            t = transfer_idx[0]
-            nearby = [ri for ri in rel_idx if abs(ri - t) <= 8]
-            if len(nearby) < 2:
-                return None
-            strength = PROXIMITY_DECAY ** abs(nearby[0] - t)
-            indices = sorted(set([t] + nearby))
-            confidence = strength * 0.8
-            return StructureMatch(
-                pattern="FAREWELL",
-                confidence=min(confidence + 0.2, 1.0),
-                matched_indices=indices,
-                description="Giving away relationships/possessions to someone",
-                v_weight=-30.0,
-                d_weight=-20.0,
-                u_weight=40.0,
-                g_weight=50.0,
-                w_weight=-10.0,
-            )
-
-        # Original path: TRANSFER + POSSESSION + nearby ref
-        ref_indices = [
-            r.position for r in roles
-            if r.role in ("RELATION_REF", "OTHER_REF")
-        ]
-        if not ref_indices:
-            return None
-
-        for t_idx, p_idx, strength in pairs:
-            for ref_idx in ref_indices:
-                dist_t = abs(ref_idx - t_idx)
-                dist_p = abs(ref_idx - p_idx)
-                if min(dist_t, dist_p) <= 8:
-                    indices = sorted({t_idx, p_idx, ref_idx})
-                    confidence = strength * 0.8
-                    return StructureMatch(
-                        pattern="FAREWELL",
-                        confidence=min(confidence + 0.2, 1.0),
-                        matched_indices=indices,
-                        description="Giving away possessions to someone",
-                        v_weight=-30.0,
-                        d_weight=-20.0,
-                        u_weight=40.0,
-                        g_weight=50.0,
-                        w_weight=-10.0,
-                    )
-        return None
 
     def _method_acquisition(self, roles: List[WordRole]) -> Optional[StructureMatch]:
         """ACQUIRE + METHOD = obtaining means.
@@ -5229,14 +5162,18 @@ class StructureDetector:
             has_mundane_object = any(w in _MUNDANE_AFTER for w in words)
             if has_mundane_object:
                 return None  # "tell my kids i love pizza" = not farewell
+        # Weights are 2x the original single-fire values: a duplicate
+        # detectors-list entry had been double-firing this pattern since
+        # the public-release squash, and the engine was calibrated with
+        # that force. The duplicate is removed; the force is preserved.
             return StructureMatch(
                 pattern="FAREWELL",
                 confidence=0.80,
                 matched_indices=[0],
                 description="Terminal message to loved ones",
-                v_weight=-60.0, d_weight=-10.0,
-                u_weight=20.0, g_weight=-20.0,
-                w_weight=-15.0,
+                v_weight=-120.0, d_weight=-20.0,
+                u_weight=40.0, g_weight=-40.0,
+                w_weight=-30.0,
             )
 
         # Secondary: "i wrote a note" — communication artifact with NO recipient
@@ -5252,9 +5189,9 @@ class StructureDetector:
                 confidence=0.65,
                 matched_indices=[0],
                 description="Writing farewell artifact",
-                v_weight=-30.0, d_weight=-10.0,
-                u_weight=15.0, g_weight=-15.0,
-                w_weight=-25.0,
+                v_weight=-60.0, d_weight=-20.0,
+                u_weight=30.0, g_weight=-30.0,
+                w_weight=-50.0,
             )
 
         return None

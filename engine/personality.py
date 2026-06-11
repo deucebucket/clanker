@@ -1,2 +1,2 @@
-"""Personality system — V5.5."""
+"""Personality system — V8.4."""
 from .shared import PersonalityVector

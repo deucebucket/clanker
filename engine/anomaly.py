@@ -1,4 +1,4 @@
-"""Emotional anomaly detector for V5.5 engine -- orbital analysis.
+"""Emotional anomaly detector for V8.4 engine -- orbital analysis.
 
 Finds emotional anomalies by looking at the ORBIT of the words,
 not just the words themselves. Takes per-message VADUGWI scores
@@ -7,9 +7,9 @@ own conversation history.
 
 Four detection modes:
   1. Gravity Wells (Topic Deflection)  -- emotional word fires then sudden neutral shift
-     V5.5: withdrawing intent (I<50) after emotional trigger = stronger deflection
+     V8.4: withdrawing intent (I<50) after emotional trigger = stronger deflection
   2. Gravitational Lensing (Masking)   -- positive words but heavy/helpless VADUGWI
-     V5.5: low W + positive V = stronger masking signal (self-worth dimension)
+     V8.4: low W + positive V = stronger masking signal (self-worth dimension)
   3. Velocity Anomalies (Behavioral)   -- message length, punctuation, formality shifts
   4. Resonance Patterns (Loops)        -- same emotional signature repeating, oscillating V
 
@@ -168,7 +168,7 @@ class AnomalyDetector:
         punct_chars = sum(1 for c in text if c in string.punctuation)
         punct_density = punct_chars / max(char_count, 1)
 
-        # Check trace for emotional word firings (V5.5 uses "EMOTIONAL" role)
+        # Check trace for emotional word firings (V8.4 uses "EMOTIONAL" role)
         emotional_words = []
         trace = meta.get("trace", [])
         for entry in trace:
@@ -243,7 +243,7 @@ class AnomalyDetector:
 
         Pattern: emotional word fires in turn N, then turns N+1 to N+3
         suddenly shift to mundane/neutral topics with short messages.
-        V5.5 addition: withdrawing intent (I<50) amplifies severity.
+        V8.4 addition: withdrawing intent (I<50) amplifies severity.
         """
         anomalies = []
         if len(self._history) < 2:
@@ -290,7 +290,7 @@ class AnomalyDetector:
             # follow the emotional trigger and how heavy the gravity priming was
             severity = min(5, 2 + neutral_count + (1 if is_short and is_neutral else 0))
 
-            # V5.5: withdrawing intent amplifies deflection signal
+            # V8.4: withdrawing intent amplifies deflection signal
             if is_withdrawing:
                 severity = min(5, severity + 1)
 
