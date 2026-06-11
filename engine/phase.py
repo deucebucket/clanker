@@ -33,6 +33,27 @@ LIQUID_WORDS = frozenset({
     "broke", "broken", "shattered",
     "bleeding", "choking", "gagging",
     "shook", "nuts", "mental", "unreal",
+    # Two-faced modern slang (2026-06 re-rating): doom-or-praise depending
+    # on register. "im cooked" = doomed, "he cooked" (casual) = excelled.
+    # "sheesh" = exasperation OR awe. "snapped" = lost temper OR performed
+    # brilliantly. Stored charge is the safer (negative) reading; SOLVENT
+    # dissolution flips it in casual register.
+    "cooked", "sheesh", "snapped",
+})
+
+# Neutralizer demotions (2026-06-11, datasets/bias_audit.json):
+# Words whose LLM-rated isolated charge contradicted sentence-level labels
+# beyond corpus baseline by > 0.20 with n >= 10 sentences of evidence.
+# Demoted GAS -> LIQUID: the (already attenuated) stored force is a
+# *presumed* charge — context machinery (SOLVENT, negation, sarcasm
+# contrast) may dissolve or flip it instead of it always applying.
+# dV attenuation (x (1 - contradiction_rate)) lives in forces_curated.py.
+NEUTRALIZED_LIQUID = frozenset({
+    "adore", "cherish", "congratulations", "overwhelmed", "fantastic",
+    "survive", "thrilled", "thank", "breaking",
+    "secret", "monster", "response", "truly", "delighted",
+    "enjoy", "overjoyed", "major", "project", "hope",
+    # "wonderful" dropped as conflicted — see forces_curated.py neutralizer note.
 })
 
 # SOLVENT words: zero charge, dissolve liquid atoms
@@ -54,7 +75,7 @@ def get_phase(word: str) -> str:
     w = word.lower()
     if w in SOLID_WORDS:
         return "SOLID"
-    if w in LIQUID_WORDS:
+    if w in LIQUID_WORDS or w in NEUTRALIZED_LIQUID:
         return "LIQUID"
     # Default: GAS (context fills it)
     return "GAS"

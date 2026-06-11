@@ -7836,3 +7836,60 @@ _V8_CORRECTIONS = {
     'results':      (0,  5,  0,  5,  5),   # information. GAS. Neutral.
 }
 EMOTIONAL_VOCABULARY.update(_V8_CORRECTIONS)
+
+# ── NEUTRALIZER 2026-06-11 (docs/neutralizer_proposal.md, datasets/bias_audit.json) ──
+# Confidence-gated demotion: words whose LLM-in-isolation charge contradicted
+# sentence-level labels beyond the corpus baseline by > 0.20 with n >= 10
+# sentences. Each word is demoted GAS -> LIQUID in engine/phase.py
+# (NEUTRALIZED_LIQUID) and its dV is attenuated here by
+# c_w = (1 - contradiction_rate). Other dimensions kept as-is (the audit only
+# measures V-sign contradiction). "love" deliberately NOT demoted: human-only
+# contradiction is 0.18 (below baseline 0.29); the headline 0.57 is inflated
+# by sarcasm-adversarial generated sentences.
+_NEUTRALIZER_DEMOTIONS = {
+    #                 dV scaled by (1 - contra)      old dV  contra  n
+    'adore':           (  0, 12,  16,  0,   9),   # +48     1.00    17
+    'cherish':         (  0, 13,  24,  0,  14),   # +37     1.00    16
+    'congratulations': (  5, 22,  29,  1,  19),   # +49     0.90    10
+    'overwhelmed':     ( -6, 30, -30, 20, -15),   # -35     0.82    11
+    'fantastic':       (  0, 20,  10,  0,  10),   # +30     1.00    27
+    'survive':         (  0, 54,  99, 54,  10),   # +28     1.00    11
+    'thrilled':        (  2, 25,  10,  5,  10),   # +30     0.93    14
+    'thank':           ( 12, 20,  17,  0,  24),   # +50     0.77    73
+    # 'wonderful' (+35, contra 0.81, n=26) DROPPED as conflicted: the
+    # structural sarcasm detector (structures.py "what a" template) needs
+    # its full >= +15 charge as a contradiction signal; attenuating to +7
+    # broke "what a wonderful surprise" in test_structures + stress sarcasm.
+    'breaking':        (-35, 103, -82, 77, -36),  # -77     0.54    13
+    'secret':          ( -6, 54,  49, 54,  10),   # -24     0.77    17
+    'monster':         (-26, 74, -67, 49,  20),   # -52     0.50    10
+    'response':        ( 18, 40,  72, 89,   0),   # +39     0.55    11
+    'truly':           (  5, 40,  24,  0,  10),   # +28     0.81    70
+    'delighted':       ( 18, 38,   7,  1,  16),   # +49     0.64    14
+    'enjoy':           (  4,  6,   7,  0,  11),   # +24     0.85    13
+    'overjoyed':       (  1, 15,  10,  0,  10),   # +20     0.94    18
+    'major':           (  7, 40,  49, 18,  10),   # +28     0.74    19
+    'project':         (  8, 49,  72, 103, 16),   # +29     0.71    17
+    'hope':            ( 22, 15,  20, 10,  25),   # +45     0.50    32
+}
+EMOTIONAL_VOCABULARY.update(_NEUTRALIZER_DEMOTIONS)
+
+# ── SLANG RE-RATING 2026-06-11 ──
+# Dead or wrong-signed modern slang. Two-faced words (doom OR praise) get the
+# safer negative reading + LIQUID phase (engine/phase.py) so SOLVENT
+# dissolution flips them in casual register; subject-aware disambiguation
+# ("he cooked" vs "im cooked" without a register marker) would need
+# force_flow changes that are out of scope — documented limitation.
+_SLANG_RERATE_2026_06 = {
+    'cooked':   (-20, 20, -12,  8, -10), # was (0,5,0,0,5). LIQUID: "im cooked" = doomed; "bruh he cooked" flips positive via SOLVENT. Kept |dV| < 25 so MUNDANE_HYPERBOLE doesn't defuse "im cooked for this exam".
+    'sheesh':   (-12, 22,  -5,  5,  -5),  # was (-47,6,-32,3,-21). LIQUID: exasperation OR awe; -47 was wildly hot for an interjection.
+    'snapped':  (-12, 28,   0,  8,   0),  # was (-5,25,5,5,10). LIQUID: "snapped at me" = anger; "lmao she snapped" flips positive via SOLVENT.
+    'drip':     ( 12, 10,   8,  0,   8),  # was (0,5,0,0,10). Praise sense (style); +12 stays below the contrast-sarcasm strong-pos threshold (15) so "his drip is crazy" isn't misread as sarcasm.
+    'w':        ( 30, 15,  10,  0,  10),  # was (0,5,0,0,10). "big w" = win. Unambiguous positive.
+    'mid':      (-18,  5,   0,  0,  -8),  # was (-15,0,0,0,-5). Mediocre/dismissive. Unambiguous mild negative.
+    'lowkey':   (  0,  0,   0,  0,   0),  # was (0,-5,0,0,0). Pure SOLVENT/hedge — zero charge.
+    'ate':      (  5,  8,   2,  0,   4),  # was (-5,5,-5,0,-3). Praise sense ("she ate") but literal eating is very common — kept sub-threshold positive.
+    'peak':     ( 10,  8,   5,  0,   5),  # new. US slang "peak fiction" = best; UK slang "thats peak" = bad — kept small for safety.
+    # fr (0,5,0,0,0), goated (+35), bussin (+40) already correct via _V8_CORRECTIONS — no change.
+}
+EMOTIONAL_VOCABULARY.update(_SLANG_RERATE_2026_06)
