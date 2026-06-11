@@ -837,15 +837,46 @@ def accumulate_forces(context: dict) -> dict:
         state_u = state_u * M_BASE + target_u * inv_m_base + push_u
         state_g = state_g * M_BASE + target_g * inv_m_base + push_g
 
-        # W (self-worth)
+        # W (self-worth): valence routed through attribution (Board 2).
+        # R answers "how much of this force's valence is about MY worth?"
+        # At the force word, R comes from the force-flow arc when it resolved
+        # real entity tokens:
+        #   self-declarative  ("i am worthless")          R = w_mod (1.5 neg / 0.7 pos)
+        #   force aimed at self ("he told me im nothing") R = w_mod (1.2 neg / 0.9 pos)
+        #   self harms other  ("i hurt her") — guilt      R = 0.43 (x0.7 damp ≈ 0.30)
+        #   other-directed / atmospheric, no self token   R = 0 (W untouched —
+        #     "the weather is awful" says nothing about MY worth)
+        # Elsewhere (and when the flow resolved nothing or only implied
+        # entities) W falls back to the legacy SELF_REF-proximity gate.
         self_ref_nearby = any(
             roles[j].role == "SELF_REF" and abs(j - i) <= 4
             for j in range(max(0, i - 4), min(len(roles), i + 5))
             if j != i
         )
-        if self_ref_nearby and dv != 0:
-            w_damp = 0.7
-            w_flow = flow_mods["w_mod"] if force_flow and i == force_flow.force_idx else 1.0
+        w_damp = 0.7
+        w_flow = flow_mods["w_mod"] if force_flow and i == force_flow.force_idx else 1.0
+        w_apply = self_ref_nearby
+        if force_flow is not None and i == force_flow.force_idx and dv != 0:
+            _a_role = force_flow.actor_role
+            _t_role = force_flow.target_role
+            _actor_token = force_flow.actor_idx >= 0
+            _target_token = force_flow.target_idx >= 0
+            _self_token_involved = ((_a_role == "SELF_REF" and _actor_token)
+                                    or (_t_role == "SELF_REF" and _target_token))
+            if (_a_role == "SELF_REF" and _actor_token
+                    and _t_role in ("OTHER_REF", "RELATION_REF") and _target_token
+                    and dv < 0):
+                # Guilt: self as actor of a negative act toward another.
+                # Partial self-attribution — your worth dips, but the
+                # valence belongs mostly to what you did, not what you are.
+                w_flow = 0.43
+                w_apply = True
+            elif _self_token_involved:
+                # Self-declarative or self-targeted force: route the
+                # valence into W even when the SELF token sits outside
+                # the 4-word proximity window.
+                w_apply = True
+        if w_apply and dv != 0:
             w_effective = dv * coeff * FORCE_SCALE * w_damp * w_flow
             target_w = CENTER + w_effective
             push_w = push_strength * (1.0 if dv * coeff >= 0 else -1.0) * abs(dv) * FORCE_SCALE * w_damp * w_flow

@@ -207,10 +207,9 @@ def compute_intent(flow: Optional[ForceFlow], roles=None) -> int:
     2. The direction (who is acting on whom)
     3. Structural cues (PULL_AWAY = withdraw, POWER = control)
     """
-    if flow is None:
-        return 128  # no flow detected = neutral intent
-
-    ev = flow.effective_valence
+    # No resolved flow = neutral directional intent, but the agency axis
+    # below can still move I from phrase-level volition/futility markers.
+    ev = flow.effective_valence if flow is not None else 0
     intent = 128  # start neutral
 
     # Positive force directed at OTHER/RELATION = CONNECT (healing potion → other)
@@ -220,7 +219,7 @@ def compute_intent(flow: Optional[ForceFlow], roles=None) -> int:
     # Self-directed force: accountability, self-attack, self-affirm, or deflection.
     # Must check BEFORE generic positive-self, because negated accountability
     # (ev positive after flip) would otherwise read as self-affirmation.
-    elif flow.self_acts_on_self:
+    elif flow is not None and flow.self_acts_on_self:
         _ACCOUNTABILITY_WORDS = {"wrong", "sorry", "apologize", "fault", "mistake",
                                 "responsibility", "owe", "messed", "screwed"}
         force_word = roles[flow.force_idx].word if roles and 0 <= flow.force_idx < len(roles) else ""
@@ -263,6 +262,65 @@ def compute_intent(flow: Optional[ForceFlow], roles=None) -> int:
     # Positive force from OTHER = receiving (not self-initiated)
     elif ev > 0 and flow.other_acts_on_self:
         intent = 155 + min(ev // 5, 50)  # 155-205 = connect (receiving)
+
+    # ── AGENCY AXIS (Board 2) ──────────────────────────────────────
+    # The directional logic above answers WHERE the force aims; this
+    # answers whether the speaker still owns their own motion.
+    # Volition/planning markers ("i want to <verb>", "im going to <verb>")
+    # lift I toward CONTROL territory. Powerlessness/futility markers
+    # ("whats the point", "i give up") sink I toward DEFLECT.
+    futility_hit = False
+    if roles:
+        words = [r.word for r in roles]
+
+        _FUTILITY_PHRASES = (
+            ("whats", "the", "point"), ("what", "is", "the", "point"),
+            ("whats", "even", "the", "point"),
+            ("why", "bother"), ("why", "even", "bother"), ("why", "i", "bother"),
+            ("why", "even", "try"),
+            ("i", "give", "up"), ("give", "up"),
+            ("no", "point"), ("cant", "do", "this"),
+        )
+        _FUTILITY_NEGATORS = {"didnt", "dont", "never", "wont", "not", "cant", "couldnt"}
+        for phrase in _FUTILITY_PHRASES:
+            plen = len(phrase)
+            for start in range(len(words) - plen + 1):
+                if tuple(words[start:start + plen]) == phrase:
+                    # "didnt give up" = perseverance, not futility
+                    if start > 0 and words[start - 1] in _FUTILITY_NEGATORS:
+                        continue
+                    futility_hit = True
+                    break
+            if futility_hit:
+                break
+
+        if futility_hit:
+            intent = min(intent, 64)  # powerlessness — sink toward deflect
+        elif 90 <= intent <= 160:
+            # Only lift out of the neutral band; never override a strong
+            # directional reading (self-destruction withdraw, attack control).
+            _AGENCY_PHRASES = (
+                ("i", "want", "to"), ("im", "going", "to"),
+                ("i", "am", "going", "to"), ("im", "gonna",),
+                ("i", "will"), ("let", "me"), ("i", "need", "to"),
+            )
+            # The marker must bind to an action, not a destination/object:
+            # "im going to fix this" = agency; "im going to the store" = travel.
+            _NON_ACTION = {
+                "the", "a", "an", "my", "your", "his", "her", "their", "our",
+                "it", "them", "me", "him", "us", "this", "that", "be",
+            }
+            for phrase in _AGENCY_PHRASES:
+                plen = len(phrase)
+                for start in range(len(words) - plen + 1):
+                    if tuple(words[start:start + plen]) == phrase:
+                        nxt = start + plen
+                        if nxt < len(words) and words[nxt] not in _NON_ACTION:
+                            intent = max(intent, 168)  # agency — owns the motion
+                            break
+                else:
+                    continue
+                break
 
     # Check for structural withdraw cues
     if roles:

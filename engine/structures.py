@@ -425,7 +425,7 @@ class StructureDetector:
             d_weight=-10.0,
             u_weight=50.0,
             g_weight=60.0,
-            w_weight=-15.0,
+            w_weight=-28.0,
         )
 
     def _finality(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -472,7 +472,7 @@ class StructureDetector:
             d_weight=-15.0,
             u_weight=30.0,
             g_weight=40.0,
-            w_weight=-10.0,
+            w_weight=-22.0,
         )
 
     def _blanket_apology(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -620,7 +620,7 @@ class StructureDetector:
             d_weight=10.0,
             u_weight=40.0,
             g_weight=50.0,
-            w_weight=-5.0,
+            w_weight=-35.0,
         )
 
     def _exhaustion(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -682,7 +682,7 @@ class StructureDetector:
             d_weight=-30.0,
             u_weight=35.0,
             g_weight=40.0,
-            w_weight=-10.0,
+            w_weight=-30.0,
         )
 
     def _no_exit(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -721,7 +721,7 @@ class StructureDetector:
             d_weight=-30.0,
             u_weight=40.0,
             g_weight=50.0,
-            w_weight=-15.0,
+            w_weight=-25.0,
         )
 
     def _self_nullify(self, roles: List[WordRole]) -> Optional[StructureMatch]:
@@ -3546,7 +3546,7 @@ class StructureDetector:
                     matched_indices=list(range(len(roles))),
                     description="Divesting possessions",
                     v_weight=-35.0, d_weight=-20.0, u_weight=35.0,
-                    g_weight=40.0, w_weight=-25.0,
+                    g_weight=40.0, w_weight=-38.0,
                 )
         return None
 
@@ -4183,7 +4183,7 @@ class StructureDetector:
                 description="Entrapment — no exit",
                 v_weight=-30.0, d_weight=-20.0,
                 u_weight=15.0, g_weight=-15.0,
-                w_weight=-15.0,
+                w_weight=-32.0,
             )
 
         # Nihilism: "whats the point" / "why bother" — but NOT with concrete objects
@@ -4210,7 +4210,7 @@ class StructureDetector:
                 description="Nihilism — pointlessness",
                 v_weight=-25.0, d_weight=-15.0,
                 u_weight=5.0, g_weight=-10.0,
-                w_weight=-20.0,
+                w_weight=-36.0,
             )
 
         # Temporal finality: "tonight is the night" (no emotional atoms but finality frame)
@@ -4297,7 +4297,7 @@ class StructureDetector:
                         description=f"Incomplete bond: '{r.word}' with no object",
                         v_weight=-35.0, d_weight=-10.0,
                         u_weight=15.0, g_weight=-15.0,
-                        w_weight=-20.0,
+                        w_weight=-32.0,
                     )
 
         # Check for "i have a plan" pattern (SELF + possess + abstract noun + no object)
@@ -4313,7 +4313,7 @@ class StructureDetector:
                     description="Plan with no object — potential crisis",
                     v_weight=-25.0, d_weight=-10.0,
                     u_weight=10.0, g_weight=-10.0,
-                    w_weight=-15.0,
+                    w_weight=-36.0,
                 )
 
         return None
@@ -4386,7 +4386,7 @@ class StructureDetector:
                 description="Desire for termination",
                 v_weight=-35.0, d_weight=-15.0,
                 u_weight=10.0, g_weight=-15.0,
-                w_weight=-20.0,
+                w_weight=-32.0,
             )
         return None
 
@@ -4479,7 +4479,7 @@ class StructureDetector:
                 description="Writing farewell artifact",
                 v_weight=-30.0, d_weight=-10.0,
                 u_weight=15.0, g_weight=-15.0,
-                w_weight=-10.0,
+                w_weight=-25.0,
             )
 
         return None
