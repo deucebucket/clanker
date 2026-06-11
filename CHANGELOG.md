@@ -37,6 +37,20 @@
   65% -> 96%; held-out probes 28/45 (62.2%) -- slang 5/15, grief 10/15,
   PA 13/15: the slang fixes did NOT transfer to holdout and cost one grief
   probe; vocabulary 4,563
+- Council-v2 data pipeline (tools/council_sample.py, council_grade.py,
+  council_assemble.py): 2,144 candidates (Twitch/Reddit sampling + DeepSeek
+  generation with hard-negative angles), graded by a 2-model DeepSeek
+  council (deepseek-chat + deepseek-reasoner), 87.0% inter-grader agreement,
+  279 disagreements quarantined to datasets/council_v2_ambiguous.json;
+  agreement-filtered 1,865 split seed=8 stratified 80/20 into
+  datasets/council_v2_train.json (1,492, open) and
+  benchmarks/holdout_v2_probes.json (373, sealed)
+- Holdout v2 baseline (V8.5): 154/373 (41.3%) -- grief 46%, mixed_safe 41%,
+  PA 31%, slang_casual 46%. Open-pool diagnosis: 77% of errors are
+  boundary (neutral vs committed pos/neg), 173 true inversions -- the
+  engine under-commits. New idiom classes surfaced: "L" as loss, "locked
+  in", W-prefix nouns ("w stream")
+- docs/DEVLOG.md established: running play-by-play of all engine work
 
 ## V8.4 (2026-06-11/12) -- W/I channels, neutralizer, tier-1 PA
 

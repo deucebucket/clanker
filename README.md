@@ -87,7 +87,8 @@ All measured 2026-06-11 against the current engine.
 | Stress test (275 real sentences, 11 categories) | 271/275 (98.5%) |
 | Crisis recall | 49/51 (96.1%) |
 | Crisis false positive (safe + dark humor + metaphor) | 0/75 (0.0%) |
-| Held-out probes (45 sentences, never tuned on) | 28/45 (62.2%) |
+| Held-out probes v1 (45 sentences, never tuned on) | 28/45 (62.2%) |
+| Held-out probes v2 (373 council-graded, sealed) | 154/373 (41.3%) |
 | SST-2 validation (872 sentences, default constants) | 542/872 (62.2%) |
 | Throughput (real corpora: Twitch, novels, philosophy) | 1,000-2,450 sentences/sec |
 | Latency (conversational sentences, single core) | 0.45ms per sentence (~2,200/sec) |
@@ -102,27 +103,36 @@ Truth labels for ambiguous sentences come from a consensus of 4 frontier AI mode
 
 The in-repo suites (stress test, ground truth, crisis benchmark) have been
 tuned against repeatedly -- they measure regression, not generalization, and
-they overestimate accuracy. `benchmarks/holdout_probes.json` is a 45-sentence
-set the engine has **never** been tuned on (protocol in
-`benchmarks/HOLDOUT_PROTOCOL.md`): when a holdout category needs work, new
-training sentences are sourced; the holdout set itself is evaluation-only.
-Both numbers are reported: 98.5% in-repo, 62.2% held-out. The gap is the
-honest one.
+they overestimate accuracy. Two holdout sets exist (protocol in
+`benchmarks/HOLDOUT_PROTOCOL.md`): v1 is 45 hand-picked probes; v2 is 373
+sealed probes built 2026-06-11 from a 2-model LLM council grading 2,144
+real and synthetic sentences (87% inter-grader agreement; disagreements
+quarantined as an ambiguity set). When a holdout category needs work, new
+training sentences are sourced (`datasets/council_v2_train.json`, 1,492
+open sentences); the holdout sets themselves are evaluation-only. All
+numbers are reported: 98.5% in-repo, 62.2% held-out v1, 41.3% held-out v2.
+The biggest gap is the honest one. v2 is the canonical generalization
+number going forward — at 373 probes, a 1% delta is real signal, not one
+lucky sentence.
 
 ## Known Weaknesses
 
 Held-out per-category scores (never tuned on, measured 2026-06-11):
 
-| Category | Held-out accuracy |
-|----------|-------------------|
-| Slang positive | 5/15 (33%) |
-| Grief | 10/15 (67%) |
-| Passive aggressive | 13/15 (87%) |
+| Category | Held-out v1 (n=15 each) | Held-out v2 (sealed) |
+|----------|-------------------------|----------------------|
+| Slang positive / casual | 5/15 (33%) | 53/115 (46%) |
+| Grief | 10/15 (67%) | 30/65 (46%) |
+| Passive aggressive | 13/15 (87%) | 23/75 (31%) |
+| Mixed safe | -- | 48/118 (41%) |
 
-Current-generation slang remains the weakest area. The 2026-06-11 slang
-batch lifted an independent 80-sentence real-corpus pool from 65% to 96%
-but did not transfer to the held-out slang probes (6/15 before, 5/15
-after) -- the register gap is wider than any one vocabulary pass. Two crisis sentences with zero lexical signal ("tonight is the
+Current-generation slang remains weak. The 2026-06-11 slang batch lifted
+an independent 80-sentence real-corpus pool from 65% to 96% but did not
+transfer to the held-out slang probes (6/15 before, 5/15 after) -- the
+register gap is wider than any one vocabulary pass. The v2 open-pool
+diagnosis adds the structural finding: 77% of engine errors are boundary
+cases -- the engine reads "neutral" where human-calibrated labels commit
+to pos/neg. It under-commits; it rarely inverts. Two crisis sentences with zero lexical signal ("tonight is the
 night", "ive made my decision") are still missed -- they need conversation
 context, not sentence physics.
 
@@ -136,7 +146,7 @@ engine/              V8 engine
   structures.py        Pattern detection (66 patterns)
   solver.py            Bidirectional A+B=C solver
   force_flow.py        WHO does WHAT to WHOM; W attribution, I agency axis
-  forces_curated.py    4,545 word force tuples (dv,da,dd,du,dg)
+  forces_curated.py    4,563 word force tuples (dv,da,dd,du,dg)
   crisis.py            Crisis detection (0.0-1.0 gradient)
   phase.py             SOLID/LIQUID/NEUTRALIZED/GAS word states
   anomaly.py           Anomaly detection (4 detectors)
@@ -168,8 +178,10 @@ python3 benchmarks/crisis_benchmark.py
 python3 benchmarks/stress_test.py
 ```
 
-Held-out probes (`benchmarks/holdout_probes.json`) are evaluation-only --
-never tune against them. See `benchmarks/HOLDOUT_PROTOCOL.md`.
+Held-out probes (`benchmarks/holdout_probes.json`, `holdout_v2_probes.json`)
+are evaluation-only -- never tune against them; v2 is sealed (its sentences
+are never displayed). Evaluate with `benchmarks/eval_holdout.py` /
+`eval_holdout_v2.py`. See `benchmarks/HOLDOUT_PROTOCOL.md`.
 
 ## Links
 
