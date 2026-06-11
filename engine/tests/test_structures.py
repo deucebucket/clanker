@@ -567,3 +567,42 @@ class TestRecoverySmallWin:
         """'i need some coffee' -> not a recovery win."""
         matches = _detect("i need some coffee")
         assert not _has_pattern(matches, "RECOVERY_SMALL_WIN")
+
+
+# ── MUNDANE_HYPERBOLE ────────────────────────────────────────────
+
+class TestMundaneHyperbole:
+
+    def test_oov_token_does_not_trigger(self):
+        """'i still have his number saved' -- 'number' is OOV; an unknown
+        token is not evidence of mundane context. MUNDANE_HYPERBOLE must
+        not fire and cancel the grief reading."""
+        matches = _detect("i still have his number saved")
+        assert not _has_pattern(matches, "MUNDANE_HYPERBOLE")
+        assert _has_pattern(matches, "PERSISTENT_ABSENCE")
+
+    def test_masking_cofire_suppresses_mundane(self):
+        """'im tired of pretending im okay' -- MASKING (crisis-tier) fires;
+        MUNDANE_HYPERBOLE must yield. A mundane reading and a crisis
+        reading cannot both be right."""
+        matches = _detect("im tired of pretending im okay")
+        assert _has_pattern(matches, "MASKING")
+        assert not _has_pattern(matches, "MUNDANE_HYPERBOLE")
+
+    def test_finality_cofire_suppresses_mundane(self):
+        """'i never got to say goodbye to my brother' -- FINALITY
+        (crisis-tier) fires; MUNDANE_HYPERBOLE must not cancel it."""
+        matches = _detect("i never got to say goodbye to my brother")
+        assert _has_pattern(matches, "FINALITY")
+        assert not _has_pattern(matches, "MUNDANE_HYPERBOLE")
+
+    def test_genuine_mundane_hyperbole_still_fires(self):
+        """'this homework is killing me' -- the canonical mundane
+        hyperbole must still be defused."""
+        matches = _detect("this homework is killing me")
+        assert _has_pattern(matches, "MUNDANE_HYPERBOLE")
+
+    def test_traffic_complaint_still_fires(self):
+        """'i want to die this traffic is insane' -- complaint, not crisis."""
+        matches = _detect("i want to die this traffic is insane")
+        assert _has_pattern(matches, "MUNDANE_HYPERBOLE")

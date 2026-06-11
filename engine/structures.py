@@ -198,6 +198,19 @@ _PERMISSION_VERBS = frozenset({
     "go", "ahead", "leave", "try", "see", "knock",
 })
 
+# Crisis-tier structures (mirrors engine/crisis.py STRUCTURE_WEIGHTS >= 0.10
+# plus the V8 council additions). When any of these fires on a sentence,
+# MUNDANE_HYPERBOLE must yield — a mundane reading and a crisis reading
+# cannot both be right, and crisis wins.
+_CRISIS_TIER_PATTERNS = frozenset({
+    "SELF_HARM_INTENT", "METHOD_ACQUISITION", "PURSUIT_OF_METHOD",
+    "SUSPICIOUS_CALM", "MASKING", "RESIGNATION",
+    "SELF_NULLIFY", "SELF_REMOVAL", "EXISTENTIAL_NEGATION",
+    "SOCIAL_NULLITY", "NO_EXIT", "FAREWELL", "FINALITY",
+    "RHETORICAL_HOPELESSNESS",
+    "SELF_ERASURE", "DIVESTITURE", "METHOD_FIXATION",
+})
+
 
 # ── Structure Detector ───────────────────────────────────────────
 
@@ -310,6 +323,18 @@ class StructureDetector:
                     if result.confidence <= 0.3:
                         continue  # dampened below threshold, skip
                 matches.append(result)
+
+        # ── CO-FIRE SUPPRESSION: crisis beats mundane ──
+        # MUNDANE_HYPERBOLE exists to defuse hyperbole ("homework is killing
+        # me"). A mundane reading and a crisis reading cannot both be right:
+        # if any crisis-tier structure fired on the same sentence, the
+        # sentence is NOT mundane hyperbole, and its +20 V weight must not
+        # cancel the crisis signal ("im tired of pretending im okay" →
+        # MASKING; "i never got to say goodbye" → FINALITY).
+        if any(m.pattern == "MUNDANE_HYPERBOLE" for m in matches) and any(
+            m.pattern in _CRISIS_TIER_PATTERNS for m in matches
+        ):
+            matches = [m for m in matches if m.pattern != "MUNDANE_HYPERBOLE"]
         return matches
 
     # ── Individual detectors ─────────────────────────────────────
@@ -3377,7 +3402,7 @@ class StructureDetector:
             # Verbs
             "want", "need", "make", "makes", "making", "get", "got",
             "take", "took", "give", "gave", "come", "go", "going",
-            "said", "tell", "told", "think", "know", "feel",
+            "say", "said", "tell", "told", "think", "know", "feel",
             "is", "was", "are", "were", "been", "being",
             "have", "had", "has", "do", "did", "does",
             "can", "could", "will", "would", "should", "might",
@@ -3399,6 +3424,17 @@ class StructureDetector:
             "every", "each", "all",  # quantifiers
             "touch", "run", "walk", "sit", "stand", "look",  # common intransitive verbs
         })
+        # Explicit known-mundane everyday nouns that may be OOV. An OOV word
+        # by itself must never qualify as mundane context (see below).
+        _KNOWN_MUNDANE_OOV = frozenset({
+            "monday", "tuesday", "wednesday", "thursday", "friday",
+            "meeting", "meetings", "homework", "traffic", "commute",
+            "deadline", "deadlines", "overtime", "chores", "bills",
+            "laundry", "dishes", "errands", "groceries", "parking",
+            "inbox", "email", "emails", "wifi", "printer", "spreadsheet",
+            "spreadsheets", "paperwork", "exam", "exams", "midterms",
+            "finals", "essay", "assignment", "assignments",
+        })
         mundane_idx = []
         for i, r in enumerate(roles):
             if r.role in _PERSON_ROLES or r.role in _SKIP_ROLES:
@@ -3407,8 +3443,11 @@ class StructureDetector:
                 continue
             f = r.force or _V.get(r.word)
             if f is None:
-                # Not in vocabulary = mundane noun
-                if r.role == "NEUTRAL":
+                # Out-of-vocabulary is NOT evidence of mundanity: slang and
+                # uncommon emotional words are OOV too ("number" in "i still
+                # have his number saved"). Only count OOV tokens that are
+                # explicitly known-mundane everyday nouns.
+                if r.role == "NEUTRAL" and r.word in _KNOWN_MUNDANE_OOV:
                     mundane_idx.append(i)
             elif abs(f[0]) <= 12 and abs(f[4]) < 15 and abs(f[1]) <= 15:
                 mundane_idx.append(i)
@@ -3841,6 +3880,26 @@ class StructureDetector:
         # Pattern 1: persistence + absent person, OR heavy persistence alone
         if (has_persistence and has_absent) or persistence_count >= 2:
             idx = [i for i, r in enumerate(roles) if r.word in _PERSISTENCE or r.word in _ABSENT_MARKERS]
+            # GHOST POSSESSION subcase: persistence + possessive of the absent
+            # person + a retention verb = keeping a dead person's things.
+            # "i still have his number saved", "i keep her voicemail".
+            # The kept object reads positive at word level ("saved" = +V),
+            # so this shape needs a stronger pull to land negative.
+            _POSSESSIVE_ABSENT = frozenset({"his", "her", "their"})
+            _RETENTION_VERBS = frozenset({"have", "keep", "keeps", "kept",
+                                          "saved", "save", "hold", "holding"})
+            if (has_persistence
+                    and any(w in _POSSESSIVE_ABSENT for w in words)
+                    and any(w in _RETENTION_VERBS for w in words)):
+                return StructureMatch(
+                    pattern="PERSISTENT_ABSENCE",
+                    confidence=0.75,
+                    matched_indices=idx,
+                    description="Retained possession of absent person",
+                    v_weight=-45.0, d_weight=-10.0,
+                    u_weight=0.0, g_weight=-15.0,
+                    w_weight=-10.0,
+                )
             return StructureMatch(
                 pattern="PERSISTENT_ABSENCE",
                 confidence=0.70,
