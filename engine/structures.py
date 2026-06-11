@@ -311,6 +311,7 @@ class StructureDetector:
             self._exclusion_contrast,
             self._ironic_deference,
             self._faint_praise,
+            self._retrospective_hope,
             self._dangling_bond,
             self._masking,
             self._resignation,
@@ -350,7 +351,7 @@ class StructureDetector:
         # positive readings must not cancel it.
         _PA_PRESUPPOSITION = {
             "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST",
-            "IRONIC_DEFERENCE", "FAINT_PRAISE",
+            "IRONIC_DEFERENCE", "FAINT_PRAISE", "RETROSPECTIVE_HOPE",
         }
         if any(m.pattern in _PA_PRESUPPOSITION for m in matches):
             matches = [m for m in matches
@@ -4295,10 +4296,12 @@ class StructureDetector:
     # ── Tier-1 passive aggression: embedded-grievance patterns ────
     # Passive aggression must be decodable by its target to function,
     # so the complaint is smuggled into deniable grammatical structures
-    # (presupposition markers). These four detectors find the smuggling
-    # channels that live INSIDE the sentence. Context-dependent PA
-    # ("hope it was worth it", bare "k") is deliberately out of scope —
-    # it needs conversation history the engine doesn't have.
+    # (presupposition markers). These five detectors find the smuggling
+    # channels that live INSIDE the sentence. ("hope it was worth it"
+    # graduated from out-of-scope: the closed-complement grammar IS
+    # sentence-internal — see _retrospective_hope.) Truly context-
+    # dependent PA (bare "k") stays out of scope — it needs
+    # conversation history the engine doesn't have.
 
     @staticmethod
     def _clean_words(roles: List[WordRole]) -> List[str]:
@@ -4681,6 +4684,185 @@ class StructureDetector:
                             u_weight=0.0, g_weight=0.0,
                             w_weight=0.0, a_weight=5.0,
                         )
+        return None
+
+    def _retrospective_hope(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Rhetorical hope aimed at a CLOSED outcome = accusation.
+
+        "hope it was worth it" — retrospective transaction audit
+        "hope youre happy now" — present-state self-satisfaction audit
+        "i hope youre proud of yourself" — ditto
+        "hope it was worth losing everything" — explicit cost named (strongest)
+
+        Real hope aims at OPEN outcomes. Hope aimed at an outcome the
+        addressee already knows is an instruction to self-audit — an
+        indictment in hope's grammar. THREE ingredients must co-occur:
+        (1) hope/hoping, (2) epistemically-closed complement (past
+        "was"/"were", or present-state "happy now"), (3) transactional
+        or self-satisfaction frame ("worth it/worth the X", "happy
+        now", "happy/satisfied with yourself", "proud of yourself").
+
+        GUARDS (each kills one ingredient): future/open complements
+        ("will be worth it", "in the end", "someday") keep the outcome
+        open; benefit-frame retrospectives ("hope you slept well") have
+        no transaction audit; SELF_REF owning the audited choice
+        ("i spent my savings on this, hope it was worth it") routes to
+        anxiety, not aggression — same actor-routing as
+        _temporal_grievance; supportive elaboration after the audit
+        ("— you trained two years for this") rescues sincerity;
+        benefit-centered "paid off" is NOT cost-centered "worth it"
+        and is deliberately excluded.
+        """
+        words = self._clean_words(roles)
+        n = len(words)
+
+        # Ingredient 1: hope verb
+        hope_idx = None
+        for i, w in enumerate(words):
+            if w in ("hope", "hoping"):
+                hope_idx = i
+                break
+        if hope_idx is None:
+            return None
+
+        # GUARD: self-owned choice. A SELF_REF before "hope" that is
+        # more than the hoper ("i hope", "i really hope" are fine; "i
+        # spent my savings on this, hope..." is not) owns the audited
+        # choice — anxiety, not aggression.
+        _HEDGE_ADVERBS = frozenset({
+            "really", "just", "truly", "honestly", "sincerely", "do",
+            "genuinely", "well", "so", "sure",
+        })
+        for i in range(hope_idx):
+            if roles[i].role == "SELF_REF":
+                between = words[i + 1: hope_idx]
+                if any(b not in _HEDGE_ADVERBS for b in between):
+                    return None
+
+        after = words[hope_idx + 1:]
+        m = len(after)
+
+        # Supportive elaboration after the audit = sincerity rescue.
+        # "hope it was worth it — you trained two years for this":
+        # effort-acknowledgment or congratulatory content following the
+        # closed complement reopens the reading as shared hope.
+        _SUPPORTIVE = frozenset({
+            "trained", "worked", "earned", "deserve", "deserved",
+            "deserves", "sacrificed", "practiced", "studied", "proud",
+            "congrats", "congratulations",
+        })
+
+        def _tail_rescues(tail_start_abs: int) -> bool:
+            for k in range(tail_start_abs, n):
+                if words[k] in _SUPPORTIVE:
+                    return True
+                f = roles[k].force
+                if f and f[0] >= 25:
+                    return True
+            return False
+
+        # Explicit cost named in the complement ("worth LOSING
+        # everything"). Lexical set: loss verbs often arrive as
+        # PULL_RESOLVED with no force attached.
+        _COST_WORDS = frozenset({
+            "losing", "lost", "ruining", "ruined", "destroying",
+            "destroyed", "wrecking", "breaking", "burning", "ending",
+            "throwing",
+        })
+
+        def _tail_cost_named(tail_start_abs: int) -> bool:
+            for k in range(tail_start_abs, n):
+                if words[k] in _COST_WORDS:
+                    return True
+                f = roles[k].force
+                if f and f[0] <= -20:
+                    return True
+            return False
+
+        # ── Branch A: retrospective transaction audit ("worth") ──
+        worth_rel = next((k for k, w in enumerate(after) if w == "worth"), None)
+        if worth_rel is not None:
+            # Ingredient 2: epistemically CLOSED — past-tense copula
+            # between hope and worth. "will be worth", "its worth it in
+            # the end" have no was/were and stay open.
+            closed = any(b in ("was", "were") for b in after[:worth_rel])
+            # GUARD: explicit open/future markers anywhere after hope
+            _OPEN_MARKERS = frozenset({
+                "will", "itll", "thatll", "someday", "eventually", "end",
+            })
+            is_open = any(w in _OPEN_MARKERS for w in after)
+            # GUARD: SELF_REF inside the audited clause ("hope my
+            # gamble was worth it") — speaker owns the choice.
+            self_in_clause = any(
+                r.role == "SELF_REF" for r in roles[hope_idx + 1:]
+            )
+            if closed and not is_open and not self_in_clause:
+                tail_abs = hope_idx + 1 + worth_rel + 1
+                # Ingredient 3 at full strength: explicit cost named
+                # right in the complement ("worth losing everything").
+                # A named cost DOMINATES the sincerity rescue — the
+                # cost's content words ("your BEST friend") must not
+                # read as supportive elaboration.
+                cost_named = _tail_cost_named(tail_abs)
+                if not cost_named and _tail_rescues(tail_abs):
+                    return None
+                conf = 0.85 if cost_named else 0.75
+                return StructureMatch(
+                    pattern="RETROSPECTIVE_HOPE",
+                    confidence=conf,
+                    matched_indices=[hope_idx, hope_idx + 1 + worth_rel],
+                    description="Hope at a closed outcome: retrospective transaction audit",
+                    v_weight=-32.0, d_weight=10.0,
+                    u_weight=5.0, g_weight=0.0,
+                    w_weight=0.0, a_weight=8.0,
+                )
+
+        # ── Branch B: present-state self-satisfaction audit ──
+        # "hope youre happy now" / "happy with yourself" /
+        # "proud of yourself" / sentence-final "satisfied".
+        _SECOND_PERSON = frozenset({"you", "your", "youre", "youve", "u"})
+        has_you = any(w in _SECOND_PERSON for w in after[:3])
+        if not has_you:
+            return None
+        for k, w in enumerate(after[:6]):
+            abs_k = hope_idx + 1 + k
+            nxt = after[k + 1] if k + 1 < m else None
+            nxt2 = after[k + 2] if k + 2 < m else None
+            if w == "happy":
+                if nxt == "now":
+                    end_abs = abs_k + 2
+                elif nxt == "with" and nxt2 == "yourself":
+                    end_abs = abs_k + 3
+                else:
+                    continue  # "happy in your new home" — open complement
+            elif w == "proud":
+                if nxt == "of" and nxt2 == "yourself":
+                    end_abs = abs_k + 3
+                else:
+                    continue  # "proud of your work" — genuine
+            elif w == "satisfied":
+                if nxt is None or nxt == "now":
+                    end_abs = abs_k + (2 if nxt == "now" else 1)
+                elif nxt == "with" and nxt2 == "yourself":
+                    end_abs = abs_k + 3
+                else:
+                    continue  # "satisfied with the results" — genuine
+            else:
+                continue
+            if _tail_rescues(end_abs):
+                return None
+            # "with yourself"/"of yourself" names the audit target
+            # explicitly — more explicit than bare "now"/"satisfied".
+            conf = 0.8 if words[end_abs - 1] == "yourself" else 0.7
+            return StructureMatch(
+                pattern="RETROSPECTIVE_HOPE",
+                confidence=conf,
+                matched_indices=[hope_idx, abs_k],
+                description="Hope at a closed outcome: self-satisfaction audit",
+                v_weight=-32.0, d_weight=10.0,
+                u_weight=5.0, g_weight=0.0,
+                w_weight=0.0, a_weight=8.0,
+            )
         return None
 
     # ── Council Round 6 patterns ──────────────────────────────────

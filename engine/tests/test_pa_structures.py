@@ -1,6 +1,6 @@
 """Tests for Tier-1 passive aggression structures — embedded grievance.
 
-Four phrasing classes where the complaint is smuggled into deniable
+Five phrasing classes where the complaint is smuggled into deniable
 grammar via presupposition markers:
 
   TEMPORAL_GRIEVANCE — "finally"/"for once"/"about time" on ANOTHER
@@ -9,10 +9,11 @@ grammar via presupposition markers:
       contrasting speaker deprivation vs target enjoyment
   IRONIC_DEFERENCE   — capitulation-as-attack ("youre clearly the expert")
   FAINT_PRAISE       — minimal praise + dismissive concession
+  RETROSPECTIVE_HOPE — hope aimed at a CLOSED outcome ("hope it was
+      worth it", "hope youre happy now") = audit instruction
 
-All test sentences are NOVEL — not in any benchmark. Context-dependent
-PA ("hope it was worth it", bare "k") is deliberately out of scope and
-must stay untouched.
+All test sentences are NOVEL — not in any benchmark. Truly context-
+dependent PA (bare "k") stays out of scope and must stay untouched.
 """
 
 import pytest
@@ -189,23 +190,101 @@ class TestFaintPraise:
         assert not _has_pattern(matches, "FAINT_PRAISE")
 
 
+# ── RETROSPECTIVE_HOPE ───────────────────────────────────────────
+
+class TestRetrospectiveHope:
+    """Hope aimed at a CLOSED outcome the addressee already knows is
+    an instruction to self-audit — an indictment in hope's grammar.
+    Three ingredients: hope verb + epistemically-closed complement +
+    transactional/self-satisfaction frame. Each rescuer kills one.
+    """
+
+    # ── Fire cases ──
+
+    def test_hope_it_was_worth_it_fires(self):
+        """Past-tense 'worth it' = retrospective transaction audit."""
+        matches = _detect("hope it was worth it")
+        assert _has_pattern(matches, "RETROSPECTIVE_HOPE")
+
+    def test_named_cost_is_strongest(self):
+        """Explicit cost after 'worth' fires at higher confidence."""
+        m_cost = [m for m in _detect("hope it was worth losing your best friend")
+                  if m.pattern == "RETROSPECTIVE_HOPE"]
+        m_base = [m for m in _detect("hope it was worth it")
+                  if m.pattern == "RETROSPECTIVE_HOPE"]
+        assert m_cost and m_base
+        assert m_cost[0].confidence > m_base[0].confidence
+
+    def test_happy_now_fires(self):
+        """'hope youre happy now' — present-state satisfaction audit."""
+        matches = _detect("hope youre happy now")
+        assert _has_pattern(matches, "RETROSPECTIVE_HOPE")
+
+    def test_proud_of_yourself_fires(self):
+        """'i hope youre proud of yourself' — the audit target named."""
+        matches = _detect("i hope youre proud of yourself")
+        assert _has_pattern(matches, "RETROSPECTIVE_HOPE")
+
+    def test_retrospective_hope_reads_negative_v(self):
+        """The full pipeline lands V below neutral, I at control."""
+        vadug, _ = compute_vadug("well i hope it was worth it")
+        assert vadug.v < 110
+        assert vadug.i == 168
+
+    # ── Rescuers (each kills one ingredient) ──
+
+    def test_future_open_outcome_guard(self):
+        """Open outcomes keep hope genuine — no closed complement."""
+        for s in ("i hope it will be worth it",
+                  "i really hope all this effort is worth it someday"):
+            assert not _has_pattern(_detect(s), "RETROSPECTIVE_HOPE"), s
+
+    def test_benefit_frame_retrospective_guard(self):
+        """Retrospective but benefit-framed — no transaction audit."""
+        for s in ("hope you slept well", "hope the trip went well"):
+            assert not _has_pattern(_detect(s), "RETROSPECTIVE_HOPE"), s
+
+    def test_self_directed_audit_guard(self):
+        """SELF_REF owns the audited choice — anxiety, not aggression."""
+        for s in ("i spent my savings on this hope it was worth it",
+                  "hope my gamble was worth it"):
+            assert not _has_pattern(_detect(s), "RETROSPECTIVE_HOPE"), s
+
+    def test_elaborated_sincerity_guard(self):
+        """Supportive elaboration after the audit rescues sincerity."""
+        for s in ("hope it was worth it you trained two years for this",
+                  "hope youre happy in your new home"):
+            assert not _has_pattern(_detect(s), "RETROSPECTIVE_HOPE"), s
+
+    def test_paid_off_stays_out(self):
+        """Benefit-centered 'paid off' is not cost-centered 'worth it'."""
+        for s in ("hope the gamble paid off", "hope it pays off"):
+            assert not _has_pattern(_detect(s), "RETROSPECTIVE_HOPE"), s
+
+
 # ── Cross-class invariants ───────────────────────────────────────
 
 class TestPAInvariants:
 
     def test_context_dependent_pa_stays_out_of_scope(self):
-        """Bare context-dependent PA must NOT fire sentence-level patterns."""
-        for s in ("hope it was worth it", "sounds fun"):
+        """Bare context-dependent PA must NOT fire sentence-level patterns.
+
+        ("hope it was worth it" graduated out of this list — its closed
+        complement is sentence-internal grammar, now RETROSPECTIVE_HOPE.)
+        """
+        for s in ("sounds fun",):
             matches = _detect(s)
             for pat in ("TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST",
-                        "IRONIC_DEFERENCE", "FAINT_PRAISE"):
+                        "IRONIC_DEFERENCE", "FAINT_PRAISE",
+                        "RETROSPECTIVE_HOPE"):
                 assert not _has_pattern(matches, pat), (s, pat)
 
     def test_pa_lifts_intent_toward_control(self):
-        """All four classes push I above 150 — the speaker is fighting."""
+        """All five classes push I above 150 — the speaker is fighting."""
         for s in ("about time you answered your texts",
                   "some of us have to be up at six",
                   "no no youre clearly the expert here",
-                  "bold strategy"):
+                  "bold strategy",
+                  "hope she was worth it"):
             vadug, _ = compute_vadug(s)
             assert vadug.i > 150, s

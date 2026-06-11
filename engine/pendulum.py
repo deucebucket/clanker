@@ -1000,7 +1000,7 @@ def apply_structures(context: dict) -> dict:
             if hedge_dw < 0:
                 state_w += 1.3 * abs(hedge_dw) * FORCE_SCALE
             state_v += sm.v_weight * sm.confidence * FORCE_SCALE
-        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION", "MASKING", "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST", "IRONIC_DEFERENCE", "FAINT_PRAISE") and state_v > CENTER:
+        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION", "MASKING", "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST", "IRONIC_DEFERENCE", "FAINT_PRAISE", "RETROSPECTIVE_HOPE") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
             state_v += pull
@@ -1209,7 +1209,7 @@ def saturate_and_clamp(context: dict) -> dict:
     # strong directional reading (withdraw/attack) is never overridden.
     _PA_CONTROL_PATTERNS = {
         "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST",
-        "IRONIC_DEFERENCE", "FAINT_PRAISE",
+        "IRONIC_DEFERENCE", "FAINT_PRAISE", "RETROSPECTIVE_HOPE",
     }
     structures = context.get("structures", [])
     if any(sm.pattern in _PA_CONTROL_PATTERNS for sm in structures) and \
