@@ -23,8 +23,9 @@ python3 -m pytest engine/tests/ -v
 ## What Not to Change
 
 - Opcode definitions are immutable. Never redefine an existing opcode.
-- Force tuples are `(dv, da, dd, du, dg, dw, di)` -- deltas, not absolute values.
+- Force tuples are 5-wide: `(dv, da, dd, du, dg)` -- deltas, not absolute values. W and I are computed dimensions (attribution routing and the agency axis), not stored per-word.
 - The physics pipeline order in `pendulum.py` is load-bearing. Don't reorder stages.
+- Never tune against `benchmarks/holdout_probes.json` -- it is evaluation-only (see `benchmarks/HOLDOUT_PROTOCOL.md`).
 
 ## Code Style
 
@@ -37,7 +38,7 @@ python3 -m pytest engine/tests/ -v
 ## Running Tests
 
 ```bash
-# Engine tests (207 tests)
+# Engine tests (286 tests)
 python3 -m pytest engine/tests/ -v
 
 # Full benchmark suite

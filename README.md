@@ -29,9 +29,14 @@ Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
 |-------|---|-------|
 | "I'm fine" | 83 | Below neutral -- uneasy, not positive |
 | "haha yeah im totally okay" | 15 | Forced composure, bravado mask detected |
-| "oh joy" | 29 | Positive word, negative reading |
+| "oh joy" | 20 | Positive word, negative reading |
 | "do you even love me" | 152 | Positive word, but A=154 D=133 -- challenge energy |
 | "my wife cheated on me with my best friend" | 14 | V=14, A=151, D=56 -- deep negative, high intensity, low control |
+| "nice of you to finally answer" | 54 | Grievance smuggled into thanks; I=168 -- fighting, deniably |
+| "i finally got my license" | 209 | Same "finally", own action -- joy, not grievance |
+| "i still have his number saved" | 95 | Ghost possession -- keepsake of an absent person reads as grief |
+| "its all my fault" | 30 | W=53 -- valence routed into self-worth, not just mood |
+| "whats the point" | 49 | I=64 -- futility sinks the agency axis |
 | "I love my mom" | 184 | Genuine positive, no false alarm |
 | "the meeting is at three" | 128 | Neutral -- no emotional content detected |
 
@@ -40,13 +45,15 @@ Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):
 Four processing layers run in sequence:
 
 1. **Word Classification** -- each word is assigned structural roles (SELF_REF, EMOTIONAL, NEGATOR, AMPLIFIER, CONNECTOR, CHOPPER, etc.)
-2. **Proximity Weighting** -- nearby words influence each other with exponential decay (0.7x per word of distance)
-3. **Structure Detection** -- 61 chess-like patterns detected from role sequences
+2. **Proximity Weighting** -- nearby words influence each other with exponential decay (0.90x per word of distance)
+3. **Structure Detection** -- 66 chess-like patterns detected from role sequences
 4. **Physics** -- 9-stage pipeline: tokenize, classify, interpret context, coefficients, accumulate forces, structure adjustment, W-V coupling, personality, tanh saturation
 
 Additional systems:
 - **Force Flow** -- WHO does WHAT to WHOM directional analysis
-- **Phase System** -- SOLID (never flips), LIQUID (context-dependent), GAS (neutral) word states
+- **W Attribution Routing** -- valence reaches Self-Worth only in proportion to how much the force is about the speaker (self-declarative > targeted > guilt > atmospheric: zero)
+- **I Agency Axis** -- futility phrases ("whats the point") sink Intent to 64, volition phrases ("im going to fix this") lift it to 168; never overrides a strong directional read
+- **Phase System** -- SOLID (never flips), LIQUID (context-dependent), NEUTRALIZED (context carries the charge), GAS (neutral) word states
 - **Crisis Detection** -- continuous 0.0-1.0 concern gradient, zero false positives on safe text
 - **Anomaly Detection** -- deflection, masking, velocity, resonance patterns
 - **Bidirectional Solver** -- given state A and target zone C, find valid response range B
@@ -72,31 +79,50 @@ print(f"V={result.v}, A={result.a}, D={result.d}, U={result.u}, G={result.g}, W=
 
 ## Current Numbers
 
+All measured 2026-06-11 against the current engine.
+
 | Metric | Value |
 |--------|-------|
-| Ground truth (developer-verified) | 41/41 (100%) |
-| Stress test (275 real sentences, 11 categories) | 201/275 (73.1%) |
-| Crisis recall | 70.6% (36/51) |
+| Ground truth (developer-verified, 41 sentences) | 40/41 (97.6%) |
+| Stress test (275 real sentences, 11 categories) | 271/275 (98.5%) |
+| Crisis recall | 49/51 (96.1%) |
 | Crisis false positive (safe + dark humor + metaphor) | 0/75 (0.0%) |
-| SST-2 benchmark | 63.9% (VADER: 55.7%, RoBERTa: 69%) |
-| Real-text spot-check (5 corpora) | ~59% on 167 sentences |
-| Throughput | 2,000-6,000 sentences/sec |
-| Latency | 0.17ms per sentence |
-| Vocabulary | 4,544 curated words |
-| Structural patterns | 61 |
-| Tests | 207 |
+| Held-out probes (45 sentences, never tuned on) | 30/45 (66.7%) |
+| SST-2 validation (872 sentences, default constants) | 542/872 (62.2%) |
+| Throughput (real corpora: Twitch, novels, philosophy) | 1,000-2,450 sentences/sec |
+| Latency (conversational sentences, single core) | 0.45ms per sentence (~2,200/sec) |
+| Vocabulary | 4,545 curated words |
+| Structural patterns | 66 |
+| Tests | 286 (+2 xfail) |
+| Engine size | 868 KB, 17,655 lines, stdlib only |
 
-Tested against consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok).
+Truth labels for ambiguous sentences come from a consensus of 4 frontier AI models (Gemini, Claude Opus, GPT-4, Grok).
+
+### Honest Evaluation
+
+The in-repo suites (stress test, ground truth, crisis benchmark) have been
+tuned against repeatedly -- they measure regression, not generalization, and
+they overestimate accuracy. `benchmarks/holdout_probes.json` is a 45-sentence
+set the engine has **never** been tuned on (protocol in
+`benchmarks/HOLDOUT_PROTOCOL.md`): when a holdout category needs work, new
+training sentences are sourced; the holdout set itself is evaluation-only.
+Both numbers are reported: 98.5% in-repo, 66.7% held-out. The gap is the
+honest one.
 
 ## Known Weaknesses
 
-| Category | Accuracy |
-|----------|----------|
-| Slang positive | 44% |
-| Grief | 52% |
-| Passive aggressive | 68% |
+Held-out per-category scores (never tuned on, measured 2026-06-11):
 
-Positive inflation reduced but not eliminated. These are areas of active development.
+| Category | Held-out accuracy |
+|----------|-------------------|
+| Slang positive | 6/15 (40%) |
+| Grief | 11/15 (73%) |
+| Passive aggressive | 13/15 (87%) |
+
+Current-generation slang ("we stay winning", "peak cinema") remains the
+weakest area. Two crisis sentences with zero lexical signal ("tonight is the
+night", "ive made my decision") are still missed -- they need conversation
+context, not sentence physics.
 
 ## File Structure
 
@@ -105,17 +131,17 @@ engine/              V8 engine
   pendulum.py          Physics layer -- 9-stage pipeline
   word_classifier.py   Structural role classification
   proximity.py         Proximity field computation
-  structures.py        Pattern detection (61 patterns)
+  structures.py        Pattern detection (66 patterns)
   solver.py            Bidirectional A+B=C solver
-  force_flow.py        WHO does WHAT to WHOM
-  forces_curated.py    4,544 word force tuples (7D VADUGWI)
+  force_flow.py        WHO does WHAT to WHOM; W attribution, I agency axis
+  forces_curated.py    4,545 word force tuples (dv,da,dd,du,dg)
   crisis.py            Crisis detection (0.0-1.0 gradient)
-  phase.py             SOLID/LIQUID/GAS word states
+  phase.py             SOLID/LIQUID/NEUTRALIZED/GAS word states
   anomaly.py           Anomaly detection (4 detectors)
   shared.py            VADUGWI dataclass
   vocabulary.py        Vocabulary loader
 
-engine_v9/           V9 engine (experimental)
+engine_v9/           V9 rewrite -- abandoned 2026-06 (kept as archive; see CHANGELOG)
 
 docs/                Reference
   vadug-calculation.md   Full equation reference
@@ -136,9 +162,12 @@ python3 benchmarks/full_barrage.py
 # Crisis benchmark
 python3 benchmarks/crisis_benchmark.py
 
-# Academic benchmark (vs VADER, TextBlob, RoBERTa)
-python3 benchmarks/academic_benchmark.py --quick
+# Stress test (275 sentences, 11 categories)
+python3 benchmarks/stress_test.py
 ```
+
+Held-out probes (`benchmarks/holdout_probes.json`) are evaluation-only --
+never tune against them. See `benchmarks/HOLDOUT_PROTOCOL.md`.
 
 ## Links
 

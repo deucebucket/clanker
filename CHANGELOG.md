@@ -1,6 +1,47 @@
 # Changelog
 
-## V9 (2026-04-15 -- present) -- Experimental Structural Decomposition
+## V8.4 (2026-06-11/12) -- W/I channels, neutralizer, tier-1 PA
+
+All numbers below re-measured 2026-06-11 against the shipped engine.
+
+- Crisis structure wiring: SUSPICIOUS_CALM, MASKING, RESIGNATION added to
+  STRUCTURE_WEIGHTS -- the detector found them, crisis scoring discarded them
+- MUNDANE_HYPERBOLE narrowed: OOV tokens alone no longer count as mundane
+  context; crisis-tier patterns suppress it on co-fire
+- Ghost-possession grief: possessive of an absent person + retention verb
+  outweighs positive keepsake forces ("i still have his number saved" V=95)
+- Vocabulary neutralizer: 19 LLM-rated charges contradicted by sentence-level
+  evidence demoted to a NEUTRALIZED_LIQUID tier, dV scaled by
+  (1 - contradiction_rate); slang re-rated with two-faced physics
+  ("bruh he cooked" V=165 vs "im cooked" V=67); methodology in
+  docs/neutralizer_proposal.md
+- W attribution routing: valence reaches Self-Worth through a force-flow
+  attribution coefficient (self-declarative / self-targeted / guilt-partial /
+  atmospheric-zero) instead of the binary SELF_REF-proximity gate; crisis-set
+  W median 88 vs 128 on the safe set
+- I agency axis: futility phrases sink I to 64, volition phrases lift it to
+  168, only from the neutral band -- strong directional reads never overridden
+- Four tier-1 passive-aggression detectors (TEMPORAL_GRIEVANCE,
+  EXCLUSION_CONTRAST, IRONIC_DEFERENCE, FAINT_PRAISE) +RARITY_MARKER
+  disambiguated by actor: "i finally got my license" V=209 stays joy,
+  "nice of you to finally answer" V=54 reads grievance
+- RETROSPECTIVE_HOPE: hope-verb + closed outcome + transactional frame reads
+  as accusation ("hope it was worth it" V=91 I=168); future tense, benefit
+  frames, and self-direction all rescue to baseline
+- Hedge fix: bare "i guess" damps instead of inverting; "i give up" fires;
+  masking deflection variant ("im fine dont worry about it" V=85)
+- Benchmark harness restored (stress_test.py, crisis_benchmark.py) + holdout
+  protocol established (benchmarks/HOLDOUT_PROTOCOL.md): holdout_probes.json
+  is evaluation-only, never tuned against
+- Soul-side integration: clanker-soul now consumes the real engine; Governor
+  heartbeat passes end to end (masked-collapse arc drives UNRESTRICTED ->
+  READ_ONLY)
+- Measured: tests 286 (+2 xfail); crisis recall 49/51 (96.1%), FP 0/75;
+  stress 271/275 (98.5%); ground truth 40/41 (97.6%); held-out probes
+  30/45 (66.7%) -- slang 6/15, grief 11/15, PA 13/15; SST-2 validation 62.2%;
+  vocabulary 4,545; structural patterns 66
+
+## V9 (2026-04-15 -- 2026-06, abandoned) -- Experimental Structural Decomposition
 - Structural pendulum: decomposes sentence into equation (SUBJECT+EVENT+CONTEXT) before force accumulation
 - Lemma root system: collapses 4,544 words to ~500 emotional roots
 - Molecular bonding layer: 8 bond types, reaction table, two-layer molecules
@@ -13,7 +54,7 @@
 - Perspective dampening: OTHER_REF emotions dampened unless directed at SELF
 - 4-model council consensus (Claude, Gemini, GPT, Grok) on 500+ sentences
 - Confidence scoring: certain/majority/ambiguous truth split
-- Status: experimental, ~10pts behind V8 on stress tests
+- Status: abandoned (2026-06); lessons: order-independence loses information, lemma roots lose nuance; bond-site formalism and nucleus check remain backport candidates
 
 ## V8.3 (2026-04-10)
 - Conversational accuracy: 73.1% → 98.5% on conversational sentences

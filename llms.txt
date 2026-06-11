@@ -1,6 +1,6 @@
 # Clanker
 
-> Clanker is a deterministic conversation state resolver that computes 7-dimensional emotional coordinates (VADUGWI) from text using structural pattern recognition. 4,544-word vocabulary, 61 structural patterns, 0.17ms per sentence. Licensed AGPL-3.0.
+> Clanker is a deterministic conversation state resolver that computes 7-dimensional emotional coordinates (VADUGWI) from text using structural pattern recognition. 4,545-word vocabulary, 66 structural patterns, 0.45ms per sentence. Licensed MIT.
 
 ## Core Documentation
 
