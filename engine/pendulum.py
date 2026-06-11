@@ -1000,7 +1000,7 @@ def apply_structures(context: dict) -> dict:
             if hedge_dw < 0:
                 state_w += 1.3 * abs(hedge_dw) * FORCE_SCALE
             state_v += sm.v_weight * sm.confidence * FORCE_SCALE
-        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION", "MASKING") and state_v > CENTER:
+        elif sm.pattern in ("SARCASM_INVERSION", "BRAVADO", "DIRECTED_POSITIVE", "EXCLUDED_POSITIVE", "GRIEF_LOSS", "ATMOSPHERIC_GRIEF", "RHETORICAL_SELF_NEGATION", "REPORTED_COMFORT", "PASSIVE_RESIGNATION", "MASKING", "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST", "IRONIC_DEFERENCE", "FAINT_PRAISE") and state_v > CENTER:
             excess = state_v - CENTER
             pull = sm.v_weight * sm.confidence * FORCE_SCALE * (1.0 + excess / 50.0)
             state_v += pull
@@ -1031,6 +1031,7 @@ def apply_structures(context: dict) -> dict:
                 state_v += distance * 0.4 * sm.confidence
         else:
             state_v += sm.v_weight * sm.confidence * FORCE_SCALE
+        state_a += sm.a_weight * sm.confidence * FORCE_SCALE
         state_d += sm.d_weight * sm.confidence * FORCE_SCALE
         state_u += sm.u_weight * sm.confidence * FORCE_SCALE
         state_g += sm.g_weight * sm.confidence * FORCE_SCALE
@@ -1201,6 +1202,19 @@ def saturate_and_clamp(context: dict) -> dict:
 
     # Intent computation
     state_i = compute_intent(force_flow, roles)
+
+    # Tier-1 passive aggression lifts I toward CONTROL: the speaker is
+    # fighting, deniably — the embedded grievance is a directed jab, not
+    # neutral information. Only lift out of the neutral/connect band; a
+    # strong directional reading (withdraw/attack) is never overridden.
+    _PA_CONTROL_PATTERNS = {
+        "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST",
+        "IRONIC_DEFERENCE", "FAINT_PRAISE",
+    }
+    structures = context.get("structures", [])
+    if any(sm.pattern in _PA_CONTROL_PATTERNS for sm in structures) and \
+            90 <= state_i < 168:
+        state_i = 168
 
     # Tanh saturation
     state_v = CENTER + SATURATION * tanh((state_v - CENTER) / SATURATION)

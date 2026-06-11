@@ -35,6 +35,7 @@ class StructureMatch:
     u_weight: float = 0.0
     g_weight: float = 0.0
     w_weight: float = 0.0   # how this structure shifts W (self-worth)
+    a_weight: float = 0.0   # how this structure shifts A (arousal)
 
 
 # ── Inline semantic word sets (not role dictionaries) ────────────
@@ -306,6 +307,10 @@ class StructureDetector:
             self._persistent_absence,
             self._directed_dismissal,
             self._martyrdom_field,
+            self._temporal_grievance,
+            self._exclusion_contrast,
+            self._ironic_deference,
+            self._faint_praise,
             self._dangling_bond,
             self._masking,
             self._resignation,
@@ -335,6 +340,21 @@ class StructureDetector:
             m.pattern in _CRISIS_TIER_PATTERNS for m in matches
         ):
             matches = [m for m in matches if m.pattern != "MUNDANE_HYPERBOLE"]
+
+        # ── CO-FIRE SUPPRESSION: embedded grievance beats milestone ──
+        # Tier-1 passive aggression smuggles a complaint into deniable
+        # grammar. When a PA presupposition pattern fires, the SAME surface
+        # words ("finally", "thanks", "nice") cannot also be read as a
+        # genuine milestone (RARITY_MARKER) or defused hyperbole
+        # (MUNDANE_HYPERBOLE) — the grievance reading wins, and the
+        # positive readings must not cancel it.
+        _PA_PRESUPPOSITION = {
+            "TEMPORAL_GRIEVANCE", "EXCLUSION_CONTRAST",
+            "IRONIC_DEFERENCE", "FAINT_PRAISE",
+        }
+        if any(m.pattern in _PA_PRESUPPOSITION for m in matches):
+            matches = [m for m in matches
+                       if m.pattern not in ("MUNDANE_HYPERBOLE", "RARITY_MARKER")]
         return matches
 
     # ── Individual detectors ─────────────────────────────────────
@@ -4222,7 +4242,15 @@ class StructureDetector:
             )
 
         # Pattern 3: false praise ("must be nice", "must be easy")
-        if has_false_praise >= 2:
+        # GUARD: "must be nice out today" — weather/impersonal frame, no
+        # target. The PA reading requires the niceness to belong to a
+        # PERSON's situation ("must be nice to ..."), not the atmosphere.
+        weather_frame = any(
+            w == "nice" and i + 1 < len(words)
+            and words[i + 1] in ("out", "outside", "in", "today", "here")
+            for i, w in enumerate(words)
+        )
+        if has_false_praise >= 2 and not weather_frame:
             idx = [i for i, r in enumerate(roles) if r.word in _FALSE_PRAISE]
             return StructureMatch(
                 pattern="MARTYRDOM_FIELD",
@@ -4262,6 +4290,397 @@ class StructureDetector:
                 w_weight=-10.0,
             )
 
+        return None
+
+    # ── Tier-1 passive aggression: embedded-grievance patterns ────
+    # Passive aggression must be decodable by its target to function,
+    # so the complaint is smuggled into deniable grammatical structures
+    # (presupposition markers). These four detectors find the smuggling
+    # channels that live INSIDE the sentence. Context-dependent PA
+    # ("hope it was worth it", bare "k") is deliberately out of scope —
+    # it needs conversation history the engine doesn't have.
+
+    @staticmethod
+    def _clean_words(roles: List[WordRole]) -> List[str]:
+        """Words with trailing punctuation stripped, for phrase matching."""
+        return [r.word.rstrip(".!?,;:…") for r in roles]
+
+    def _temporal_grievance(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Temporal rarity marker bound to ANOTHER PERSON's action = grievance.
+
+        "thanks for finally calling me back" — gratitude frame + "finally"
+        "nice of you to finally show up" — politeness frame + "finally"
+        "for once you actually listened" — "for once" + second person
+        "about time you did the dishes" — "about time" + second person
+
+        The marker ("finally", "for once", "about time", "at last")
+        presupposes a resented delay. Disambiguation against RARITY_MARKER
+        is the ACTOR: finally + SELF action = genuine relief/milestone
+        (RARITY_MARKER keeps it); finally + YOU action inside an
+        acknowledgment frame = embedded complaint.
+
+        GUARDS: "i finally got the job" (self actor), "we finally did it"
+        (joint actor), "you finally got the job!" (bare second person +
+        achievement verb — shared joy, no acknowledgment frame).
+        """
+        words = self._clean_words(roles)
+        n = len(words)
+        _SECOND_PERSON = frozenset({
+            "you", "your", "youre", "youve", "youd", "youll", "u",
+        })
+
+        # Locate grievance-capable temporal markers
+        marker_idx = []          # (index, kind)
+        for i, w in enumerate(words):
+            if w == "finally":
+                marker_idx.append((i, "finally"))
+            elif w == "once" and i > 0 and words[i - 1] == "for":
+                marker_idx.append((i, "for_once"))
+            elif w == "time" and i > 0 and words[i - 1] == "about":
+                marker_idx.append((i, "about_time"))
+            elif w == "last" and i > 0 and words[i - 1] == "at":
+                marker_idx.append((i, "at_last"))
+        if not marker_idx:
+            return None
+
+        for mi, kind in marker_idx:
+            # Rule A: acknowledgment frame BEFORE the marker.
+            # "thanks for finally...", "thank you for finally...",
+            # "nice of you to finally...", "kind of you to finally..."
+            # Nobody thanks themselves — the actor is the target.
+            ack = False
+            for j in range(0, mi):
+                w = words[j]
+                if w in ("thanks", "thank") and mi - j <= 6:
+                    ack = True
+                elif w in ("nice", "kind") and j + 1 < n and \
+                        words[j + 1] == "of" and mi - j <= 6:
+                    ack = True
+            # Marker must precede an action (not be sentence-final flourish)
+            if ack and mi < n - 1:
+                return StructureMatch(
+                    pattern="TEMPORAL_GRIEVANCE",
+                    confidence=0.85,
+                    matched_indices=[mi],
+                    description="Acknowledgment frame + resented-delay marker",
+                    v_weight=-35.0, d_weight=10.0,
+                    u_weight=5.0, g_weight=5.0,
+                    w_weight=0.0, a_weight=10.0,
+                )
+
+            # Rule B: intrinsically-grievance markers + second person.
+            # "for once YOU...", "about time YOU...", "at last YOU..."
+            if kind in ("for_once", "about_time", "at_last"):
+                near_you = any(
+                    words[k] in _SECOND_PERSON
+                    for k in range(max(0, mi - 2), min(n, mi + 5))
+                )
+                if near_you:
+                    return StructureMatch(
+                        pattern="TEMPORAL_GRIEVANCE",
+                        confidence=0.8,
+                        matched_indices=[mi],
+                        description="Resented-delay marker bound to second person",
+                        v_weight=-35.0, d_weight=10.0,
+                        u_weight=5.0, g_weight=5.0,
+                        w_weight=0.0, a_weight=10.0,
+                    )
+
+            # Rule C: "finally" + second-person actor + DELIBERATION verb.
+            # "you finally decided to answer" — "decided/bothered/managed"
+            # presupposes reluctance. Bare "you finally got the job" is
+            # shared joy and stays with RARITY_MARKER.
+            if kind == "finally":
+                _DELIBERATION = frozenset({
+                    "decided", "bothered", "managed", "remembered",
+                    "deigned", "chose",
+                })
+                you_before = any(
+                    words[k] in _SECOND_PERSON
+                    for k in range(max(0, mi - 3), mi)
+                )
+                delib_after = any(
+                    words[k] in _DELIBERATION
+                    for k in range(mi + 1, min(n, mi + 3))
+                )
+                if you_before and delib_after:
+                    return StructureMatch(
+                        pattern="TEMPORAL_GRIEVANCE",
+                        confidence=0.8,
+                        matched_indices=[mi],
+                        description="Second person + finally + deliberation verb",
+                        v_weight=-35.0, d_weight=10.0,
+                        u_weight=5.0, g_weight=5.0,
+                        w_weight=0.0, a_weight=10.0,
+                    )
+        return None
+
+    def _exclusion_contrast(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Speaker's deprivation contrasted against target's enjoyment.
+
+        "glad one of us is having fun" — positive surface + partitive contrast
+        "some of us have to work for a living" — partitive + obligation
+        "must be nice to sleep in whenever you want" — false envy + infinitive
+
+        The partitive ("one of us", "some of us") splits the group into
+        the deprived speaker and the enjoying target; "must be nice to X"
+        assigns the enjoyment to the target's life, not the weather.
+
+        GUARDS: "must be nice out today" (impersonal/weather),
+        "one of us should drive" (logistics — no contrast charge).
+        """
+        words = self._clean_words(roles)
+        n = len(words)
+
+        # Rule 1: "must be nice to ..." — envy frame with a target.
+        for i in range(n - 2):
+            if words[i] == "must" and words[i + 1] == "be" and \
+                    words[i + 2] == "nice":
+                if i + 3 < n and words[i + 3] == "to":
+                    return StructureMatch(
+                        pattern="EXCLUSION_CONTRAST",
+                        confidence=0.8,
+                        matched_indices=[i, i + 1, i + 2],
+                        description="False envy: target's ease vs speaker's deprivation",
+                        v_weight=-30.0, d_weight=5.0,
+                        u_weight=5.0, g_weight=5.0,
+                        w_weight=-5.0, a_weight=8.0,
+                    )
+
+        # Partitive phrases: "one of us", "some of us"
+        part_idx = None
+        for i in range(n - 2):
+            if words[i] in ("one", "some") and words[i + 1] == "of" and \
+                    words[i + 2] == "us":
+                part_idx = i
+                break
+        if part_idx is None:
+            return None
+
+        # Rule 2: positive surface word right BEFORE the partitive —
+        # "glad one of us is having fun", "at least one of us is happy".
+        _POSITIVE_SURFACE = frozenset({
+            "glad", "nice", "good", "great", "happy", "least", "well",
+        })
+        if any(words[k] in _POSITIVE_SURFACE
+               for k in range(max(0, part_idx - 3), part_idx)):
+            return StructureMatch(
+                pattern="EXCLUSION_CONTRAST",
+                confidence=0.8,
+                matched_indices=[part_idx, part_idx + 1, part_idx + 2],
+                description="Positive surface + partitive exclusion",
+                v_weight=-30.0, d_weight=5.0,
+                u_weight=5.0, g_weight=5.0,
+                w_weight=-5.0, a_weight=8.0,
+            )
+
+        # Rule 3: partitive + obligation — "some of us have to work".
+        # "should/could" logistics ("one of us should drive") stays neutral;
+        # the grievance form is "have/has/had to" or "actually".
+        after = words[part_idx + 3: part_idx + 6]
+        for k in range(len(after) - 1):
+            if after[k] in ("have", "has", "had") and after[k + 1] == "to":
+                return StructureMatch(
+                    pattern="EXCLUSION_CONTRAST",
+                    confidence=0.75,
+                    matched_indices=[part_idx, part_idx + 1, part_idx + 2],
+                    description="Partitive + obligation: martyred contrast",
+                    v_weight=-30.0, d_weight=5.0,
+                    u_weight=5.0, g_weight=5.0,
+                    w_weight=-5.0, a_weight=8.0,
+                )
+        if "actually" in after:
+            return StructureMatch(
+                pattern="EXCLUSION_CONTRAST",
+                confidence=0.7,
+                matched_indices=[part_idx, part_idx + 1, part_idx + 2],
+                description="Partitive + 'actually': martyred contrast",
+                v_weight=-30.0, d_weight=5.0,
+                u_weight=5.0, g_weight=5.0,
+                w_weight=-5.0, a_weight=8.0,
+            )
+        return None
+
+    def _ironic_deference(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Capitulation-as-attack: the surrender IS the weapon.
+
+        "youre clearly the expert" — certainty adverb + granted expertise
+        "no no youre clearly the expert here" — doubled marker intensifies
+        "fine youre right" — concession opener + granted victory
+
+        The speaker hands over authority they don't mean to hand over;
+        D stays UP because the surrender is actually an assertion.
+
+        GUARDS: "youre the expert what do you think we should do"
+        (genuine deference — asks a real question; also lacks the
+        certainty adverb), "you know what youre right i hadnt thought
+        of that" (sincere concession — elaborates WHY).
+        """
+        words = self._clean_words(roles)
+        n = len(words)
+        _SECOND_PERSON = frozenset({"you", "your", "youre", "youve"})
+        _CERTAINTY = frozenset({"clearly", "obviously", "evidently"})
+        _EXPERT_NOUNS = frozenset({
+            "expert", "genius", "boss", "authority", "smartest", "professional",
+        })
+        _QUESTION_WORDS = frozenset({"what", "how", "which", "should", "?"})
+
+        # Doubled discourse marker ("no no", "sure sure") = intensifier
+        doubled = any(
+            words[i] == words[i + 1] and words[i] in ("no", "sure", "ok", "okay", "right", "fine")
+            for i in range(n - 1)
+        )
+
+        # Rule 1: certainty adverb + second person + expertise grant.
+        cert_idx = [i for i, w in enumerate(words) if w in _CERTAINTY]
+        expert_idx = [i for i, w in enumerate(words) if w in _EXPERT_NOUNS]
+        has_you = any(w in _SECOND_PERSON for w in words)
+        if cert_idx and expert_idx and has_you:
+            # GUARD: a genuine question after the deference = real deference
+            head = max(expert_idx)
+            asks_after = any(w in _QUESTION_WORDS for w in words[head + 1:])
+            if not asks_after:
+                conf = 0.8 + (0.1 if doubled else 0.0)
+                return StructureMatch(
+                    pattern="IRONIC_DEFERENCE",
+                    confidence=min(conf, 0.9),
+                    matched_indices=sorted(set(cert_idx + expert_idx)),
+                    description="Capitulation-as-attack: ironic expertise grant",
+                    v_weight=-28.0, d_weight=15.0,
+                    u_weight=5.0, g_weight=0.0,
+                    w_weight=0.0, a_weight=8.0,
+                )
+
+        # Rule 2: concession opener + granted victory — "fine youre right",
+        # "fine you win". Sincere concession elaborates ("you know what
+        # youre right i hadnt thought of that") — guard on SELF_REF
+        # cognition after the grant.
+        for i, w in enumerate(words):
+            if w == "fine" and i + 2 < n + 1:
+                seg = words[i + 1: i + 4]
+                granted = False
+                grant_end = i
+                for k in range(len(seg) - 1):
+                    if seg[k] in ("youre", "you") and seg[k + 1] in ("right", "win", "correct"):
+                        granted = True
+                        grant_end = i + 1 + k + 1
+                if granted:
+                    # GUARD: elaboration after the grant = sincere concession
+                    tail = words[grant_end + 1:]
+                    elaborates = any(w2 in ("i", "im", "id", "ill") for w2 in tail)
+                    if not elaborates:
+                        conf = 0.75 + (0.1 if doubled else 0.0)
+                        return StructureMatch(
+                            pattern="IRONIC_DEFERENCE",
+                            confidence=min(conf, 0.85),
+                            matched_indices=[i, grant_end],
+                            description="Concession opener + granted victory",
+                            v_weight=-28.0, d_weight=15.0,
+                            u_weight=5.0, g_weight=0.0,
+                            w_weight=0.0, a_weight=8.0,
+                        )
+        return None
+
+    def _faint_praise(self, roles: List[WordRole]) -> Optional[StructureMatch]:
+        """Minimal/hedged praise + dismissive concession.
+
+        "interesting choice but ok" — minimal praise + dismissive tail
+        "well thats one way to do it" — dismissive opener + grudging frame
+        "thats... something" — trailing-off non-praise
+        "bold strategy" — meme-coded ironic courage grant (standalone)
+
+        The praise is real grammar but empty content; the dismissive cue
+        (tail, opener, ellipsis) marks the withheld approval.
+
+        GUARDS: bare "interesting choice" and bare "thats one way to do it"
+        are ambiguous WITHOUT a dismissive cue — they stay neutral.
+        "interesting choice why that one" (sincere curiosity),
+        "thats something to be proud of" (something not utterance-final).
+        """
+        raw_words = [r.word for r in roles]
+        words = self._clean_words(roles)
+        n = len(words)
+        _MINIMAL_ADJ = frozenset({
+            "interesting", "bold", "brave", "ambitious", "unique", "different",
+        })
+        _PRAISE_NOUNS = frozenset({
+            "choice", "strategy", "move", "decision", "idea",
+            "approach", "look", "plan", "take",
+        })
+        _DISMISSIVE_TAILS = frozenset({"ok", "okay", "sure", "whatever", "fine"})
+
+        # Rule 1: minimal adj + praise noun + dismissive cue.
+        for i in range(n - 1):
+            if words[i] in _MINIMAL_ADJ and words[i + 1] in _PRAISE_NOUNS:
+                tail = words[i + 2:]
+                # GUARD: sincere curiosity — a question follows the praise
+                if any(w in ("why", "what", "how", "tell") for w in tail):
+                    return None
+                # Dismissive tail: "but ok", "i guess", trailing "whatever"
+                dismiss = False
+                for k in range(len(tail) - 1):
+                    if tail[k] == "but" and tail[k + 1] in _DISMISSIVE_TAILS:
+                        dismiss = True
+                    if tail[k] == "i" and tail[k + 1] == "guess":
+                        dismiss = True
+                # Standalone meme-coded irony: "bold strategy" as the whole
+                # utterance. ("interesting choice" alone stays neutral —
+                # genuinely ambiguous without more signal.)
+                standalone_ironic = (
+                    n <= 3 and words[i] in ("bold", "brave")
+                    and words[i + 1] in ("strategy", "move")
+                )
+                if dismiss or standalone_ironic:
+                    return StructureMatch(
+                        pattern="FAINT_PRAISE",
+                        confidence=0.75,
+                        matched_indices=[i, i + 1],
+                        description="Minimal praise + dismissive concession",
+                        v_weight=-25.0, d_weight=8.0,
+                        u_weight=0.0, g_weight=0.0,
+                        w_weight=0.0, a_weight=5.0,
+                    )
+
+        # Rule 2: "thats... something" — trailing-off non-praise as the
+        # utterance's final word. Ellipsis or bare, but "something" must be
+        # terminal ("thats something to be proud of" stays untouched).
+        if n >= 2 and words[-1] == "something":
+            for k in range(max(0, n - 3), n - 1):
+                if words[k].startswith("thats") or words[k].startswith("that"):
+                    # GUARD: genuine amazement opener ("wow thats something")
+                    if any(w in ("wow", "woah", "whoa", "omg") for w in words[:k]):
+                        break
+                    # Ellipsis after "thats" = strong trailing-off cue;
+                    # bare "thats something" still fires but weaker.
+                    has_ellipsis = "..." in raw_words[k] or "…" in raw_words[k]
+                    conf = 0.8 if has_ellipsis else 0.65
+                    return StructureMatch(
+                        pattern="FAINT_PRAISE",
+                        confidence=conf,
+                        matched_indices=[k, n - 1],
+                        description="Trailing-off non-praise",
+                        v_weight=-25.0, d_weight=8.0,
+                        u_weight=0.0, g_weight=0.0,
+                        w_weight=0.0, a_weight=5.0,
+                    )
+
+        # Rule 3: dismissive opener + "thats one way to do it".
+        # The bare sentence is neutral (stress-test ambiguous); the
+        # grudging reading needs the discourse-marker opener ("well").
+        for i in range(n - 3):
+            if words[i] in ("well", "huh", "hm", "hmm") :
+                seg = words[i + 1: i + 6]
+                for k in range(len(seg) - 2):
+                    if seg[k].startswith("that") and seg[k + 1] == "one" and seg[k + 2] == "way":
+                        return StructureMatch(
+                            pattern="FAINT_PRAISE",
+                            confidence=0.75,
+                            matched_indices=[i],
+                            description="Dismissive opener + grudging acknowledgment",
+                            v_weight=-25.0, d_weight=8.0,
+                            u_weight=0.0, g_weight=0.0,
+                            w_weight=0.0, a_weight=5.0,
+                        )
         return None
 
     # ── Council Round 6 patterns ──────────────────────────────────
