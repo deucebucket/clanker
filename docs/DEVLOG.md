@@ -173,3 +173,29 @@ only, measured on v2.
 
 Docs synced with measured numbers: README, CHANGELOG, CLAUDE.md,
 CONTRIBUTING, HOLDOUT_PROTOCOL, this devlog.
+
+---
+
+## 2026-06-15 — Pet showroom QA surfaces 4 engine findings (flywheel working)
+
+End-to-end QA of the clanker-pet-space M4 build (toys + physics + animation,
+shipped live on deucebucket/clanker) doubled as a real-world engine audit: the
+pet IS an eval harness with a face. Ran the four canonical demo sentences
+through the engine and judged the reads for correctness — several came back
+wrong, which is the point. Logged to docs/v8_audit_log.md (findings #7-#10) and
+added 8 probes (the 4 sentences + diagnostic minimal pairs) UNLABELED to
+datasets/council_v2_candidates.json (source pet:qa_audit) for council grading —
+no truth labels invented.
+
+Findings, sharpest first:
+- ALL-CAPS / "!!!" invisible to Arousal: "THIS IS THE BEST DAY EVER" reads
+  A=138, identical to lowercase. Orthographic intensity not modeled.
+- "content/calm" sentence collapses to negative Valence: "content"=V218 alone
+  but "i'm calm and content, everything is quietly fine"=V91. Compositional
+  over-damping eats a SOLID positive atom; also contradicts a showcase claim.
+- Stacked insults under-read in magnitude (V86/W78 for triple insult; aggression
+  lowers A instead of raising it).
+- Warm gratitude over-reads Gravity (G185 for light thanks).
+
+Next: trace the "content" collapse stage; add caps/exclamation Arousal
+amplification; all tuned against the OPEN pool only after council grades land.
