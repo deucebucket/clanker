@@ -1383,6 +1383,37 @@ def apply_personality(context: dict) -> dict:
 
 # ── Stage 8: Saturate and Clamp ─────────────────────────────────
 
+_ORTHO_AROUSAL_MAGNITUDE = 72.0   # max pre-saturation arousal push for full SHOUT
+
+
+def apply_orthographic_intensity(context: dict) -> dict:
+    """SHOUTING (all-caps) and exclamation!!! raise Arousal.
+
+    The rest of the pipeline lowercases words and strips punctuation, so
+    orthographic intensity was invisible to arousal -- "THIS IS THE BEST DAY
+    EVER" read identical arousal to lowercase (v8_audit_log #7). Caps ratio +
+    exclamation count add a pre-saturation push to state_a, so the boost still
+    tanh-compresses in saturate_and_clamp and never runs away. Arousal only --
+    shouting activates regardless of valence (angry or thrilled).
+    """
+    text = context.get("text", "")
+    if not text:
+        return context
+    eligible = caps = 0
+    for w in text.split():
+        cw = w.strip(".,!?;:'\"()[]")
+        if len(cw) > 1 and cw.isalpha():
+            eligible += 1
+            if cw.isupper():
+                caps += 1
+    caps_ratio = (caps / eligible) if eligible else 0.0
+    exclaim = min(text.count("!"), 3)
+    intensity = min(1.0, caps_ratio + 0.15 * exclaim)
+    if intensity > 0 and "state_a" in context:
+        context["state_a"] += intensity * _ORTHO_AROUSAL_MAGNITUDE
+    return context
+
+
 def saturate_and_clamp(context: dict) -> dict:
     """Tanh saturation, intent computation, and 0-255 clamping.
 
@@ -1470,6 +1501,7 @@ class Pipeline:
             # apply_static_friction,  # Council R7: needs higher threshold tuning, disabled for now
             apply_w_coefficient,
             apply_personality,
+            apply_orthographic_intensity,   # SHOUTING / !!! raise arousal pre-saturation
             saturate_and_clamp,
         ]
 

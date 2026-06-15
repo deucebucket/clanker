@@ -212,3 +212,14 @@ masks the ABSENCE of feeling. Result: V=91 -> V=178 (correctly positive, A=93
 low). Hollow protest preserved: "im totally fine" V=44, BRAVADO still fires.
 Engine suite 333 -> 336 (3 new tests in TestBravadoGenuinePositive), barrage
 IDENTICAL to baseline (stress 271/275, crisis 49/51, FP 0/75 -- FP-zero held).
+
+### Fix (same session): caps/exclamation → Arousal (audit finding #7)
+New pipeline stage apply_orthographic_intensity, inserted before
+saturate_and_clamp. The pipeline lowercases/strips punctuation, so SHOUTING and
+"!!!" were invisible to arousal -- "THIS IS THE BEST DAY EVER" read A=138,
+identical to lowercase. Fix: intensity = min(1, caps_ratio + 0.15*min(!count,3))
+adds up to +72 to state_a pre-saturation (tanh-compressed, capped; arousal only,
+since shouting activates regardless of valence). Results: caps day-ever 138->199;
+"LET'S GO!! ...EVER!!!" 145->198; "stop it now!!!" 130->162; lowercase and the
+calm/content sentence unaffected. Engine suite 336->340 (TestOrthographicIntensity),
+barrage IDENTICAL (stress 271/275, crisis 49/51, FP 0/75).

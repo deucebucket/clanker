@@ -253,3 +253,27 @@ class TestSelfWorth:
         """'im a burden' triggers SELF_NULLIFY which drops W."""
         r = _vadug("im a burden to everyone")
         assert r.w < 110, f"W={r.w} should be < 110 for self-as-burden"
+
+
+class TestOrthographicIntensity:
+    """SHOUTING (all-caps) and exclamation!!! raise Arousal. The engine used to
+    ignore case/punctuation entirely for arousal, so 'THIS IS THE BEST DAY EVER'
+    read identical arousal to lowercase (v8_audit_log #7)."""
+
+    def test_allcaps_raises_arousal(self):
+        caps = _vadug("THIS IS THE BEST DAY EVER").a
+        low = _vadug("this is the best day ever").a
+        assert caps > low + 30, f"caps A={caps} should exceed lowercase A={low} by >30"
+
+    def test_exclamation_raises_arousal(self):
+        bang = _vadug("stop it right now!!!").a
+        plain = _vadug("stop it right now").a
+        assert bang > plain, f"exclamation A={bang} should exceed plain A={plain}"
+
+    def test_hyped_shout_reads_high_arousal(self):
+        r = _vadug("LET'S GO!! this is the BEST day EVER!!!")
+        assert r.a > 175, f"A={r.a} should be high for an all-caps exclamatory shout"
+
+    def test_lowercase_calm_unaffected(self):
+        """No caps, no '!' → arousal unchanged (regression guard)."""
+        assert _vadug("this is the best day ever").a < 150
