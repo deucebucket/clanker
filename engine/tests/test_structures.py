@@ -744,3 +744,29 @@ class TestDivestitureParticleOrder:
             matches = _detect(text)
             assert not _has_pattern(matches, "DIVESTITURE"), \
                 f"DIVESTITURE misfired on benign giveaway: {text!r}"
+
+
+class TestBravadoGenuinePositive:
+    """BRAVADO is hollow protest -- it must NOT fire when a genuine positive
+    EMOTIONAL atom is present. Surfaced by the pet showroom QA (v8_audit_log #8):
+    'i am calm and content, everything is quietly fine' collapsed to V=91 because
+    BRAVADO fired off 'i'+'everything'+'fine' despite 'content' being genuinely
+    positive. Real bravado masks the ABSENCE of feeling, so a named positive
+    emotion rules it out."""
+
+    def test_genuine_positive_suppresses_bravado(self):
+        matches = _detect("i am calm and content everything is quietly fine")
+        assert not _has_pattern(matches, "BRAVADO"), \
+            "BRAVADO must not fire when a genuine positive emotion (content) is present"
+
+    def test_real_bravado_still_fires(self):
+        """Peace-claim with intensity protest and NO genuine positive = bravado."""
+        for text in ("im totally fine", "haha yeah im totally okay"):
+            assert _has_pattern(_detect(text), "BRAVADO"), \
+                f"BRAVADO should still fire on hollow protest: {text!r}"
+
+    def test_content_sentence_reads_positive(self):
+        """End-to-end: the contented statement must read positive valence."""
+        from engine.pendulum import compute_vadug
+        r, _ = compute_vadug("i am calm and content, everything is quietly fine")
+        assert r.v > 128, f"V={r.v} should be positive for a contented statement"

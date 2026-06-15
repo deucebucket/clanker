@@ -1203,6 +1203,14 @@ class StructureDetector:
         if not peace_indices:
             return None
 
+        # BRAVADO is hollow protest -- it masks the ABSENCE of genuine feeling.
+        # A named positive emotion (e.g. "content") rules it out, so the peace
+        # claim is not the only positive in the sentence. See v8_audit_log #8:
+        # "i am calm and content, everything is quietly fine" wrongly collapsed
+        # to V=91 because BRAVADO fired off i+everything+fine despite "content".
+        if any(r.role == "EMOTIONAL" and r.force and r.force[0] > 30 for r in roles):
+            return None
+
         has_laughter = len(laughter_indices) > 0
         has_amplifier = len(amplifier_indices) > 0
         has_self = len(self_indices) > 0

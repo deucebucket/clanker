@@ -199,3 +199,16 @@ Findings, sharpest first:
 
 Next: trace the "content" collapse stage; add caps/exclamation Arousal
 amplification; all tuned against the OPEN pool only after council grades land.
+
+### Fix (same session): BRAVADO false-positive on genuine contentment
+Audit finding #8 root-caused and fixed. "i am calm and content, everything is
+quietly fine" collapsed to V=91 because _bravado() fired off SELF_REF "i" +
+generic AMPLIFIER "everything" + PEACE "fine" (2 signals), inverting valence
+-55, despite "content" being a genuine positive EMOTIONAL atom (v=58). Root
+cause: bravado is hollow protest, but the detector ignored whether a real
+positive emotion was named. Fix (engine/structures.py:_bravado): suppress
+BRAVADO when any EMOTIONAL atom with force[0] > 30 is present -- real bravado
+masks the ABSENCE of feeling. Result: V=91 -> V=178 (correctly positive, A=93
+low). Hollow protest preserved: "im totally fine" V=44, BRAVADO still fires.
+Engine suite 333 -> 336 (3 new tests in TestBravadoGenuinePositive), barrage
+IDENTICAL to baseline (stress 271/275, crisis 49/51, FP 0/75 -- FP-zero held).
