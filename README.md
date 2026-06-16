@@ -7,6 +7,10 @@ A conversation state resolver that detects emotional stance through structural p
 
 "Whatever" alone reads as resignation (V=93, D=97). "Whatever makes you happy" reads as passive-aggressive (V=30, D=113). "Do whatever" reads as dismissive permission (V=93, D=97). Same word -- context changes the coordinates. A sentiment classifier says "neutral" for all three.
 
+## Live demo
+
+**[Clanker the pet](https://huggingface.co/spaces/deucebucket/clanker)** -- a community virtual creature on Hugging Face whose emotional state is this engine, made visible. Talk to it, give it toys, feed it; it roams, reacts, and self-soothes, and every feeling traces back to the exact words and actions that caused it (the raw read, the structures detected, the per-dimension contributions). No language model -- pure deterministic VADUGWI physics. It doubles as a real-world evaluation harness: live usage surfaces engine gaps that feed back into the formulas (see `docs/v8_audit_log.md`).
+
 ## VADUGWI Coordinates
 
 Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):

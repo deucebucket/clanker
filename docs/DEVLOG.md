@@ -223,3 +223,11 @@ since shouting activates regardless of valence). Results: caps day-ever 138->199
 "LET'S GO!! ...EVER!!!" 145->198; "stop it now!!!" 130->162; lowercase and the
 calm/content sentence unaffected. Engine suite 336->340 (TestOrthographicIntensity),
 barrage IDENTICAL (stress 271/275, crisis 49/51, FP 0/75).
+
+### 2026-06-16 — Docs point to the live HF Space showcase
+The engine's flagship public demo is the community pet at
+huggingface.co/spaces/deucebucket/clanker (repo ~/ai-drive/clanker-pet-space).
+README gained a "Live demo" section; CLAUDE.md gained a "Live showcase" note so
+future sessions know the pet exists, runs this engine, and feeds findings back to
+docs/v8_audit_log.md (it's how findings #7-#10 were found). Engine work stays here;
+pet work stays in clanker-pet-space.
