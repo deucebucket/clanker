@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           git fetch origin feature/clanker-lm-relative-modifiers
           git show origin/feature/clanker-lm-relative-modifiers:.relative-modifier-materialize/apply.py > /tmp/relative-apply.py
-          python .relative-current/currentize5.py
+          python .relative-current/currentize6.py
           git diff --check
 
       - name: Install and validate
