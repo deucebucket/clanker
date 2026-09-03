@@ -1,0 +1,60 @@
+name: Apply relative-clause parser repairs
+
+on:
+  push:
+    branches:
+      - feature/clanker-lm-relative-debug
+    paths:
+      - .relative-fix/READY
+
+permissions:
+  contents: write
+
+concurrency:
+  group: relative-clause-parser-repair
+  cancel-in-progress: false
+
+jobs:
+  apply-test-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/clanker-lm-relative-debug
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Apply exact parser repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python .relative-fix/apply.py
+          git diff --check
+
+      - name: Run complete validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+          python -m compileall -q engine clanker_lm tests benchmarks
+          python -m pytest -q
+          python benchmarks/clanker_lm_eval.py
+
+      - name: Commit validated implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            clanker_lm/parser.py \
+            clanker_lm/memory.py \
+            tests/test_subordinate_relations.py
+          git diff --cached --check
+          git commit -m "fix: stabilize relative-clause boundaries and identity"
+          git push origin HEAD:feature/clanker-lm-relative-debug
