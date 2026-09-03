@@ -35,5 +35,7 @@ jobs:
         run: python -m compileall -q clanker_lm
       - name: Run complete engine test suite
         run: python -m pytest engine/tests/ -q
-      - name: Run deterministic CLI smoke test
+      - name: Run deterministic affective smoke test
         run: python -m clanker_lm --once "My sister pissed me off again." --strict-clanker --trace
+      - name: Run semantic truth-boundary smoke test
+        run: python -m clanker_lm --once "Sarah did not buy a Honda. What did Sarah buy?" --strict-clanker --trace
