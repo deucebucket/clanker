@@ -176,7 +176,7 @@ def test_memory_snapshot_binds_and_restores_relation_ids() -> None:
         runtime.close()
 
     restored = ConversationMemory.loads(snapshot)
-    assert restored.SNAPSHOT_VERSION == 2
+    assert restored.SNAPSHOT_VERSION == ConversationMemory.SNAPSHOT_VERSION
     assert len(restored.relations) == 1
     relation = restored.relations[0]
     assert restored.relation_between(
