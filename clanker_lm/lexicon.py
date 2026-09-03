@@ -338,7 +338,7 @@ KNOWN_VERBS: Set[str] = {
     "visit", "call", "text", "email", "ask", "answer", "explain", "show", "lend",
     "borrow", "wear", "use", "unlock", "calculate", "compute", "process", "sort",
     "create", "delete", "change", "turn", "look", "watch", "play", "study", "learn",
-    "record", "schedule", "drop", "tie", "vie",
+    "record", "schedule", "drop", "tie", "vie", "wait",
     "remember", "forget", "happen", "occur", "rain", "snow", "cost", "weigh",
     "measure", "seem", "become", "own", "apologize", "argue", "fight", "cheat",
     "lie", "laugh", "cry", "smile", "recover", "heal", "die", "kill", "save",

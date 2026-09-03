@@ -297,6 +297,7 @@ class ClankerLM:
 
         if parse.speech_act == SpeechAct.ASSERT and parse.events:
             stored = [self.memory.add_event(event) for event in parse.events]
+            self.memory.add_clause_relations(parse.relations, stored)
             return AnswerContract(
                 status=AnswerStatus.ACKNOWLEDGED,
                 proposition=stored[-1],
@@ -395,6 +396,7 @@ class ClankerLM:
                 event.certainty = max(0, min(255, int(certainty)))
                 event.inferred = bool(inferred)
                 stored.append(self.memory.add_event(event))
+            self.memory.add_clause_relations(parsed.relations, stored)
             return stored
 
     def learn_many(
