@@ -7,6 +7,7 @@ JSON snapshots all operate on this state.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from dataclasses import dataclass, field
@@ -17,6 +18,7 @@ from . import lexicon
 from .model import (
     ClauseRelation,
     Entity,
+    EntityModifierRelation,
     EntityKind,
     EventFrame,
     Gender,
@@ -51,18 +53,20 @@ class EventMatch:
 class ConversationMemory:
     """Entity/event store with deterministic salience and provenance."""
 
-    SNAPSHOT_VERSION = 2
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2}
+    SNAPSHOT_VERSION = 3
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3}
 
     def __init__(self) -> None:
         self.entities: Dict[str, Entity] = {}
         self.events: List[EventFrame] = []
         self.relations: List[ClauseRelation] = []
+        self.modifiers: List[EntityModifierRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
         self._entity_counter: int = 0
         self._event_counter: int = 0
         self._relation_counter: int = 0
+        self._modifier_counter: int = 0
         self._initialize_participants()
 
     def _initialize_participants(self) -> None:
@@ -199,8 +203,112 @@ class ConversationMemory:
         self.revision += 1
         return entity
 
+    def ensure_internal_alias(self, entity_id: str) -> str:
+        entity = self.entities.get(entity_id)
+        if entity is None:
+            raise KeyError(f"Unknown entity: {entity_id}")
+        alias = "entityref-" + re.sub(r"[^a-z0-9-]+", "-", entity_id.lower()).strip("-")
+        entity.add_alias(alias)
+        return alias
+
+    def get_or_create_modified_entity(
+        self,
+        name: str,
+        modifier_signature: str,
+        *,
+        kind: EntityKind = EntityKind.UNKNOWN,
+        gender: Gender = Gender.UNKNOWN,
+        number: GrammaticalNumber = GrammaticalNumber.SINGULAR,
+        role_salience: float = 1.0,
+    ) -> Tuple[Entity, str]:
+        """Create a deterministic entity identity scoped by its modifier.
+
+        Generic restrictive descriptions must not collapse merely because they
+        share a head noun.  The public alias remains available for later
+        ambiguity detection; a private deterministic alias lets the current
+        parser bind exactly the entity it just introduced.
+        """
+
+        normalized = self.normalize_alias(name)
+        digest = hashlib.sha256(
+            f"{normalized}|{modifier_signature}".encode("utf-8")
+        ).hexdigest()[:16]
+        identity_alias = f"modified-{digest}"
+        existing = self.find_by_alias(identity_alias, expected_kind=kind)
+        if existing.resolved:
+            entity = existing.entity
+            assert entity is not None
+            entity.last_mentioned_turn = self.turn_index
+            entity.salience += role_salience
+            return entity, identity_alias
+
+        entity_id = self._next_entity_id(normalized or kind.value)
+        entity = Entity(
+            entity_id=entity_id,
+            canonical_name=name.strip(),
+            kind=kind,
+            gender=gender,
+            number=number,
+            aliases=[],
+            attributes={"modifier_signature": modifier_signature},
+            created_turn=self.turn_index,
+            last_mentioned_turn=self.turn_index,
+            salience=role_salience,
+        )
+        entity.add_alias(name)
+        entity.add_alias(normalized)
+        entity.add_alias(identity_alias)
+        self.entities[entity_id] = entity
+        self.revision += 1
+        return entity, identity_alias
+
+    def get_or_create_possessed_entity(
+        self,
+        owner_id: str,
+        name: str,
+        modifier_signature: str,
+        *,
+        kind: EntityKind = EntityKind.THING,
+    ) -> Tuple[Entity, str]:
+        owner = self.entities.get(owner_id)
+        if owner is None:
+            raise KeyError(f"Unknown owner entity: {owner_id}")
+        normalized = self.normalize_alias(name)
+        digest = hashlib.sha256(
+            f"{owner_id}|{normalized}|{modifier_signature}".encode("utf-8")
+        ).hexdigest()[:16]
+        identity_alias = f"possessed-{digest}"
+        existing = self.find_by_alias(identity_alias, expected_kind=kind)
+        if existing.resolved:
+            entity = existing.entity
+            assert entity is not None
+            entity.last_mentioned_turn = self.turn_index
+            entity.salience += 0.8
+            return entity, identity_alias
+
+        entity_id = self._next_entity_id(normalized or "possessed")
+        entity = Entity(
+            entity_id=entity_id,
+            canonical_name=name.strip(),
+            kind=kind,
+            owner_id=owner_id,
+            aliases=[],
+            attributes={"modifier_signature": modifier_signature},
+            created_turn=self.turn_index,
+            last_mentioned_turn=self.turn_index,
+            salience=0.8,
+        )
+        entity.add_alias(name)
+        entity.add_alias(identity_alias)
+        self.entities[entity_id] = entity
+        self.revision += 1
+        return entity, identity_alias
+
     def find_by_alias(self, phrase: str, expected_kind: EntityKind = EntityKind.UNKNOWN) -> Resolution:
         normalized = self.normalize_alias(phrase)
+        # First/second-person pronouns are fixed deictic participant references,
+        # not nominal aliases. They intentionally take precedence over generic
+        # modifier-alias ambiguity (for example, two entities named "woman").
         if normalized in {"i", "me", "myself"}:
             return Resolution("resolved", self.entities["user"])
         if normalized in {"you", "yourself"}:
@@ -235,6 +343,12 @@ class ConversationMemory:
             return Resolution("resolved", direct[0])
         if len(direct) > 1:
             ranked = sorted(direct, key=lambda entity: (entity.last_mentioned_turn, entity.salience), reverse=True)
+            if all("modifier_signature" in entity.attributes for entity in ranked):
+                return Resolution(
+                    "ambiguous",
+                    candidates=ranked,
+                    reason="multiple modified entities share that generic alias",
+                )
             if (
                 len(ranked) == 1
                 or ranked[0].last_mentioned_turn > ranked[1].last_mentioned_turn
@@ -399,6 +513,76 @@ class ConversationMemory:
             self.revision += 1
         return stored
 
+    @staticmethod
+    def _event_signature_key(event: EventFrame) -> str:
+        payload = repr(event.signature()).encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()[:24]
+
+    def _next_modifier_id(self) -> str:
+        self._modifier_counter += 1
+        return f"modifier_{self._modifier_counter}"
+
+    def add_entity_modifier_relations(
+        self,
+        modifiers: Sequence[EntityModifierRelation],
+        stored_events: Sequence[EventFrame],
+    ) -> List[EntityModifierRelation]:
+        """Bind parser-local modifier indices to stable event identities."""
+
+        stored: List[EntityModifierRelation] = []
+        for modifier in modifiers:
+            if not 0 <= modifier.modifier_event_index < len(stored_events):
+                raise ValueError("Entity modifier references an invalid event index")
+            if modifier.head_entity_id not in self.entities:
+                raise ValueError("Entity modifier references an unknown head entity")
+            event = stored_events[modifier.modifier_event_index]
+            expected_signature = modifier.modifier_event_signature
+            if expected_signature:
+                actual_signature = self._event_signature_key(event)
+                if actual_signature != expected_signature:
+                    candidates = [
+                        item
+                        for item in stored_events
+                        if self._event_signature_key(item) == expected_signature
+                    ]
+                    if len(candidates) != 1:
+                        raise ValueError(
+                            "Entity modifier event index/signature mismatch"
+                        )
+                    event = candidates[0]
+            if event.discourse_role != "modifier":
+                raise ValueError(
+                    "Entity modifier must bind to a modifier-role event"
+                )
+            bound = modifier.copy(
+                relation_id=modifier.relation_id or self._next_modifier_id(),
+                modifier_event_id=event.event_id,
+                certainty=min(modifier.certainty, event.certainty),
+            )
+            existing = next(
+                (item for item in self.modifiers if item.signature() == bound.signature()),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, bound.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + bound.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                self.modifiers.append(bound)
+                stored.append(bound)
+            self.mention(bound.head_entity_id, "modifier", 0.5)
+            self.revision += 1
+        return stored
+
+    def modifiers_for_entity(self, entity_id: str) -> List[EntityModifierRelation]:
+        return [
+            modifier
+            for modifier in self.modifiers
+            if modifier.head_entity_id == entity_id
+        ]
+
     def relations_for_event(self, event_id: str) -> List[ClauseRelation]:
         return [
             relation
@@ -494,9 +678,11 @@ class ConversationMemory:
             "entity_counter": self._entity_counter,
             "event_counter": self._event_counter,
             "relation_counter": self._relation_counter,
+            "modifier_counter": self._modifier_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
             "relations": [relation.to_dict() for relation in self.relations],
+            "modifiers": [modifier.to_dict() for modifier in self.modifiers],
         }
 
     @classmethod
@@ -516,12 +702,19 @@ class ConversationMemory:
             ClauseRelation.from_dict(item)
             for item in data.get("relations", [])
         ]
+        memory.modifiers = [
+            EntityModifierRelation.from_dict(item)
+            for item in data.get("modifiers", [])
+        ]
         memory.turn_index = int(data.get("turn_index", 0))
         memory.revision = int(data.get("revision", 0))
         memory._entity_counter = int(data.get("entity_counter", len(memory.entities)))
         memory._event_counter = int(data.get("event_counter", len(memory.events)))
         memory._relation_counter = int(
             data.get("relation_counter", len(memory.relations))
+        )
+        memory._modifier_counter = int(
+            data.get("modifier_counter", len(memory.modifiers))
         )
         return memory
 

@@ -41,7 +41,8 @@ class ClankerLM:
     A+B=C transition to select the candidate that best reaches the target state.
     """
 
-    SNAPSHOT_VERSION = 2
+    SNAPSHOT_VERSION = 3
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3}
     MAX_BATCH_MESSAGES = 10_000
 
     def __init__(
@@ -298,6 +299,7 @@ class ClankerLM:
         if parse.speech_act == SpeechAct.ASSERT and parse.events:
             stored = [self.memory.add_event(event) for event in parse.events]
             self.memory.add_clause_relations(parse.relations, stored)
+            self.memory.add_entity_modifier_relations(parse.modifiers, stored)
             return AnswerContract(
                 status=AnswerStatus.ACKNOWLEDGED,
                 proposition=stored[-1],
@@ -510,7 +512,7 @@ class ClankerLM:
         clock: Optional[Callable[[], datetime]] = None,
     ) -> "ClankerLM":
         version = int(data.get("snapshot_version", 0))
-        if version not in {1, cls.SNAPSHOT_VERSION}:
+        if version not in cls.COMPATIBLE_SNAPSHOT_VERSIONS:
             raise ValueError(f"Unsupported Clanker-LM snapshot version: {version}")
         store = language_store or LanguageStore()
         if version >= 2 and data.get("language_overlay"):
