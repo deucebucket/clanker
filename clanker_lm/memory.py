@@ -347,12 +347,40 @@ class ConversationMemory:
             return left.value.lower().strip() == right.value.lower().strip()
         return normalize_alias(left.value) == normalize_alias(right.value)
 
-    def query(self, question: QuestionFrame) -> Tuple[Fact, ...]:
+    def query(
+        self,
+        question: QuestionFrame,
+        *,
+        include_opposing_polarity: bool = False,
+    ) -> Tuple[Fact, ...]:
+        """Return facts compatible with the known portion of a question.
+
+        Open-slot questions may only bind facts that preserve tense, modality,
+        and polarity.  A negative fact must never answer a positive ``what``
+        question, and a past event must never silently answer a future one.
+
+        Polar questions are the deliberate exception for polarity: both the
+        proposition and its explicit negation are retrieved so the answer
+        engine can distinguish TRUE, FALSE, UNKNOWN, and conflict states.
+        """
+
         requested = set(question.requested_roles)
         matches: List[Fact] = []
         for fact in self.facts:
             if fact.frame.predicate != question.frame.predicate:
                 continue
+            if fact.frame.tense != question.frame.tense:
+                continue
+            if fact.frame.modality != question.frame.modality:
+                continue
+            if (
+                not include_opposing_polarity
+                and fact.frame.polarity != question.frame.polarity
+            ):
+                continue
+            if question.frame.repeated and not fact.frame.repeated:
+                continue
+
             compatible = True
             for role, value in question.frame.roles.items():
                 if role in requested:

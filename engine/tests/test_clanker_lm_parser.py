@@ -178,3 +178,23 @@ def test_bare_past_copula_is_not_misexpanded_as_we_are():
     assert parsed.question.family == QuestionFamily.POLAR
     assert parsed.question.frame.predicate == "be"
     assert parsed.question.frame.tense == "past"
+
+def test_negative_object_wh_keeps_subject_separate_from_negator():
+    _, parser = _parser()
+    parsed = parser.parse("What did Sarah not buy?")
+
+    assert parsed.question is not None
+    assert parsed.question.frame.polarity is False
+    assert parsed.question.frame.role(SemanticRole.AGENT).display == "Sarah"
+    assert parsed.question.requested_roles == (SemanticRole.THEME,)
+
+
+def test_normative_statement_routes_because_clause_to_justification():
+    _, parser = _parser()
+    parsed = parser.parse("I should apologize because my comment was hurtful.")
+
+    assert parsed.frame is not None
+    assert parsed.frame.modality == "should"
+    assert parsed.frame.role(SemanticRole.JUSTIFICATION).display == "my comment was hurtful"
+    assert parsed.frame.role(SemanticRole.CAUSE) is None
+

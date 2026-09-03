@@ -785,6 +785,13 @@ class SemanticParser:
             frame.predicate = tail_parse.frame.predicate
             frame.roles.update(tail_parse.frame.roles)
             frame.repeated = frame.repeated or tail_parse.frame.repeated
+        # In a normative modal statement, a because-clause supplies the reason
+        # the action is warranted, not merely a physical event cause.
+        if modality in {"should", "must"} and SemanticRole.CAUSE in frame.roles:
+            frame.roles.setdefault(
+                SemanticRole.JUSTIFICATION,
+                frame.roles.pop(SemanticRole.CAUSE),
+            )
         unresolved.extend(tail_parse.unresolved)
         return _PredicateParse(frame, tuple(unresolved))
 
@@ -1020,14 +1027,14 @@ class SemanticParser:
         # Generic noun phrases continue until the first lexical verb.
         if end == start + 1 and items[start] in DETERMINERS:
             for index in range(start + 1, len(items)):
-                if is_known_verb(items[index]):
+                if items[index] == "not" or is_known_verb(items[index]):
                     end = index
                     break
         elif end == start + 1 and items[start] not in (
             FIRST_PERSON | SECOND_PERSON | FEMALE_PRONOUNS | MALE_PRONOUNS | PLURAL_PRONOUNS | OBJECT_PRONOUNS
         ):
             for index in range(start + 1, len(items)):
-                if is_known_verb(items[index]):
+                if items[index] == "not" or is_known_verb(items[index]):
                     end = index
                     break
         expected = self._subject_expected_kind(items, raw_words, start, end)

@@ -156,3 +156,34 @@ def test_quantity_and_double_object_transfer_questions_are_realized_grammaticall
     assert recipient.response == "Sarah gave it to John."
     assert theme.response == "Sarah gave the book to John."
     assert agent.response == "Sarah gave it to John."
+
+def test_open_slot_queries_preserve_polarity_tense_and_modality():
+    negative = _bot()
+    negative.reply("Sarah did not buy a Honda.")
+
+    positive_wh = negative.process("What did Sarah buy?")
+    negative_wh = negative.process("What did Sarah not buy?")
+
+    assert positive_wh.answer and positive_wh.answer.status == AnswerStatus.UNKNOWN
+    assert negative_wh.answer and negative_wh.answer.status == AnswerStatus.ANSWERED
+    assert negative_wh.response == "Sarah did not buy a Honda."
+
+    temporal = _bot()
+    temporal.reply("Sarah bought a Honda.")
+    future = temporal.process("What will Sarah buy?")
+    modal = temporal.process("What might Sarah buy?")
+
+    assert future.answer and future.answer.status == AnswerStatus.UNKNOWN
+    assert modal.answer and modal.answer.status == AnswerStatus.UNKNOWN
+
+
+def test_normative_because_clause_binds_why_justification_slot():
+    bot = _bot()
+    bot.reply("I should apologize because my comment was hurtful.")
+    result = bot.process("Why should I apologize?")
+
+    assert result.answer and result.answer.status == AnswerStatus.ANSWERED
+    assert result.answer.bound_role.value == "justification"
+    assert result.answer.bound_value.display == "my comment was hurtful"
+    assert "because my comment was hurtful" in result.response.lower()
+

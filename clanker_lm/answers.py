@@ -52,7 +52,10 @@ class AnswerEngine:
                 explanation="conventional social check-in",
             )
 
-        matches = self.memory.query(question)
+        matches = self.memory.query(
+            question,
+            include_opposing_polarity=question.family == QuestionFamily.POLAR,
+        )
         if question.family == QuestionFamily.POLAR:
             return self._answer_polar(question, matches)
         return self._answer_open_slot(question, matches)
@@ -491,7 +494,13 @@ class AnswerRealizer:
                 f"{fact.fact_id}:{role.value}:{value.value}",
             )
         ]
-        if compact and normalize_alias(compact) != normalize_alias(full):
+        # A bare value is not a faithful realization of a negated fact.
+        # "A Honda." would erase the polarity of "Sarah did not buy a Honda."
+        if (
+            fact.frame.polarity
+            and compact
+            and normalize_alias(compact) != normalize_alias(full)
+        ):
             candidates.append(
                 ResponseCandidate(
                     f"fact-compact-{fact.fact_id}-{role.value}",
@@ -724,6 +733,12 @@ class SemanticValidator:
             signature = self._entity_signature(value)
             if signature and signature not in normalized:
                 reasons.append("candidate omits the verified bound value")
+            if (
+                contract.selected_fact is not None
+                and not contract.selected_fact.frame.polarity
+                and not self._realizes_negation(text)
+            ):
+                reasons.append("negative fact answer omits proposition polarity")
 
         # A full polar candidate may name the evidence; a concise yes/no is also
         # valid.  It may not, however, state the opposite prefix.
@@ -733,6 +748,38 @@ class SemanticValidator:
             reasons.append("candidate reverses false proposition")
 
         return (not reasons), tuple(reasons or ["semantic contract preserved"])
+
+    @staticmethod
+    def _realizes_negation(text: str) -> bool:
+        padded = f" {text.lower()} "
+        return any(
+            marker in padded
+            for marker in (
+                " not ",
+                " didn't ",
+                " did not ",
+                " doesn't ",
+                " does not ",
+                " isn't ",
+                " is not ",
+                " wasn't ",
+                " was not ",
+                " weren't ",
+                " were not ",
+                " won't ",
+                " will not ",
+                " can't ",
+                " cannot ",
+                " couldn't ",
+                " could not ",
+                " shouldn't ",
+                " should not ",
+                " mustn't ",
+                " must not ",
+                " never ",
+                " no ",
+            )
+        )
 
     @staticmethod
     def _entity_signature(value: RoleValue) -> str:
