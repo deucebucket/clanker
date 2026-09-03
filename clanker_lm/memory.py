@@ -15,6 +15,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 
 from . import lexicon
 from .model import (
+    ClauseRelation,
     Entity,
     EntityKind,
     EventFrame,
@@ -50,15 +51,18 @@ class EventMatch:
 class ConversationMemory:
     """Entity/event store with deterministic salience and provenance."""
 
-    SNAPSHOT_VERSION = 1
+    SNAPSHOT_VERSION = 2
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2}
 
     def __init__(self) -> None:
         self.entities: Dict[str, Entity] = {}
         self.events: List[EventFrame] = []
+        self.relations: List[ClauseRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
         self._entity_counter: int = 0
         self._event_counter: int = 0
+        self._relation_counter: int = 0
         self._initialize_participants()
 
     def _initialize_participants(self) -> None:
@@ -349,6 +353,74 @@ class ConversationMemory:
         self.revision += 1
         return stored
 
+    def _next_relation_id(self) -> str:
+        self._relation_counter += 1
+        return f"relation_{self._relation_counter}"
+
+    def add_clause_relations(
+        self,
+        relations: Sequence[ClauseRelation],
+        stored_events: Sequence[EventFrame],
+    ) -> List[ClauseRelation]:
+        """Bind parser-local relation indices to stable stored event IDs."""
+
+        stored: List[ClauseRelation] = []
+        for relation in relations:
+            if not (
+                0 <= relation.main_event_index < len(stored_events)
+                and 0 <= relation.subordinate_event_index < len(stored_events)
+            ):
+                raise ValueError("Clause relation references an invalid event index")
+            main_event = stored_events[relation.main_event_index]
+            subordinate_event = stored_events[relation.subordinate_event_index]
+            bound = relation.copy(
+                relation_id=relation.relation_id or self._next_relation_id(),
+                main_event_id=main_event.event_id,
+                subordinate_event_id=subordinate_event.event_id,
+                certainty=min(
+                    relation.certainty,
+                    main_event.certainty,
+                    subordinate_event.certainty,
+                ),
+            )
+            existing = next(
+                (item for item in self.relations if item.signature() == bound.signature()),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, bound.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + bound.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                self.relations.append(bound)
+                stored.append(bound)
+            self.revision += 1
+        return stored
+
+    def relations_for_event(self, event_id: str) -> List[ClauseRelation]:
+        return [
+            relation
+            for relation in self.relations
+            if event_id in {relation.main_event_id, relation.subordinate_event_id}
+        ]
+
+    def relation_between(
+        self,
+        main_event_id: str,
+        subordinate_event_id: str,
+    ) -> Optional[ClauseRelation]:
+        return next(
+            (
+                relation
+                for relation in self.relations
+                if relation.main_event_id == main_event_id
+                and relation.subordinate_event_id == subordinate_event_id
+            ),
+            None,
+        )
+
     @staticmethod
     def refs_equal(left: SemanticRef, right: SemanticRef) -> bool:
         if left.is_variable or right.is_variable:
@@ -421,14 +493,16 @@ class ConversationMemory:
             "revision": self.revision,
             "entity_counter": self._entity_counter,
             "event_counter": self._event_counter,
+            "relation_counter": self._relation_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
+            "relations": [relation.to_dict() for relation in self.relations],
         }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "ConversationMemory":
         version = int(data.get("snapshot_version", 0))
-        if version != cls.SNAPSHOT_VERSION:
+        if version not in cls.COMPATIBLE_SNAPSHOT_VERSIONS:
             raise ValueError(f"Unsupported memory snapshot version: {version}")
         memory = cls()
         memory.entities = {
@@ -438,10 +512,17 @@ class ConversationMemory:
         if "user" not in memory.entities or "assistant" not in memory.entities:
             memory._initialize_participants()
         memory.events = [EventFrame.from_dict(item) for item in data.get("events", [])]
+        memory.relations = [
+            ClauseRelation.from_dict(item)
+            for item in data.get("relations", [])
+        ]
         memory.turn_index = int(data.get("turn_index", 0))
         memory.revision = int(data.get("revision", 0))
         memory._entity_counter = int(data.get("entity_counter", len(memory.entities)))
         memory._event_counter = int(data.get("event_counter", len(memory.events)))
+        memory._relation_counter = int(
+            data.get("relation_counter", len(memory.relations))
+        )
         return memory
 
     def dumps(self, *, indent: Optional[int] = 2) -> str:

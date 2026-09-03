@@ -97,6 +97,29 @@ class HowKind(StringEnum):
     UNKNOWN = "unknown"
 
 
+class ClauseRelationType(StringEnum):
+    CAUSE = "cause"
+    TEMPORAL_WHEN = "temporal_when"
+    TEMPORAL_OVERLAP = "temporal_overlap"
+    TEMPORAL_BEFORE = "temporal_before"
+    TEMPORAL_AFTER = "temporal_after"
+    TEMPORAL_UNTIL = "temporal_until"
+    TEMPORAL_SINCE = "temporal_since"
+    CONDITION = "condition"
+    EXCEPTION_CONDITION = "exception_condition"
+    CONCESSION = "concession"
+    PURPOSE = "purpose"
+    RESULT = "result"
+    AMBIGUOUS = "ambiguous"
+
+
+class ClauseRelationDirection(StringEnum):
+    MAIN_TO_SUBORDINATE = "main_to_subordinate"
+    SUBORDINATE_TO_MAIN = "subordinate_to_main"
+    SYMMETRIC = "symmetric"
+    UNRESOLVED = "unresolved"
+
+
 class AnswerStatus(StringEnum):
     ANSWERED = "answered"
     TRUE = "true"
@@ -332,6 +355,94 @@ class EventFrame:
 
 
 @dataclass
+class ClauseRelation:
+    """A typed relation between one main and one subordinate event.
+
+    Parser instances use event-list indices.  Conversation memory binds those
+    indices to stable event IDs without changing the relation semantics.
+    """
+
+    relation_type: ClauseRelationType
+    main_event_index: int
+    subordinate_event_index: int
+    marker: str
+    direction: ClauseRelationDirection
+    certainty: int = 230
+    candidate_types: List[ClauseRelationType] = field(default_factory=list)
+    relation_id: str = ""
+    main_event_id: str = ""
+    subordinate_event_id: str = ""
+    diagnostics: List[str] = field(default_factory=list)
+
+    @property
+    def ambiguous(self) -> bool:
+        return self.relation_type == ClauseRelationType.AMBIGUOUS
+
+    def copy(self, **changes: Any) -> "ClauseRelation":
+        values: Dict[str, Any] = {
+            "relation_type": self.relation_type,
+            "main_event_index": self.main_event_index,
+            "subordinate_event_index": self.subordinate_event_index,
+            "marker": self.marker,
+            "direction": self.direction,
+            "certainty": self.certainty,
+            "candidate_types": list(self.candidate_types),
+            "relation_id": self.relation_id,
+            "main_event_id": self.main_event_id,
+            "subordinate_event_id": self.subordinate_event_id,
+            "diagnostics": list(self.diagnostics),
+        }
+        values.update(changes)
+        return ClauseRelation(**values)
+
+    def signature(self) -> Tuple[Any, ...]:
+        return (
+            self.relation_type.value,
+            self.main_event_id,
+            self.subordinate_event_id,
+            self.marker,
+            self.direction.value,
+            tuple(item.value for item in self.candidate_types),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "relation_type": self.relation_type.value,
+            "main_event_index": self.main_event_index,
+            "subordinate_event_index": self.subordinate_event_index,
+            "marker": self.marker,
+            "direction": self.direction.value,
+            "certainty": self.certainty,
+            "candidate_types": [item.value for item in self.candidate_types],
+            "relation_id": self.relation_id,
+            "main_event_id": self.main_event_id,
+            "subordinate_event_id": self.subordinate_event_id,
+            "diagnostics": list(self.diagnostics),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "ClauseRelation":
+        return cls(
+            relation_type=ClauseRelationType(data["relation_type"]),
+            main_event_index=int(data.get("main_event_index", -1)),
+            subordinate_event_index=int(data.get("subordinate_event_index", -1)),
+            marker=str(data.get("marker", "")),
+            direction=ClauseRelationDirection(
+                data.get("direction", ClauseRelationDirection.UNRESOLVED.value)
+            ),
+            certainty=max(0, min(255, int(data.get("certainty", 230)))),
+            candidate_types=[
+                ClauseRelationType(item)
+                for item in data.get("candidate_types", [])
+            ],
+            relation_id=str(data.get("relation_id", "")),
+            main_event_id=str(data.get("main_event_id", "")),
+            subordinate_event_id=str(data.get("subordinate_event_id", "")),
+            diagnostics=list(data.get("diagnostics", [])),
+        )
+
+
+@dataclass
 class UnresolvedReference:
     surface: str
     reason: str
@@ -380,6 +491,7 @@ class ParseResult:
     speech_act: SpeechAct
     raw_text: str
     events: List[EventFrame] = field(default_factory=list)
+    relations: List[ClauseRelation] = field(default_factory=list)
     question: Optional[QuestionFrame] = None
     entities: List[str] = field(default_factory=list)
     unresolved: List[UnresolvedReference] = field(default_factory=list)
@@ -395,6 +507,7 @@ class ParseResult:
             "speech_act": self.speech_act.value,
             "raw_text": self.raw_text,
             "events": [event.to_dict() for event in self.events],
+            "relations": [relation.to_dict() for relation in self.relations],
             "question": self.question.to_dict() if self.question else None,
             "entities": list(self.entities),
             "unresolved": [item.to_dict() for item in self.unresolved],
