@@ -340,6 +340,12 @@ class ConversationMemory:
             return Resolution("resolved", direct[0])
         if len(direct) > 1:
             ranked = sorted(direct, key=lambda entity: (entity.last_mentioned_turn, entity.salience), reverse=True)
+            if all("modifier_signature" in entity.attributes for entity in ranked):
+                return Resolution(
+                    "ambiguous",
+                    candidates=ranked,
+                    reason="multiple modified entities share that generic alias",
+                )
             if (
                 len(ranked) == 1
                 or ranked[0].last_mentioned_turn > ranked[1].last_mentioned_turn

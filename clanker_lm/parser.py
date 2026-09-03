@@ -501,7 +501,12 @@ class SemanticParser:
         marker_indices = [
             index
             for index, token in enumerate(items)
-            if token.norm in self.RELATIVE_MARKERS and index > 0
+            if token.norm in self.RELATIVE_MARKERS
+            and index > 0
+            and not (
+                token.norm == "that"
+                and items[index - 1].norm == "so"
+            )
         ]
         if not marker_indices:
             return None, None
@@ -746,12 +751,19 @@ class SemanticParser:
         content = [
             token.norm
             for token in tokens
-            if token.norm not in lexicon.ARTICLES
-            and token.norm not in lexicon.DEMONSTRATIVES
+            if token.norm not in lexicon.DETERMINERS
             and token.norm not in {",", ";"}
         ]
         head = content[-1] if content else "entity"
-        if head in self.PERSON_RELATIVE_HEADS or head in lexicon.RELATIONS:
+        proper_name = bool(
+            len(content) == 1
+            and any(
+                token.text[:1].isupper()
+                for token in tokens
+                if token.norm == head
+            )
+        )
+        if proper_name or head in self.PERSON_RELATIVE_HEADS or head in lexicon.RELATIONS:
             kind = EntityKind.PERSON
         else:
             kind = lexicon.classify_unknown_noun(head)
@@ -775,8 +787,7 @@ class SemanticParser:
         content = [
             token.norm
             for token in tokens
-            if token.norm not in lexicon.ARTICLES
-            and token.norm not in lexicon.DEMONSTRATIVES
+            if token.norm not in lexicon.DETERMINERS
         ]
         return bool(content and content[-1] in self.ABSTRACT_COMPLEMENT_HEADS)
 
