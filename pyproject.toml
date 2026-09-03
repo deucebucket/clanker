@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clanker-vadugwi"
+version = "0.2.0"
+description = "Adaptive template-free VADUGWI semantic conversation runtime"
+readme = "docs/CLANKER_LM.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Jerry Mares"}]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7.0", "coverage>=7.0"]
+
+[project.scripts]
+clanker-lm = "clanker_lm.__main__:main"
+
+[project.urls]
+Repository = "https://github.com/deucebucket/clanker"
+Documentation = "https://github.com/deucebucket/clanker/blob/main/docs/CLANKER_LM.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["engine*", "clanker_lm*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+"clanker_lm.data" = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["engine/tests", "tests"]
+addopts = "-ra"

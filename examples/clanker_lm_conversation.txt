@@ -1,0 +1,10 @@
+# One message per line. Run with:
+# python -m clanker_lm script examples/clanker_lm_conversation.txt
+My sister bought a used Honda yesterday.
+Who bought the Honda?
+What did she buy?
+When did she buy it?
+Why did she buy it?
+She bought it because her old car broke down.
+Why did she buy it?
+Did my mother buy it?

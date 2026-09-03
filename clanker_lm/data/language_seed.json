@@ -1,0 +1,1945 @@
+{
+  "atoms": [
+    {
+      "id": "punct.period",
+      "surface": ".",
+      "lemma": ".",
+      "category": "punct_period",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 108,
+        "d": 132,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 130
+      }
+    },
+    {
+      "id": "punct.question",
+      "surface": "?",
+      "lemma": "?",
+      "category": "punct_question",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 132,
+        "d": 128,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 174
+      }
+    },
+    {
+      "id": "punct.comma",
+      "surface": ",",
+      "lemma": ",",
+      "category": "punct_comma",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 116,
+        "d": 128,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 132
+      }
+    },
+    {
+      "id": "punct.colon",
+      "surface": ":",
+      "lemma": ":",
+      "category": "punct_colon",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 120,
+        "d": 138,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 148
+      }
+    },
+    {
+      "id": "polarity.yes",
+      "surface": "yes",
+      "lemma": "yes",
+      "category": "affirmation",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "polarity": true
+      },
+      "effects": {
+        "v": 153,
+        "a": 112,
+        "d": 158,
+        "u": 0,
+        "g": 145,
+        "w": 132,
+        "i": 184
+      }
+    },
+    {
+      "id": "polarity.yeah",
+      "surface": "yeah",
+      "lemma": "yes",
+      "category": "affirmation",
+      "register": "casual",
+      "severity": 0,
+      "features": {
+        "polarity": true
+      },
+      "effects": {
+        "v": 156,
+        "a": 125,
+        "d": 156,
+        "u": 0,
+        "g": 147,
+        "w": 132,
+        "i": 185
+      }
+    },
+    {
+      "id": "polarity.no",
+      "surface": "no",
+      "lemma": "no",
+      "category": "denial",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "polarity": false
+      },
+      "effects": {
+        "v": 125,
+        "a": 102,
+        "d": 160,
+        "u": 0,
+        "g": 125,
+        "w": 128,
+        "i": 170
+      }
+    },
+    {
+      "id": "polarity.nope",
+      "surface": "nope",
+      "lemma": "no",
+      "category": "denial",
+      "register": "casual",
+      "severity": 0,
+      "features": {
+        "polarity": false
+      },
+      "effects": {
+        "v": 122,
+        "a": 112,
+        "d": 157,
+        "u": 0,
+        "g": 124,
+        "w": 128,
+        "i": 169
+      }
+    },
+    {
+      "id": "ack.understand",
+      "surface": "understand",
+      "lemma": "understand",
+      "category": "acknowledge_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 143,
+        "a": 96,
+        "d": 148,
+        "u": 0,
+        "g": 138,
+        "w": 135,
+        "i": 178
+      }
+    },
+    {
+      "id": "ack.hear",
+      "surface": "hear",
+      "lemma": "hear",
+      "category": "acknowledge_verb",
+      "register": "neutral",
+      "severity": 1,
+      "effects": {
+        "v": 139,
+        "a": 105,
+        "d": 142,
+        "u": 0,
+        "g": 132,
+        "w": 144,
+        "i": 187
+      }
+    },
+    {
+      "id": "ack.get",
+      "surface": "get",
+      "lemma": "get",
+      "category": "acknowledge_verb",
+      "register": "casual",
+      "severity": 0,
+      "effects": {
+        "v": 142,
+        "a": 108,
+        "d": 147,
+        "u": 0,
+        "g": 136,
+        "w": 132,
+        "i": 177
+      }
+    },
+    {
+      "id": "empathy.sorry",
+      "surface": "sorry",
+      "lemma": "sorry",
+      "category": "empathy_state",
+      "register": "neutral",
+      "severity": 1,
+      "effects": {
+        "v": 148,
+        "a": 96,
+        "d": 132,
+        "u": 0,
+        "g": 132,
+        "w": 150,
+        "i": 188
+      }
+    },
+    {
+      "id": "evaluation.rough",
+      "surface": "rough",
+      "lemma": "rough",
+      "category": "evaluation_state",
+      "register": "casual",
+      "severity": 1,
+      "features": {
+        "valence": "negative"
+      },
+      "effects": {
+        "v": 105,
+        "a": 110,
+        "d": 132,
+        "u": 0,
+        "g": 104,
+        "w": 142,
+        "i": 180
+      }
+    },
+    {
+      "id": "evaluation.serious",
+      "surface": "serious",
+      "lemma": "serious",
+      "category": "evaluation_state",
+      "register": "neutral",
+      "severity": 2,
+      "features": {
+        "valence": "negative"
+      },
+      "effects": {
+        "v": 112,
+        "a": 145,
+        "d": 150,
+        "u": 190,
+        "g": 86,
+        "w": 145,
+        "i": 185
+      }
+    },
+    {
+      "id": "evaluation.good",
+      "surface": "good",
+      "lemma": "good",
+      "category": "evaluation_state",
+      "register": "positive",
+      "severity": 0,
+      "features": {
+        "valence": "positive"
+      },
+      "effects": {
+        "v": 178,
+        "a": 120,
+        "d": 150,
+        "u": 0,
+        "g": 166,
+        "w": 145,
+        "i": 182
+      }
+    },
+    {
+      "id": "evaluation.safe",
+      "surface": "safe",
+      "lemma": "safe",
+      "category": "safety_state",
+      "register": "neutral",
+      "severity": 3,
+      "effects": {
+        "v": 158,
+        "a": 105,
+        "d": 175,
+        "u": 180,
+        "g": 143,
+        "w": 170,
+        "i": 205
+      }
+    },
+    {
+      "id": "cognition.know",
+      "surface": "know",
+      "lemma": "know",
+      "category": "cognition_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 137,
+        "a": 98,
+        "d": 154,
+        "u": 0,
+        "g": 135,
+        "w": 128,
+        "i": 168
+      }
+    },
+    {
+      "id": "communication.tell",
+      "surface": "tell",
+      "lemma": "tell",
+      "category": "communication_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 133,
+        "a": 111,
+        "d": 149,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 181
+      }
+    },
+    {
+      "id": "communication.mean",
+      "surface": "mean",
+      "lemma": "mean",
+      "category": "definition_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 112,
+        "d": 145,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 184
+      }
+    },
+    {
+      "id": "relation.sound",
+      "surface": "sound",
+      "lemma": "sound",
+      "category": "evaluation_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 130,
+        "a": 108,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 136,
+        "i": 177
+      }
+    },
+    {
+      "id": "event.happen",
+      "surface": "happen",
+      "lemma": "happen",
+      "category": "event_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 130,
+        "d": 128,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 187
+      }
+    },
+    {
+      "id": "process.work",
+      "surface": "work",
+      "lemma": "work",
+      "category": "process_verb",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 142,
+        "a": 116,
+        "d": 151,
+        "u": 0,
+        "g": 137,
+        "w": 134,
+        "i": 174
+      }
+    },
+    {
+      "id": "social.hey",
+      "surface": "hey",
+      "lemma": "hey",
+      "category": "greeting",
+      "register": "casual",
+      "severity": 0,
+      "effects": {
+        "v": 160,
+        "a": 132,
+        "d": 140,
+        "u": 0,
+        "g": 151,
+        "w": 133,
+        "i": 192
+      }
+    },
+    {
+      "id": "social.hello",
+      "surface": "hello",
+      "lemma": "hello",
+      "category": "greeting",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 158,
+        "a": 118,
+        "d": 138,
+        "u": 0,
+        "g": 149,
+        "w": 133,
+        "i": 190
+      }
+    },
+    {
+      "id": "link.but",
+      "surface": "but",
+      "lemma": "but",
+      "category": "contrast",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 124,
+        "a": 124,
+        "d": 132,
+        "u": 0,
+        "g": 126,
+        "w": 128,
+        "i": 150
+      }
+    },
+    {
+      "id": "link.and",
+      "surface": "and",
+      "lemma": "and",
+      "category": "conjunction",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 130,
+        "a": 120,
+        "d": 128,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 145
+      }
+    },
+    {
+      "id": "link.or",
+      "surface": "or",
+      "lemma": "or",
+      "category": "alternative",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 126,
+        "d": 130,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 170
+      }
+    },
+    {
+      "id": "link.because",
+      "surface": "because",
+      "lemma": "because",
+      "category": "reason_link",
+      "register": "any",
+      "severity": 0,
+      "effects": {
+        "v": 130,
+        "a": 118,
+        "d": 148,
+        "u": 0,
+        "g": 132,
+        "w": 128,
+        "i": 170
+      }
+    },
+    {
+      "id": "meta.conflicting",
+      "surface": "conflicting",
+      "lemma": "conflict",
+      "category": "conflict_modifier",
+      "register": "neutral",
+      "severity": 1,
+      "effects": {
+        "v": 104,
+        "a": 148,
+        "d": 144,
+        "u": 25,
+        "g": 102,
+        "w": 128,
+        "i": 166
+      }
+    },
+    {
+      "id": "meta.information",
+      "surface": "information",
+      "lemma": "information",
+      "category": "information_noun",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 96,
+        "d": 148,
+        "u": 0,
+        "g": 132,
+        "w": 128,
+        "i": 156
+      }
+    },
+    {
+      "id": "meta.answer",
+      "surface": "answer",
+      "lemma": "answer",
+      "category": "answer_noun",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 134,
+        "a": 105,
+        "d": 150,
+        "u": 0,
+        "g": 132,
+        "w": 128,
+        "i": 176
+      }
+    },
+    {
+      "id": "meta.word",
+      "surface": "word",
+      "lemma": "word",
+      "category": "word_noun",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 100,
+        "d": 138,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 160
+      }
+    },
+    {
+      "id": "meta.context",
+      "surface": "context",
+      "lemma": "context",
+      "category": "context_noun",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 103,
+        "d": 145,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 170
+      }
+    },
+    {
+      "id": "meta.one",
+      "surface": "one",
+      "lemma": "one",
+      "category": "choice_noun",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 105,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 166
+      }
+    },
+    {
+      "id": "meta.more",
+      "surface": "more",
+      "lemma": "more",
+      "category": "quantity_modifier",
+      "register": "neutral",
+      "severity": 0,
+      "effects": {
+        "v": 128,
+        "a": 118,
+        "d": 138,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 166
+      }
+    },
+    {
+      "id": "role.cause",
+      "surface": "cause",
+      "lemma": "cause",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "cause"
+      },
+      "effects": {
+        "v": 126,
+        "a": 118,
+        "d": 146,
+        "u": 0,
+        "g": 126,
+        "w": 128,
+        "i": 170
+      }
+    },
+    {
+      "id": "role.motive",
+      "surface": "motive",
+      "lemma": "motive",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "motive"
+      },
+      "effects": {
+        "v": 128,
+        "a": 115,
+        "d": 146,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 171
+      }
+    },
+    {
+      "id": "role.purpose",
+      "surface": "purpose",
+      "lemma": "purpose",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "purpose"
+      },
+      "effects": {
+        "v": 133,
+        "a": 108,
+        "d": 149,
+        "u": 0,
+        "g": 133,
+        "w": 128,
+        "i": 171
+      }
+    },
+    {
+      "id": "role.justification",
+      "surface": "justification",
+      "lemma": "justification",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "justification"
+      },
+      "effects": {
+        "v": 128,
+        "a": 116,
+        "d": 150,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 172
+      }
+    },
+    {
+      "id": "role.evidence",
+      "surface": "evidence",
+      "lemma": "evidence",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "evidence"
+      },
+      "effects": {
+        "v": 128,
+        "a": 112,
+        "d": 152,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 174
+      }
+    },
+    {
+      "id": "role.method",
+      "surface": "method",
+      "lemma": "method",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "method"
+      },
+      "effects": {
+        "v": 130,
+        "a": 109,
+        "d": 150,
+        "u": 0,
+        "g": 131,
+        "w": 128,
+        "i": 171
+      }
+    },
+    {
+      "id": "role.manner",
+      "surface": "manner",
+      "lemma": "manner",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "manner"
+      },
+      "effects": {
+        "v": 130,
+        "a": 108,
+        "d": 148,
+        "u": 0,
+        "g": 131,
+        "w": 128,
+        "i": 170
+      }
+    },
+    {
+      "id": "role.mechanism",
+      "surface": "mechanism",
+      "lemma": "mechanism",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "mechanism"
+      },
+      "effects": {
+        "v": 130,
+        "a": 112,
+        "d": 153,
+        "u": 0,
+        "g": 132,
+        "w": 128,
+        "i": 173
+      }
+    },
+    {
+      "id": "role.process",
+      "surface": "process",
+      "lemma": "process",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "process"
+      },
+      "effects": {
+        "v": 130,
+        "a": 109,
+        "d": 151,
+        "u": 0,
+        "g": 132,
+        "w": 128,
+        "i": 172
+      }
+    },
+    {
+      "id": "role.time",
+      "surface": "time",
+      "lemma": "time",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "time"
+      },
+      "effects": {
+        "v": 128,
+        "a": 108,
+        "d": 143,
+        "u": 15,
+        "g": 128,
+        "w": 128,
+        "i": 169
+      }
+    },
+    {
+      "id": "role.location",
+      "surface": "location",
+      "lemma": "location",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "location"
+      },
+      "effects": {
+        "v": 128,
+        "a": 106,
+        "d": 143,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 169
+      }
+    },
+    {
+      "id": "role.quantity",
+      "surface": "quantity",
+      "lemma": "quantity",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "quantity"
+      },
+      "effects": {
+        "v": 128,
+        "a": 106,
+        "d": 145,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 169
+      }
+    },
+    {
+      "id": "role.value",
+      "surface": "value",
+      "lemma": "value",
+      "category": "semantic_role_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "role": "value"
+      },
+      "effects": {
+        "v": 128,
+        "a": 106,
+        "d": 145,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 169
+      }
+    },
+    {
+      "id": "learn.positive",
+      "surface": "positive",
+      "lemma": "positive",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "polarity",
+        "value": "positive"
+      },
+      "effects": {
+        "v": 174,
+        "a": 118,
+        "d": 144,
+        "u": 0,
+        "g": 160,
+        "w": 138,
+        "i": 180
+      }
+    },
+    {
+      "id": "learn.negative",
+      "surface": "negative",
+      "lemma": "negative",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "polarity",
+        "value": "negative"
+      },
+      "effects": {
+        "v": 82,
+        "a": 128,
+        "d": 136,
+        "u": 0,
+        "g": 96,
+        "w": 128,
+        "i": 175
+      }
+    },
+    {
+      "id": "learn.intense",
+      "surface": "intense",
+      "lemma": "intense",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 1,
+      "features": {
+        "axis": "arousal",
+        "value": "high"
+      },
+      "effects": {
+        "v": 122,
+        "a": 190,
+        "d": 145,
+        "u": 20,
+        "g": 108,
+        "w": 128,
+        "i": 178
+      }
+    },
+    {
+      "id": "learn.descriptive",
+      "surface": "descriptive",
+      "lemma": "descriptive",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "semantic",
+        "value": "descriptive"
+      },
+      "effects": {
+        "v": 128,
+        "a": 100,
+        "d": 144,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 168
+      }
+    },
+    {
+      "id": "pronoun.i",
+      "surface": "I",
+      "lemma": "i",
+      "category": "pronoun_subject",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "person": 1
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "pronoun.me",
+      "surface": "me",
+      "lemma": "me",
+      "category": "pronoun_object",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "person": 1
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "pronoun.you",
+      "surface": "you",
+      "lemma": "you",
+      "category": "pronoun",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "person": 2
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "demonstrative.that",
+      "surface": "that",
+      "lemma": "that",
+      "category": "demonstrative",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.what",
+      "surface": "what",
+      "lemma": "what",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "what"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.who",
+      "surface": "who",
+      "lemma": "who",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "who"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.which",
+      "surface": "which",
+      "lemma": "which",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "which"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.why",
+      "surface": "why",
+      "lemma": "why",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "why"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.how",
+      "surface": "how",
+      "lemma": "how",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "how"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.when",
+      "surface": "when",
+      "lemma": "when",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "when"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.where",
+      "surface": "where",
+      "lemma": "where",
+      "category": "question_operator",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "kind": "where"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "question.whether",
+      "surface": "whether",
+      "lemma": "whether",
+      "category": "subordinator",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "aux.do",
+      "surface": "do",
+      "lemma": "do",
+      "category": "auxiliary",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "tense": "present"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "aux.does",
+      "surface": "does",
+      "lemma": "does",
+      "category": "auxiliary",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "tense": "present",
+        "third": true
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "aux.did",
+      "surface": "did",
+      "lemma": "did",
+      "category": "auxiliary",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "tense": "past"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "aux.am",
+      "surface": "am",
+      "lemma": "am",
+      "category": "auxiliary_be",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "person": 1
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "aux.are",
+      "surface": "are",
+      "lemma": "are",
+      "category": "auxiliary_be",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "plural": true
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "aux.have",
+      "surface": "have",
+      "lemma": "have",
+      "category": "auxiliary_have",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "neg.not",
+      "surface": "not",
+      "lemma": "not",
+      "category": "negation",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "neg.dont",
+      "surface": "don't",
+      "lemma": "don't",
+      "category": "negative_auxiliary",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "aux": "do"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "neg.havent",
+      "surface": "haven't",
+      "lemma": "haven't",
+      "category": "negative_auxiliary",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "aux": "have"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "neg.cannot",
+      "surface": "cannot",
+      "lemma": "cannot",
+      "category": "negative_auxiliary",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "aux": "can"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "det.the",
+      "surface": "the",
+      "lemma": "the",
+      "category": "determiner",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "definite": true
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "det.a",
+      "surface": "a",
+      "lemma": "a",
+      "category": "determiner",
+      "register": "any",
+      "severity": 0,
+      "features": {
+        "definite": false
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "prep.by",
+      "surface": "by",
+      "lemma": "by",
+      "category": "preposition",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "prep.to",
+      "surface": "to",
+      "lemma": "to",
+      "category": "preposition",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "prep.about",
+      "surface": "about",
+      "lemma": "about",
+      "category": "preposition",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "prep.than",
+      "surface": "than",
+      "lemma": "than",
+      "category": "comparison_link",
+      "register": "any",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "state.ready",
+      "surface": "ready",
+      "lemma": "ready",
+      "category": "social_state",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "state.working",
+      "surface": "working",
+      "lemma": "working",
+      "category": "activity_state",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "verb.find",
+      "surface": "find",
+      "lemma": "find",
+      "category": "meta_verb",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "verb.determine",
+      "surface": "determine",
+      "lemma": "determine",
+      "category": "meta_verb",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "verb.learn",
+      "surface": "learn",
+      "lemma": "learn",
+      "category": "learning_verb",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "meta.meaning",
+      "surface": "meaning",
+      "lemma": "meaning",
+      "category": "meaning_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "meta.example",
+      "surface": "example",
+      "lemma": "example",
+      "category": "example_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "meta.timezone",
+      "surface": "timezone",
+      "lemma": "timezone",
+      "category": "information_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "meta.calculation",
+      "surface": "calculation",
+      "lemma": "calculation",
+      "category": "information_noun",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "meta.current",
+      "surface": "current",
+      "lemma": "current",
+      "category": "time_modifier",
+      "register": "neutral",
+      "severity": 0,
+      "features": {},
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "meta.mean",
+      "surface": "mean",
+      "lemma": "mean",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "definition"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "learn.meaning",
+      "surface": "meaning",
+      "lemma": "meaning",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "semantic_class"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "learn.example",
+      "surface": "example",
+      "lemma": "example",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "example"
+      },
+      "effects": {
+        "v": 128,
+        "a": 110,
+        "d": 140,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 165
+      }
+    },
+    {
+      "id": "learn.polarity",
+      "surface": "polarity",
+      "lemma": "polarity",
+      "category": "learning_probe",
+      "register": "neutral",
+      "severity": 0,
+      "features": {
+        "axis": "polarity"
+      },
+      "effects": {
+        "v": 128,
+        "a": 122,
+        "d": 145,
+        "u": 0,
+        "g": 128,
+        "w": 128,
+        "i": 188
+      }
+    }
+  ],
+  "grammar_rules": [
+    {
+      "id": "reply.answer",
+      "parent": "reply:answer",
+      "symbols": [
+        "DECLARATIVE_CLAUSE"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "reply.true",
+      "parent": "reply:true",
+      "symbols": [
+        "POLARITY_PARTICLE",
+        "DECLARATIVE_CLAUSE"
+      ],
+      "conditions": {
+        "polarity": true
+      },
+      "priority": 100
+    },
+    {
+      "id": "reply.false",
+      "parent": "reply:false",
+      "symbols": [
+        "POLARITY_PARTICLE",
+        "NEGATED_DECLARATIVE_CLAUSE"
+      ],
+      "conditions": {
+        "polarity": false
+      },
+      "priority": 100
+    },
+    {
+      "id": "reply.unknown",
+      "parent": "reply:unknown",
+      "symbols": [
+        "EPISTEMIC_CLAUSE"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "reply.probe",
+      "parent": "reply:probe",
+      "symbols": [
+        "INTERROGATIVE_CLAUSE"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "reply.acknowledge",
+      "parent": "reply:acknowledge",
+      "symbols": [
+        "ACKNOWLEDGMENT_CLAUSE",
+        "OPTIONAL_FOLLOWUP"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "reply.social",
+      "parent": "reply:social",
+      "symbols": [
+        "SOCIAL_ACT",
+        "OPTIONAL_FOLLOWUP"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "clause.declarative",
+      "parent": "clause:declarative",
+      "symbols": [
+        "SUBJECT",
+        "FINITE_PREDICATE",
+        "COMPLEMENTS",
+        "ADJUNCTS"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "clause.interrogative",
+      "parent": "clause:interrogative",
+      "symbols": [
+        "QUESTION_OPERATOR",
+        "AUXILIARY",
+        "SUBJECT",
+        "BASE_PREDICATE",
+        "COMPLEMENTS",
+        "ADJUNCTS"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "phrase.nominal",
+      "parent": "phrase:nominal",
+      "symbols": [
+        "DETERMINER",
+        "MODIFIERS",
+        "HEAD"
+      ],
+      "conditions": {},
+      "priority": 100
+    },
+    {
+      "id": "phrase.coordinate",
+      "parent": "phrase:coordinate",
+      "symbols": [
+        "ITEM",
+        "CONJUNCTION",
+        "ITEM"
+      ],
+      "conditions": {},
+      "priority": 100
+    }
+  ],
+  "gate_rules": [
+    {
+      "id": "high_severity_no_humor",
+      "condition": {
+        "severity_level": {
+          "gte": 2
+        }
+      },
+      "lock_pools": [
+        "humor",
+        "slang"
+      ],
+      "allow_pools": [
+        "neutral",
+        "high_severity"
+      ],
+      "priority": 100
+    },
+    {
+      "id": "masking_preserve_distance",
+      "condition": {
+        "masking": true
+      },
+      "lock_pools": [
+        "formal",
+        "humor",
+        "slang",
+        "high_severity"
+      ],
+      "allow_pools": [
+        "neutral",
+        "casual_serious"
+      ],
+      "priority": 120
+    },
+    {
+      "id": "low_casual",
+      "condition": {
+        "register": "casual",
+        "severity_level": {
+          "lte": 1
+        }
+      },
+      "lock_pools": [
+        "formal",
+        "high_severity"
+      ],
+      "allow_pools": [
+        "neutral",
+        "casual",
+        "positive"
+      ],
+      "priority": 60
+    }
+  ]
+}
