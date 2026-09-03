@@ -422,3 +422,22 @@ trajectory or corpus feature channel
 
 None requires storing a completed response sentence or replacing the Clanker
 VADUGWI kernel.
+
+## Deterministic response-act policy
+
+Response wording and affective candidate scoring occur only after a closed
+response-act planner selects the warranted communicative operation.  The
+planner distinguishes neutral acknowledgment, positive acknowledgment,
+empathic acknowledgment, empathic follow-up, serious follow-up, safety probe,
+clarification probe, social response, and evidential answer.
+
+Literal semantic evidence takes precedence over incidental affective boundary
+noise when selecting the act.  For example, an ordinary `buy` event remains a
+neutral factual contribution even if its sentence-level VADUGWI score lands
+slightly negative.  Explicit danger, loss, distress, questions, unresolved
+references, and truth contracts retain hard precedence.  The realizer emits
+only candidates within the selected act class, preventing VADUGWI ranking from
+changing the communicative operation after policy selection.
+
+Neutral acknowledgment variation is deterministic and derived from discourse
+turn state rather than randomness or stored completed sentences.
