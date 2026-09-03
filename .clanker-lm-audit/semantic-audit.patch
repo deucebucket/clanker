@@ -1,0 +1,221 @@
+--- a/clanker_lm/memory.py
++++ b/clanker_lm/memory.py
+@@ -347,12 +347,40 @@
+             return left.value.lower().strip() == right.value.lower().strip()
+         return normalize_alias(left.value) == normalize_alias(right.value)
+ 
+-    def query(self, question: QuestionFrame) -> Tuple[Fact, ...]:
++    def query(
++        self,
++        question: QuestionFrame,
++        *,
++        include_opposing_polarity: bool = False,
++    ) -> Tuple[Fact, ...]:
++        """Return facts compatible with the known portion of a question.
++
++        Open-slot questions may only bind facts that preserve tense, modality,
++        and polarity.  A negative fact must never answer a positive ``what``
++        question, and a past event must never silently answer a future one.
++
++        Polar questions are the deliberate exception for polarity: both the
++        proposition and its explicit negation are retrieved so the answer
++        engine can distinguish TRUE, FALSE, UNKNOWN, and conflict states.
++        """
++
+         requested = set(question.requested_roles)
+         matches: List[Fact] = []
+         for fact in self.facts:
+             if fact.frame.predicate != question.frame.predicate:
+                 continue
++            if fact.frame.tense != question.frame.tense:
++                continue
++            if fact.frame.modality != question.frame.modality:
++                continue
++            if (
++                not include_opposing_polarity
++                and fact.frame.polarity != question.frame.polarity
++            ):
++                continue
++            if question.frame.repeated and not fact.frame.repeated:
++                continue
++
+             compatible = True
+             for role, value in question.frame.roles.items():
+                 if role in requested:
+--- a/clanker_lm/answers.py
++++ b/clanker_lm/answers.py
+@@ -52,7 +52,10 @@
+                 explanation="conventional social check-in",
+             )
+ 
+-        matches = self.memory.query(question)
++        matches = self.memory.query(
++            question,
++            include_opposing_polarity=question.family == QuestionFamily.POLAR,
++        )
+         if question.family == QuestionFamily.POLAR:
+             return self._answer_polar(question, matches)
+         return self._answer_open_slot(question, matches)
+@@ -491,7 +494,13 @@
+                 f"{fact.fact_id}:{role.value}:{value.value}",
+             )
+         ]
+-        if compact and normalize_alias(compact) != normalize_alias(full):
++        # A bare value is not a faithful realization of a negated fact.
++        # "A Honda." would erase the polarity of "Sarah did not buy a Honda."
++        if (
++            fact.frame.polarity
++            and compact
++            and normalize_alias(compact) != normalize_alias(full)
++        ):
+             candidates.append(
+                 ResponseCandidate(
+                     f"fact-compact-{fact.fact_id}-{role.value}",
+@@ -724,6 +733,12 @@
+             signature = self._entity_signature(value)
+             if signature and signature not in normalized:
+                 reasons.append("candidate omits the verified bound value")
++            if (
++                contract.selected_fact is not None
++                and not contract.selected_fact.frame.polarity
++                and not self._realizes_negation(text)
++            ):
++                reasons.append("negative fact answer omits proposition polarity")
+ 
+         # A full polar candidate may name the evidence; a concise yes/no is also
+         # valid.  It may not, however, state the opposite prefix.
+@@ -735,6 +750,38 @@
+         return (not reasons), tuple(reasons or ["semantic contract preserved"])
+ 
+     @staticmethod
++    def _realizes_negation(text: str) -> bool:
++        padded = f" {text.lower()} "
++        return any(
++            marker in padded
++            for marker in (
++                " not ",
++                " didn't ",
++                " did not ",
++                " doesn't ",
++                " does not ",
++                " isn't ",
++                " is not ",
++                " wasn't ",
++                " was not ",
++                " weren't ",
++                " were not ",
++                " won't ",
++                " will not ",
++                " can't ",
++                " cannot ",
++                " couldn't ",
++                " could not ",
++                " shouldn't ",
++                " should not ",
++                " mustn't ",
++                " must not ",
++                " never ",
++                " no ",
++            )
++        )
++
++    @staticmethod
+     def _entity_signature(value: RoleValue) -> str:
+         return normalize_alias(value.display)
+ 
+--- a/clanker_lm/parser.py
++++ b/clanker_lm/parser.py
+@@ -785,6 +785,13 @@
+             frame.predicate = tail_parse.frame.predicate
+             frame.roles.update(tail_parse.frame.roles)
+             frame.repeated = frame.repeated or tail_parse.frame.repeated
++        # In a normative modal statement, a because-clause supplies the reason
++        # the action is warranted, not merely a physical event cause.
++        if modality in {"should", "must"} and SemanticRole.CAUSE in frame.roles:
++            frame.roles.setdefault(
++                SemanticRole.JUSTIFICATION,
++                frame.roles.pop(SemanticRole.CAUSE),
++            )
+         unresolved.extend(tail_parse.unresolved)
+         return _PredicateParse(frame, tuple(unresolved))
+ 
+@@ -1020,14 +1027,14 @@
+         # Generic noun phrases continue until the first lexical verb.
+         if end == start + 1 and items[start] in DETERMINERS:
+             for index in range(start + 1, len(items)):
+-                if is_known_verb(items[index]):
++                if items[index] == "not" or is_known_verb(items[index]):
+                     end = index
+                     break
+         elif end == start + 1 and items[start] not in (
+             FIRST_PERSON | SECOND_PERSON | FEMALE_PRONOUNS | MALE_PRONOUNS | PLURAL_PRONOUNS | OBJECT_PRONOUNS
+         ):
+             for index in range(start + 1, len(items)):
+-                if is_known_verb(items[index]):
++                if items[index] == "not" or is_known_verb(items[index]):
+                     end = index
+                     break
+         expected = self._subject_expected_kind(items, raw_words, start, end)
+--- a/engine/tests/test_clanker_lm_runtime.py
++++ b/engine/tests/test_clanker_lm_runtime.py
+@@ -156,3 +156,34 @@
+     assert recipient.response == "Sarah gave it to John."
+     assert theme.response == "Sarah gave the book to John."
+     assert agent.response == "Sarah gave it to John."
++
++def test_open_slot_queries_preserve_polarity_tense_and_modality():
++    negative = _bot()
++    negative.reply("Sarah did not buy a Honda.")
++
++    positive_wh = negative.process("What did Sarah buy?")
++    negative_wh = negative.process("What did Sarah not buy?")
++
++    assert positive_wh.answer and positive_wh.answer.status == AnswerStatus.UNKNOWN
++    assert negative_wh.answer and negative_wh.answer.status == AnswerStatus.ANSWERED
++    assert negative_wh.response == "Sarah did not buy a Honda."
++
++    temporal = _bot()
++    temporal.reply("Sarah bought a Honda.")
++    future = temporal.process("What will Sarah buy?")
++    modal = temporal.process("What might Sarah buy?")
++
++    assert future.answer and future.answer.status == AnswerStatus.UNKNOWN
++    assert modal.answer and modal.answer.status == AnswerStatus.UNKNOWN
++
++
++def test_normative_because_clause_binds_why_justification_slot():
++    bot = _bot()
++    bot.reply("I should apologize because my comment was hurtful.")
++    result = bot.process("Why should I apologize?")
++
++    assert result.answer and result.answer.status == AnswerStatus.ANSWERED
++    assert result.answer.bound_role.value == "justification"
++    assert result.answer.bound_value.display == "my comment was hurtful"
++    assert "because my comment was hurtful" in result.response.lower()
++
+--- a/engine/tests/test_clanker_lm_parser.py
++++ b/engine/tests/test_clanker_lm_parser.py
+@@ -178,3 +178,23 @@
+     assert parsed.question.family == QuestionFamily.POLAR
+     assert parsed.question.frame.predicate == "be"
+     assert parsed.question.frame.tense == "past"
++
++def test_negative_object_wh_keeps_subject_separate_from_negator():
++    _, parser = _parser()
++    parsed = parser.parse("What did Sarah not buy?")
++
++    assert parsed.question is not None
++    assert parsed.question.frame.polarity is False
++    assert parsed.question.frame.role(SemanticRole.AGENT).display == "Sarah"
++    assert parsed.question.requested_roles == (SemanticRole.THEME,)
++
++
++def test_normative_statement_routes_because_clause_to_justification():
++    _, parser = _parser()
++    parsed = parser.parse("I should apologize because my comment was hurtful.")
++
++    assert parsed.frame is not None
++    assert parsed.frame.modality == "should"
++    assert parsed.frame.role(SemanticRole.JUSTIFICATION).display == "my comment was hurtful"
++    assert parsed.frame.role(SemanticRole.CAUSE) is None
++
