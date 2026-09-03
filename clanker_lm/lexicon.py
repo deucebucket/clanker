@@ -247,6 +247,10 @@ IRREGULAR_LEMMAS: Dict[str, str] = {
     "does": "do", "did": "do", "done": "do",
     "went": "go", "gone": "go",
     "left": "leave",
+    # ``-ied`` usually maps to ``-y`` (tried -> try), but these high-frequency
+    # verbs retain a final silent e.  Keep the exceptions explicit rather than
+    # guessing from suffix shape.
+    "died": "die", "lied": "lie", "tied": "tie", "vied": "vie",
     "bought": "buy",
     "brought": "bring",
     "caught": "catch",
@@ -334,6 +338,7 @@ KNOWN_VERBS: Set[str] = {
     "visit", "call", "text", "email", "ask", "answer", "explain", "show", "lend",
     "borrow", "wear", "use", "unlock", "calculate", "compute", "process", "sort",
     "create", "delete", "change", "turn", "look", "watch", "play", "study", "learn",
+    "record", "schedule", "drop", "tie", "vie",
     "remember", "forget", "happen", "occur", "rain", "snow", "cost", "weigh",
     "measure", "seem", "become", "own", "apologize", "argue", "fight", "cheat",
     "lie", "laugh", "cry", "smile", "recover", "heal", "die", "kill", "save",
@@ -553,9 +558,15 @@ def is_probable_verb(word: str, previous: Optional[str] = None, following: Optio
         return True
     if previous in AUX_HAVE and (w in IRREGULAR_LEMMAS or w.endswith(("ed", "en", "ing"))):
         return True
-    if w.endswith(("ed", "ing")) and len(w) > 4:
+    # An auxiliary supplies independent grammatical evidence for an unknown
+    # participle/progressive predicate.  Bare suffixes do not: ``did florb``
+    # and ``is florbing`` are recoverable, while an isolated ``florbed`` is not
+    # promoted to a verb solely because of its spelling.
+    if previous in COPULAS and w.endswith(("ed", "en", "ing")) and len(w) > 4:
         return True
-    # Third-person regular forms are only treated as verbs when their lemma is known.
+    # Regular finite and progressive forms have already succeeded through
+    # ``base in KNOWN_VERBS`` above.  Unknown suffix-shaped tokens remain
+    # unknown until syntax or lexical learning supplies stronger evidence.
     return False
 
 
