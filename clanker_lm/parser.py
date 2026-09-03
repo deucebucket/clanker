@@ -58,7 +58,10 @@ class SemanticParser:
 
         tokens = lexicon.tokenize(raw, include_punctuation=True)
         normalized = " ".join(token.norm for token in tokens if token.norm not in lexicon.PUNCTUATION)
-        clean = [token for token in tokens if token.norm not in {".", "!", "?", ";"}]
+        # Retain semicolons until assertion segmentation.  Clause parsing
+        # removes punctuation later, but deleting ``;`` here made the existing
+        # semicolon branch unreachable.
+        clean = [token for token in tokens if token.norm not in {".", "!", "?"}]
         clean = self._rewrite_yoda(clean)
         clean = lexicon.strip_discourse_prefix(clean)
         # A final casual vocative (``my tummy hurts, bruh``) controls register
@@ -94,14 +97,21 @@ class SemanticParser:
                 diagnostics=diagnostics,
             )
 
-        clauses = self._split_assertion_clauses(clean)
+        segments = self._split_assertion_segments(clean)
         events: List[EventFrame] = []
         unresolved: List[UnresolvedReference] = []
         entities: List[str] = []
         diagnostics: List[str] = []
-        for clause in clauses:
+        primary_event_count = 0
+        for clause, connector in segments:
             result = self._parse_clause(clause, raw, memory)
             if result.event:
+                result.event.discourse_role = (
+                    "main" if primary_event_count == 0 else "coordinate"
+                )
+                if connector is not None:
+                    result.diagnostics.insert(0, f"coordinate connector={connector}")
+                primary_event_count += 1
                 events.append(result.event)
             unresolved.extend(result.unresolved)
             entities.extend(result.entities)
@@ -148,37 +158,124 @@ class SemanticParser:
             return "greeting"
         return None
 
-    def _split_assertion_clauses(self, tokens: Sequence[lexicon.Token]) -> List[List[lexicon.Token]]:
-        clauses: List[List[lexicon.Token]] = []
+    def _split_assertion_segments(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> List[Tuple[List[lexicon.Token], Optional[str]]]:
+        """Split only independently finite coordinated assertions.
+
+        A conjunction is not enough evidence by itself: compound subjects,
+        compound objects, and shared-subject/gapping coordination remain in one
+        clause.  Each returned connector belongs to the clause on its right.
+        """
+
+        segments: List[Tuple[List[lexicon.Token], Optional[str]]] = []
         current: List[lexicon.Token] = []
-        for index, token in enumerate(tokens):
-            split_here = token.norm == ";"
-            skip_then = False
-            if token.norm == "and" and index + 1 < len(tokens):
-                if tokens[index + 1].norm == "then":
-                    split_here = True
-                    skip_then = True
+        incoming_connector: Optional[str] = None
+        index = 0
+        while index < len(tokens):
+            token = tokens[index]
+            norm = token.norm
+            connector: Optional[str] = None
+            right_start = index + 1
+
+            if norm == ";":
+                connector = ";"
+            elif norm in {"and", "but", "yet", "or", "so"}:
+                # ``so that`` introduces a subordinate purpose/result clause,
+                # not the independently finite resultative coordination covered
+                # by this slice.
+                if norm == "so" and right_start < len(tokens) and tokens[right_start].norm == "that":
+                    current.append(token)
+                    index += 1
+                    continue
+                if norm == "and" and right_start < len(tokens) and tokens[right_start].norm == "then":
+                    connector = "and then"
+                    right_start += 1
                 else:
-                    # Split only when both sides independently contain a
-                    # predicate.  This preserves compound subjects/objects
-                    # (``Sarah and Mary`` / ``bread and milk``) while handling
-                    # ``Sarah bought a car and John bought a bike``.
-                    left_has_verb = self._find_main_verb(current) >= 0
-                    right = [item for item in tokens[index + 1 :] if item.norm not in lexicon.PUNCTUATION]
-                    right_has_verb = self._find_main_verb(right) >= 0
-                    if left_has_verb and right_has_verb:
-                        split_here = True
-            if split_here:
-                if current:
-                    clauses.append(current)
-                current = []
-                continue
-            if token.norm == "then" and index > 0 and tokens[index - 1].norm == "and":
-                continue
+                    connector = norm
+
+            if connector is not None:
+                right = self._immediate_right_clause(tokens, right_start)
+                if self._is_independently_finite(current) and self._is_independently_finite(right):
+                    cleaned_current = [
+                        item for item in current if item.norm not in {",", ";"}
+                    ]
+                    if cleaned_current:
+                        segments.append((cleaned_current, incoming_connector))
+                    current = []
+                    incoming_connector = connector
+                    index = right_start
+                    continue
+
             current.append(token)
-        if current:
-            clauses.append(current)
-        return clauses or [list(tokens)]
+            index += 1
+
+        cleaned_current = [item for item in current if item.norm not in {",", ";"}]
+        if cleaned_current:
+            segments.append((cleaned_current, incoming_connector))
+        return segments or [(list(tokens), None)]
+
+    def _split_assertion_clauses(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> List[List[lexicon.Token]]:
+        """Compatibility wrapper returning token lists without connectors."""
+
+        return [clause for clause, _connector in self._split_assertion_segments(tokens)]
+
+    @staticmethod
+    def _immediate_right_clause(
+        tokens: Sequence[lexicon.Token],
+        start: int,
+    ) -> List[lexicon.Token]:
+        """Return lookahead only through the next coordination boundary.
+
+        Without this bound, an early compound-object ``and`` could borrow a
+        finite verb from a later ``but John left`` clause and split at the
+        wrong connector.
+        """
+
+        end = len(tokens)
+        for index in range(start, len(tokens)):
+            norm = tokens[index].norm
+            if norm == ";":
+                end = index
+                break
+            if norm in {"and", "but", "yet", "or", "so"}:
+                if (
+                    norm == "so"
+                    and index + 1 < len(tokens)
+                    and tokens[index + 1].norm == "that"
+                ):
+                    continue
+                end = index
+                break
+        return [
+            item
+            for item in tokens[start:end]
+            if item.norm not in lexicon.PUNCTUATION
+        ]
+
+    def _is_independently_finite(self, tokens: Sequence[lexicon.Token]) -> bool:
+        """Return whether a segment contains a finite predicate and subject."""
+
+        items = [item for item in tokens if item.norm not in lexicon.PUNCTUATION]
+        verb_index = self._find_main_verb(items)
+        if verb_index <= 0:
+            # A verb-initial segment may be an imperative or shared-subject
+            # continuation.  Those require their own deterministic slice and
+            # are deliberately not split here.
+            return False
+        subject_tokens = [
+            item
+            for item in items[:verb_index]
+            if item.norm not in lexicon.AUXILIARIES
+            and item.norm not in lexicon.NEGATORS
+            and item.norm not in lexicon.INTENSIFIERS
+            and item.norm not in {",", ";"}
+        ]
+        return bool(subject_tokens)
 
     @staticmethod
     def _rewrite_yoda(tokens: Sequence[lexicon.Token]) -> List[lexicon.Token]:
