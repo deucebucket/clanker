@@ -26,6 +26,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          cat > /tmp/chunks.sha256 <<'EOF'
+          d9a294e8994fb1fcb5f3e5158b597f1819291c2bcb391b747c2d4656b1aee8b2  bootstrap/chunk-00.b64
+          37fd8ec5da4bc2ca7a0bf87c9205b9930681a5fa39386a0d7b20f0f8c944acfc  bootstrap/chunk-01.b64
+          92ad9b341883e035e8d3f8328635e6e46a6c735fd5d600b8b0f2e7e2d6a7cff3  bootstrap/chunk-02.b64
+          7fd91eab16d753cc9da4ff469906bb573d4d756af057d361151f0d861bd44540  bootstrap/chunk-03.b64
+          d68fc120dde5e4d8e2a9db5ab6485e96ce160753ea6f6c2270eae150e8ac0a5c  bootstrap/chunk-04.b64
+          87ef9627d4081743fb0dc36efe613838adddac1690796cb8fff92781daeebf2c  bootstrap/chunk-05.b64
+          0e210427013ea7ac13525457e1ed5683e3ed349d0cfd6853ff56c4ea21720bae  bootstrap/chunk-06.b64
+          e1628e4c19b63ad24b8b15cc0fc4466a46d73ca13a574efab80a1eb16824ad06  bootstrap/chunk-07.b64
+          EOF
+          sha256sum --check --strict /tmp/chunks.sha256
           cat bootstrap/chunk-*.b64 | base64 --decode > /tmp/clanker_lm_bundle.tar.gz
           echo "b2400349a725aa4a87b6c4eeeb191390dcf32f06e9bd98bdc015f53669734a47  /tmp/clanker_lm_bundle.tar.gz" | sha256sum --check --strict
           tar -tzf /tmp/clanker_lm_bundle.tar.gz
