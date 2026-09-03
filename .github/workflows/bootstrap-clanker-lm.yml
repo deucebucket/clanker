@@ -5,7 +5,7 @@ on:
     branches:
       - feature/clanker-lm-deterministic-qa
     paths:
-      - bootstrap/clanker_lm_bundle.b64
+      - bootstrap/READY
 
 permissions:
   contents: write
@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base64 --decode bootstrap/clanker_lm_bundle.b64 > /tmp/clanker_lm_bundle.tar.gz
+          cat bootstrap/chunk-*.b64 | base64 --decode > /tmp/clanker_lm_bundle.tar.gz
           echo "b2400349a725aa4a87b6c4eeeb191390dcf32f06e9bd98bdc015f53669734a47  /tmp/clanker_lm_bundle.tar.gz" | sha256sum --check --strict
           tar -tzf /tmp/clanker_lm_bundle.tar.gz
           tar -xzf /tmp/clanker_lm_bundle.tar.gz
