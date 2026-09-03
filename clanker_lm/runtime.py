@@ -298,6 +298,7 @@ class ClankerLM:
         if parse.speech_act == SpeechAct.ASSERT and parse.events:
             stored = [self.memory.add_event(event) for event in parse.events]
             self.memory.add_clause_relations(parse.relations, stored)
+            self.memory.add_entity_modifier_relations(parse.modifiers, stored)
             return AnswerContract(
                 status=AnswerStatus.ACKNOWLEDGED,
                 proposition=stored[-1],
