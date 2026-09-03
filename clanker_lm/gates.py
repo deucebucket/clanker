@@ -1,4 +1,4 @@
-"""Contextual gating and collision-masking rules for Clanker-LM."""
+"""Contextual gating, response-act planning, and collision masking."""
 
 from __future__ import annotations
 
@@ -7,14 +7,16 @@ from typing import List, Optional
 from . import lexicon
 from .database import LanguageStore
 from .memory import ConversationMemory
-from .model import AffectReading, AnswerStatus, GateDecision, ParseResult, SpeechAct
+from .model import AffectReading, AnswerStatus, GateDecision, ParseResult
+from .response_policy import ResponseActPlanner
 
 
 class ContextGate:
-    """Convert parsed/affective context into legal response pools."""
+    """Convert parsed/affective context into legal response pools and acts."""
 
     def __init__(self, store: LanguageStore) -> None:
         self.store = store
+        self.response_policy = ResponseActPlanner()
 
     def decide(
         self,
@@ -37,22 +39,36 @@ class ContextGate:
         if vector.u >= 200 or (vector.v <= 50 and vector.g <= 45):
             severity_level = 3
             rationale.append("critical VADUGWI region")
-        elif vector.u >= 120 or vector.g <= 75 or structures & {"FAREWELL", "METHOD_ACQUISITION", "SELF_REMOVAL", "NO_EXIT", "CRISIS"}:
+        elif vector.u >= 120 or vector.g <= 75 or structures & {
+            "FAREWELL",
+            "METHOD_ACQUISITION",
+            "SELF_REMOVAL",
+            "NO_EXIT",
+            "CRISIS",
+        }:
             severity_level = 2
             rationale.append("high urgency/gravity or crisis structure")
         elif vector.v < 105 or vector.a > 175:
             severity_level = 1
             rationale.append("negative or high-arousal input")
 
-        # Severity gates cannot depend exclusively on an affect backend's
-        # aggregate coordinate.  The semantic content itself supplies a hard
-        # floor for explicit severe family disclosures; otherwise a backend
-        # boundary read could turn "my mom is really sick" into a glib low-
-        # severity acknowledgment.  VADUGWI still controls finer movement and
-        # can raise this floor to critical.
+        # Literal semantic severity supplies a hard floor.  A boundary affect
+        # read may refine or raise this floor but cannot erase an explicit
+        # severe family disclosure.
         severe_family_terms = {
-            "sick", "ill", "dying", "died", "dead", "missing", "hospital",
-            "cancer", "hurt", "injured", "overdose", "suicide", "killed",
+            "sick",
+            "ill",
+            "dying",
+            "died",
+            "dead",
+            "missing",
+            "hospital",
+            "cancer",
+            "hurt",
+            "injured",
+            "overdose",
+            "suicide",
+            "killed",
         }
         severe_family_hit = familial and any(word in severe_family_terms for word in words)
         if severe_family_hit:
@@ -61,39 +77,40 @@ class ContextGate:
         elif familial and severity_level >= 1:
             rationale.append("familial relevance raises response care without severity escalation")
 
+        if casual or profanity:
+            initial_register = "casual"
+        elif vector.v >= 170 and severity_level == 0:
+            initial_register = "positive"
+        else:
+            initial_register = "neutral"
+
+        policy = self.response_policy.plan(
+            text,
+            parse,
+            affect,
+            answer_status=answer_status,
+            initial_severity={0: "low", 1: "moderate", 2: "high", 3: "critical"}[severity_level],
+            initial_register=initial_register,
+        )
+        severity_level = self.response_policy.SEVERITY_TO_LEVEL[policy.severity]
+        register = policy.register
+        response_act = policy.response_act
+        rationale.extend(policy.rationale)
+
         masking = casual and severity_level >= 2
         if masking:
+            register = "casual"
             rationale.append("casual register collides with severe content")
 
-        if masking:
-            register = "casual"
-        elif casual or profanity:
-            register = "casual"
-        elif vector.v >= 170 and severity_level == 0:
-            register = "positive"
-        else:
-            register = "neutral"
-
-        requires_probe = bool(parse.unresolved)
-        if requires_probe:
-            response_act = "probe"
-            rationale.append("unresolved reference halts normal equation")
-        elif parse.speech_act == SpeechAct.ASK:
-            response_act = "social" if parse.question and parse.question.social_convention else "answer"
-        elif parse.speech_act in {SpeechAct.GREET, SpeechAct.SOCIAL}:
-            response_act = "social"
-        else:
-            response_act = "acknowledge"
-
-        if answer_status in {AnswerStatus.MISSING_REFERENCE, AnswerStatus.AMBIGUOUS_REFERENCE, AnswerStatus.MULTIPLE_MATCHES}:
-            response_act = "probe"
+        requires_probe = bool(parse.unresolved) or response_act in {"probe", "safety_probe"}
 
         feature_map = {
             "severity_level": severity_level,
-            "register": "casual" if casual else "neutral",
+            "register": "casual" if casual else register,
             "masking": masking,
             "familial": familial,
             "profanity": profanity,
+            "response_act": response_act,
         }
         locked: List[str] = []
         allowed: List[str] = []
@@ -125,7 +142,7 @@ class ContextGate:
             locked_pools=locked,
             allowed_pools=allowed,
             response_act=response_act,
-            max_sentences=1 if severity_level == 0 and response_act == "answer" else 2,
+            max_sentences=policy.max_sentences,
             requires_probe=requires_probe,
             rationale=rationale,
         )
