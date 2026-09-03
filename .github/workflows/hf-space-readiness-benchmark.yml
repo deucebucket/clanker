@@ -1,0 +1,127 @@
+name: Clanker-LM HF Space readiness benchmark
+
+on:
+  push:
+    branches:
+      - chore/hf-space-readiness-benchmark
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package only
+        run: python -m pip install -e .
+
+      - name: Measure source payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def total(root: str) -> int:
+              return sum(
+                  p.stat().st_size
+                  for p in Path(root).rglob("*")
+                  if p.is_file() and "__pycache__" not in p.parts
+              )
+
+          engine = total("engine")
+          runtime = total("clanker_lm")
+          print(f"ENGINE_SOURCE_BYTES={engine}")
+          print(f"CLANKER_LM_SOURCE_BYTES={runtime}")
+          print(f"COMBINED_SOURCE_BYTES={engine + runtime}")
+          print(f"COMBINED_SOURCE_MIB={(engine + runtime) / 1024 / 1024:.4f}")
+          PY
+
+      - name: Measure cold start, memory, latency, and learning persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import os
+          import resource
+          import statistics
+          import tempfile
+          import time
+
+          process_start = time.perf_counter()
+          from clanker_lm import ClankerLM, LanguageStore
+          import_complete = time.perf_counter()
+
+          runtime_start = time.perf_counter()
+          runtime = ClankerLM(default_timezone="America/Chicago")
+          runtime_ready = time.perf_counter()
+
+          warmup = [
+              "My sister bought a used Honda yesterday.",
+              "Who bought the Honda?",
+              "What time is it in Tokyo?",
+              "That movie was glorp.",
+              "Negative, like disappointing and overhyped.",
+              "What does glorp mean?",
+          ]
+          warmup_results = [runtime.process(text) for text in warmup]
+
+          probes = [
+              "Hello.",
+              "My sister called me again.",
+              "Who called me?",
+              "What is 2 + 3 * 4?",
+              "Bruh, my mom is really sick.",
+              "What does glorp mean?",
+          ]
+          latencies_ms = []
+          for index in range(600):
+              text = probes[index % len(probes)]
+              start = time.perf_counter_ns()
+              runtime.process(text)
+              latencies_ms.append((time.perf_counter_ns() - start) / 1_000_000)
+
+          sorted_latencies = sorted(latencies_ms)
+          p95 = sorted_latencies[int(len(sorted_latencies) * 0.95) - 1]
+          rss_kib = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+          learned = runtime.learned_lexicon()
+          runtime.close()
+
+          with tempfile.TemporaryDirectory() as temp_dir:
+              db_path = os.path.join(temp_dir, "clanker-lm.sqlite3")
+              store = LanguageStore(db_path)
+              persistent = ClankerLM(language_store=store)
+              persistent.process("That game was zorb.")
+              persistent.process("Zorb means intensely exciting.")
+              persistent.process("What does zorb mean?")
+              overlay = persistent.store.export_overlay()
+              persistent.close()
+              database_bytes = os.path.getsize(db_path)
+
+          report = {
+              "python_process_import_ms": round((import_complete - process_start) * 1000, 3),
+              "runtime_init_ms": round((runtime_ready - runtime_start) * 1000, 3),
+              "warm_turns": len(warmup_results),
+              "benchmark_turns": len(latencies_ms),
+              "latency_mean_ms": round(statistics.fmean(latencies_ms), 4),
+              "latency_median_ms": round(statistics.median(latencies_ms), 4),
+              "latency_p95_ms": round(p95, 4),
+              "throughput_turns_per_second": round(1000 / statistics.fmean(latencies_ms), 2),
+              "max_rss_kib": rss_kib,
+              "max_rss_mib": round(rss_kib / 1024, 3),
+              "learned_terms_in_session": len(learned),
+              "persistent_sqlite_bytes_after_learning_demo": database_bytes,
+              "overlay_tables_exported": sorted(overlay),
+              "sample_responses": [item.response for item in warmup_results],
+          }
+          print("CLANKER_LM_BENCHMARK=" + json.dumps(report, sort_keys=True))
+          PY
