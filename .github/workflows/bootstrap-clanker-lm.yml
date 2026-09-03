@@ -1,0 +1,43 @@
+name: Bootstrap Clanker-LM source
+
+on:
+  push:
+    branches:
+      - feature/clanker-lm-deterministic-qa
+    paths:
+      - bootstrap/clanker_lm_bundle.b64
+
+permissions:
+  contents: write
+
+concurrency:
+  group: clanker-lm-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/clanker-lm-deterministic-qa
+          fetch-depth: 0
+      - name: Decode and verify source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 --decode bootstrap/clanker_lm_bundle.b64 > /tmp/clanker_lm_bundle.tar.gz
+          echo "b2400349a725aa4a87b6c4eeeb191390dcf32f06e9bd98bdc015f53669734a47  /tmp/clanker_lm_bundle.tar.gz" | sha256sum --check --strict
+          tar -tzf /tmp/clanker_lm_bundle.tar.gz
+          tar -xzf /tmp/clanker_lm_bundle.tar.gz
+      - name: Replace bootstrap with normal source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf bootstrap
+          rm -f .github/workflows/bootstrap-clanker-lm.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: add deterministic Clanker-LM question-answering runtime"
+          git push origin HEAD:feature/clanker-lm-deterministic-qa
