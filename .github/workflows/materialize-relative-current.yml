@@ -1,0 +1,65 @@
+name: Materialize current-main relative clauses
+
+on:
+  push:
+    branches:
+      - feature/clanker-lm-relative-clauses
+    paths:
+      - .relative-current/READY
+
+permissions:
+  contents: write
+
+concurrency:
+  group: relative-current-materializer
+  cancel-in-progress: false
+
+jobs:
+  materialize-test-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/clanker-lm-relative-clauses
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Load staged implementation and rebase it onto current main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin feature/clanker-lm-relative-modifiers
+          git show origin/feature/clanker-lm-relative-modifiers:.relative-modifier-materialize/apply.py > /tmp/relative-apply.py
+          python .relative-current/currentize.py
+          git diff --check
+
+      - name: Install and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+          python -m compileall -q engine clanker_lm tests benchmarks
+          python -m pytest -q
+          python benchmarks/clanker_lm_eval.py
+
+      - name: Commit validated implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            clanker_lm/model.py \
+            clanker_lm/memory.py \
+            clanker_lm/parser.py \
+            clanker_lm/runtime.py \
+            docs/CLANKER_LM_RELATIVE_MODIFIERS.md \
+            tests/test_relative_modifiers.py
+          git diff --cached --check
+          git commit -m "feat: add typed subject and object relative clauses"
+          git push origin HEAD:feature/clanker-lm-relative-clauses
