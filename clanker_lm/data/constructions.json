@@ -1,0 +1,271 @@
+{
+  "version": 1,
+  "nodes": [
+    {
+      "id": "root",
+      "type": "root",
+      "children": [
+        "act_context_probe",
+        "act_greeting",
+        "act_conflict_support",
+        "act_serious_illness",
+        "act_masked_illness",
+        "act_pain_check",
+        "act_critical_safety",
+        "act_general_support",
+        "act_celebrate",
+        "act_fact_ack",
+        "act_clarify_unknown"
+      ]
+    },
+    {
+      "id": "act_context_probe",
+      "type": "act",
+      "act": "context_probe",
+      "children": ["probe_person", "probe_options", "probe_object"]
+    },
+    {
+      "id": "probe_person",
+      "type": "construction",
+      "template": "Who do you mean by {reference}?",
+      "required_slots": ["reference"],
+      "register": ["neutral", "casual"],
+      "severity": ["low", "moderate", "high", "critical"],
+      "tags": ["context_probe", "clarify", "no_claim"]
+    },
+    {
+      "id": "probe_options",
+      "type": "construction",
+      "template": "Do you mean {options}?",
+      "required_slots": ["options"],
+      "register": ["neutral", "casual"],
+      "severity": ["low", "moderate", "high", "critical"],
+      "tags": ["context_probe", "clarify", "no_claim"]
+    },
+    {
+      "id": "probe_object",
+      "type": "construction",
+      "template": "What do you mean by {reference}?",
+      "required_slots": ["reference"],
+      "register": ["neutral", "casual"],
+      "severity": ["low", "moderate", "high", "critical"],
+      "tags": ["context_probe", "clarify", "no_claim"]
+    },
+    {
+      "id": "act_greeting",
+      "type": "act",
+      "act": "greeting",
+      "children": ["greeting_neutral", "greeting_casual"]
+    },
+    {
+      "id": "greeting_neutral",
+      "type": "construction",
+      "template": "Hey. What's going on?",
+      "register": ["neutral"],
+      "severity": ["low", "moderate"],
+      "tags": ["social", "inquiry"]
+    },
+    {
+      "id": "greeting_casual",
+      "type": "construction",
+      "template": "Hey, what's up?",
+      "register": ["casual"],
+      "severity": ["low", "moderate"],
+      "tags": ["social", "inquiry"]
+    },
+    {
+      "id": "act_conflict_support",
+      "type": "act",
+      "act": "conflict_support",
+      "children": ["conflict_specific", "conflict_neutral", "conflict_casual"]
+    },
+    {
+      "id": "conflict_specific",
+      "type": "construction",
+      "template": "I'm sorry {agent_pronoun} did this{repeat_phrase}. What happened?",
+      "required_slots": ["agent_pronoun", "repeat_phrase"],
+      "register": ["neutral", "casual"],
+      "severity": ["low", "moderate", "high"],
+      "tags": ["acknowledge", "inquiry", "support"]
+    },
+    {
+      "id": "conflict_neutral",
+      "type": "construction",
+      "template": "That sounds frustrating. What happened?",
+      "register": ["neutral"],
+      "severity": ["low", "moderate", "high"],
+      "tags": ["acknowledge", "inquiry", "support"]
+    },
+    {
+      "id": "conflict_casual",
+      "type": "construction",
+      "template": "That sucks. What happened?",
+      "register": ["casual"],
+      "severity": ["low", "moderate"],
+      "tags": ["acknowledge", "inquiry", "support", "slang"]
+    },
+    {
+      "id": "act_serious_illness",
+      "type": "act",
+      "act": "serious_illness",
+      "children": ["illness_specific", "illness_direct"]
+    },
+    {
+      "id": "illness_specific",
+      "type": "construction",
+      "template": "I'm sorry {agent_display} is {attribute}. What happened?",
+      "required_slots": ["agent_display", "attribute"],
+      "register": ["neutral"],
+      "severity": ["moderate", "high"],
+      "tags": ["acknowledge", "inquiry", "support"]
+    },
+    {
+      "id": "illness_direct",
+      "type": "construction",
+      "template": "That sounds serious. What happened with {agent_display}?",
+      "required_slots": ["agent_display"],
+      "register": ["neutral"],
+      "severity": ["moderate", "high"],
+      "tags": ["acknowledge", "inquiry", "support", "direct"]
+    },
+    {
+      "id": "act_masked_illness",
+      "type": "act",
+      "act": "masked_illness",
+      "children": ["masked_illness_direct", "masked_illness_restrained"]
+    },
+    {
+      "id": "masked_illness_direct",
+      "type": "construction",
+      "template": "Damn, I'm sorry {agent_display} is {attribute}. What happened?",
+      "required_slots": ["agent_display", "attribute"],
+      "register": ["casual"],
+      "severity": ["high"],
+      "tags": ["acknowledge", "inquiry", "support", "restrained_casual"]
+    },
+    {
+      "id": "masked_illness_restrained",
+      "type": "construction",
+      "template": "That sounds serious. What happened?",
+      "register": ["casual"],
+      "severity": ["high"],
+      "tags": ["acknowledge", "inquiry", "support", "direct"]
+    },
+    {
+      "id": "act_pain_check",
+      "type": "act",
+      "act": "pain_check",
+      "children": ["pain_casual", "pain_neutral"]
+    },
+    {
+      "id": "pain_casual",
+      "type": "construction",
+      "template": "That sucks. How bad does it hurt?",
+      "register": ["casual"],
+      "severity": ["low", "moderate"],
+      "tags": ["acknowledge", "inquiry", "support", "slang"]
+    },
+    {
+      "id": "pain_neutral",
+      "type": "construction",
+      "template": "I'm sorry you're hurting. How bad is it?",
+      "register": ["neutral"],
+      "severity": ["low", "moderate", "high"],
+      "tags": ["acknowledge", "inquiry", "support"]
+    },
+    {
+      "id": "act_critical_safety",
+      "type": "act",
+      "act": "critical_safety",
+      "children": ["critical_safety_direct"]
+    },
+    {
+      "id": "critical_safety_direct",
+      "type": "construction",
+      "template": "This sounds serious. Are you in immediate danger right now?",
+      "register": ["neutral", "casual"],
+      "severity": ["critical"],
+      "tags": ["acknowledge", "safety_check", "direct", "inquiry"]
+    },
+    {
+      "id": "act_general_support",
+      "type": "act",
+      "act": "general_support",
+      "children": ["general_support_neutral", "general_support_casual"]
+    },
+    {
+      "id": "general_support_neutral",
+      "type": "construction",
+      "template": "That sounds hard. What happened?",
+      "register": ["neutral"],
+      "severity": ["low", "moderate", "high"],
+      "tags": ["acknowledge", "inquiry", "support"]
+    },
+    {
+      "id": "general_support_casual",
+      "type": "construction",
+      "template": "Damn. What happened?",
+      "register": ["casual"],
+      "severity": ["low", "moderate"],
+      "tags": ["acknowledge", "inquiry", "support", "slang"]
+    },
+    {
+      "id": "act_celebrate",
+      "type": "act",
+      "act": "celebrate",
+      "children": ["celebrate_neutral", "celebrate_casual"]
+    },
+    {
+      "id": "celebrate_neutral",
+      "type": "construction",
+      "template": "That's great. What happened?",
+      "register": ["neutral"],
+      "severity": ["low"],
+      "tags": ["celebrate", "inquiry", "support"]
+    },
+    {
+      "id": "celebrate_casual",
+      "type": "construction",
+      "template": "Hell yeah. What happened?",
+      "register": ["casual"],
+      "severity": ["low"],
+      "tags": ["celebrate", "inquiry", "slang", "playful"]
+    },
+    {
+      "id": "act_fact_ack",
+      "type": "act",
+      "act": "fact_ack",
+      "children": ["fact_ack_neutral", "fact_ack_casual"]
+    },
+    {
+      "id": "fact_ack_neutral",
+      "type": "construction",
+      "template": "Got it.",
+      "register": ["neutral"],
+      "severity": ["low", "moderate"],
+      "tags": ["acknowledge", "concise", "no_claim"]
+    },
+    {
+      "id": "fact_ack_casual",
+      "type": "construction",
+      "template": "Okay, got you.",
+      "register": ["casual"],
+      "severity": ["low", "moderate"],
+      "tags": ["acknowledge", "concise", "no_claim", "restrained_casual"]
+    },
+    {
+      "id": "act_clarify_unknown",
+      "type": "act",
+      "act": "clarify_unknown",
+      "children": ["clarify_unknown_default"]
+    },
+    {
+      "id": "clarify_unknown_default",
+      "type": "construction",
+      "template": "I need a little more detail. What happened?",
+      "register": ["neutral", "casual"],
+      "severity": ["low", "moderate", "high"],
+      "tags": ["clarify", "inquiry", "no_claim"]
+    }
+  ]
+}
