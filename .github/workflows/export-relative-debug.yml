@@ -38,19 +38,13 @@ jobs:
           python .relative-current/currentize6.py
           git diff --check
 
-      - name: Commit inspectable generated source
+      - name: Commit complete inspectable generated source
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            clanker_lm/model.py \
-            clanker_lm/memory.py \
-            clanker_lm/parser.py \
-            clanker_lm/runtime.py \
-            docs/CLANKER_LM_RELATIVE_MODIFIERS.md \
-            tests/test_relative_modifiers.py
+          git add clanker_lm docs tests
           git diff --cached --check
-          git commit -m "debug: materialize relative-clause implementation"
+          git commit -m "debug: materialize complete relative-clause implementation"
           git push --force origin HEAD:feature/clanker-lm-relative-debug
