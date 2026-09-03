@@ -41,12 +41,12 @@ jobs:
           echo "b2400349a725aa4a87b6c4eeeb191390dcf32f06e9bd98bdc015f53669734a47  /tmp/clanker_lm_bundle.tar.gz" | sha256sum --check --strict
           tar -tzf /tmp/clanker_lm_bundle.tar.gz
           tar -xzf /tmp/clanker_lm_bundle.tar.gz
-      - name: Replace bootstrap with normal source tree
+      - name: Replace bootstrap payload with normal source tree
         shell: bash
         run: |
           set -euo pipefail
           rm -rf bootstrap
-          rm -f .github/workflows/bootstrap-clanker-lm.yml
+          rm -f .github/workflows/clanker-lm-ci.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
