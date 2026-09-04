@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#202522">
+    <title>Clanker-LM · Semantic Workbench</title>
+    <link rel="stylesheet" href="/assets/app.css">
+    <script src="/assets/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#composer">Skip to message</a>
+    <div class="shell">
+      <header class="masthead">
+        <a class="brand" href="/" aria-label="Clanker-LM home">
+          <span class="face" aria-hidden="true">
+            <span class="eye"></span><span class="eye"></span><span class="mouth"></span>
+          </span>
+          <span>
+            <strong>Clanker-LM</strong>
+            <small>semantic workbench</small>
+          </span>
+        </a>
+        <div class="runtime-state" aria-label="Runtime status">
+          <span class="status-lamp" aria-hidden="true"></span>
+          <span>Local runtime</span>
+        </div>
+      </header>
+
+      <main class="workbench">
+        <section class="conversation" aria-labelledby="conversation-title">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Conversation 01</p>
+              <h1 id="conversation-title">Reason in the open.</h1>
+            </div>
+            <p class="intro">Each answer keeps its evidence close: status, source, memory revision, and the selected VADUG state.</p>
+          </div>
+
+          <div id="transcript" class="transcript" role="log" aria-live="polite" aria-relevant="additions">
+            <article class="turn turn--system">
+              <p class="speaker">Workbench</p>
+              <div class="bubble">
+                <p>I’m ready. State a fact, ask a question, or start with one of these.</p>
+                <div class="suggestions" aria-label="Example messages">
+                  <button type="button" data-prompt="My sister bought a used Honda yesterday.">Store a fact</button>
+                  <button type="button" data-prompt="Who bought the Honda?">Ask from memory</button>
+                  <button type="button" data-prompt="What time is it?">Use a resolver</button>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <form id="composer" class="composer" novalidate>
+            <label for="message">Message</label>
+            <div class="composer-frame">
+              <textarea id="message" name="message" rows="2" maxlength="4096" placeholder="Tell Clanker something…" required></textarea>
+              <button id="send" class="send" type="submit">
+                <span>Send</span>
+                <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+            <div class="composer-meta">
+              <span id="form-status" role="status">Enter to send · Shift + Enter for a new line</span>
+              <span><output id="message-count" for="message">0</output> / 4096 bytes</span>
+            </div>
+          </form>
+        </section>
+
+        <aside class="sidecar" aria-labelledby="session-title">
+          <div class="sidecar-rule" aria-hidden="true"></div>
+          <p class="eyebrow">Session controls</p>
+          <h2 id="session-title">Memory is browser-bound.</h2>
+          <p>Each browser session has an isolated deterministic runtime. Export it for inspection or reset it to begin cleanly.</p>
+          <dl class="limits">
+            <div><dt>Input ceiling</dt><dd>4 KiB</dd></div>
+            <div><dt>Session</dt><dd>Ephemeral</dd></div>
+            <div><dt>Execution</dt><dd>Single loop</dd></div>
+          </dl>
+          <div class="sidecar-actions">
+            <a id="export" class="button button--quiet is-disabled" href="/api/export" aria-disabled="true">Export state</a>
+            <button id="reset" class="button button--danger" type="button">Reset session</button>
+          </div>
+          <p class="privacy-note"><span aria-hidden="true">◌</span> Replies are generated from structured state; the web layer does not log message bodies.</p>
+        </aside>
+      </main>
+    </div>
+  </body>
+</html>

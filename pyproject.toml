@@ -14,6 +14,7 @@ dependencies = []
 
 [project.optional-dependencies]
 test = ["pytest>=7.0", "coverage>=7.0"]
+web = ["starlette>=0.40,<1", "uvicorn>=0.30,<1"]
 
 [project.scripts]
 clanker-lm = "clanker_lm.__main__:main"
@@ -29,6 +30,7 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 "clanker_lm.data" = ["*.json"]
+"clanker_lm.web_assets" = ["*.html", "*.css", "*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["engine/tests", "tests"]

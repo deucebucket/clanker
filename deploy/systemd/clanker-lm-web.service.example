@@ -1,0 +1,45 @@
+[Unit]
+Description=Clanker-LM single-process web workbench
+Documentation=https://github.com/deucebucket/clanker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=clanker-lm
+Group=clanker-lm
+WorkingDirectory=/opt/clanker-lm
+EnvironmentFile=/etc/clanker-lm/web.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+# web.env contains non-secret deployment coordinates, for example:
+# CLANKER_LM_PUBLIC_ORIGIN=https://clanker.example-tailnet.ts.net
+# CLANKER_LM_ALLOWED_USER=operator@example.com
+ExecStart=/opt/clanker-lm/venv/bin/clanker-lm web --host 127.0.0.1 --port 8765 --deployed --public-origin ${CLANKER_LM_PUBLIC_ORIGIN} --allow-user ${CLANKER_LM_ALLOWED_USER}
+Restart=on-failure
+RestartSec=3s
+TimeoutStopSec=20s
+KillSignal=SIGINT
+UMask=0077
+
+# The service stays on loopback behind Tailscale Serve. The app verifies the
+# exact Tailscale-User-Login header for every non-health request.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

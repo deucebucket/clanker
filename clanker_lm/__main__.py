@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import List, Optional
 
 from .database import LanguageStore
 from .model import SourceKind
@@ -271,6 +270,37 @@ def cmd_schema(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_web(args: argparse.Namespace) -> int:
+    """Load the optional ASGI stack only when the web command is selected."""
+
+    try:
+        from .web import WebConfig, run_server
+    except ModuleNotFoundError as exc:
+        raise ValueError(
+            "Web dependencies are not installed; install clanker-vadugwi[web]."
+        ) from exc
+
+    config = WebConfig(
+        host=args.host,
+        port=args.port,
+        public_origin=args.public_origin,
+        deployed=args.deployed,
+        allowed_users=tuple(args.allowed_users),
+        session_idle_seconds=args.session_idle_seconds,
+        max_sessions=args.max_sessions,
+        rate_limit=args.rate_limit,
+        rate_window_seconds=args.rate_window_seconds,
+        max_turns=args.max_turns,
+    )
+    try:
+        run_server(config, log_level=args.log_level)
+    except ModuleNotFoundError as exc:
+        raise ValueError(
+            "Web dependencies are not installed; install clanker-vadugwi[web]."
+        ) from exc
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Clanker-LM deterministic semantic conversation runtime")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -341,6 +371,38 @@ def build_parser() -> argparse.ArgumentParser:
     schema = sub.add_parser("schema", help="Show atomic language and adaptive database row counts")
     schema.add_argument("--database")
     schema.set_defaults(func=cmd_schema)
+
+    web = sub.add_parser("web", help="Run the single-process browser workbench")
+    web.add_argument("--host", default="127.0.0.1", help="Listen address (default: loopback)")
+    web.add_argument("--port", type=int, default=8765)
+    web.add_argument(
+        "--public-origin",
+        help="Exact browser origin; required in deployed mode",
+    )
+    web.add_argument(
+        "--deployed",
+        action="store_true",
+        help="Require an exact Tailscale-User-Login allowlist",
+    )
+    web.add_argument(
+        "--allow-user",
+        dest="allowed_users",
+        action="append",
+        default=[],
+        metavar="LOGIN",
+        help="Exact Tailscale login allowed in deployed mode (repeatable)",
+    )
+    web.add_argument("--session-idle-seconds", type=float, default=1800.0)
+    web.add_argument("--max-sessions", type=int, default=128)
+    web.add_argument("--rate-limit", type=int, default=30)
+    web.add_argument("--rate-window-seconds", type=float, default=60.0)
+    web.add_argument("--max-turns", type=int, default=200)
+    web.add_argument(
+        "--log-level",
+        choices=("critical", "error", "warning", "info"),
+        default="info",
+    )
+    web.set_defaults(func=cmd_web)
     return parser
 
 
