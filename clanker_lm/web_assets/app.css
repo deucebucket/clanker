@@ -133,7 +133,7 @@ h1 { margin: 0; max-width: 620px; font-family: Georgia, "Times New Roman", serif
 .composer > label { display: block; margin: 0 0 8px; font-size: 0.75rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
 .composer-frame { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; padding: 12px; background: white; border: 1px solid rgba(32, 37, 34, 0.34); border-radius: 12px; box-shadow: 0 12px 30px rgba(32, 37, 34, 0.08); }
 .composer:focus-within .composer-frame { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(40, 125, 120, 0.13), 0 12px 30px rgba(32, 37, 34, 0.08); }
-textarea { width: 100%; max-height: 180px; min-height: 52px; padding: 8px 10px; resize: none; color: var(--graphite-900); background: transparent; border: 0; outline: 0; line-height: 1.45; }
+textarea { width: 100%; max-height: 180px; min-height: 52px; padding: 8px 10px; field-sizing: content; resize: none; color: var(--graphite-900); background: transparent; border: 0; outline: 0; line-height: 1.45; }
 textarea::placeholder { color: #8b928d; }
 .send { display: inline-flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 108px; min-height: 48px; padding: 0 16px; color: white; cursor: pointer; background: var(--teal); border: 0; border-radius: 8px; font-weight: 720; }
 .send:hover { background: #1f6a66; }

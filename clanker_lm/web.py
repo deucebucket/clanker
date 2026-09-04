@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from importlib import resources
 from typing import Any, Callable, Deque, Mapping, Optional
+from urllib.parse import urlsplit
 
 from starlette.applications import Starlette
 from starlette.datastructures import MutableHeaders
@@ -89,19 +90,27 @@ class WebConfig:
         if self.public_origin is not None:
             if not isinstance(self.public_origin, str) or not self.public_origin:
                 raise ValueError("public_origin must be a non-empty string")
-            if self.public_origin.endswith("/"):
-                raise ValueError("public_origin must not have a trailing slash")
-            if not self.public_origin.startswith(("http://", "https://")):
-                raise ValueError("public_origin must be an absolute HTTP(S) origin")
             if any(
                 character in self.public_origin for character in ("\n", "\r", "\t", " ")
             ):
                 raise ValueError(
                     "public_origin must be an origin without whitespace or a path"
                 )
-            # A path, query, or fragment cannot occur after an origin's authority.
-            authority = self.public_origin.split("://", 1)[1]
-            if any(character in authority for character in ("/", "?", "#")):
+            try:
+                parsed_origin = urlsplit(self.public_origin)
+                # Access validates malformed and out-of-range explicit ports.
+                parsed_origin.port
+            except ValueError as exc:
+                raise ValueError("public_origin is not a valid origin") from exc
+            if (
+                parsed_origin.scheme not in {"http", "https"}
+                or not parsed_origin.netloc
+                or parsed_origin.hostname is None
+                or parsed_origin.username is not None
+                or parsed_origin.password is not None
+            ):
+                raise ValueError("public_origin must be an absolute HTTP(S) origin")
+            if parsed_origin.path or parsed_origin.query or parsed_origin.fragment:
                 raise ValueError(
                     "public_origin must not include a path, query, or fragment"
                 )
@@ -130,7 +139,12 @@ class WebConfig:
     def allowed_origin(self) -> str:
         """The one exact origin accepted for state-changing requests."""
 
-        return self.public_origin or f"http://{self.host}:{self.port}"
+        host = (
+            f"[{self.host}]"
+            if ":" in self.host and not self.host.startswith("[")
+            else self.host
+        )
+        return self.public_origin or f"http://{host}:{self.port}"
 
 
 @dataclass

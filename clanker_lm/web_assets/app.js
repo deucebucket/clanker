@@ -25,8 +25,6 @@ function setStatus(text, isError = false) {
 function updateMessageState() {
   const bytes = encoder.encode(message.value).length;
   messageCount.textContent = String(bytes);
-  message.style.height = "auto";
-  message.style.height = `${Math.min(message.scrollHeight, 180)}px`;
   if (bytes > 4096) setStatus("Message exceeds the 4 KiB limit.", true);
   else if (!send.disabled) setStatus("Enter to send · Shift + Enter for a new line");
 }
