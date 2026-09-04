@@ -137,4 +137,3 @@ def test_ci_runs_the_network_release_verifier() -> None:
     ).read_text(encoding="utf-8")
     assert "python -m clanker_lm.web_release_verify" in workflow
     assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
-
