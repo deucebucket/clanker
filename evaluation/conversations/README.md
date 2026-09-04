@@ -33,8 +33,12 @@ IDs and aggregates, not source text or generated responses.
 `development_v1.jsonl`, `manifest_v1.json`, and `ROOT.sha256` as one complete
 generation. `data/HISTORY.json` binds the byte digest and `100644` mode of
 every generation ever selected on this branch. The `verify-history` gate walks
-the candidate's own Git ancestry, rather than only its merge base, and refuses
-deletion or alteration of any prior selection. The manifest records the full split policy and counts, every
+the candidate's `HISTORY` changes and authenticates each generation at the
+commit where it first appears. A first appearance may import a batch of branch
+generations, so GitHub's squash-merge policy does not erase their lineage; the
+final ledger must retain the union of all first introductions and their
+original entries. Deleting, changing, or reintroducing different bytes still
+fails. The manifest records the full split policy and counts, every
 whole-conversation digest, raw-source digests, compiler/evaluator digests, and
 a digest of the exact production code and runtime-data bytes at the named
 release commit. `ROOT.sha256` anchors all of those constituents. The compiler
@@ -60,7 +64,9 @@ preference artifact; it never promotes a raw conversation split directly.
 
 The `evaluation` package is excluded from built distributions. A repository
 gate also parses every declared production source and bounded executable asset
-literal expressions, rejecting statically resolvable references to the
+literal expressions—including conditional expressions, simple Boolean
+choices, literal dictionary selection, and named expressions—rejecting
+statically resolvable references to the
 evaluation module, corpus paths, `CURRENT`, or a held-out loader call. Dynamic
 Python import APIs are rejected outright in declared production sources. This
 static gate does not claim to decide arbitrary Python or JavaScript obfuscation,
@@ -113,7 +119,22 @@ Every deterministic metric carries ID-only per-conversation/per-turn
 sufficient statistics. Validation rebuilds point estimates and fixed-seed
 cluster intervals from those observations, binds UNKNOWN/CONFLICT predictions
 to gold statuses, and derives the failure ledger from the exact zero-valued
-turn metrics. No source utterance or generated response is included.
+turn metrics. Latency, construction latency, memory growth, SQLite allocation,
+row growth, maxima, counts, and slopes likewise carry bounded ID-only
+observations; validation rebuilds their aggregates and binds every domain and
+turn identity to the evaluated corpus. Drift rows are bound to the identical
+next-state/MAE population, per-axis absolute residuals, normalized MAE, and the
+weighted-RMS distance equation. No source utterance or generated response is
+included.
+
+`evaluation_commit` is not accepted merely because it is an ancestor. It must
+equal the newest commit on the current ancestry that changes the measured
+production/evaluator/corpus/schema paths. This identifies the executable
+snapshot that could have produced the report while allowing a later,
+artifact-only commit. Baseline publication is therefore a separate commit (or
+PR) after the executable core is integrated. Report output cannot use a
+`.jsonl` suffix, which is reserved for the failure-ledger role; ambiguous role
+names fail before any directory, generation, symlink, or pointer is mutated.
 
 VADUGWI labels are produced only by the frozen weak rule. Sources marked
 `structural_only` are scored for their gold semantic/entity structure but are
@@ -128,11 +149,13 @@ Reports and ID-only failure ledgers are validated against every held-out turn.
 The runner writes each report, ledger, and checksum as one immutable generation
 and exposes the three conventional paths through fixed role symlinks beneath a
 single atomically switched `.current` directory symlink. File and parent-directory
-`fsync` calls make the generation durable before selection, so an exception or
+Final `100644` modes are applied before each file `fsync`; file and
+parent-directory `fsync` calls make the generation durable before selection, so an exception or
 abrupt process death cannot select a mixed generation. `load_published_artifacts`
 hashes and parses the same buffers, then validates the aggregate schema, corpus
-provenance, and evaluation-commit ancestry by default. The runner captures HEAD and all
-compiler/evaluator/production digests at startup and fails if they or the
+provenance, and exact producing-executable commit by default. The runner
+captures that measured commit and all compiler/evaluator/production digests at
+startup and fails if they or the
 measured worktree change during the run.
 
 The first baseline sets no accuracy threshold: it records the honest result at

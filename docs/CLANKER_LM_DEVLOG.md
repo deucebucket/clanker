@@ -1109,3 +1109,114 @@ report/failure/checksum generation, commit those baseline artifacts separately,
 rerun the full suite, bind stable CI thresholds/fingerprint/root, and create
 the documented immutable release tag after merge. Held-out text and labels
 remain forbidden inputs to #107/#110 training, teacher replay, or promotion.
+
+---
+
+## 2026-09-04 — RR devlog: issue #41 evidence-binding repair
+
+- **Audience:** independent core reviewers, release maintainer, and the later
+  baseline operator
+- **Scope:** aggregate evidence, evaluator provenance, static held-out boundary,
+  immutable publication, and squash-safe corpus history; no production runtime
+  behavior change and no held-out baseline run
+- **Goal and success condition:** every published aggregate must be
+  reconstructible from bounded ID-only observations, every observation must
+  belong to the declared corpus population, the evaluator commit must name the
+  producing executable snapshot, and the corpus lineage must remain verifiable
+  after the repository's squash-merge workflow
+
+### Rundown
+
+**Proven:** executable core `78ee1ea4d8d9b7b09d802b257c8983112ed7fb25`
+closes the seven evidence-integrity findings from the rejected predecessor.
+Latency and resource aggregates now rebuild from ID-only observations; drift is
+cross-bound to the identical next-state/MAE rows and weighted-RMS equation;
+ambiguous `.jsonl` report targets fail before mutation; final file modes are
+set before file synchronization; and conditional static references are found.
+
+**Proven:** the first-introduction `HISTORY` contract survives a real temporary
+squash-merge reproduction. It authenticates all files and `100644` modes at the
+commit where a generation first appears, permits a squash commit to import a
+batch of already-recorded branch generations, and still requires the final
+ledger to retain every first introduction unchanged. This supersedes the prior
+entry's claim that observing every intermediate `CURRENT` commit was sufficient
+for the repository's integration policy.
+
+**Unknown:** held-out score values, failure identities, thresholds, and baseline
+fingerprint remain intentionally unobserved. The accepted executable core must
+be integrated first so the subsequent baseline can name the durable producing
+commit rather than a branch SHA that a squash merge would discard.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | Timing and growth means, maxima, counts, percentiles, throughput, row maxima, and slopes are reconstructible. | ID-only latency, construction, memory, and SQLite observations; adversarial aggregate/observation mutation tests. |
+| Proven | Observation domains and populations cannot be relabeled or swapped while remaining valid. | Exact conversation/turn/domain and turn-ordinal binding against the selected corpus. |
+| Proven | Drift distances and residuals cannot float independently of the metric evidence. | Exact population match; next-state equality; per-axis MAE/normalized-MAE equality; weighted-RMS reconstruction. |
+| Proven | `evaluation_commit` cannot name an arbitrary valid ancestor. | Validator requires the newest commit changing the measured production/evaluator/corpus/schema paths; ancestor-forgery test passes only by rejection. |
+| Proven | Squash integration retains authenticated corpus history. | Temporary two-generation feature branch squash-merged into `main`; `verify-history` authenticated both first introductions. |
+| Proven | Selected corpus contents and policies did not change. | Held-out SHA `05a2dfed…` (56/520); development SHA `5018d7d3…` (10/60); zero overlap/reference/text-leak hits. |
+| Unknown | Held-out quality and release threshold. | Baseline artifacts remain absent; the corresponding test intentionally skips. |
+
+### How it works, in plain language
+
+The report now includes the small, non-conversational facts needed to check its
+math: which corpus turn a timing or growth observation belongs to and the
+measured number. The validator recalculates every summary instead of trusting a
+claimed mean or maximum. For drift, it also proves those rows are the same rows
+used by next-state error and MAE, so two separately plausible tables cannot
+describe different populations.
+
+Git commit ancestry alone was too weak because any old ancestor could be named.
+The producer rule now selects the newest commit that changed the measured
+executable snapshot. Conversely, using intermediate `CURRENT` commits as corpus
+history was too brittle because squash merging erases them. `HISTORY` therefore
+uses first introductions as its durable audit record and authenticates the
+generation bytes in the introducing commit.
+
+### Evidence and conditions
+
+```text
+production base:     c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e
+executable core:     78ee1ea4d8d9b7b09d802b257c8983112ed7fb25
+selected root:       0c69ae01491af9b608f93cb36f4fcd42ca066ae73228c4897d7eb7631d8d11de
+compiler digest:     2f593e134beb1dd710fc4f6f19835915fcce3ba68655c98ba180dc8fc02d5ca9
+evaluator digest:    865117ca29dfc442d9518b21440aa43062ecaa32b29bf47f06e096b80b3eea7c
+report schema digest:5b9bf6fb7c852ba4198b7bace8c9fbc9a436010cc2737de0a615149fac54540e
+history inventory:   15 authenticated first-introduced generations
+focused evaluator:   132 passed, 1 intentional pre-baseline skip
+full repository:     2,899 passed, 1 intentional pre-baseline skip, 2 expected xfails
+benchmark:           29/29 deterministic turns
+integrity verify:    520 held-out + 60 development; 0 exact overlap; 0 near overlap;
+                     0 production references; 0 production/test text leakage
+additive checks:     origin/main has no baseline; prior roots 135bfc6 and 852281d
+                     each retain their one authenticated committed generation
+package boundary:    wheel 65 entries; sdist 106 entries; 0 evaluation/conversations paths
+visual evidence:     not applicable; this is a non-UI evaluator milestone
+```
+
+### Negative results and open questions
+
+- Two focused attempts exposed stale expected-error text in the new adversarial
+  test. Both failures were assertion wording only: the validator had already
+  rejected the forged artifacts. The expectations were corrected and the full
+  focused suite then passed.
+- The two content-addressed roots introduced during repair preserve the exact
+  same held-out and development split hashes. They differ only because the
+  manifest binds successive evaluator/schema bytes; both first introductions
+  are retained and authenticated.
+- Observational timing/resource rows are internally reconstructible and
+  population-bound, but they remain nondeterministic measurements and are
+  deliberately excluded from the semantic fingerprint.
+- Static analysis resolves bounded ordinary expressions; it does not claim to
+  defeat arbitrary obfuscation or operator-supplied paths.
+
+### Next step / blocker
+
+Obtain independent core acceptance at the exact clean candidate. Then integrate
+the executable core under the repository's squash policy. Generate the held-out
+baseline only from that durable integrated producer commit, publish it as a
+separate immutable artifact commit, reproduce it in a second clean checkout,
+and independently review its aggregate-only metrics, failure identities,
+thresholds, and release tag. Until then, issue #41 remains pre-baseline.

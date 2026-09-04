@@ -1561,7 +1561,9 @@ def test_report_provenance_resources_and_failure_membership_fail_closed(
             forged["modes"]["sentence_only"]["resource_growth"][
                 "process_lifetime_maxrss_peak"
             ] = value
-        with pytest.raises(CorpusIntegrityError, match="domain"):
+        with pytest.raises(
+            CorpusIntegrityError, match="domain|sufficient-stat|process observation"
+        ):
             _validate_aggregate_artifacts(forged, failures, conversations)
 
     forged = copy.deepcopy(report)
@@ -1582,6 +1584,9 @@ def test_report_provenance_resources_and_failure_membership_fail_closed(
     latency_observation["domain"] = next(
         domain for domain in conversation_corpus.ALLOWED_DOMAINS
         if domain != latency_observation["domain"]
+    )
+    forged["modes"]["sentence_only"]["latency"]["observations"].sort(
+        key=lambda item: (item["domain"], item["conversation_id"], item["turn_id"])
     )
     with pytest.raises(CorpusIntegrityError, match="resource/latency population"):
         _validate_aggregate_artifacts(forged, failures, conversations)
