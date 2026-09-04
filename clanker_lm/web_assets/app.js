@@ -9,6 +9,7 @@ const messageCount = document.querySelector("#message-count");
 const reset = document.querySelector("#reset");
 const exportLink = document.querySelector("#export");
 const encoder = new TextEncoder();
+let requestInFlight = false;
 
 function element(name, className, text) {
   const node = document.createElement(name);
@@ -70,6 +71,7 @@ async function requestJson(path, options) {
 }
 
 async function submitMessage() {
+  if (requestInFlight) return;
   const text = message.value;
   const bytes = encoder.encode(text).length;
   if (!text.trim()) {
@@ -86,7 +88,9 @@ async function submitMessage() {
   addTurn("You", text);
   message.value = "";
   updateMessageState();
+  requestInFlight = true;
   send.disabled = true;
+  reset.disabled = true;
   setStatus("Reasoning…");
   try {
     const data = await requestJson("/api/chat", {
@@ -103,7 +107,9 @@ async function submitMessage() {
     addTurn("Workbench", "I couldn’t complete that turn. Your message was not retried.");
     setStatus(error instanceof Error ? error.message : "The request failed.", true);
   } finally {
+    requestInFlight = false;
     send.disabled = false;
+    reset.disabled = false;
     message.focus();
     updateMessageState();
   }
@@ -131,7 +137,10 @@ document.querySelectorAll("[data-prompt]").forEach((button) => {
 });
 
 reset.addEventListener("click", async () => {
+  if (requestInFlight) return;
+  requestInFlight = true;
   reset.disabled = true;
+  send.disabled = true;
   setStatus("Resetting…");
   try {
     await requestJson("/api/reset", {
@@ -147,7 +156,9 @@ reset.addEventListener("click", async () => {
   } catch (error) {
     setStatus(error instanceof Error ? error.message : "Reset failed.", true);
   } finally {
+    requestInFlight = false;
     reset.disabled = false;
+    send.disabled = false;
     message.focus();
   }
 });

@@ -32,12 +32,21 @@ from .runtime import ClankerLM
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 SESSION_COOKIE = "clanker_lm_session"
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 _ASSET_NAMES = ("index.html", "app.css", "app.js")
 _CONTENT_SECURITY_POLICY = (
     "default-src 'none'; base-uri 'none'; form-action 'self'; "
     "frame-ancestors 'none'; img-src 'self' data:; "
     "script-src 'self'; style-src 'self'; connect-src 'self'"
 )
+
+
+def _require_loopback_host(host: Any) -> None:
+    if host not in _LOOPBACK_HOSTS:
+        raise ValueError(
+            "host must be 127.0.0.1, ::1, or localhost; "
+            "use a trusted local reverse proxy for remote access"
+        )
 
 
 @dataclass(frozen=True)
@@ -61,6 +70,7 @@ class WebConfig:
     def __post_init__(self) -> None:
         if not isinstance(self.host, str) or not self.host:
             raise ValueError("host must be a non-empty string")
+        _require_loopback_host(self.host)
         self._positive_integer("port", self.port, maximum=65535)
         self._positive_integer("max_sessions", self.max_sessions)
         self._positive_integer("rate_limit", self.rate_limit)
@@ -451,7 +461,11 @@ def create_app(
 
     async def index(request: Request) -> Response:
         authorize(request)
-        return Response(assets["index.html"], media_type="text/html")
+        session, _ = lookup(request, create=True)
+        assert session is not None
+        response = Response(assets["index.html"], media_type="text/html")
+        attach_cookie(response, session)
+        return response
 
     async def asset(request: Request) -> Response:
         authorize(request)
@@ -588,6 +602,10 @@ def create_app(
 
 def run_server(config: WebConfig, *, log_level: str = "info") -> None:
     """Run exactly one Uvicorn worker; intended for the lazy CLI adapter."""
+
+    # Keep this defense at the launch boundary as well as WebConfig validation.
+    # It protects callers that forged or mutated a frozen config object.
+    _require_loopback_host(config.host)
 
     import uvicorn
 
