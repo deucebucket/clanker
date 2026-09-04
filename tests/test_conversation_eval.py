@@ -279,11 +279,14 @@ def test_corpus_pointer_failure_keeps_prior_generation_selected(tmp_path, monkey
     output_dir = tmp_path / "data"
     first = compile_corpora(source_dir=source_dir, output_dir=output_dir)
     old_manifest_path = selected_manifest_path(output_dir / "manifest_v1.json")
+    old_text = load_split(
+        "development", purpose="development", manifest_path=output_dir / "manifest_v1.json"
+    )[0]["turns"][0]["text"]
     original = conversation_corpus._atomic_replace_path
 
     document_path = source_dir / "development_v1.json"
     document = json.loads(document_path.read_text())
-    document["sources"][0]["rights_note"] += " Atomic publication probe."
+    document["conversations"][0]["turns"][0]["text"] += " Atomic publication probe."
     document_path.write_text(json.dumps(document, indent=2) + "\n")
 
     def fail_before_select(source, target):
@@ -297,6 +300,9 @@ def test_corpus_pointer_failure_keeps_prior_generation_selected(tmp_path, monkey
     selected = load_manifest(output_dir / "manifest_v1.json")
     assert selected["corpus_root_sha256"] == first["corpus_root_sha256"]
     assert selected_manifest_path(output_dir / "manifest_v1.json") == old_manifest_path
+    assert load_split(
+        "development", purpose="development", manifest_path=output_dir / "manifest_v1.json"
+    )[0]["turns"][0]["text"] == old_text
 
 
 def test_corpus_process_death_before_pointer_keeps_prior_generation(tmp_path):
@@ -304,10 +310,13 @@ def test_corpus_process_death_before_pointer_keeps_prior_generation(tmp_path):
     shutil.copytree(SOURCE_DIR, source_dir)
     output_dir = tmp_path / "data"
     first = compile_corpora(source_dir=source_dir, output_dir=output_dir)
+    old_text = load_split(
+        "development", purpose="development", manifest_path=output_dir / "manifest_v1.json"
+    )[0]["turns"][0]["text"]
 
     document_path = source_dir / "development_v1.json"
     document = json.loads(document_path.read_text())
-    document["sources"][0]["rights_note"] += " Process-death publication probe."
+    document["conversations"][0]["turns"][0]["text"] += " Process-death publication probe."
     document_path.write_text(json.dumps(document, indent=2) + "\n")
     code = """
 import os
@@ -327,6 +336,20 @@ corpus.compile_corpora(source_dir=Path(__import__('sys').argv[1]), output_dir=Pa
     assert result.returncode == 73
     selected = load_manifest(output_dir / "manifest_v1.json")
     assert selected["corpus_root_sha256"] == first["corpus_root_sha256"]
+    assert load_split(
+        "development", purpose="development", manifest_path=output_dir / "manifest_v1.json"
+    )[0]["turns"][0]["text"] == old_text
+
+
+def test_corpus_pointer_generation_name_must_match_constituent_root(tmp_path):
+    data = tmp_path / "data"
+    shutil.copytree(DATA_DIR, data)
+    selected = selected_manifest_path(data / "manifest_v1.json")
+    counterfeit = data / "generations" / ("f" * 64)
+    shutil.copytree(selected.parent, counterfeit)
+    (data / "CURRENT").write_text("f" * 64 + "\n")
+    with pytest.raises(CorpusIntegrityError, match="generation name"):
+        load_manifest(data / "manifest_v1.json")
 
 
 @pytest.mark.parametrize("field", ["allowed_uses", "training_eligible", "teacher_replay_eligible"])

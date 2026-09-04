@@ -1093,6 +1093,8 @@ def load_manifest(path: Path = MANIFEST_PATH) -> Dict[str, Any]:
     expected_root = _sha256_bytes(_canonical_json(_manifest_constituents(manifest)).encode("utf-8"))
     if manifest["corpus_root_sha256"] != expected_root:
         raise CorpusIntegrityError("manifest policy/provenance constituent root is inconsistent")
+    if path.parent.parent.name == GENERATIONS_DIRECTORY and path.parent.name != expected_root:
+        raise CorpusIntegrityError("selected corpus generation name disagrees with constituent root")
     root_path = path.parent / "ROOT.sha256"
     if not root_path.is_file() or root_path.read_text(encoding="ascii").strip() != expected_root:
         raise CorpusIntegrityError("corpus root digest is missing or inconsistent")
@@ -1112,6 +1114,7 @@ def load_split(
     """
 
     manifest = load_manifest(manifest_path)
+    manifest_path = selected_manifest_path(manifest_path)
     if split not in manifest["splits"]:
         raise CorpusIntegrityError(f"unknown split: {split}")
     entry = manifest["splits"][split]
