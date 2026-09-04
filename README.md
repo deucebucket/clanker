@@ -11,6 +11,18 @@ A conversation state resolver that detects emotional stance through structural p
 
 **[Clanker the pet](https://huggingface.co/spaces/deucebucket/clanker)** -- a community virtual creature on Hugging Face whose emotional state is this engine, made visible. Talk to it, give it toys, feed it; it roams, reacts, and self-soothes, and every feeling traces back to the exact words and actions that caused it (the raw read, the structures detected, the per-dimension contributions). No language model -- pure deterministic VADUGWI physics. It doubles as a real-world evaluation harness: live usage surfaces engine gaps that feed back into the formulas (see `docs/v8_audit_log.md`).
 
+### Private Clanker-LM workbench
+
+The deterministic conversation runtime is deployed at
+**[https://bazzite.tail85f65f.ts.net:8444/](https://bazzite.tail85f65f.ts.net:8444/)**
+for the allowlisted Tailnet login `jerrymares@gmail.com`. It is served through
+Tailscale Serve on port 8444, is **tailnet only**, and has no Funnel/public
+exposure. Each browser session gets isolated memory and each reply displays its
+six evidence fields: **Answer**, **Truth**, **Source**, **Certainty**,
+**Memory**, and **VADUG**. See
+[`docs/CLANKER_LM_WEB.md`](docs/CLANKER_LM_WEB.md) for operation, verification,
+security boundaries, and rollback.
+
 ## VADUGWI Coordinates
 
 Seven dimensions, each 0--255 with 128 as neutral center (Urgency starts at 0):

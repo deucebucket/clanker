@@ -625,3 +625,96 @@ test/code review with no blockers: **2,606 passed, 2 expected xfails**, **285
 dedicated passes** with **160 generated conformance cases**, and the deterministic
 acceptance harness remains **29/29**. Exact-head CI, automated review, and merge
 evidence are recorded on PR #105 after this devlog commit.
+
+---
+
+## 2026-09-04 — RR devlog: private browser workbench deployed
+
+- **Audience:** the operator and maintainers of Clanker-LM
+- **Scope:** the optional browser interface, its live user-service deployment,
+  and its Tailnet boundary; no V8 engine changes
+- **Success condition:** an allowlisted Tailnet user can use isolated Clanker-LM
+  sessions through HTTPS while the application remains loopback-only, bounded,
+  inspectable, and absent from the public internet
+
+### Rundown
+
+**Proven:** the Starlette/Uvicorn workbench is running under the
+`clanker-lm-web.service` systemd user service on `127.0.0.1:8765`. Tailscale
+Serve maps the tailnet-only URL
+`https://bazzite.tail85f65f.ts.net:8444/` to that listener. This workbench does
+not use Funnel and has no public route. Both the loopback and Tailnet health
+checks return `{"status":"ok"}`.
+
+In plain language, the approved user can chat with the same deterministic
+runtime in a browser without opening a public website. Each browser gets its own
+memory, and each answer shows **Answer**, **Truth**, **Source**, **Certainty**,
+**Memory**, and **VADUG** instead of presenting an unexplained string.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | The service is deployed, enabled, and active. | `systemctl --user is-enabled` returned `enabled`; `is-active` returned `active`. |
+| Proven | Port 8444 is tailnet-only and proxies to loopback port 8765. | `tailscale serve status` marks the exact 8444 route `tailnet only` and shows `http://127.0.0.1:8765`. |
+| Proven | The live process and route are healthy. | Local and Tailnet `/healthz` requests both returned `{"status":"ok"}`. |
+| Proven | Identity, origin, cookie, session-isolation, resource, logging, and browser security boundaries are covered by the dedicated suite. | 88 web tests passed on the current exact tree. |
+| Proven | The web change preserved repository behavior and the V8 boundary. | 2,694 passed plus two expected xfails; benchmark 29/29; compile, JavaScript syntax, diff, and no-engine checks clean. |
+| Proven | Independent review accepted the earlier web implementation. | Reviewer verdict before rebase and before `6f3c1bf`: ACCEPT. |
+| Proven | The reported ACL-link regression is corrected in the live deployment. | Commit `6f3c1bf`; service restart; Jerry's successful live ACL-link retest; focused navigation regressions. |
+| Inference | The corrected deployment is suitable for the current private, allowlisted workbench use. | Live boundary/link checks and the current suites cover the intended single-process scope; exact-head independent review remains outstanding. |
+| Unknown | Long-duration availability across future host, user-session, or Tailnet maintenance. | The deployment is newly live; sustained uptime has not yet been measured. |
+| Unknown | Whether an independent reviewer will accept the final exact head without further findings. | The recorded ACCEPT predates `6f3c1bf`; current exact-tree checks are green but are not a final reviewer verdict. |
+
+### What changed
+
+- Added an optional Starlette application and one-worker Uvicorn CLI adapter.
+- Added a browser conversation surface with safe DOM rendering, accessible
+  controls, session export, reset, and a six-field evidence rail: **Answer**,
+  **Truth**, **Source**, **Certainty**, **Memory**, and **VADUG**.
+- Added exact Tailscale identity and origin checks, strict session cookies,
+  defensive response headers, no message-body/access logging, and resource
+  ceilings for sessions, rates, turns, bodies, responses, and exports.
+- Refined shell bootstrap after Jerry's ACL-link report: only a user-activated
+  top-level document navigation may bootstrap from same/cross-site sources;
+  iframe, subresource, fetch/CORS, and non-user cross-site attempts fail closed.
+- Deployed the loopback process as `clanker-lm-web.service` and placed Tailscale
+  Serve—not Funnel—in front of it on HTTPS port 8444.
+
+### Evidence and conditions
+
+```text
+dedicated: 88 web tests passed
+full:      2,694 passed, 2 expected xfails
+benchmark: 29/29 deterministic turns
+static:    compile, JavaScript syntax, and diff checks clean
+review:    pre-rebase/pre-6f3c1bf web reviewer ACCEPT
+boundary:  engine/ and clanker_engine.py unchanged
+service:   enabled and active; loopback + Tailnet health checks healthy
+route:     :8444 tailnet only -> http://127.0.0.1:8765
+live fix:  6f3c1bf; Jerry's ACL-link retest succeeded
+```
+
+The independent verdict predates both the rebase and `6f3c1bf`. The green
+exact-tree suites and live retest prove the exercised behavior after the fix,
+but do not imply that reviewer examined the final exact commit.
+
+### Risks and guardrails
+
+- This is an in-memory, single-process workbench. A service restart clears
+  unexported sessions.
+- Tailnet membership is necessary but insufficient: deployed requests also need
+  the exact allowlisted login. Local processes remain inside the host trust
+  boundary.
+- A minimal health response is intentionally unauthenticated, but it is reachable
+  only through loopback or this tailnet-only route.
+- Do not replace Serve with Funnel and do not use `tailscale serve reset` on the
+  shared host; reset would affect unrelated routes.
+
+### Next / blocker
+
+No deployment blocker is known. Obtain final independent review of the exact
+head without treating the earlier ACCEPT as transferable. Continue normal
+service and Tailnet monitoring; after host or Tailnet maintenance, rerun the
+health and route checks in `docs/CLANKER_LM_WEB.md`. Measure sustained
+availability only if an uptime claim becomes a requirement.

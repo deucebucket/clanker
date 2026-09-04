@@ -15,6 +15,48 @@ left `engine/` unchanged.
 
 ---
 
+## Unreleased — Private browser workbench
+
+Added a small Starlette/Uvicorn interface for the deterministic runtime and
+deployed it as the `clanker-lm-web.service` systemd user service.
+
+- Live URL: `https://bazzite.tail85f65f.ts.net:8444/`.
+- Exposure: Tailscale Serve on port 8444, **tailnet only**; no Funnel/public
+  route for this workbench.
+- Backend: one Uvicorn worker bound to `127.0.0.1:8765`.
+- Access: exact `Tailscale-User-Login` allowlist for
+  `jerrymares@gmail.com`, with exact-origin mutation checks.
+- Sessions: isolated in-memory Clanker-LM runtimes behind opaque Secure,
+  HttpOnly, SameSite=Strict cookies; export and reset controls are available.
+- Evidence: every displayed answer includes **Answer**, **Truth**, **Source**,
+  **Certainty**, **Memory**, and **VADUG**.
+- Bounds: idle expiry, rate/turn/session limits, byte ceilings, bounded exports,
+  fail-closed capacity, security headers, and no message-body/access logging.
+
+Live use exposed one bootstrap regression after the earlier review: Jerry's ACL
+link was blocked by the blanket cross-site rule. Commit `6f3c1bf` now permits
+only authenticated, user-activated top-level document navigation to bootstrap
+from same-site or cross-site links. Iframes, subresources, fetch/CORS, and
+non-user cross-site attempts still fail closed without allocating a session.
+The service was restarted and Jerry's live ACL-link retest succeeded.
+
+Validation on the current exact tree:
+
+```text
+88 web tests passed
+2,694 full-suite tests passed, 2 expected xfails
+29/29 deterministic benchmark turns
+compile, JavaScript syntax, and diff checks clean
+engine/ and clanker_engine.py unchanged
+```
+
+An independent web reviewer returned **ACCEPT** before rebase and before the live
+link fix. The current exact tree passed the dedicated, full, benchmark, compile,
+JavaScript syntax, diff, and engine-boundary gates. Final exact-head independent
+review is not yet claimed. Operational details are in `docs/CLANKER_LM_WEB.md`.
+
+---
+
 ## Unreleased — Gerund, participial, and aspectual complements
 
 **Branch:** `feature/clanker-lm-gerund-participial-complements`

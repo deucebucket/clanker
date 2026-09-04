@@ -8,6 +8,20 @@ sentences. It does not retrieve canned replies. A turn is parsed into symbolic
 state, resolved against evidence, compiled into one or more grammatical
 compositions, and evaluated through Clanker's A+B=C state transition.
 
+## Private web workbench
+
+The Starlette/Uvicorn browser interface is live at
+**[https://bazzite.tail85f65f.ts.net:8444/](https://bazzite.tail85f65f.ts.net:8444/)**
+for the allowlisted Tailnet login `jerrymares@gmail.com`. It has no public
+exposure: Tailscale Serve maps tailnet-only HTTPS port 8444 to the loopback-only
+application on `127.0.0.1:8765`; Tailscale Funnel is not used for this route.
+
+Each browser cookie identifies an isolated in-memory runtime. Replies expose an
+evidence rail with **Answer**, **Truth**, **Source**, **Certainty**, **Memory**,
+and **VADUG**. The UI can export the session snapshot or reset and close its
+runtime. See [`CLANKER_LM_WEB.md`](CLANKER_LM_WEB.md) for deployment,
+security/resource bounds, verification, and rollback commands.
+
 ```text
 language
   -> entities and event frames
@@ -421,7 +435,13 @@ python -m clanker_lm profiles --memory session.json
 python -m clanker_lm match quotation.txt --memory session.json
 python -m clanker_lm tone off --memory session.json
 python -m clanker_lm schema
+python -m clanker_lm web --host 127.0.0.1 --port 8765
 ```
+
+The web command requires the `web` optional dependency group. Production mode
+also requires an exact public origin and Tailscale login allowlist; use the
+deployed command documented in [`CLANKER_LM_WEB.md`](CLANKER_LM_WEB.md), not a
+non-loopback bind.
 
 ## Validation
 
