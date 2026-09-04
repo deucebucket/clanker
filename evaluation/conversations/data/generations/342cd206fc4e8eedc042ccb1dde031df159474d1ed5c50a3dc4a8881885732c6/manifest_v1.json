@@ -1,0 +1,828 @@
+{
+  "baseline_code_commit": "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e",
+  "compiler": "evaluation.conversations.corpus:compile_corpora",
+  "compiler_sha256": "2f593e134beb1dd710fc4f6f19835915fcce3ba68655c98ba180dc8fc02d5ca9",
+  "content_address": "sha256:05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
+  "corpus_root_sha256": "342cd206fc4e8eedc042ccb1dde031df159474d1ed5c50a3dc4a8881885732c6",
+  "corpus_version": "conversation-v1",
+  "evaluator_sha256": "a39c8c48a7bad4eb5e485ce2b6173a08e5f0da260a832750fa5d92f5312c9f0e",
+  "frozen_date": "2026-09-04",
+  "immutability_policy": "heldout-v1 bytes and labels are frozen; corrections require a new corpus version",
+  "manifest_schema_version": 1,
+  "production_code_files": [
+    {
+      "path": "clanker_engine.py",
+      "sha256": "e0cb1f91f7b0916dc05377e70f9649c94210e9d42913eabec7861801b034bb99"
+    },
+    {
+      "path": "clanker_lm/__init__.py",
+      "sha256": "faf09d83e519ad3652b1e95c372339d4f089b8c61fdb36dbe57ef0ef9e476a9b"
+    },
+    {
+      "path": "clanker_lm/__main__.py",
+      "sha256": "5525d1b29b0e29c963fd5181344eba9bc18cd481348ec1cdb927a2afb9790b78"
+    },
+    {
+      "path": "clanker_lm/affect.py",
+      "sha256": "36bfc83b4b75c2ae326be10365346f2c620c7ceca872ce193a76a7d205f237ce"
+    },
+    {
+      "path": "clanker_lm/contracts.py",
+      "sha256": "856086498e275bb02f36d5d739b4e9b4ffc4906571563adf7be21f729ce2a368"
+    },
+    {
+      "path": "clanker_lm/data/__init__.py",
+      "sha256": "46c9664e7f5619b4c33f3951cf67ea358d02ef4a400e00b45f44a386027477ee"
+    },
+    {
+      "path": "clanker_lm/data/language_seed.json",
+      "sha256": "ffb9e42ae34d30ba1435aa07425897375fc905dde1d6b1868b493a0ae5d9807c"
+    },
+    {
+      "path": "clanker_lm/database.py",
+      "sha256": "55af69551c097310bee1246854689363573a72a8ffaa61c4bf303484c63ee1da"
+    },
+    {
+      "path": "clanker_lm/gates.py",
+      "sha256": "0a5791a0d00837e65c34cc8bb4bd66fc57a832dbb89ee9572b5efa8cfd7fcf2e"
+    },
+    {
+      "path": "clanker_lm/learning.py",
+      "sha256": "a1ddeb881430b30f1607bc1cfab631173e7bb8270f946bd2637e757e076f96a2"
+    },
+    {
+      "path": "clanker_lm/lexicon.py",
+      "sha256": "8a98b6432153dcc6684482630bd9ba81a889396c30971427ed9d05af83a86a8a"
+    },
+    {
+      "path": "clanker_lm/memory.py",
+      "sha256": "f3793221d2110e43207ffe9a9fdff1c84736e463bfb7f6083793beb4e22127ec"
+    },
+    {
+      "path": "clanker_lm/model.py",
+      "sha256": "c7f7d225c6e5aa71e44968a4a7986f5be4109e3f4e9f22e36983904bc0489388"
+    },
+    {
+      "path": "clanker_lm/parser.py",
+      "sha256": "34c65af6529219bb633d0ccfee8ec1d24a1d3c9b5c865609c8e743d86d734693"
+    },
+    {
+      "path": "clanker_lm/qa.py",
+      "sha256": "a8c28d86af1188d982974f80385ce17c4268f63ef5a95e9d017dc5af4ac4cd58"
+    },
+    {
+      "path": "clanker_lm/realize.py",
+      "sha256": "5a93d32f634a01312146eff8615d6521750277d770f9deb4f40246a347dfe2e6"
+    },
+    {
+      "path": "clanker_lm/resolvers.py",
+      "sha256": "61f782bdd7f81c27dfc9d0a5426e03ac551d2bd864400679788871df37a0f71e"
+    },
+    {
+      "path": "clanker_lm/response_policy.py",
+      "sha256": "85009b15f4e14fff5468161a7ebb94339a27561ebab18daf1082f7c0f5eeb401"
+    },
+    {
+      "path": "clanker_lm/runtime.py",
+      "sha256": "d5a71f23a680325ced2a4fd100e7e9b843a0ace699585225190ef0870b522a8a"
+    },
+    {
+      "path": "clanker_lm/trajectory.py",
+      "sha256": "1e87c590f14a41b261d8b2d4e3316f390c0d7b47094e05a3726002aa2bf0be8d"
+    },
+    {
+      "path": "clanker_lm/web.py",
+      "sha256": "479c3b6092d9732fd4f6baea8ac2e527a42fbf737ba67d944a594a8dbfe50617"
+    },
+    {
+      "path": "clanker_lm/web_assets/__init__.py",
+      "sha256": "a25cedc97e2acf0da4c37f596703d39ab95d9cd86f5fc836f5d0787ba125e1ac"
+    },
+    {
+      "path": "clanker_lm/web_assets/app.css",
+      "sha256": "99ccd97971bb2c3b5a69b490d585e2d37e6297635c8a8787b6b9bc416c1c1481"
+    },
+    {
+      "path": "clanker_lm/web_assets/app.js",
+      "sha256": "b8111afeca16bed34f4b9bfdabf539439ce6787d00fea7c892212082026fc484"
+    },
+    {
+      "path": "clanker_lm/web_assets/index.html",
+      "sha256": "2afec8e0d09da6a5593d5b8451486b0018eda6c7193321137a1a9f86a5504f88"
+    },
+    {
+      "path": "clanker_lm/web_assets/releases.json",
+      "sha256": "35236db654fca160e67a0115e2242609382d5e28fb369a6adb169e22697fc937"
+    },
+    {
+      "path": "clanker_lm/web_release_verify.py",
+      "sha256": "36cfbe63e3f6c575fef63fab5782e8294fcd1489bf4ff4957150578557b85a28"
+    },
+    {
+      "path": "engine/__init__.py",
+      "sha256": "d2c07fcf1328ccc328a4af2cee5420492d55cb0eb5e48b4c2c3b8f25d11ab49f"
+    },
+    {
+      "path": "engine/anomaly.py",
+      "sha256": "863aee3f2655894ab1626dbcded8422b9ac5ad4c3f5cc99f3fbc114d2c504ca8"
+    },
+    {
+      "path": "engine/battleship.py",
+      "sha256": "fdafe832244585528868da9d62336cad7e8faa323a5319567f954027120e43a7"
+    },
+    {
+      "path": "engine/crisis.py",
+      "sha256": "70f9e3c240379ddb80984605d233d28ac473ae49b6951f2e78a7c348bf901e29"
+    },
+    {
+      "path": "engine/force_flow.py",
+      "sha256": "43713d58091e3b209946192f9bb0b1808a9a7942051ea6d48151ba4295fbbafd"
+    },
+    {
+      "path": "engine/forces_curated.py",
+      "sha256": "59db2de454d1e67c82c4fbf31d2cc831afb7cad0b614fbed56ee9c0685dd1c5f"
+    },
+    {
+      "path": "engine/fuzzy.py",
+      "sha256": "c0abb03f1c09e472504e85ad12a1898d310f0053a32ab72362efd0b40aed25b8"
+    },
+    {
+      "path": "engine/pendulum.py",
+      "sha256": "8101933ae2311e051bb05ae909c88b7bb36ddd476365b32cd4edeea23e1fb7e0"
+    },
+    {
+      "path": "engine/personality.py",
+      "sha256": "49ef3abfc7fca0e5e9594af3c6c7d9111793a166499068be6577ee800d1ee8b7"
+    },
+    {
+      "path": "engine/phase.py",
+      "sha256": "0ce87c53b077ddb04fc172185df50825857b54313fae3d74eaff4d308034506e"
+    },
+    {
+      "path": "engine/proximity.py",
+      "sha256": "c776a418a847ba139d8d2a75610159a08bca932a09705d9b38d5a87877818557"
+    },
+    {
+      "path": "engine/shared.py",
+      "sha256": "7bb036894fb6df9c3706e20771a391a81e9ceb807c6fe158eb70c093d660891e"
+    },
+    {
+      "path": "engine/solver.py",
+      "sha256": "e10b8c8e4974ad06ad5bbf1b9dbf815440514232e4bb7b82d81c6215c16e4338"
+    },
+    {
+      "path": "engine/structures.py",
+      "sha256": "4a65c0248eb567aacf76a40415eae6b0afa5043298efa5e7056006382775c742"
+    },
+    {
+      "path": "engine/tests/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "engine/tests/test_battleship.py",
+      "sha256": "ee80a29ae8cb3af83bbc16644296b7819a0ebde1d5dd1f8045aac2fd3a0fc227"
+    },
+    {
+      "path": "engine/tests/test_crisis.py",
+      "sha256": "8162409387a6e76283baad4a37def40e0d53f0bda81b19d94d7b19d2a2c08d9f"
+    },
+    {
+      "path": "engine/tests/test_neutralizer.py",
+      "sha256": "64bb77de4d7eddf96bf68fc31ad738de2d79b94055800dcd35e45266197cf3d1"
+    },
+    {
+      "path": "engine/tests/test_novel.py",
+      "sha256": "a336b2bc784da47df3868a2f0fc9aa50b8222244140a5f8c37b11afd8fb29508"
+    },
+    {
+      "path": "engine/tests/test_pa_structures.py",
+      "sha256": "ad6dcc97c3e4236a097607770597e7f6d5c8621906381de0fbe6662f05279fb8"
+    },
+    {
+      "path": "engine/tests/test_pendulum.py",
+      "sha256": "ff127a411f78b17d13feadb1bfd6dfca1bca5fef34d4d90e405a909ffafc6d34"
+    },
+    {
+      "path": "engine/tests/test_proximity.py",
+      "sha256": "7650b982e3265a32fec3e7b68db8fcb0c947101b6086073f1a46c684ab0471a0"
+    },
+    {
+      "path": "engine/tests/test_scaffold.py",
+      "sha256": "0332248dd40ae955022d6a0514becc91b0bb581f64f8f853809a185653cc462a"
+    },
+    {
+      "path": "engine/tests/test_slang_register.py",
+      "sha256": "5d729f08d2c7d6780d6df0e0c17b25ff27bb42778a6187f81d447fb2a2351bd9"
+    },
+    {
+      "path": "engine/tests/test_solver.py",
+      "sha256": "eef8b893f0c74a67420148c03c87397e2d2b2d9a325b7d105f8f89dbb1f339fe"
+    },
+    {
+      "path": "engine/tests/test_structures.py",
+      "sha256": "d0397c82343e3cd143d4664f5e3672fb1cda34a0b29549e309957f935bb20d8f"
+    },
+    {
+      "path": "engine/tests/test_w_channel.py",
+      "sha256": "d200b7584c429fef998f066836a85500931b68856d408f09249f2a61d650f546"
+    },
+    {
+      "path": "engine/tests/test_word_classifier.py",
+      "sha256": "5ca2474640620c207f47c4354113c7d60799f74cbc601347271c00fcfdc07c52"
+    },
+    {
+      "path": "engine/trace.py",
+      "sha256": "4a33436d0c533cb61a0be2669d1dab2369a53657235f1779fd556be596466f55"
+    },
+    {
+      "path": "engine/vocabulary.py",
+      "sha256": "ae382cc207451df532185f06e874f5b058150c873fb16abd0775777ef9b43eea"
+    },
+    {
+      "path": "engine/word_classifier.py",
+      "sha256": "10e455ced4bd939a22c03ccf6edc4eab2ebcdf964cadfef23c9273928f2ddec6"
+    },
+    {
+      "path": "engine/zones.py",
+      "sha256": "d2b825ca9aae372e1335d348595e175d057f75053c3b14626b9166887f0de642"
+    },
+    {
+      "path": "engine/zones_impl.py",
+      "sha256": "513ddbe1a02dd1361cf1dd0fa24a7195394cf076087ac5eb9fc68bde330553e3"
+    }
+  ],
+  "production_code_sha256": "b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f",
+  "schema_sha256": {
+    "conversation-v1.schema.json": "560f2ee2fe18822589985125ff0138d6d18d685ddc5d56a05c5bee319c83da66",
+    "failure-v1.schema.json": "b55fb5ab2d3882011805097af660ba7f90d0e0cc37c2f5817196c21fb584a13d",
+    "report-v1.schema.json": "c1926d41621774e6cc18d484ca18469ab98464beba56e77ef3f5910b171f976d",
+    "source-v1.schema.json": "78a766470871e1c7df6d870b134b2e06bdfb6200eb3e552c18d8389517fffc79"
+  },
+  "sources": [
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/11",
+      "creator": "Lewis Carroll",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/11",
+      "publication_year": 1865,
+      "raw_source_sha256": "a3a27f8edbf7fcd9b8ba8435494440e24952deaa3e2f2d65192d4cb7ca403754",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1865; Project Gutenberg eBook #11 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/11/11-0.txt",
+      "source_id": "gutenberg_11_alice_in_wonderland",
+      "source_url": "https://www.gutenberg.org/ebooks/11",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Alice's Adventures in Wonderland",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/120",
+      "creator": "Robert Louis Stevenson",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/120",
+      "publication_year": 1883,
+      "raw_source_sha256": "2b2d9892200cebe1355cac5288ecf31ea01057aa04da97be35786beaef2cfb40",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in book form in 1883; Project Gutenberg eBook #120 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/120/120-0.txt",
+      "source_id": "gutenberg_120_treasure_island",
+      "source_url": "https://www.gutenberg.org/ebooks/120",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Treasure Island",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/1260",
+      "creator": "Charlotte Brontë",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/1260",
+      "publication_year": 1847,
+      "raw_source_sha256": "693618b2da336410626b96d793af9988215d39a8e5f192e3e7800c5f927d6c43",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1847; Project Gutenberg eBook #1260 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/1260/1260-0.txt",
+      "source_id": "gutenberg_1260_jane_eyre",
+      "source_url": "https://www.gutenberg.org/ebooks/1260",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Jane Eyre: An Autobiography",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/1342",
+      "creator": "Jane Austen",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/1342",
+      "publication_year": 1813,
+      "raw_source_sha256": "81300b79e8a8d65ac530a97578417d06137e3bbc90622a10a65e5036183d2500",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1813; Project Gutenberg eBook #1342 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/1342/1342-0.txt",
+      "source_id": "gutenberg_1342_pride_and_prejudice",
+      "source_url": "https://www.gutenberg.org/ebooks/1342",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Pride and Prejudice",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/16",
+      "creator": "J. M. Barrie",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/16",
+      "publication_year": 1911,
+      "raw_source_sha256": "b7b2a3fef03a02ed6e5e3c61d92f8199e50fe810d992335f0b59df60acaddba7",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published as the novel Peter and Wendy in 1911; Project Gutenberg eBook #16 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/16/16-0.txt",
+      "source_id": "gutenberg_16_peter_and_wendy",
+      "source_url": "https://www.gutenberg.org/ebooks/16",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Peter Pan [Peter and Wendy]",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/244",
+      "creator": "Arthur Conan Doyle",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/244",
+      "publication_year": 1887,
+      "raw_source_sha256": "b798106eca9865fadf36b89dc3156553a6d0648590dbd379e75377a51e222357",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1887; Project Gutenberg eBook #244 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/244/244-0.txt",
+      "source_id": "gutenberg_244_study_in_scarlet",
+      "source_url": "https://www.gutenberg.org/ebooks/244",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "A Study in Scarlet",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/289",
+      "creator": "Kenneth Grahame",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/289",
+      "publication_year": 1908,
+      "raw_source_sha256": "9d07138ca7a6dd98c0f93a74dde2418053a1e49b05bc4e0cba25901d99cb4dc5",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1908; Project Gutenberg eBook #289 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/289/289-0.txt",
+      "source_id": "gutenberg_289_wind_in_willows",
+      "source_url": "https://www.gutenberg.org/ebooks/289",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "The Wind in the Willows",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/45",
+      "creator": "L. M. Montgomery",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/45",
+      "publication_year": 1908,
+      "raw_source_sha256": "30312750954df9a0b73b8c97f34e11b0de3cd36cc370c233a4e27d5fcfa80857",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1908; Project Gutenberg eBook #45 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/45/45-0.txt",
+      "source_id": "gutenberg_45_anne_green_gables",
+      "source_url": "https://www.gutenberg.org/ebooks/45",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Anne of Green Gables",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/514",
+      "creator": "Louisa May Alcott",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/514",
+      "publication_year": 1868,
+      "raw_source_sha256": "250020da93b76b2b5a9b96c8f50c71422773beeeb4e4c09a15d2187cf6a7db0e",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in two volumes in 1868 and 1869; Project Gutenberg eBook #514 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/514/514-0.txt",
+      "source_id": "gutenberg_514_little_women",
+      "source_url": "https://www.gutenberg.org/ebooks/514",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Little Women",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/55",
+      "creator": "L. Frank Baum",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/55",
+      "publication_year": 1900,
+      "raw_source_sha256": "28f216c60a662e8e4464f8ecdfafaa41842ff5c197664807884caa0cc2e21a54",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1900; Project Gutenberg eBook #55 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/55/55-0.txt",
+      "source_id": "gutenberg_55_wonderful_wizard_oz",
+      "source_url": "https://www.gutenberg.org/ebooks/55",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "The Wonderful Wizard of Oz",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/768",
+      "creator": "Emily Brontë",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/768",
+      "publication_year": 1847,
+      "raw_source_sha256": "90aeac022568e77f012b8cd2c9f1049d1c12326d427979d62a37256e70459888",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1847; Project Gutenberg eBook #768 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/768/768-0.txt",
+      "source_id": "gutenberg_768_wuthering_heights",
+      "source_url": "https://www.gutenberg.org/ebooks/768",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Wuthering Heights",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/844",
+      "creator": "Oscar Wilde",
+      "domain": "public_domain_drama",
+      "extraction_locator_schema": "act plus Project Gutenberg plain-text line range",
+      "extraction_method": "Manual selection of bounded, contiguous ten-turn dialogue excerpts from the Project Gutenberg UTF-8 plain-text edition of ebook #844, retrieved 2026-09-04. Source line wrapping was normalized to spaces; dialogue wording, punctuation, emphasis markers, and inline stage directions were otherwise preserved.",
+      "extractor_version": "manual-contiguous-dialogue-v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/844",
+      "publication_year": 1895,
+      "raw_source_sha256": "1b8a58099bb1cdef6a845277a4bacf2f4a268702c165bde30124d4b5105d1851",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "The play was first published in 1895. Project Gutenberg ebook #844 states that it is usable in the United States at no cost and with almost no restrictions; readers outside the United States must check local law.",
+      "source_document": "sources/heldout_drama_v1.json",
+      "source_document_sha256": "99a5bb0af0c7c572e0e4693c09a9eda020ee72dcbab51cf583040add3a684d18",
+      "source_download_url": "https://www.gutenberg.org/cache/epub/844/pg844.txt",
+      "source_id": "gutenberg_844",
+      "source_url": "https://www.gutenberg.org/ebooks/844",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "The Importance of Being Earnest: A Trivial Comedy for Serious People",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "literary_weak_supervision_v1",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/84",
+      "creator": "Mary Wollstonecraft Shelley",
+      "domain": "public_domain_novel",
+      "extraction_locator_schema": "gutenberg_chapter_scene_quote_ordinal_v1",
+      "extraction_method": "deterministic quotation/speaker extraction from bounded excerpt",
+      "extractor_version": "gutenberg_bounded_dialogue_v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/84",
+      "publication_year": 1818,
+      "raw_source_sha256": "06c37d2c52d208d3d81eb12c3b10b5edbd7728b73554325ddceadbe2fb427e77",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "First published in 1818; Project Gutenberg eBook #84 is cataloged as public domain in the USA. This source preserves only a bounded quotation excerpt and links to the authoritative source and license.",
+      "source_document": "sources/heldout_novel_v1.json",
+      "source_document_sha256": "a5b8faedb054df39fa7fbb2386da29772c6cb00e0c0b5eb4593df8456d2b49ea",
+      "source_download_url": "https://www.gutenberg.org/files/84/84-0.txt",
+      "source_id": "gutenberg_84_frankenstein",
+      "source_url": "https://www.gutenberg.org/ebooks/84",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Frankenstein; Or, The Modern Prometheus",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "government_transcript_weak_supervision_v1",
+      "authoritative_source_url": "https://ntrs.nasa.gov/citations/20160014392",
+      "creator": "National Aeronautics and Space Administration",
+      "domain": "public_domain_real_human",
+      "extraction_locator_schema": "NASA GET DD HH MM SS (mission elapsed days, hours, minutes, seconds)",
+      "extraction_method": "Twelve manually selected, disjoint windows were faithfully transcribed from the NASA OCR HTML of the raw Technical Air-to-Ground transcript. Each window contains exactly ten consecutive timestamped transmissions in source order; no transmission was skipped within a window. Windows containing the transcript's three-dot garble marker or an ellipsis-only transmission were excluded. OCR spellings and the transcript's dash notation were preserved.",
+      "extractor_version": "manual_contiguous_window_extractor_v1",
+      "is_public_domain": true,
+      "is_real_human": true,
+      "license_name": "U.S. Government Work / Public Use Permitted",
+      "license_url": "https://ntrs.nasa.gov/citations/20160014392",
+      "outcome_evidence": "archival_human_exchange_weak_supervision",
+      "provenance_evidence_url": "https://ntrs.nasa.gov/citations/20160014392",
+      "publication_year": 1969,
+      "raw_source_sha256": "daf141a2c9030b0ca1e8748962af7a4cbfe227ed324f5c5ca085f063db271b3a",
+      "retrieval_date": "2026-09-04",
+      "rights_index_url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11trans.html",
+      "rights_note": "NASA's Apollo 11 transcript index identifies the linked technical air-to-ground material as a raw transcript presented in its original form and states that no copyright is asserted. The NASA Technical Reports Server record identifies the document as a Work of the US Gov. with Public Use Permitted. This corpus uses the raw technical air-to-ground OCR transcript, not the copyright-corrected Lunar Surface Journal.",
+      "source_document": "sources/heldout_nasa_v1.json",
+      "source_document_sha256": "b51b0600472b4daaab66a7d9e11ae155de34d440883cec96445bff3446e47483",
+      "source_download_url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11transcript_tec.html",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "source_url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11transcript_tec.html",
+      "supervision_level": "weak",
+      "teacher_replay_eligible": false,
+      "title": "Apollo 11 Technical Air-to-Ground Voice Transmission (GOSS NET 1)",
+      "training_eligible": false
+    },
+    {
+      "annotation_method": "synthetic_gold_v1",
+      "authoritative_source_url": "https://github.com/deucebucket/clanker/issues/41",
+      "creator": "Clanker project contributors",
+      "domain": "open_development",
+      "extraction_locator_schema": "synthetic_conversation_id_and_turn_ordinal_v1",
+      "extraction_method": "original_synthetic_authorship",
+      "extractor_version": "synthetic-authoring-v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "outcome_evidence": "synthetic_counterfactual",
+      "provenance_evidence_url": "https://github.com/deucebucket/clanker/issues/41",
+      "publication_year": 2026,
+      "raw_source_sha256": "53d05e73080d587695d7eccab1df6a541ff58b70243f89ff81f46494df43b1fd",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "Original synthetic development conversations dedicated to the public domain under CC0 1.0; open for training, tuning, and teacher replay.",
+      "source_document": "sources/development_v1.json",
+      "source_document_sha256": "e8a67b842c4d8be4daca146b5a81a51d4313b522a35155a2c9ecf52591ae8f5e",
+      "source_download_url": "https://github.com/deucebucket/clanker/issues/41",
+      "source_id": "open-development-synthetic-v1",
+      "source_url": "https://github.com/deucebucket/clanker/issues/41",
+      "structural_only": true,
+      "supervision_level": "gold_structural",
+      "teacher_replay_eligible": true,
+      "title": "Clanker-LM Open Development Conversations, Version 1",
+      "training_eligible": true
+    },
+    {
+      "annotation_method": "synthetic_gold_v1",
+      "authoritative_source_url": "https://github.com/deucebucket/clanker/issues/41",
+      "creator": "Clanker project contributors",
+      "domain": "synthetic_adversarial",
+      "extraction_locator_schema": "synthetic_conversation_id_and_turn_ordinal_v1",
+      "extraction_method": "original_synthetic_authorship",
+      "extractor_version": "synthetic-authoring-v1",
+      "is_public_domain": true,
+      "is_real_human": false,
+      "license_name": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "outcome_evidence": "synthetic_counterfactual",
+      "provenance_evidence_url": "https://github.com/deucebucket/clanker/issues/41",
+      "publication_year": 2026,
+      "raw_source_sha256": "efaa3703c84a273f42ba463a92bc0e53a5dbd120b19940235a09568103ed861b",
+      "retrieval_date": "2026-09-04",
+      "rights_note": "Original synthetic conversations dedicated to the public domain under CC0 1.0; immutable evaluation-only material.",
+      "source_document": "sources/heldout_synthetic_v1.json",
+      "source_document_sha256": "4ce9e12a4dcb56cf804ede91b67ece5caf29465570fdb0ee05809ca7ff614a62",
+      "source_download_url": "https://github.com/deucebucket/clanker/issues/41",
+      "source_id": "synthetic-adversarial-v1",
+      "source_url": "https://github.com/deucebucket/clanker/issues/41",
+      "structural_only": true,
+      "supervision_level": "gold_structural",
+      "teacher_replay_eligible": false,
+      "title": "Clanker-LM Synthetic Adversarial Conversations, Held-Out Version 1",
+      "training_eligible": false
+    }
+  ],
+  "splits": {
+    "development": {
+      "allowed_uses": [
+        "development",
+        "evaluation",
+        "teacher_replay"
+      ],
+      "conversation_count": 10,
+      "conversation_hashes": {
+        "development-open-01": "90883d7033e0f066426e0866b25aec3f1f965032c62b347c4bdcd8e1317633e8",
+        "development-open-02": "952036c5fc241b89cf66f5c51de80f417c9fe63c52308a467668c5ce81bbb0c2",
+        "development-open-03": "e96d10972b33a21dc1c9a6b06bfc4f2043ebfb68b8775c81ec26b77f0804c063",
+        "development-open-04": "5408653459dfc8cd7edcf63a763ed4097d25b54b29b3d2e5f12de69f5aae923f",
+        "development-open-05": "0b05223ac47e74a0d434ceb77e9930c948d8d51e19f6c58d5506bc91c5528af8",
+        "development-open-06": "4505484b84e4d110085353ec5a75164af6a48c411d19275f75ed911e9161f1e2",
+        "development-open-07": "553e8bc564496b29ff7ae4a61a289038e02333ea49dac401e432c57d4c8a8160",
+        "development-open-08": "19becb4a18b7c3ade78db3ec1bce8ee1d62645d9a71300d097f9bccbf1c6cb44",
+        "development-open-09": "40e03c285f6c0bd89c613a64f4a331b326dabdad47f4f3373add39b7a2007f45",
+        "development-open-10": "d609da64f947b422777eae6545a78ff4c1cd6ef58b302cb59340a464d129b8bf"
+      },
+      "domain_conversations": {
+        "open_development": 10
+      },
+      "domain_turns": {
+        "open_development": 60
+      },
+      "path": "development_v1.jsonl",
+      "sha256": "5018d7d3f2b60207333b6c50fec594b6b46411a6065962ec322038f0b75f0e43",
+      "teacher_replay_eligible": true,
+      "training_eligible": true,
+      "turn_count": 60
+    },
+    "heldout": {
+      "allowed_uses": [
+        "evaluation"
+      ],
+      "conversation_count": 56,
+      "conversation_hashes": {
+        "gutenberg_844_act_1_jack_courts_gwendolen": "0af7201efbc21a74e69a9fbcd09de21294a2584c5ba4def3e4b23d0758eaed83",
+        "gutenberg_844_act_1_marriage_interview": "3fa49121ddf9332460eb4266093e4f4bf5cb98e110b3eb82123c42e4afbc016e",
+        "gutenberg_844_act_1_music_and_champagne": "7ef2e09c35a6f4de901866fa1a5d181ca19939294905d05762ae1b7cea16ae11",
+        "gutenberg_844_act_1_town_and_country": "cf057fa0267e238451b8a2e2f08d99d00448be0b0562297f26552ddc1e5be2a7",
+        "gutenberg_844_act_2_bunbury_argument": "d66fbce807051a87dabd809531927039392c871d78ffa0983522f29ac72373a9",
+        "gutenberg_844_act_2_cousins_meet": "eb47066660d3f8bca47874d9e1925b04580f113e9a7c25c222d10462e21d6e5f",
+        "gutenberg_844_act_2_false_bereavement": "36a3b1292d5debf351b3f8a661d301791153c0780c849d6db18e8062c76d122b",
+        "gutenberg_844_act_2_german_lesson": "3649e72a626a969520edf5bb2704cbe2180488352ea45850f9f74e30fafc46b8",
+        "gutenberg_844_act_2_guardian_confusion": "09ea17f28643871ec1900b7bd615c5e454ede9d0cd16614a614006e42a65f19a",
+        "gutenberg_844_act_2_painful_parting": "5df2955e81ee043d0e09cfe1d3f2981ccd13a3f3db0cd503b28fbe02dfb35ab3",
+        "gutenberg_844_act_3_cecily_fortune": "b543c27e0d49279cf67136627f6bd957ca9726c4fae6820d327a7eb6a8cec65a",
+        "gutenberg_844_act_3_dignified_silence": "da2cf4a5067a19981d707aec737284fe539ad7353f95ba49e9337a8ffb9453f6",
+        "heldout-synthetic-01": "12b1f07d3cf29b481780a57c712de159d974cffd306b26e3737ab2dd414ef0ff",
+        "heldout-synthetic-02": "c201664501d388500c12b5cc083324b91c3112f08f61dad1b854d332121f5978",
+        "heldout-synthetic-03": "a50e215d016318aa9e19b8c52e6cbca7464a19fa4dc9c39e5a189e87804f55d3",
+        "heldout-synthetic-04": "6e571843253678d72a97dfb00eba731c045f2b65c38a858fac37916fa3be2719",
+        "heldout-synthetic-05": "179d359af337380861028b1e5bcf9473a13416e1a74b912acc8fcfe7ca081bbd",
+        "heldout-synthetic-06": "647795f42fbfe069abcf925977651165a0bd3d05e598f99ff7e74880457ae6f0",
+        "heldout-synthetic-07": "07c52fd7c0427b8104853861c0f93a844daca1c0ce19bc7888bcbd7caeafbd47",
+        "heldout-synthetic-08": "45351fe805239a07ecfa289e9ef339679e06f814429874d4fac0b0d82dc3c8da",
+        "heldout-synthetic-09": "9718984ce3a0a42d44e1e41a78aaf67a3d7bb7cf8fb9031a8302d4b799538b92",
+        "heldout-synthetic-10": "6dc7b06c773b5d5b53bd5a030527d7725c15b9deb426a202a5ec897d89ab7e1d",
+        "heldout-synthetic-11": "b05941d0bb3cf48b8c25c406761b82f92b7cb40157d812ee1367088b2bf94c43",
+        "heldout-synthetic-12": "056a0262dfc71c4e25fc6dc85e726a8df2dd62d5b8c84da9cf051c0cf28c90d3",
+        "heldout-synthetic-13": "afa9b562876a48629b9003163ae6905747a6a48356fd2f80a6f13308999ce168",
+        "heldout-synthetic-14": "b6f2203e8445846206485f5d6ecb00dd4f59798e38f781ea5cd45d7e57cc4c7b",
+        "heldout-synthetic-15": "238df6127a2a8c1790a947893f2cd0e4217aebcc0a8e935000f0ea4d41200b98",
+        "heldout-synthetic-16": "28d863d39f86cd8a60657483f3e973f632c9aa574821790f96fd39dc277be73d",
+        "heldout-synthetic-17": "cbf08dbc38d12c1619a66df7f0d89e2598dee055596dbbade6761b3917887267",
+        "heldout-synthetic-18": "edc3df558811eaa73eb6e921f516fff89a3e400880d721d061838ae3dd297345",
+        "heldout-synthetic-19": "2a84f0eeb6d9083ffd3ca17029dc3926a7261d13d3d2ea61bb90d00ecaa8a82a",
+        "heldout-synthetic-20": "98f763ef32b9140a7637cb09f0d5d79d7858acbb4a32d6fe35796a4ad40e5705",
+        "nasa_a11_entry_preparation_08012508": "4dbecf57e9bc2df531c31f217a21d76c45ea8a7cb13f9cead6ea5eefba1f1b72",
+        "nasa_a11_first_steps_lunar_surface_04132248": "d215157f7122d5413d1d610f0e749c635d9378ba3258d839ca524ccf6f9510cb",
+        "nasa_a11_launch_mode_1_charlie_00000102": "f3994bf80577c0536050db20045049925935d642e7ae93aa1be76e81c343b284",
+        "nasa_a11_launch_orbit_insertion_00000852": "0a6abaf7f64f0e060c511deab9876e25a8c7c8233f8a64354a7d2a8a745f69d4",
+        "nasa_a11_lm_hatch_television_02073045": "c18f09dbd6d1ecd6229e374a02e87b073fb40848d5388af8ff9fa504ce7997db",
+        "nasa_a11_lunar_orbit_accumulator_03012021": "94233fea6f912e7dbbfa0ab485af22f9f80bfa1ad2b330238ac14f6c16f6a451",
+        "nasa_a11_midcourse_correction_2_01014920": "0dd48b884fb952d9d5df38a82a4aec0714cb07ba9014d21ab2e16e1d502da900",
+        "nasa_a11_orbit_alignment_results_00005303": "71bd56fd3d56e6e53f288e1be9a6c1737477103ff243ce2d2307379ec1e495ec",
+        "nasa_a11_post_rendezvous_cabin_check_05095102": "83cb00618c6a72b0648926a7bad524918da8a08b996d60786c62f7e52afec62b",
+        "nasa_a11_powered_descent_go_relay_04062808": "fd0b6828e8660a9b568f6c3e97421fba48d629c750fdf4d1ba51884c98942e66",
+        "nasa_a11_return_coast_cabin_moisture_06115725": "ed81e10d68b3aaea955375a0ddc3bf934cad879a581f2b425070d60c4a2780ba",
+        "nasa_a11_tli_go_and_radio_check_00022638": "67fcf59902620ccdc7925e3f93ece2063699fff9aef899bbbc661d542e48ae63",
+        "novel_v1_alice_cheshire_directions": "0cba96ae85b614ba8d6d4694dbc7beeb58f9ff8422fb1dda3e31b661432b7cae",
+        "novel_v1_anne_cordelia_name": "1109941ca1e062d933081759d5134c54411237926fdceea3d317656854277290",
+        "novel_v1_frankenstein_companion_bargain": "5774c31811abe49e8b3273a30b799647c87d7b849e961a9ac7b8917fe6247a4b",
+        "novel_v1_jane_eyre_handsome": "363a42fb8d57e2d6b936df6efc34e9d02074b585e9b3111124021a93e8de1f09",
+        "novel_v1_little_women_jo_laurie_names": "0f64ee3eb83279dfecf1bd4e4f37785db264b1f5388fd0b25a3b5806c6645ef5",
+        "novel_v1_oz_dorothy_scarecrow": "846cb88433988de930b118182b7e9c2ddf0844af4844d14a9d0c915e12278f8c",
+        "novel_v1_peter_wendy_shadow": "33dbd0c786d3ebc3b6751ce8770f1790c0886a526a871c5a477a532ba01acb9d",
+        "novel_v1_pride_prejudice_bennet_netherfield": "dc12301a3b263191c7081d33290254e8ac72c13e601ca46d041321d2ec125a03",
+        "novel_v1_study_scarlet_roommates": "06c935e3382b40de7d54e49511c6b520c0dea0ad100fb1f0235919745798251c",
+        "novel_v1_treasure_island_silver_embassy": "552dd11c20156023753ae42996c87ecc60c24dd993008a7491218c3743e5ba8a",
+        "novel_v1_wind_willows_first_boat": "a0a2ca84852e3196a2aa380303527b83b6c5dd0ada66488b17929912185926ef",
+        "novel_v1_wuthering_edgar_catechism": "89c5aec5331ffedfdab8bb7711f91942f0360490fbe199f6d85336d284b1383e"
+      },
+      "domain_conversations": {
+        "public_domain_drama": 12,
+        "public_domain_novel": 12,
+        "public_domain_real_human": 12,
+        "synthetic_adversarial": 20
+      },
+      "domain_turns": {
+        "public_domain_drama": 120,
+        "public_domain_novel": 120,
+        "public_domain_real_human": 120,
+        "synthetic_adversarial": 160
+      },
+      "path": "heldout_v1.jsonl",
+      "sha256": "05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
+      "teacher_replay_eligible": false,
+      "training_eligible": false,
+      "turn_count": 520
+    }
+  }
+}

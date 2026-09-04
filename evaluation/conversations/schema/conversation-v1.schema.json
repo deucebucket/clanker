@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deucebucket/clanker/evaluation/conversations/conversation-v1.schema.json",
+  "title": "Compiled Clanker whole conversation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "corpus_version", "split", "conversation_id", "conversation_sha256", "source_conversation_id", "source_id", "lineage_id", "domain", "relationship_context", "participants", "participant_bindings", "source", "turns"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "corpus_version": {"const": "conversation-v1"},
+    "split": {"enum": ["heldout", "development"]},
+    "conversation_id": {"type": "string", "minLength": 1},
+    "conversation_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_conversation_id": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "lineage_id": {"type": "string", "minLength": 1},
+    "domain": {"type": "string", "minLength": 1},
+    "relationship_context": {"type": "string", "minLength": 1},
+    "participants": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "participant_bindings": {"$ref": "#/$defs/stringMap"},
+    "source": {"$ref": "#/$defs/source"},
+    "turns": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["turn_id", "speaker", "addressee", "text", "annotation"],
+        "properties": {
+          "turn_id": {"type": "string", "minLength": 1},
+          "speaker": {"type": "string", "minLength": 1},
+          "addressee": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "source_locator": {"type": "string"},
+          "annotation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dialogue_act", "semantic", "vadugwi_before", "vadugwi_after", "observed_next_state", "expected_response_act", "expected_answer_status", "expected_answer", "expected_truth", "outcome", "ambiguity", "annotator_confidence", "expected_entity_refs", "supervision_level", "semantic_supervision_level", "affect_supervision_level", "affect_scored", "outcome_evidence"],
+            "properties": {
+              "dialogue_act": {"type": "string"},
+              "semantic": {"$ref": "#/$defs/semantic"},
+              "vadugwi_before": {"$ref": "#/$defs/affect"},
+              "vadugwi_after": {"$ref": "#/$defs/affect"},
+              "observed_next_state": {"oneOf": [{"$ref": "#/$defs/affect"}, {"type": "null"}]},
+              "expected_response_act": {"type": "string"},
+              "expected_answer_status": {"type": "string"},
+              "expected_answer": {"$ref": "#/$defs/answer"},
+              "expected_truth": {"enum": ["true", "false", "unknown", "conflict"]},
+              "outcome": {"type": "string"},
+              "ambiguity": {"type": "boolean"},
+              "annotator_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+              "expected_entity_refs": {"oneOf": [{"maxProperties": 0}, {"$ref": "#/$defs/entityRefs"}]},
+              "supervision_level": {"enum": ["weak", "gold_structural"]},
+              "semantic_supervision_level": {"enum": ["weak", "gold_structural"]},
+              "affect_supervision_level": {"const": "weak_rule_v1"},
+              "affect_scored": {"type": "boolean"},
+              "outcome_evidence": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stringMap": {"type": "object", "propertyNames": {"minLength": 1}, "additionalProperties": {"type": "string", "minLength": 1}},
+    "affect": {"type": "object", "additionalProperties": false, "required": ["v", "a", "d", "u", "g", "w", "i"], "properties": {"v": {"type": "integer", "minimum": 0, "maximum": 255}, "a": {"type": "integer", "minimum": 0, "maximum": 255}, "d": {"type": "integer", "minimum": 0, "maximum": 255}, "u": {"type": "integer", "minimum": 0, "maximum": 255}, "g": {"type": "integer", "minimum": 0, "maximum": 255}, "w": {"type": "integer", "minimum": 0, "maximum": 255}, "i": {"type": "integer", "minimum": 0, "maximum": 255}}},
+    "semantic": {"type": "object", "additionalProperties": false, "required": ["predicate", "roles", "scored", "annotation_method", "confidence"], "properties": {"predicate": {"type": "string"}, "roles": {"$ref": "#/$defs/stringMap"}, "scored": {"type": "boolean"}, "partial_roles": {"type": "boolean"}, "annotation_method": {"type": "string"}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}}},
+    "answer": {"type": "object", "additionalProperties": false, "required": ["scored", "values", "predicate", "requested_roles"], "properties": {"scored": {"type": "boolean"}, "values": {"type": "array", "items": {"type": "string"}}, "predicate": {"type": "string"}, "requested_roles": {"type": "array", "items": {"type": "string"}}}},
+    "entityRefs": {"type": "object", "additionalProperties": false, "required": ["roles", "mentions"], "properties": {"roles": {"type": "object", "additionalProperties": {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]}}, "mentions": {"type": "object", "additionalProperties": {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]}}}},
+    "source": {"type": "object", "additionalProperties": false, "required": ["title", "creator", "publication_year", "source_url", "license_name", "license_url", "rights_note", "extraction_method", "annotation_method", "is_real_human", "is_public_domain", "training_eligible", "teacher_replay_eligible", "source_download_url", "provenance_evidence_url", "authoritative_source_url", "retrieval_date", "raw_source_sha256", "extraction_locator_schema", "extractor_version", "supervision_level", "outcome_evidence", "structural_only"], "properties": {"title": {"type": "string"}, "creator": {"type": "string"}, "publication_year": {"type": "integer"}, "source_url": {"type": "string"}, "license_name": {"type": "string"}, "license_url": {"type": "string"}, "rights_note": {"type": "string"}, "extraction_method": {"type": "string"}, "annotation_method": {"type": "string"}, "is_real_human": {"type": "boolean"}, "is_public_domain": {"type": "boolean"}, "training_eligible": {"type": "boolean"}, "teacher_replay_eligible": {"type": "boolean"}, "source_download_url": {"type": "string"}, "provenance_evidence_url": {"type": "string"}, "authoritative_source_url": {"type": "string"}, "retrieval_date": {"type": "string"}, "raw_source_sha256": {"type": "string"}, "extraction_locator_schema": {"type": "string"}, "extractor_version": {"type": "string"}, "supervision_level": {"type": "string"}, "outcome_evidence": {"type": "string"}, "structural_only": {"type": "boolean"}}}
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deucebucket/clanker/evaluation/conversations/failure-v1.schema.json",
+  "title": "Clanker conversation evaluation failure row v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["conversation_id", "turn_id", "domain", "mode", "category"],
+  "properties": {
+    "conversation_id": {"type": "string", "minLength": 1},
+    "turn_id": {"type": "string", "minLength": 1},
+    "domain": {"enum": ["public_domain_drama", "public_domain_novel", "public_domain_real_human", "synthetic_adversarial", "open_development"]},
+    "mode": {"enum": ["sentence_only", "stateful", "transition_corrected"]},
+    "category": {"enum": ["dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct", "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact"]}
+  }
+}

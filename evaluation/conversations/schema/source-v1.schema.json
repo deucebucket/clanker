@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deucebucket/clanker/evaluation/conversations/source-v1.schema.json",
+  "title": "Clanker conversation source v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_schema_version", "split", "learning_allowed", "sources", "conversations"],
+  "properties": {
+    "source_schema_version": {"const": 1},
+    "split": {"enum": ["heldout", "development"]},
+    "learning_allowed": {"type": "boolean"},
+    "transcription_policy": {"type": "string", "minLength": 1},
+    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
+    "conversations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/conversation"}}
+  },
+  "$defs": {
+    "stringMap": {"type": "object", "propertyNames": {"minLength": 1}, "additionalProperties": {"type": "string", "minLength": 1}},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "domain", "title", "creator", "publication_year", "source_url", "source_download_url", "authoritative_source_url", "provenance_evidence_url", "license_name", "license_url", "rights_note", "retrieval_date", "raw_source_sha256", "extraction_method", "extraction_locator_schema", "extractor_version", "annotation_method", "supervision_level", "outcome_evidence", "is_real_human", "is_public_domain", "training_eligible", "teacher_replay_eligible"],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "domain": {"enum": ["public_domain_drama", "public_domain_novel", "public_domain_real_human", "synthetic_adversarial", "open_development"]},
+        "title": {"type": "string", "minLength": 1},
+        "creator": {"type": "string", "minLength": 1},
+        "publication_year": {"type": "integer", "minimum": 1, "maximum": 9999},
+        "source_url": {"type": "string", "pattern": "^https://"},
+        "source_download_url": {"type": "string", "pattern": "^https://"},
+        "authoritative_source_url": {"type": "string", "pattern": "^https://"},
+        "provenance_evidence_url": {"type": "string", "pattern": "^https://"},
+        "rights_index_url": {"type": "string", "pattern": "^https://"},
+        "license_name": {"type": "string", "minLength": 1},
+        "license_url": {"type": "string", "pattern": "^https://"},
+        "rights_note": {"type": "string", "minLength": 1},
+        "retrieval_date": {"type": "string", "format": "date"},
+        "raw_source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "extraction_method": {"type": "string", "minLength": 1},
+        "extraction_locator_schema": {"type": "string", "minLength": 1},
+        "extractor_version": {"type": "string", "minLength": 1},
+        "annotation_method": {"type": "string", "minLength": 1},
+        "supervision_level": {"enum": ["weak", "gold_structural"]},
+        "outcome_evidence": {"type": "string", "minLength": 1},
+        "is_real_human": {"type": "boolean"},
+        "is_public_domain": {"type": "boolean"},
+        "training_eligible": {"type": "boolean"},
+        "teacher_replay_eligible": {"type": "boolean"},
+        "structural_only": {"type": "boolean"}
+      }
+    },
+    "semantic": {
+      "type": "object", "additionalProperties": false,
+      "required": ["predicate", "roles", "scored"],
+      "properties": {"predicate": {"type": "string", "minLength": 1}, "roles": {"$ref": "#/$defs/stringMap"}, "scored": {"type": "boolean"}, "partial_roles": {"type": "boolean"}}
+    },
+    "answer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scored", "values", "predicate", "requested_roles"],
+      "properties": {"scored": {"type": "boolean"}, "values": {"type": "array", "items": {"type": "string", "minLength": 1}}, "predicate": {"type": "string", "minLength": 1}, "requested_roles": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+    },
+    "entityRefs": {"type": "object", "propertyNames": {"minLength": 1}, "additionalProperties": {"oneOf": [{"type": "string", "minLength": 1}, {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}]}},
+    "overrides": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "dialogue_act": {"enum": ["assert", "ask", "command", "acknowledge", "social", "clarify", "fragment"]},
+        "semantic": {"$ref": "#/$defs/semantic"}, "expected_response_act": {"type": "string", "minLength": 1}, "expected_answer_status": {"type": "string", "minLength": 1}, "expected_truth": {"enum": ["true", "false", "unknown", "conflict"]}, "outcome": {"type": "string", "minLength": 1}, "ambiguity": {"type": "boolean"}, "annotator_confidence": {"type": "number", "minimum": 0, "maximum": 1}, "expected_entity_refs": {"$ref": "#/$defs/entityRefs"}, "expected_answer": {"$ref": "#/$defs/answer"}
+      }
+    },
+    "turn": {
+      "type": "object", "additionalProperties": false,
+      "required": ["speaker", "addressee", "text"],
+      "properties": {"speaker": {"type": "string", "minLength": 1}, "addressee": {"type": "string", "minLength": 1}, "text": {"type": "string", "minLength": 1}, "source_locator": {"type": "string"}, "annotation_overrides": {"$ref": "#/$defs/overrides"}}
+    },
+    "conversation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_conversation_id", "source_id", "relationship_context", "participants", "turns"],
+      "properties": {"source_conversation_id": {"type": "string", "minLength": 1}, "source_id": {"type": "string", "minLength": 1}, "lineage_id": {"type": "string", "minLength": 1}, "template_id": {"type": "string", "minLength": 1}, "template_variables": {"$ref": "#/$defs/stringMap"}, "relationship_context": {"type": "string", "minLength": 1}, "participants": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "entity_bindings": {"$ref": "#/$defs/stringMap"}, "turns": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/turn"}}}
+    }
+  }
+}

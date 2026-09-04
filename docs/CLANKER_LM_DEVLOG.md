@@ -980,3 +980,309 @@ Obtain exact-head review and CI, merge the final promotion, deploy that merge
 SHA as `CLANKER_LM_BUILD_COMMIT`, and verify health, authenticated API identity,
 canonical live/history cards, responsive overflow, focus restoration, and
 console/page errors. Issue closure depends on those measured results.
+
+---
+
+## 2026-09-04 — RR devlog: issue #41 held-out evaluation core candidate
+
+- **Audience:** evaluation reviewer, Clanker-LM maintainer, and future #107
+  tuning owner
+- **Scope:** versioned conversation corpus, deterministic evaluator, integrity
+  gates, CI, and documentation; no language-runtime behavior changes and no
+  held-out baseline publication yet
+- **Goal and success condition:** freeze at least 500 whole held-out turns with
+  auditable rights, keep open development data separate, bind the measured
+  production tree, and make every report/integrity boundary fail closed before
+  any tuning can see held-out evidence
+
+### Rundown
+
+**Proven:** the selected `conversation-v1` generation contains 56 held-out
+conversations / 520 turns and 10 open-development conversations / 60 turns.
+The held-out split spans public-domain drama, public-domain novels, raw NASA
+technical air-to-ground exchanges, and original CC0 synthetic structural
+stress cases. The held-out and development split bytes and labels remained
+unchanged throughout the evaluator and storage-integrity repairs.
+
+**Proven:** corpus root
+`a2bbc72fdab1fa33088f3b4a7b41c1ac8d4aa99e0b2e70c05ae3ef07b106618f`
+binds compiler, evaluator, schema, split policy, source provenance, and the
+exact production/package tree at
+`c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e`. Production Python, language seed,
+and packaged web assets are all included in production digest
+`b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f`.
+Built wheel and sdist artifacts exclude `evaluation/conversations`.
+
+**Proven:** the ancestry/history gate authenticates all 13 generations ever
+selected on this candidate lineage, including the eight roots recovered after
+the rejected `27fd4c0` candidate. A metadata-only lineage inventory verifies
+the selected manifest and every whole-conversation content address, then
+exposes only IDs, hashes, counts, and allowed-use policy for downstream #110.
+
+**Unknown:** held-out baseline metrics are intentionally absent. Two detached
+reviewers must accept the final clean core before the 520-turn, three-mode run
+is allowed. Until that report is generated from the accepted core commit and
+committed separately, issue #41 is not complete.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | Whole-conversation scale and split separation meet the corpus floor. | Held-out 56/520; development 10/60; selected root `a2bbc72f…`. |
+| Proven | Real-human material is bounded to raw NASA technical transcript windows with authoritative public-use provenance. | NTRS `20160014392`, NASA raw transcript index/download locators, frozen raw digest, and source manifest. |
+| Proven | Literary affect/outcome annotations remain weak supervision; synthetic structural gold is excluded from affect scoring. | Per-turn supervision fields and evaluator strata. |
+| Proven | Corpus history is append-only on the candidate ancestry, not merely relative to main. | `verify-history --ref HEAD`: 13 generations; additive checks pass against `135bfc6` and `852281d`. |
+| Proven | #110 receives authenticated lineage/policy metadata without conversation payloads. | `lineage-inventory`: 56 held-out + 10 development records; held-out allows evaluation only; development allows development/evaluation/teacher replay, never direct promotion. |
+| Proven | Integrity checks reject policy mutation, leakage, near-duplicates, source/schema corruption, TOCTOU swaps, symlink escapes, partial/crash publication, metric forgery, failure-ledger swaps, and production-tree drift. | 126 evaluator tests passed with one intentional pre-baseline skip; `verify` reports zero overlap/reference/text-leak hits. |
+| Unknown | Final semantic/entity/transition scores and confidence intervals. | Baseline run is held pending independent ACCEPT verdicts. |
+
+### How it works, in plain language
+
+`CURRENT` is one atomic pointer to one content-addressed corpus directory. A
+reader hashes and parses the same bytes, validates the exact directory
+inventory, and refuses training or replay access to held-out rows. `HISTORY`
+binds every selected generation's exact file modes and bytes, while the Git
+ancestry gate proves none of the branch-local selections disappeared. Reports
+use the same immutable-generation pointer pattern with durable file and
+directory synchronization, so an exception or abrupt process death cannot
+select a mixed report, failure ledger, and checksum generation.
+
+Aggregate reports carry authenticated per-conversation/per-turn sufficient
+statistics but no conversation or response text. The validator reconstructs
+binary/scalar points, 10,000-draw clustered intervals, classification,
+calibration, drift, paired mode differences, failure membership, and the
+semantic fingerprint. This makes internally self-consistent counterfeits fail,
+not only malformed JSON. Cluster bootstrap samples whole conversations,
+preserving turn-weighted point estimates and identical paired draws.
+
+The truth boundary is intentionally conservative: literary and archival next
+turns show what followed in their source, not what a Clanker response caused.
+Synthetic conversations provide structural labels, not real-human outcome
+ground truth. No private chat, ACL transcript, user-supplied conversation, or
+copyright-ambiguous source is present.
+
+### Evidence and conditions
+
+```text
+production base:     c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e
+executable core:     1174748d2d6196ee766dcf3ae61da34d7b534ae4
+corpus root:         a2bbc72fdab1fa33088f3b4a7b41c1ac8d4aa99e0b2e70c05ae3ef07b106618f
+production digest:   b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f
+held-out split:      05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18
+development split:   5018d7d3f2b60207333b6c50fec594b6b46411a6065962ec322038f0b75f0e43
+manifest digest:     264b5b0c457015ee9704f42066c15bc45330742165e92d2832335bc12fa0e0a1
+history inventory:   13 authenticated selected generations
+focused evaluator:   126 passed, 1 intentional pre-baseline skip
+full repository:     2,893 passed, 1 intentional pre-baseline skip, 2 expected xfails
+benchmark:           29/29 deterministic turns
+integrity verify:    520 held-out + 60 development; 0 exact overlap; 0 near overlap;
+                     0 production references; 0 production/test text leakage
+package boundary:    wheel 65 entries; sdist 106 entries; 0 evaluation/conversations paths
+visual evidence:     not applicable; this milestone has no UI surface
+```
+
+### Negative results and open questions
+
+- Several earlier baseline attempts were invalidated before publication by
+  scorer, annotation, provenance, and transactional-integrity findings. They
+  are not evidence and are not present in the repository.
+- The full suite skips one test because `post_113_heldout_v1.current` is
+  deliberately absent. A missing baseline is not reported as a core failure,
+  but it remains an explicit release blocker.
+- Static production-reference analysis covers resolvable literals,
+  concatenation, constant f-strings, named constants, imports, loader calls,
+  path joins, and bounded executable-asset constructions. It cannot prove the
+  absence of arbitrary Python/JavaScript obfuscation or govern an
+  operator-supplied path. Distribution exclusion plus the direct-reference
+  gate is the enforceable deployed boundary.
+- Development conversations may be replayed to construct supervised proposals;
+  they are not themselves promotable. #110 must promote only approved,
+  provenance-bound artifacts and must use the lineage inventory to reject
+  held-out and correlated duplicate evidence.
+
+### Next step / blocker
+
+Nominate the final clean documentation successor for both detached reviewers.
+Only after both return ACCEPT: run all three modes over the immutable 520-turn
+held-out split, transactionally publish the text-free, ID-only sufficient-statistic
+report/failure/checksum generation, commit those baseline artifacts separately,
+rerun the full suite, bind stable CI thresholds/fingerprint/root, and create
+the documented immutable release tag after merge. Held-out text and labels
+remain forbidden inputs to #107/#110 training, teacher replay, or promotion.
+
+---
+
+## 2026-09-04 — RR devlog: issue #41 evidence-binding repair
+
+- **Audience:** independent core reviewers, release maintainer, and the later
+  baseline operator
+- **Scope:** aggregate evidence, evaluator provenance, static held-out boundary,
+  immutable publication, and squash-safe corpus history; no production runtime
+  behavior change and no held-out baseline run
+- **Goal and success condition:** every published aggregate must be
+  reconstructible from bounded ID-only observations, every observation must
+  belong to the declared corpus population, the evaluator commit must name the
+  producing executable snapshot, and the corpus lineage must remain verifiable
+  after the repository's squash-merge workflow
+
+### Rundown
+
+**Proven:** executable core `78ee1ea4d8d9b7b09d802b257c8983112ed7fb25`
+closes the seven evidence-integrity findings from the rejected predecessor.
+Latency and resource aggregates now rebuild from ID-only observations; drift is
+cross-bound to the identical next-state/MAE rows and weighted-RMS equation;
+ambiguous `.jsonl` report targets fail before mutation; final file modes are
+set before file synchronization; and conditional static references are found.
+
+**Proven:** the first-introduction `HISTORY` contract survives a real temporary
+squash-merge reproduction. It authenticates all files and `100644` modes at the
+commit where a generation first appears, permits a squash commit to import a
+batch of already-recorded branch generations, and still requires the final
+ledger to retain every first introduction unchanged. This supersedes the prior
+entry's claim that observing every intermediate `CURRENT` commit was sufficient
+for the repository's integration policy.
+
+**Unknown:** held-out score values, failure identities, thresholds, and baseline
+fingerprint remain intentionally unobserved. The accepted executable core must
+be integrated first so the subsequent baseline can name the durable producing
+commit rather than a branch SHA that a squash merge would discard.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | Timing and growth means, maxima, counts, percentiles, throughput, row maxima, and slopes are reconstructible. | ID-only latency, construction, memory, and SQLite observations; adversarial aggregate/observation mutation tests. |
+| Proven | Observation domains and populations cannot be relabeled or swapped while remaining valid. | Exact conversation/turn/domain and turn-ordinal binding against the selected corpus. |
+| Proven | Drift distances and residuals cannot float independently of the metric evidence. | Exact population match; next-state equality; per-axis MAE/normalized-MAE equality; weighted-RMS reconstruction. |
+| Proven | `evaluation_commit` cannot name an arbitrary valid ancestor. | Validator requires the newest commit changing the measured production/evaluator/corpus/schema paths; ancestor-forgery test passes only by rejection. |
+| Proven | Squash integration retains authenticated corpus history. | Temporary two-generation feature branch squash-merged into `main`; `verify-history` authenticated both first introductions. |
+| Proven | Selected corpus contents and policies did not change. | Held-out SHA `05a2dfed…` (56/520); development SHA `5018d7d3…` (10/60); zero overlap/reference/text-leak hits. |
+| Unknown | Held-out quality and release threshold. | Baseline artifacts remain absent; the corresponding test intentionally skips. |
+
+### How it works, in plain language
+
+The report now includes the small, non-conversational facts needed to check its
+math: which corpus turn a timing or growth observation belongs to and the
+measured number. The validator recalculates every summary instead of trusting a
+claimed mean or maximum. For drift, it also proves those rows are the same rows
+used by next-state error and MAE, so two separately plausible tables cannot
+describe different populations.
+
+Git commit ancestry alone was too weak because any old ancestor could be named.
+The producer rule now selects the newest commit that changed the measured
+executable snapshot. Conversely, using intermediate `CURRENT` commits as corpus
+history was too brittle because squash merging erases them. `HISTORY` therefore
+uses first introductions as its durable audit record and authenticates the
+generation bytes in the introducing commit.
+
+### Evidence and conditions
+
+```text
+production base:     c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e
+executable core:     78ee1ea4d8d9b7b09d802b257c8983112ed7fb25
+selected root:       0c69ae01491af9b608f93cb36f4fcd42ca066ae73228c4897d7eb7631d8d11de
+compiler digest:     2f593e134beb1dd710fc4f6f19835915fcce3ba68655c98ba180dc8fc02d5ca9
+evaluator digest:    865117ca29dfc442d9518b21440aa43062ecaa32b29bf47f06e096b80b3eea7c
+report schema digest:5b9bf6fb7c852ba4198b7bace8c9fbc9a436010cc2737de0a615149fac54540e
+history inventory:   15 authenticated first-introduced generations
+focused evaluator:   132 passed, 1 intentional pre-baseline skip
+full repository:     2,899 passed, 1 intentional pre-baseline skip, 2 expected xfails
+benchmark:           29/29 deterministic turns
+integrity verify:    520 held-out + 60 development; 0 exact overlap; 0 near overlap;
+                     0 production references; 0 production/test text leakage
+additive checks:     origin/main has no baseline; prior roots 135bfc6 and 852281d
+                     each retain their one authenticated committed generation
+package boundary:    wheel 65 entries; sdist 106 entries; 0 evaluation/conversations paths
+visual evidence:     not applicable; this is a non-UI evaluator milestone
+```
+
+### Negative results and open questions
+
+- Two focused attempts exposed stale expected-error text in the new adversarial
+  test. Both failures were assertion wording only: the validator had already
+  rejected the forged artifacts. The expectations were corrected and the full
+  focused suite then passed.
+- The two content-addressed roots introduced during repair preserve the exact
+  same held-out and development split hashes. They differ only because the
+  manifest binds successive evaluator/schema bytes; both first introductions
+  are retained and authenticated.
+- Observational timing/resource rows are internally reconstructible and
+  population-bound, but they remain nondeterministic measurements and are
+  deliberately excluded from the semantic fingerprint.
+- Static analysis resolves bounded ordinary expressions; it does not claim to
+  defeat arbitrary obfuscation or operator-supplied paths.
+
+### Next step / blocker
+
+Obtain independent core acceptance at the exact clean candidate. Then integrate
+the executable core under the repository's squash policy. Generate the held-out
+baseline only from that durable integrated producer commit, publish it as a
+separate immutable artifact commit, reproduce it in a second clean checkout,
+and independently review its text-free, ID-only sufficient-statistic metrics,
+failure identities, thresholds, and release tag. Until then, issue #41 remains
+pre-baseline.
+
+---
+
+## 2026-09-04 — RR correction: independently bound signed drift evidence
+
+- **Audience:** independent metric/storage reviewers and release maintainer
+- **Scope:** evaluator metric authenticity and evidence terminology only; no
+  held-out evaluation or baseline publication
+- **Supersedes:** the metric-integrity acceptance claim above for `f5cd31d`;
+  its storage mechanisms remain accepted, but its drift signs were not
+  independently bound
+
+### Rundown
+
+**Proven:** executable producer `3125e3bee623416a61a230710b6e9a9c874140c0`
+makes every per-axis signed residual a first-class, text-free metric carrying
+conversation ID, turn ID, and domain. Drift validation requires each trajectory
+residual to equal that exact metric observation, in addition to the existing
+absolute-MAE, normalized-MAE, and weighted-RMS checks.
+
+**Proven:** an adversarial regression flips every signed residual, rebuilds the
+entire drift structure from those forged rows, and confirms that the changed
+terminal signed bias is rejected against the unchanged signed metric channel.
+This is the coordinated forgery that `f5cd31d` did not detect.
+
+**Proven:** evaluator-owned runner documentation and devlog guidance now call
+the artifacts “text-free, ID-only sufficient-statistic” reports. The former
+summary-only wording was inaccurate because reports intentionally include
+bounded per-turn observations needed to reconstruct and authenticate metrics.
+
+**Unknown:** held-out score values, failure identities, thresholds, and the
+baseline fingerprint remain intentionally unobserved. The baseline must still
+wait for exact-core acceptance and integration.
+
+### Evidence and conditions
+
+```text
+rejected predecessor: f5cd31d88cd94e3692a9cc175090c726a29c8f97
+executable producer:  3125e3bee623416a61a230710b6e9a9c874140c0
+selected root:        770bb78c9011cf0918c952b0f4a56a1ad321d38f6719ef9c51263b2ae10c5e4c
+evaluator digest:     014ee5292ae35dc5ec0abd68562e04a058ba6362ac792188776afb096390acc5
+split hashes:         development 5018d7d3…; held-out 05a2dfed… (unchanged)
+focused evaluator:    132 passed, 1 intentional pre-baseline skip
+full repository:      2,899 passed, 1 intentional pre-baseline skip,
+                      2 expected xfails
+benchmark:            29/29 deterministic turns
+integrity verify:     56/520 held-out + 10/60 development; zero overlap,
+                      production reference hits, or production text leaks
+history inventory:    16 authenticated first-introduced generations
+additive checks:      origin/main has no baseline; 135bfc6 and 852281d each
+                      retain one authenticated committed generation
+package boundary:     wheel 65 entries; sdist 106 entries; zero evaluator paths
+visual evidence:      not applicable; this is a non-UI evaluator correction
+```
+
+### Negative results and next gate
+
+- A development-only evaluator smoke run published and validated a report from
+  producer `3125e3b`; the open development split has no affect-scored rows, so
+  the focused synthetic regression is the direct signed-drift exercise.
+- No held-out evaluator run, baseline file, failure ledger, checksum generation,
+  or release threshold was created or inspected.
+- The exact clean documentation successor must receive renewed metric review.
+  The prior storage acceptance covers the unchanged publication mechanisms;
+  the release owner decides whether to repeat storage review at the successor.

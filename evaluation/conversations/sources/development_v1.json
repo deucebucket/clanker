@@ -1,0 +1,1809 @@
+{
+  "source_schema_version": 1,
+  "split": "development",
+  "learning_allowed": true,
+  "sources": [
+    {
+      "source_id": "open-development-synthetic-v1",
+      "title": "Clanker-LM Open Development Conversations, Version 1",
+      "creator": "Clanker project contributors",
+      "publication_year": 2026,
+      "domain": "open_development",
+      "source_url": "https://github.com/deucebucket/clanker/issues/41",
+      "source_download_url": "https://github.com/deucebucket/clanker/issues/41",
+      "authoritative_source_url": "https://github.com/deucebucket/clanker/issues/41",
+      "license_name": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "rights_note": "Original synthetic development conversations dedicated to the public domain under CC0 1.0; open for training, tuning, and teacher replay.",
+      "provenance_evidence_url": "https://github.com/deucebucket/clanker/issues/41",
+      "retrieval_date": "2026-09-04",
+      "raw_source_sha256": "53d05e73080d587695d7eccab1df6a541ff58b70243f89ff81f46494df43b1fd",
+      "extraction_method": "original_synthetic_authorship",
+      "extraction_locator_schema": "synthetic_conversation_id_and_turn_ordinal_v1",
+      "extractor_version": "synthetic-authoring-v1",
+      "annotation_method": "synthetic_gold_v1",
+      "supervision_level": "gold_structural",
+      "outcome_evidence": "synthetic_counterfactual",
+      "structural_only": true,
+      "is_real_human": false,
+      "is_public_domain": true,
+      "training_eligible": true,
+      "teacher_replay_eligible": true
+    }
+  ],
+  "conversations": [
+    {
+      "source_conversation_id": "development-open-01",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-01",
+      "template_id": "development-indigo_notebook",
+      "template_variables": {
+        "scenario": "indigo_notebook"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "research partners maintaining a catalog",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Rhea catalogued an indigo notebook under shelf K.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "catalogue",
+              "roles": {
+                "agent": "rhea",
+                "theme": "indigo_notebook",
+                "location": "shelf_k"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Shelf K now has the catalogue entry for Rhea's indigo notebook.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record",
+              "roles": {
+                "fact": "indigo_notebook_shelf_k"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Later, she lent the notebook to Sol.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "lend",
+              "roles": {
+                "agent": "rhea",
+                "theme": "indigo_notebook",
+                "recipient": "sol"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:rhea",
+              "patient": "entity:indigo_notebook"
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "I noted Sol as its borrower.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record",
+              "roles": {
+                "owner": "rhea",
+                "theme": "indigo_notebook",
+                "borrower": "sol"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "entity:indigo_notebook"
+            }
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Whom did Rhea lend the notebook to?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "lend",
+              "roles": {
+                "agent": "rhea",
+                "theme": "indigo_notebook",
+                "requested_role": "recipient"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:rhea",
+              "patient": "entity:indigo_notebook"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "Sol"
+              ],
+              "predicate": "lend",
+              "requested_roles": [
+                "recipient"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Sol received the indigo notebook from Rhea.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "lend",
+              "roles": {
+                "agent": "rhea",
+                "theme": "indigo_notebook",
+                "recipient": "sol"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-02",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-02",
+      "template_id": "development-seedling_delivery",
+      "template_variables": {
+        "scenario": "seedling_delivery"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "garden coordinators revising a delivery date",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "The juniper seedlings are due on Friday.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "schedule",
+              "roles": {
+                "theme": "juniper_seedlings",
+                "time": "friday"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Friday is on the delivery note.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record",
+              "roles": {
+                "fact": "juniper_seedlings_friday"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "The nursery changed the date to Monday; discard Friday.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "correct",
+              "roles": {
+                "theme": "juniper_seedlings",
+                "new_time": "monday",
+                "retracted_time": "friday"
+              },
+              "scored": true
+            },
+            "expected_response_act": "positive_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "clarified",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Monday now replaces the prior date.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "replace",
+              "roles": {
+                "theme": "juniper_seedlings",
+                "new_time": "monday",
+                "old_time": "friday"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "When should the juniper seedlings arrive?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "schedule",
+              "roles": {
+                "theme": "juniper_seedlings",
+                "requested_role": "time"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {},
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "Monday"
+              ],
+              "predicate": "schedule",
+              "requested_roles": [
+                "time"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Their revised arrival day is Monday.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "schedule",
+              "roles": {
+                "theme": "juniper_seedlings",
+                "time": "monday"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-03",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-03",
+      "template_id": "development-ceramic_token",
+      "template_variables": {
+        "scenario": "ceramic_token"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "neighbors tracing a clearly resolved object",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Benji left a ceramic token with Farah near the fountain.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "leave",
+              "roles": {
+                "agent": "benji",
+                "theme": "ceramic_token",
+                "recipient": "farah",
+                "location": "fountain"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Farah is recorded as holding the ceramic token.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record",
+              "roles": {
+                "holder": "farah",
+                "theme": "ceramic_token"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "She wrapped it in linen before sunset.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "wrap",
+              "roles": {
+                "agent": "farah",
+                "theme": "ceramic_token",
+                "material": "linen",
+                "time": "before_sunset"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:farah",
+              "patient": "entity:ceramic_token"
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "The token's linen wrapping is noted.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record",
+              "roles": {
+                "theme": "ceramic_token",
+                "material": "linen"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Who wrapped the token?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "wrap",
+              "roles": {
+                "theme": "ceramic_token",
+                "requested_role": "agent"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "entity:ceramic_token"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "Farah"
+              ],
+              "predicate": "wrap",
+              "requested_roles": [
+                "agent"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Farah wrapped it in linen.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "wrap",
+              "roles": {
+                "agent": "farah",
+                "theme": "ceramic_token",
+                "material": "linen"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:farah",
+              "patient": "entity:ceramic_token"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-04",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-04",
+      "template_id": "development-foghorn_direction",
+      "template_variables": {
+        "scenario": "foghorn_direction"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "coastal observers preserving an unstated detail",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "The monitoring buoy detected a foghorn shortly after noon.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "detect",
+              "roles": {
+                "agent": "monitoring_buoy",
+                "theme": "foghorn",
+                "time": "after_noon"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "I have the buoy's foghorn detection after noon.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record",
+              "roles": {
+                "fact": "buoy_detected_foghorn_after_noon"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Which direction did the sound come from?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "originate",
+              "roles": {
+                "theme": "foghorn_sound",
+                "requested_role": "direction"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "entity:foghorn_sound"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "originate",
+              "requested_roles": [
+                "direction"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "The detection report does not provide a direction.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "preserve_unknown",
+              "roles": {
+                "theme": "foghorn_sound",
+                "missing_role": "direction"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "understood",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Can we call it a southern signal?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "originate",
+              "roles": {
+                "theme": "foghorn_sound",
+                "direction": "south"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "entity:foghorn_sound"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "originate",
+              "requested_roles": []
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "No direction is supported, including south.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "reject_unsupported_detail",
+              "roles": {
+                "theme": "foghorn_sound",
+                "direction": "south"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-05",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-05",
+      "template_id": "development-saffron_breakfast",
+      "template_variables": {
+        "scenario": "saffron_breakfast"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "roommates learning a meal preference",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "For breakfast, I would choose saffron rice over barley soup.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "prefer",
+              "roles": {
+                "experiencer": "user",
+                "preferred": "saffron_rice",
+                "alternative": "barley_soup",
+                "context": "breakfast"
+              },
+              "scored": true
+            },
+            "expected_response_act": "positive_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "participant:user"
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Your breakfast choice favors saffron rice.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record_preference",
+              "roles": {
+                "owner": "user",
+                "target": "saffron_rice",
+                "context": "breakfast"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Which meal did I favor this morning?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "prefer",
+              "roles": {
+                "experiencer": "user",
+                "requested_role": "preferred",
+                "context": "breakfast"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "participant:user"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "saffron rice"
+              ],
+              "predicate": "prefer",
+              "requested_roles": [
+                "preferred"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "You favored saffron rice.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "prefer",
+              "roles": {
+                "experiencer": "user",
+                "preferred": "saffron_rice"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "understood",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "participant:user"
+            }
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Does that tell us what my roommate likes?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "prefer",
+              "roles": {
+                "experiencer": "roommate"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:roommate"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "prefer",
+              "requested_roles": []
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "No; your choice supplies no preference for your roommate.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "preserve_preference_owner",
+              "roles": {
+                "known_owner": "user",
+                "unknown_owner": "roommate"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-06",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-06",
+      "template_id": "development-ivo_display_name",
+      "template_variables": {
+        "scenario": "ivo_display_name"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "new collaborator establishing a display name without merging identities",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Please call me Ivo Chen during this session.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "identify",
+              "roles": {
+                "entity": "user",
+                "name": "ivo_chen",
+                "scope": "session"
+              },
+              "scored": true
+            },
+            "expected_response_act": "positive_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "participant:user"
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "I will address you as Ivo Chen here.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "link_name",
+              "roles": {
+                "entity": "user",
+                "name": "ivo_chen",
+                "scope": "session"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "participant:user"
+            }
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "What should you call me?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "identify",
+              "roles": {
+                "entity": "user",
+                "requested_role": "name"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "participant:user"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "Ivo Chen"
+              ],
+              "predicate": "identify",
+              "requested_roles": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "I should call you Ivo Chen.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "identify",
+              "roles": {
+                "entity": "user",
+                "name": "ivo_chen"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "understood",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "participant:user"
+            }
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Did that rename the assistant?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "rename",
+              "roles": {
+                "entity": "clanker"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "false",
+            "expected_truth": "false",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "patient": "participant:clanker"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "rename",
+              "requested_roles": []
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "No, the session name applies to you, not to me.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "distinguish_identity",
+              "roles": {
+                "named_participant": "user",
+                "assistant": "clanker"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "false",
+            "expected_truth": "false",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-07",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-07",
+      "template_id": "development-stage_direction_quote",
+      "template_variables": {
+        "scenario": "stage_direction_quote"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "editors examining an instruction inside fictional dialogue",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "The rehearsal script says, \"Flood the atrium with blue light.\"",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "quote",
+              "roles": {
+                "source": "rehearsal_script",
+                "content": "flood_atrium_blue_light"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "That is a line from the script, not an instruction I will carry out.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "classify_quote",
+              "roles": {
+                "source": "rehearsal_script",
+                "execution": "none"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "What color does the fictional direction specify?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "specify",
+              "roles": {
+                "source": "rehearsal_script",
+                "requested_role": "color"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {},
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "blue"
+              ],
+              "predicate": "specify",
+              "requested_roles": [
+                "color"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "The fictional direction specifies blue light.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "specify",
+              "roles": {
+                "source": "rehearsal_script",
+                "color": "blue",
+                "theme": "light"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "understood",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Should the quotation trigger a real lighting change?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "trigger",
+              "roles": {
+                "source": "rehearsal_script",
+                "theme": "real_lighting_change"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "false",
+            "expected_truth": "false",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {},
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "trigger",
+              "requested_roles": []
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "No. Its imperative form remains inert quoted material.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "distinguish_quote_action",
+              "roles": {
+                "source": "rehearsal_script",
+                "actual_action": "false"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "false",
+            "expected_truth": "false",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-08",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-08",
+      "template_id": "development-raven_suspicion",
+      "template_variables": {
+        "scenario": "raven_suspicion"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "lab partners distinguishing suspicion from evidence",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Yara suspects that a raven opened the greenhouse latch.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "suspect",
+              "roles": {
+                "experiencer": "yara",
+                "content": "raven_open_greenhouse_latch"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "I have attributed that suspicion to Yara.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "attribute",
+              "roles": {
+                "source": "yara",
+                "proposition": "raven_open_greenhouse_latch",
+                "status": "suspicion"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Was the latch actually opened by a raven?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "open",
+              "roles": {
+                "agent": "raven",
+                "theme": "greenhouse_latch"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:raven",
+              "patient": "entity:greenhouse_latch"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "open",
+              "requested_roles": []
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Yara's suspicion alone does not verify the cause.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "distinguish_suspicion_fact",
+              "roles": {
+                "source": "yara",
+                "proposition": "raven_open_greenhouse_latch"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "unknown",
+            "expected_truth": "unknown",
+            "outcome": "clarified",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Whose suspicion is recorded?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "suspect",
+              "roles": {
+                "content": "raven_open_greenhouse_latch",
+                "requested_role": "experiencer"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {},
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "Yara"
+              ],
+              "predicate": "suspect",
+              "requested_roles": [
+                "experiencer"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "The recorded suspicion belongs to Yara.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "suspect",
+              "roles": {
+                "experiencer": "yara",
+                "content": "raven_open_greenhouse_latch"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-09",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-09",
+      "template_id": "development-presentation_nerves",
+      "template_variables": {
+        "scenario": "presentation_nerves"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "supportive peers preparing for a difficult presentation",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "My hands shake whenever I rehearse tomorrow's council briefing.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "shake",
+              "roles": {
+                "theme": "user_hands",
+                "context": "rehearse_council_briefing"
+              },
+              "scored": true
+            },
+            "expected_response_act": "empathic_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "That sounds like a stressful rehearsal response.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "recognize_emotion",
+              "roles": {
+                "experiencer": "user",
+                "emotion": "stress",
+                "context": "council_briefing"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Could you answer briefly and avoid pep-talk slogans?",
+          "annotation_overrides": {
+            "dialogue_act": "command",
+            "semantic": {
+              "predicate": "set_response_style",
+              "roles": {
+                "agent": "clanker",
+                "style": "brief",
+                "avoid": "pep_talk_slogans"
+              },
+              "scored": true
+            },
+            "expected_response_act": "empathic_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Yes. I will keep my replies concise and grounded.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "adopt_style",
+              "roles": {
+                "agent": "clanker",
+                "style": "concise_grounded"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "de-escalated",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Have I said that I plan to cancel the briefing?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "cancel",
+              "roles": {
+                "agent": "user",
+                "theme": "council_briefing"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "false",
+            "expected_truth": "false",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "participant:user",
+              "patient": "entity:council_briefing"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [],
+              "predicate": "cancel",
+              "requested_roles": []
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "No. You described nervousness, not a plan to cancel.",
+          "annotation_overrides": {
+            "dialogue_act": "clarify",
+            "semantic": {
+              "predicate": "distinguish_emotion_intent",
+              "roles": {
+                "emotion": "nervousness",
+                "intent": "cancel_briefing_false"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "false",
+            "expected_truth": "false",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "development-open-10",
+      "source_id": "open-development-synthetic-v1",
+      "lineage_id": "development-open-lineage-10",
+      "template_id": "development-glinter_lesson",
+      "template_variables": {
+        "scenario": "glinter_lesson"
+      },
+      "entity_bindings": {
+        "user": "participant:user",
+        "clanker": "participant:clanker"
+      },
+      "relationship_context": "designated development instructor demonstrating reviewed lexical replay",
+      "participants": [
+        "user",
+        "clanker"
+      ],
+      "turns": [
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "In this development lesson, the reviewed verb glinter means to polish glass softly.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "define",
+              "roles": {
+                "teacher": "user",
+                "word": "glinter",
+                "meaning": "polish_glass_softly",
+                "scope": "development"
+              },
+              "scored": true
+            },
+            "expected_response_act": "probe",
+            "expected_answer_status": "lexical_probe",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "I have the proposed development meaning and will keep its source attached.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "record_definition",
+              "roles": {
+                "word": "glinter",
+                "meaning": "polish_glass_softly",
+                "source": "development_instructor"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "lexical_learned",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "Ari glintered the prism after lunch.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "glinter",
+              "roles": {
+                "agent": "ari",
+                "theme": "prism",
+                "time": "after_lunch"
+              },
+              "scored": true
+            },
+            "expected_response_act": "neutral_acknowledge",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Using the reviewed lesson, Ari softly polished the prism.",
+          "annotation_overrides": {
+            "dialogue_act": "acknowledge",
+            "semantic": {
+              "predicate": "paraphrase",
+              "roles": {
+                "agent": "ari",
+                "theme": "prism",
+                "action": "polish_softly"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "acknowledged",
+            "expected_truth": "true",
+            "outcome": "understood",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        },
+        {
+          "speaker": "user",
+          "addressee": "clanker",
+          "text": "What did Ari glinter?",
+          "annotation_overrides": {
+            "dialogue_act": "ask",
+            "semantic": {
+              "predicate": "glinter",
+              "roles": {
+                "agent": "ari",
+                "requested_role": "theme"
+              },
+              "scored": true
+            },
+            "expected_response_act": "answer",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "continued",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {
+              "agent": "entity:ari"
+            },
+            "expected_answer": {
+              "scored": true,
+              "values": [
+                "prism"
+              ],
+              "predicate": "glinter",
+              "requested_roles": [
+                "theme"
+              ]
+            }
+          }
+        },
+        {
+          "speaker": "clanker",
+          "addressee": "user",
+          "text": "Ari glintered the prism.",
+          "annotation_overrides": {
+            "dialogue_act": "assert",
+            "semantic": {
+              "predicate": "glinter",
+              "roles": {
+                "agent": "ari",
+                "theme": "prism"
+              },
+              "scored": true
+            },
+            "expected_response_act": "social",
+            "expected_answer_status": "answered",
+            "expected_truth": "true",
+            "outcome": "ended",
+            "ambiguity": false,
+            "annotator_confidence": 0.99,
+            "expected_entity_refs": {}
+          }
+        }
+      ]
+    }
+  ]
+}

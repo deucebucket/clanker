@@ -13,7 +13,7 @@ authors = [{name = "Jerry Mares"}]
 dependencies = []
 
 [project.optional-dependencies]
-test = ["pytest>=7.0", "coverage>=7.0", "httpx>=0.27,<1", "playwright>=1.55,<2"]
+test = ["pytest>=7.0", "coverage>=7.0", "httpx>=0.27,<1", "playwright>=1.55,<2", "build>=1.2"]
 web = ["starlette>=0.40,<1", "uvicorn>=0.30,<1"]
 
 [project.scripts]
@@ -26,7 +26,7 @@ Documentation = "https://github.com/deucebucket/clanker/blob/main/docs/CLANKER_L
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["engine*", "clanker_lm*"]
-exclude = ["tests*"]
+exclude = ["tests*", "evaluation*"]
 
 [tool.setuptools.package-data]
 "clanker_lm.data" = ["*.json"]

@@ -1,0 +1,264 @@
+{
+  "source_schema_version": 1,
+  "split": "heldout",
+  "learning_allowed": false,
+  "sources": [
+    {
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "domain": "public_domain_real_human",
+      "title": "Apollo 11 Technical Air-to-Ground Voice Transmission (GOSS NET 1)",
+      "creator": "National Aeronautics and Space Administration",
+      "publication_year": 1969,
+      "source_url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11transcript_tec.html",
+      "source_download_url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11transcript_tec.html",
+      "authoritative_source_url": "https://ntrs.nasa.gov/citations/20160014392",
+      "license_name": "U.S. Government Work / Public Use Permitted",
+      "license_url": "https://ntrs.nasa.gov/citations/20160014392",
+      "provenance_evidence_url": "https://ntrs.nasa.gov/citations/20160014392",
+      "rights_index_url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/a11trans.html",
+      "retrieval_date": "2026-09-04",
+      "raw_source_sha256": "daf141a2c9030b0ca1e8748962af7a4cbfe227ed324f5c5ca085f063db271b3a",
+      "extraction_locator_schema": "NASA GET DD HH MM SS (mission elapsed days, hours, minutes, seconds)",
+      "extractor_version": "manual_contiguous_window_extractor_v1",
+      "supervision_level": "weak",
+      "outcome_evidence": "archival_human_exchange_weak_supervision",
+      "rights_note": "NASA's Apollo 11 transcript index identifies the linked technical air-to-ground material as a raw transcript presented in its original form and states that no copyright is asserted. The NASA Technical Reports Server record identifies the document as a Work of the US Gov. with Public Use Permitted. This corpus uses the raw technical air-to-ground OCR transcript, not the copyright-corrected Lunar Surface Journal.",
+      "extraction_method": "Twelve manually selected, disjoint windows were faithfully transcribed from the NASA OCR HTML of the raw Technical Air-to-Ground transcript. Each window contains exactly ten consecutive timestamped transmissions in source order; no transmission was skipped within a window. Windows containing the transcript's three-dot garble marker or an ellipsis-only transmission were excluded. OCR spellings and the transcript's dash notation were preserved.",
+      "annotation_method": "government_transcript_weak_supervision_v1",
+      "is_real_human": true,
+      "is_public_domain": true,
+      "training_eligible": false,
+      "teacher_replay_eligible": false
+    }
+  ],
+  "conversations": [
+    {
+      "source_conversation_id": "nasa_a11_launch_mode_1_charlie_00000102",
+      "lineage_id": "nasa_apollo11_tec_segment_00000102_00000244",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 Commander and Houston CAP COMM coordinating launch milestones during the first minutes of flight.",
+      "participants": ["CC", "CDR"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CDR", "text": "Apollo 11, Houston. You're good at 1 minute.", "source_locator": "GET 00 00 01 02"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Roger.", "source_locator": "GET 00 00 01 06"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Stand by for mode 1 Charlie.", "source_locator": "GET 00 00 01 54"},
+        {"speaker": "CC", "addressee": "CDR", "text": "MARK.", "source_locator": "GET 00 00 01 57"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Mode 1 Charlie.", "source_locator": "GET 00 00 01 58"},
+        {"speaker": "CDR", "addressee": "CC", "text": "One Charlie.", "source_locator": "GET 00 00 01 59"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Apollo 11, this is Houston. You are GO for staging.", "source_locator": "GET 00 00 02 03"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Inboard cut-off.", "source_locator": "GET 00 00 02 17"},
+        {"speaker": "CC", "addressee": "CDR", "text": "We confirm inboard cut-off.", "source_locator": "GET 00 00 02 19"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Staging.", "source_locator": "GET 00 00 02 44"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_midcourse_correction_2_01014920",
+      "lineage_id": "nasa_apollo11_tec_segment_01014920_01015427",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 Command Module Pilot and Houston CAP COMM reading back a midcourse-correction PAD and coordinating battery charging.",
+      "participants": ["CC", "CMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CMP", "text": "Apollo 11, this is Houston. Mideourse correetion number 2. SPS/G&N 63059, plus 097, minus 020, GET ignition 02644 5792, plus 00118, minus 00003, plus 00177, roll 277 355 015, NOUN 44 BLOCK is NA, DELTA-VT 00213 003 00168, sextant star 30 2082 370.", "source_locator": "GET 01 01 49 20"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Roger. Midcourse correction number 2. SPS/G&N: 63059, plus 097, minus 020 02644 5792, plus 00118, minus 00003, plus 00177 277 - Are you still copying?", "source_locator": "GET 01 01 51 12"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. Still copying. Go ahead. Apollo 11, this is Houston. I copied your transmission about roll 277, and go ahead from roll 277. Over.", "source_locator": "GET 01 01 51 50"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Roger. 355 015, NA, 00213 003 00168 30 2082 370. Vega and Deneb 007 144 068. No ullage. LM weight: 33302. Heads towards the Earth. Over.", "source_locator": "GET 01 01 52 19"},
+        {"speaker": "CC", "addressee": "CMP", "text": "11, this is Houston. Readback correct. Out.", "source_locator": "GET 01 01 52 46"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Apollo 11, Houston. Over.", "source_locator": "GET 01 01 54 02"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Go ahead, Houston. Apollo 11.", "source_locator": "GET 01 01 54 08"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. We'd like you to terminate battery A at GET 26 hours and reinitiate battery A charge after midcourse correction 2. Over.", "source_locator": "GET 01 01 54 09"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Apollo 11. Roger.", "source_locator": "GET 01 01 54 23"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. Out.", "source_locator": "GET 01 01 54 27"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_lm_hatch_television_02073045",
+      "lineage_id": "nasa_apollo11_tec_segment_02073045_02073316",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 crew and Houston CAP COMM sharing a television view of the lunar module hatch during translunar coast.",
+      "participants": ["CC", "LMP", "CDR"],
+      "turns": [
+        {"speaker": "CC", "addressee": "LMP", "text": "11, Houston. We can even read the decals up there on the LM hatch.", "source_locator": "GET 02 07 30 45"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Well, let me zoom it up and see how much you can read.", "source_locator": "GET 02 07 30 53"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Okay.", "source_locator": "GET 02 07 30 57"},
+        {"speaker": "CC", "addressee": "LMP", "text": "We can see the LM umbilical connection quite well there, Buzz. We see you zooming in on one of the decals now. It's, \"To reset, unlatch handle; latch behind grip and pull back two full strokes.\" That's about all we can make out.", "source_locator": "GET 02 07 31 11"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Hey, you get an A-plus.", "source_locator": "GET 02 07 31 35"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Thank you very much, sir. At least I passed my eye test.", "source_locator": "GET 02 07 31 37"},
+        {"speaker": "LMP", "addressee": "CC", "text": "I'm standing 6 feet from it, Charlie, and you can read it better than I can. There's something wrong with the system.", "source_locator": "GET 02 07 31 46"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger.", "source_locator": "GET 02 07 31 54"},
+        {"speaker": "CC", "addressee": "CDR", "text": "That's a real good view of the LM hatch handle there, 11. 0ver.", "source_locator": "GET 02 07 33 08"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Roger.", "source_locator": "GET 02 07 33 16"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_lunar_orbit_accumulator_03012021",
+      "lineage_id": "nasa_apollo11_tec_segment_03012021_03012131",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 Command Module Pilot and Houston CAP COMM mixing informal crew banter with a technical accumulator-service request in lunar orbit.",
+      "participants": ["CC", "CMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CMP", "text": "Apollo 11, this is Houston. Over.", "source_locator": "GET 03 01 20 21"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Go ahead, Houston.", "source_locator": "GET 03 01 20 28"},
+        {"speaker": "CC", "addressee": "CMP", "text": "11, this is Houston. We're showing you - -", "source_locator": "GET 03 01 20 30"},
+        {"speaker": "CMP", "addressee": "CC", "text": "The Czar is brushing his teeth, so I'm filling in for him.", "source_locator": "GET 03 01 20 32"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Say again, please.", "source_locator": "GET 03 01 20 36"},
+        {"speaker": "CMP", "addressee": "CC", "text": "I said the Czar is brushing his teeth, so I'm filling in for him. What can we do for you?", "source_locator": "GET 03 01 20 42"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. If you don't get in the way of the Czar while he's brushing his teeth, we'd like you to bring up the primary accumulator quantity a little bit. We're showing the quantity now at 20.6 percent on TM. Seems to have gone down a bit since you've gone into the shadow. We'd like it serviced to bring the quantity up to between 30 and 40 percent, preferable 35 percent. Over.", "source_locator": "GET 03 01 20 47"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Okay.", "source_locator": "GET 03 01 21 19"},
+        {"speaker": "CC", "addressee": "CMP", "text": "The computer is yours, 11. The loads are in and verified. You can go back to BLOCK.", "source_locator": "GET 03 01 21 23"},
+        {"speaker": "CMP", "addressee": "CC", "text": "We're in BLOCK.", "source_locator": "GET 03 01 21 31"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_powered_descent_go_relay_04062808",
+      "lineage_id": "nasa_apollo11_tec_segment_04062808_04062907",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Houston CAP COMM and Columbia relay a powered-descent GO to Eagle while the lunar-module crew manages communications and descent controls.",
+      "participants": ["CC", "CMP", "LMP", "CDR"],
+      "turns": [
+        {"speaker": "CC", "addressee": "LMP", "text": "Eagle, Houston. If you read, you're GO for powered descent. Over.", "source_locator": "GET 04 06 28 08"},
+        {"speaker": "CMP", "addressee": "LMP", "text": "Eagle, this is Columbia. They just gave you a GO for powered descent.", "source_locator": "GET 04 06 28 18"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Columbia, Houston. We've lost them on the high gain again. Would you please - We recommend they yaw right 10 degrees and reacquire.", "source_locator": "GET 04 06 28 22"},
+        {"speaker": "CMP", "addressee": "LMP", "text": "Eagle, this is Columbia. You're GO for PDI and they recommend you yaw right 10 degrees and try the high gain again.", "source_locator": "GET 04 06 28 34"},
+        {"speaker": "CMP", "addressee": "LMP", "text": "Eagle, you read Columbia?", "source_locator": "GET 04 06 28 46"},
+        {"speaker": "LMP", "addressee": "CMP", "text": "Roger. We read you.", "source_locator": "GET 04 06 28 48"},
+        {"speaker": "CMP", "addressee": "LMP", "text": "Okay.", "source_locator": "GET 04 06 28 49"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Eagle, Houston. We read you now. You're GO for PDI. Over.", "source_locator": "GET 04 06 28 51"},
+        {"speaker": "LMP", "addressee": "CDR", "text": "Roger. Understand. AELD control circuit breakers. DECA GIMBAL AC - closed?", "source_locator": "GET 04 06 28 57"},
+        {"speaker": "CDR", "addressee": "LMP", "text": "What?", "source_locator": "GET 04 06 29 07"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_launch_orbit_insertion_00000852",
+      "lineage_id": "nasa_apollo11_tec_segment_00000852_00001001",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 Commander and Houston CAP COMM confirming staging, ignition, and abort-mode capability during ascent.",
+      "participants": ["CC", "CDR"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CDR", "text": "11, this is Houston. You are GO for staging. Over.", "source_locator": "GET 00 00 08 52"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Understand, GO for staging. And - -", "source_locator": "GET 00 00 08 56"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Stand by for mode IV capability.", "source_locator": "GET 00 00 08 57"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Okay. Mode IV.", "source_locator": "GET 00 00 08 59"},
+        {"speaker": "CC", "addressee": "CDR", "text": "MARK.", "source_locator": "GET 00 00 09 00"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Mode IV capability.", "source_locator": "GET 00 00 09 01"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Staging -", "source_locator": "GET 00 00 09 15"},
+        {"speaker": "CDR", "addressee": "CC", "text": "- And ignition.", "source_locator": "GET 00 00 09 16"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Ignition confirmed; thrust is GO, 11.", "source_locator": "GET 00 00 09 19"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Apollo 11, this is Houston. At 10 minutes, you are GO.", "source_locator": "GET 00 00 10 01"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_orbit_alignment_results_00005303",
+      "lineage_id": "nasa_apollo11_tec_segment_00005303_00005413",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 crew and Houston CAP COMM establishing contact through Carnarvon and exchanging platform-alignment results.",
+      "participants": ["CC", "LMP", "CMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "LMP", "text": "Apollo 11, this is Houston through Carnarvon. Over.", "source_locator": "GET 00 00 53 03"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Houston, Apollo 11. Loud and clear. Over.", "source_locator": "GET 00 00 53 08"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger, 11. We're reading you the same. Both the booster and the spacecraft are looking good to us. Over.", "source_locator": "GET 00 00 53 11"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Houston, Apollo 11. Would you like to copy the alignment results?", "source_locator": "GET 00 00 53 26"},
+        {"speaker": "CC", "addressee": "LMP", "text": "That's affirmative.", "source_locator": "GET 00 00 53 31"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Okay. NOUN 71: we used 30 and 37, four balls 1; NOUN 93: plus 00016, plus 00033, plus 00152; GET 00 48 15; check star 34. Over.", "source_locator": "GET 00 00 53 35"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger. Say again check star.", "source_locator": "GET 00 00 54 02"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Check star 34.", "source_locator": "GET 00 00 54 06"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger. We copy. And the angles look good.", "source_locator": "GET 00 00 54 09"},
+        {"speaker": "CMP", "addressee": "CC", "text": "And tell Glenn Parker down at the Cape that he lucked out.", "source_locator": "GET 00 00 54 13"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_tli_go_and_radio_check_00022638",
+      "lineage_id": "nasa_apollo11_tec_segment_00022638_00023234",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 flight crew and Houston CAP COMM confirming translunar-injection readiness and radio coverage.",
+      "participants": ["CC", "CMP", "CDR", "LMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CMP", "text": "Apollo 11, this is Houston. You are GO for TLI. Over.", "source_locator": "GET 00 02 26 38"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Apollo 11. Thank you.", "source_locator": "GET 00 02 26 45"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. Out.", "source_locator": "GET 00 02 26 48"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Apollo 11, this is Houston. Over.", "source_locator": "GET 00 02 30 11"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Houston, 11.", "source_locator": "GET 00 02 30 16"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Roger. We'll be coming within range of the ARIA aircraft coverage, here, in about 1 minute. They're going to try uplinking both on S-band and on VHF this time. So if you turn your - make sure your S-band volume is turned up, we'd appreciate it. And we believe that we'll have continuous coverage from now on through the TLI burn. Over.", "source_locator": "GET 00 02 30 18"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Very good.", "source_locator": "GET 00 02 30 42"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Apollo 11, Apollo 11, this is Houston through ARIA 4. Radio check. Over.", "source_locator": "GET 00 02 32 20"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Houston, we read you strength 4 and a little scratchy.", "source_locator": "GET 00 02 32 28"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger. We're reading you strength 5, readability about 3. Should be quite adequate.", "source_locator": "GET 00 02 32 34"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_first_steps_lunar_surface_04132248",
+      "lineage_id": "nasa_apollo11_tec_segment_04132248_04132530",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Tranquility Base crew and Houston CAP COMM communicating as Commander Neil Armstrong descends the ladder and first steps onto the lunar surface.",
+      "participants": ["CC", "CDR", "LMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CDR", "text": "Okay. Neil, we can see you coming down the ladder now.", "source_locator": "GET 04 13 22 48"},
+        {"speaker": "CDR", "addressee": "LMP", "text": "Okay. I just checked getting back up to that first step, Buzz. It's - not even collapsed too far, but it's adequate to get back up.", "source_locator": "GET 04 13 22 59"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Roger. We copy.", "source_locator": "GET 04 13 23 10"},
+        {"speaker": "CDR", "addressee": "LMP", "text": "It takes a pretty good little jump.", "source_locator": "GET 04 13 23 11"},
+        {"speaker": "LMP", "addressee": "CDR", "text": "Okay.", "source_locator": "GET 04 13 23 35"},
+        {"speaker": "CDR", "addressee": "CC", "text": "I'm at the foot of the ladder. The LM footpads are only depressed in the surface about 1 or 2 inches, although the surface appears to be very, very fine grained, as you get close to it. It's almost like a powder. Down there, it's very fine.", "source_locator": "GET 04 13 23 38"},
+        {"speaker": "CDR", "addressee": "CC", "text": "I'm going to step off the LM now.", "source_locator": "GET 04 13 23 43"},
+        {"speaker": "CDR", "addressee": "CC", "text": "THAT'S ONE SMALL STEP FOR (A) MAN, ONE GIANT LEAP FOR MANKIND.", "source_locator": "GET 04 13 24 48"},
+        {"speaker": "CDR", "addressee": "CC", "text": "And the - the surface is fine and powdery. I can - I can pick it up loosely with my toe. It does adhere in fine layers like powdered charcoal to the sole and sides of my boots. I only go in a small fraction of an inch, maybe an eighth of an inch, but I can see the footprints of my boots and the treads in the fine, sandy particles.", "source_locator": "GET 04 13 24 48"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Neil, this is Houston. We're copying.", "source_locator": "GET 04 13 25 30"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_post_rendezvous_cabin_check_05095102",
+      "lineage_id": "nasa_apollo11_tec_segment_05095102_05095221",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Reunited Apollo 11 crew and Houston CAP COMM confirming cabin integrity, consumables, and computer readiness after lunar-orbit rendezvous.",
+      "participants": ["CC", "CDR"],
+      "turns": [
+        {"speaker": "CDR", "addressee": "CC", "text": "Houston, this is Columbia. Reading you loud and clear. We're all three back inside; the hatch is installed. We're running a pressure check leak check. Everything's going well.", "source_locator": "GET 05 09 51 02"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Roger, Eagle. Correction - Roger, Columbia. We copy. You guys are speedy; you beat us to the punch. We had a couple of things for you.", "source_locator": "GET 05 09 51 11"},
+        {"speaker": "CDR", "addressee": "CC", "text": "What are they?", "source_locator": "GET 05 09 51 25"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Oh, it was just - We wanted you to close the CO2 sensor breaker and give us an RCS onboard readout out of Eagle, but that's all. Columbia, Houston. We've got a state vector for you if you'll give us P00 in ACCEPT. Over.", "source_locator": "GET 05 09 51 26"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Buzz says the CO2 sensor circuit breaker is IN", "source_locator": "GET 05 09 51 54"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Roger. Thank you very much.", "source_locator": "GET 05 09 51 58"},
+        {"speaker": "CDR", "addressee": "CC", "text": "The RCS quantity was approximately 60 at A and 45 percent at B.", "source_locator": "GET 05 09 52 09"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Roger.", "source_locator": "GET 05 09 52 14"},
+        {"speaker": "CDR", "addressee": "CC", "text": "And we're going P00 in ACCEPT.", "source_locator": "GET 05 09 52 19"},
+        {"speaker": "CC", "addressee": "CDR", "text": "Roger. Thank you.", "source_locator": "GET 05 09 52 21"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_return_coast_cabin_moisture_06115725",
+      "lineage_id": "nasa_apollo11_tec_segment_06115725_06120738",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 Command Module Pilot and Houston CAP COMM discussing cabin moisture, passive thermal control, news, and a flight-plan update during the return coast.",
+      "participants": ["CC", "CMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CMP", "text": "Apollo 11, Houston. We were curious to see if there was any excess moisture up around the tunnel hatch area as we saw on 10. Over.", "source_locator": "GET 06 11 57 25"},
+        {"speaker": "CMP", "addressee": "CC", "text": "It just so happens that's what we were talking about now. There is a little bit of dampness around the outside edge of the hatch, but a very, very slight amount. We've got a hose up there that we're hoping will sort of help keep it a little bit dry.", "source_locator": "GET 06 11 57 39"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger, Mike. Thank you much. Have you seen any more water collecting on the aft bulkhead? Over.", "source_locator": "GET 06 11 57 58"},
+        {"speaker": "CMP", "addressee": "CC", "text": "No, we haven't, as a matter of fact. It's been dry in that area since we got rid of that last time.", "source_locator": "GET 06 11 58 07"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. Thank you.", "source_locator": "GET 06 11 58 14"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Apollo 11 is back in PTC attitude. Standing by for thruster quieting.", "source_locator": "GET 06 11 58 47"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger. We see that. Thank you much, Mike.", "source_locator": "GET 06 11 58 53"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Houston, Apollo 11. Could you get a little summary of the evening news for us?", "source_locator": "GET 06 12 07 20"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Yes, sir. We'll have it for you momentarily. Also, a little flight plan update, Mike. If you - On page 3 113, you can delete the O2 fuel cell purge. Over.", "source_locator": "GET 06 12 07 26"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Will do.", "source_locator": "GET 06 12 07 38"}
+      ]
+    },
+    {
+      "source_conversation_id": "nasa_a11_entry_preparation_08012508",
+      "lineage_id": "nasa_apollo11_tec_segment_08012508_08013128",
+      "source_id": "nasa_apollo_11_technical_air_to_ground_1969",
+      "relationship_context": "Apollo 11 flight crew and Houston CAP COMM checking entry timing, spacecraft configuration, photography, and VHF antenna selection before Earth return.",
+      "participants": ["CC", "CDR", "LMP", "CMP"],
+      "turns": [
+        {"speaker": "CC", "addressee": "CDR", "text": "Apollo 11, Houston.", "source_locator": "GET 08 01 25 08"},
+        {"speaker": "CDR", "addressee": "CC", "text": "Go ahead.", "source_locator": "GET 08 01 25 11"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger. Just to get a little downlink here to check out our VHF: I show us about an hour and 37 minutes, approximately, from entry interface. Over.", "source_locator": "GET 08 01 25 13"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Okay. That's about right.", "source_locator": "GET 08 01 25 26"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Okay. Looks like we're together on that, and I guess we're standing by for you to whip into the entry attitude.", "source_locator": "GET 08 01 25 28"},
+        {"speaker": "LMP", "addressee": "CC", "text": "Okay. We've just been taking a couple of last minute pictures. We've finished the EMS entry check, primary water EVAP activation.", "source_locator": "GET 08 01 25 37"},
+        {"speaker": "CC", "addressee": "LMP", "text": "Roger. Mighty fine.", "source_locator": "GET 08 01 25 46"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Apollo 11, Houston.", "source_locator": "GET 08 01 31 22"},
+        {"speaker": "CMP", "addressee": "CC", "text": "Go ahead.", "source_locator": "GET 08 01 31 26"},
+        {"speaker": "CC", "addressee": "CMP", "text": "Roger, Mike. We recommend the left VHF antenna for VHF.", "source_locator": "GET 08 01 31 28"}
+      ]
+    }
+  ]
+}

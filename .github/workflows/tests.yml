@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -35,7 +37,26 @@ jobs:
           python -m pip install -e ".[test,web]"
 
       - name: Compile source
-        run: python -m compileall -q engine clanker_lm tests
+        run: python -m compileall -q engine clanker_lm evaluation tests
+
+      - name: Verify frozen conversation corpus
+        run: |
+          python -m evaluation.conversations verify
+          python -m evaluation.conversations verify-history --ref HEAD
+
+      - name: Enforce additive-only held-out versions
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            additive_base="${{ github.event.before }}"
+            git fetch --no-tags --depth=1 origin "$additive_base"
+          else
+            additive_base="origin/main"
+            git fetch --no-tags --depth=1 origin main
+          fi
+          python -m evaluation.conversations verify-additive --base "$additive_base"
+
+      - name: Run open development conversation evaluation
+        run: python -m evaluation.conversations run --split development --output /tmp/clanker-conversation-dev.json
 
       - name: Install Chromium for web DOM acceptance
         if: matrix.python-version == '3.12'
