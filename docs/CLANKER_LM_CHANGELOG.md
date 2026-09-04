@@ -33,11 +33,13 @@ milestone agreement, `pr-N`/pull-request and milestone/commit evidence links,
 URL allowlists, pinned private deployment URL, and absence of private-content
 fields. It also requires exactly one current-live row first, followed by
 newest-first pending rows and then newest-first history; a pending milestone may
-be newer than the live baseline. A separate required deployed configuration
-value reports the exact running build through the API and UI. CI asks GitHub to
-prove every milestone PR is merged at its recorded commit. The browser creates
-dynamic content with `textContent`; it uses no HTML insertion or external
-assets.
+be newer than the live baseline. Every state has one canonical badge label;
+startup rejects contradictory state/label pairs, and the browser derives badge
+copy from state rather than rendering ledger label text. A separate required
+deployed configuration value reports the exact running build through the API
+and UI. CI asks GitHub to prove every milestone PR is merged at its recorded
+commit. The browser creates dynamic content with `textContent`; it uses no HTML
+insertion or external assets.
 
 The initial pre-merge feed contained only reviewed PR #106. After the
 implementation merged as PR #113, this follow-up release artifact added the
@@ -57,8 +59,8 @@ IDs. The checked-in feed contains no self-referential build SHA.
 Local validation on the current tree:
 
 ```text
-154 focused web/config/CLI/verifier/DOM tests passed
-2,757 full-suite tests passed, 2 expected xfails
+157 focused web/config/CLI/verifier/DOM tests passed
+2,760 full-suite tests passed, 2 expected xfails
 29/29 deterministic acceptance turns
 real Chromium DOM wiring passed; hostile text remained text with no overflow
 1440×1000, 360×800, and 300×700: runtime/milestone split visible; focus restored

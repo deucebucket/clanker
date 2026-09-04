@@ -961,7 +961,7 @@ def _release_record(
     ]
     release["deployment"].update(
         state=state,
-        label=f"{state.replace('_', ' ').title()} · test fixture",
+        label=web_module._DEPLOYMENT_LABELS[state],
     )
     return release
 
@@ -1065,7 +1065,7 @@ def test_release_lifecycle_rejects_duplicate_live_and_bad_group_order() -> None:
     duplicate_live = copy.deepcopy(feed)
     duplicate_live["releases"][1]["deployment"].update(
         state="live",
-        label="Live · duplicate test fixture",
+        label=web_module._DEPLOYMENT_LABELS["live"],
     )
     with pytest.raises(ValueError, match="exactly one live release"):
         web_module._validate_release_feed(duplicate_live)
@@ -1126,6 +1126,28 @@ def test_release_lifecycle_rejects_duplicate_live_and_bad_group_order() -> None:
     )
     with pytest.raises(ValueError, match="release history must be ordered"):
         web_module._validate_release_feed(history_out_of_order)
+
+
+@pytest.mark.parametrize(
+    ("release_index", "state", "forged_label"),
+    [
+        (1, "pending", "Live · private Tailnet"),
+        (0, "live", "Pending · live verification"),
+        (1, "retired", "Live · private Tailnet"),
+    ],
+)
+def test_release_deployment_state_requires_its_canonical_label(
+    release_index: int,
+    state: str,
+    forged_label: str,
+) -> None:
+    feed = _release_feed_fixture()
+    feed["releases"][release_index]["deployment"].update(
+        state=state,
+        label=forged_label,
+    )
+    with pytest.raises(ValueError, match="label does not match its state"):
+        web_module._validate_release_feed(feed)
 
 
 def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() -> None:
@@ -1206,6 +1228,7 @@ def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() 
                     "deployment": {
                         **copy.deepcopy(feed["releases"][0]["deployment"]),
                         "state": "pending",
+                        "label": web_module._DEPLOYMENT_LABELS["pending"],
                     },
                     "evidence": [
                         {
@@ -1412,6 +1435,8 @@ def test_changelog_dialog_has_keyboard_focus_mobile_and_loading_error_hooks() ->
     assert "release-card--pending" in js
     assert "newest first" not in js
     assert "current live" in js
+    assert "release.deployment.label" not in js
+    assert "current.deployment.label" not in js
     assert "The reviewed release record could not be loaded." in js
     assert ".changelog-body {" in css and "overflow-y: auto" in css
     assert "@media (max-width: 640px)" in css

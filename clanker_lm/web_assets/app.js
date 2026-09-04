@@ -73,24 +73,28 @@ const lifecyclePresentation = Object.freeze({
   live: Object.freeze({
     cardClass: "release-card--live",
     badgeClass: "deployment-badge--live",
+    badgeLabel: "Live · private Tailnet",
     capabilityHeading: "What is live",
     deploymentLinkLabel: "Open live workbench",
   }),
   pending: Object.freeze({
     cardClass: "release-card--pending",
     badgeClass: "deployment-badge--pending",
+    badgeLabel: "Pending · live verification",
     capabilityHeading: "What passed review",
     deploymentLinkLabel: "Open current live baseline",
   }),
   retired: Object.freeze({
     cardClass: "release-card--history",
     badgeClass: "deployment-badge--history",
+    badgeLabel: "Retired · release history",
     capabilityHeading: "What shipped",
     deploymentLinkLabel: "Open current live workbench",
   }),
   rolled_back: Object.freeze({
     cardClass: "release-card--history",
     badgeClass: "deployment-badge--history",
+    badgeLabel: "Rolled back · release history",
     capabilityHeading: "What shipped before rollback",
     deploymentLinkLabel: "Open current live workbench",
   }),
@@ -141,7 +145,7 @@ function renderRelease(release) {
 
   const deployment = element("footer", "release-deployment");
   deployment.append(
-    element("span", `deployment-badge ${presentation.badgeClass}`, release.deployment.label),
+    element("span", `deployment-badge ${presentation.badgeClass}`, presentation.badgeLabel),
     element("p", "", release.deployment.detail),
     deploymentLink(release.deployment, presentation.deploymentLinkLabel),
   );
@@ -163,6 +167,7 @@ function renderReleaseFeed(feed) {
     throw new Error("The release feed is empty or malformed.");
   }
   const current = feed.releases[0];
+  const currentPresentation = lifecyclePresentation[current.deployment && current.deployment.state];
   const states = feed.releases.map((release) => release.deployment && release.deployment.state);
   const liveCount = states.filter((state) => state === "live").length;
   const pendingCount = states.filter((state) => state === "pending").length;
@@ -173,6 +178,7 @@ function renderReleaseFeed(feed) {
     || current.milestone_commit !== feed.latest_shipped_release.milestone_commit
     || current.package_version !== feed.running_package_version
     || current.deployment.state !== "live"
+    || !currentPresentation
     || liveCount !== 1
     || liveCount + pendingCount + historyCount !== feed.releases.length
   ) {
@@ -184,7 +190,7 @@ function renderReleaseFeed(feed) {
   latestReleaseLabel.textContent = `v${current.package_version} · ${shortCommit}`;
   deployedVersion.textContent = `v${feed.running_package_version}`;
   deployedBuildCommit.textContent = feed.deployed_build_commit;
-  deployedState.textContent = current.deployment.label;
+  deployedState.textContent = currentPresentation.badgeLabel;
   releaseList.setAttribute("aria-busy", "false");
   changelogRetry.hidden = true;
   setChangelogStatus(`${feed.releases.length} reviewed release${feed.releases.length === 1 ? "" : "s"}: ${liveCount} current live, ${pendingCount} pending, ${historyCount} history.`);

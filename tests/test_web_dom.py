@@ -22,6 +22,8 @@ def test_changelog_wiring_executes_in_a_real_browser_dom() -> None:
 
     marker = '<img src=x onerror="window.privateTranscript=1">'
     payload["releases"][0]["title"] = marker
+    payload["releases"][0]["deployment"]["label"] = "Pending · forged metadata"
+    payload["releases"][1]["deployment"]["label"] = "Live · forged metadata"
     html = re.sub(r"<link\b[^>]*app\.css[^>]*>", "", html)
     html = re.sub(r"<script\b[^>]*app\.js[^>]*></script>", "", html)
 
@@ -53,12 +55,19 @@ def test_changelog_wiring_executes_in_a_real_browser_dom() -> None:
             )
             assert page.locator(".release-card--live").count() == 1
             assert page.locator(".release-card--live").get_attribute("aria-current") == "true"
+            assert page.locator(".release-card--live .deployment-badge").text_content() == (
+                "Live · private Tailnet"
+            )
             assert page.locator(".release-card--pending").count() == 1
             assert page.locator(".release-card--pending h4").first.text_content() == (
                 "What passed review"
             )
             assert page.locator(".deployment-badge--pending").text_content() == (
                 "Pending · live verification"
+            )
+            assert "forged metadata" not in page.locator("#release-list").text_content()
+            assert page.locator("#deployed-state").text_content() == (
+                "Live · private Tailnet"
             )
             assert page.locator(".release-card--pending").get_by_role(
                 "link", name="Open current live baseline"

@@ -192,6 +192,12 @@ row; it must not replace `latest_shipped_release`. There must be exactly one
 more `pending` rows come next, newest date first within that group. `retired`
 and `rolled_back` history follows, also newest date first within the history
 group. A pending row may therefore have a later date than the current live row.
+Deployment badges have one canonical label per state: `live` is
+**Live · private Tailnet**, `pending` is **Pending · live verification**,
+`retired` is **Retired · release history**, and `rolled_back` is
+**Rolled back · release history**. Startup rejects any state/label mismatch,
+and the browser derives the visible badge from state instead of trusting label
+copy from the ledger.
 After live verification, promote it to the top `live` row and retire the
 previous live marker. The top entry and `latest_shipped_release` must agree
 exactly on release ID, package version, and full 40-character milestone commit.

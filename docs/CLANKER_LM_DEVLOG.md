@@ -788,8 +788,8 @@ deployed build stops the app instead of producing a plausible-looking receipt.
 
 ```text
 base:      main at 9ae77f072f8afda0b1d2b757ab492757cabff0f8
-focused:   154 web/config/CLI/verifier/real-DOM tests passed
-full:      2,757 passed, 2 expected xfails
+focused:   157 web/config/CLI/verifier/real-DOM tests passed
+full:      2,760 passed, 2 expected xfails
 benchmark: 29/29 deterministic turns
 browser:   1440×1000, 360×800, and 300×700; no overflow; focus restored
 identity:  injected runtime build differed visibly from PR #106 milestone
@@ -856,6 +856,12 @@ closed. The dialog visibly says **Reviewed release record**, marks the current
 live card, and gives the pending card distinct **What passed review** language
 and amber treatment.
 
+**Proven:** lifecycle badge copy is canonical rather than author-controlled.
+Startup rejects pending/live, live/pending, and retired/live state-label
+mismatches. The browser selects fixed badge text from structured state; a real
+DOM test injects forged opposite-state labels and proves they are not visible
+in either release card or the current-runtime summary.
+
 **Inference:** the metadata is ready for release review because its identifiers
 come from GitHub's completed merge and CI records, not a predicted PR number or
 self-referential commit placeholder.
@@ -874,8 +880,8 @@ accepted head:         e4c25ae330d917132e496e700b1c2839e652a911
 PR CI run:             33861328696 (Python 3.10 and 3.12 passed)
 live URL:              https://bazzite.tail85f65f.ts.net:8444/
 runtime build:         supplied only after this follow-up artifact merges
-focused:              154 web/config/CLI/verifier/real-DOM tests passed
-full:                 2,757 passed, 2 expected xfails
+focused:              157 web/config/CLI/verifier/real-DOM tests passed
+full:                 2,760 passed, 2 expected xfails
 benchmark:            29/29 deterministic turns
 GitHub:               PR #106 at 9ae77f0; PR #113 at 66b85de
 static:               compile, JavaScript syntax, and diff checks clean

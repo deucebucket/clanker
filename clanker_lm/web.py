@@ -59,6 +59,12 @@ _SHIPPED_RELEASE_KEYS = frozenset(
 )
 _EVIDENCE_KEYS = frozenset({"label", "url"})
 _DEPLOYMENT_KEYS = frozenset({"state", "label", "detail", "url"})
+_DEPLOYMENT_LABELS = {
+    "live": "Live · private Tailnet",
+    "pending": "Pending · live verification",
+    "retired": "Retired · release history",
+    "rolled_back": "Rolled back · release history",
+}
 _PRIVATE_FEED_KEYS = frozenset(
     {
         "attachment",
@@ -604,9 +610,13 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
         deployment_state = _release_text(
             deployment["state"], name="deployment state", maximum=20
         )
-        if deployment_state not in {"live", "pending", "retired", "rolled_back"}:
+        if deployment_state not in _DEPLOYMENT_LABELS:
             raise ValueError("release deployment state is unsupported")
-        _release_text(deployment["label"], name="deployment label", maximum=100)
+        deployment_label = _release_text(
+            deployment["label"], name="deployment label", maximum=100
+        )
+        if deployment_label != _DEPLOYMENT_LABELS[deployment_state]:
+            raise ValueError("release deployment label does not match its state")
         _release_text(deployment["detail"], name="deployment detail")
         deployment_url = _release_text(
             deployment["url"], name="deployment URL", maximum=200
