@@ -123,10 +123,11 @@ h1 { margin: 0; max-width: 620px; font-family: Georgia, "Times New Roman", serif
 .suggestions button { min-height: 38px; padding: 7px 11px; color: var(--teal); cursor: pointer; background: transparent; border: 1px solid rgba(40, 125, 120, 0.34); border-radius: 999px; }
 .suggestions button:hover { background: var(--teal-pale); }
 
-.evidence-rail { display: grid; grid-template-columns: repeat(3, minmax(82px, auto)) minmax(190px, 1fr); gap: 1px; margin: 17px -21px -18px; overflow: hidden; color: #d9dfda; background: #4b544f; border-radius: 0 0 17px 17px; }
+.evidence-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); min-width: 0; gap: 1px; margin: 17px -21px -18px; overflow: hidden; color: #d9dfda; background: #4b544f; border-radius: 0 0 17px 17px; }
 .evidence-field { min-width: 0; padding: 10px 12px; background: var(--graphite-900); }
 .evidence-field dt { margin-bottom: 4px; color: #8ea49a; font: 600 0.57rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.1em; text-transform: uppercase; }
-.evidence-field dd { margin: 0; overflow: hidden; font: 600 0.68rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.evidence-field dd { margin: 0; overflow-wrap: anywhere; font: 600 0.68rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.evidence-field--vadug { grid-column: 1 / -1; }
 .evidence-field--vadug dd { color: #f0b15e; }
 
 .composer { position: sticky; bottom: 0; z-index: 4; padding-top: 16px; background: linear-gradient(transparent, var(--paper-light) 16px); }
@@ -181,8 +182,7 @@ textarea::placeholder { color: #8b928d; }
   .turn { grid-template-columns: 1fr; gap: 7px; margin-bottom: 23px; }
   .speaker { margin: 0 4px; text-align: left; }
   .turn--user .speaker { text-align: right; }
-  .evidence-rail { grid-template-columns: repeat(3, 1fr); }
-  .evidence-field--vadug { grid-column: 1 / -1; }
+  .evidence-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .send { min-width: 52px; }
   .send span:first-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
   .composer-meta span:first-child { max-width: 70%; }

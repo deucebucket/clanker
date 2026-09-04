@@ -862,6 +862,28 @@ def test_ui_uses_safe_dom_apis_local_assets_and_accessibility_hooks() -> None:
     assert "@media" in css
 
 
+def test_ui_evidence_rail_renders_truth_certainty_and_wraps_responsively() -> None:
+    app = create_app(config=_config())
+    with _client(app) as client:
+        js_response = client.get("/assets/app.js", headers=_headers())
+        css_response = client.get("/assets/app.css", headers=_headers())
+
+    assert js_response.status_code == css_response.status_code == 200
+    js = js_response.text
+    css = re.sub(r"\s+", " ", css_response.text)
+
+    assert re.search(r'label:\s*"Truth",\s*value:\s*evidence\.truth', js)
+    assert re.search(
+        r'label:\s*"Certainty",\s*value:\s*`\$\{evidence\.certainty\}\s*/\s*255`',
+        js,
+    )
+    assert "evidence-field--vadug" in js
+    assert "grid-template-columns: repeat(5, minmax(0, 1fr))" in css
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr))" in css
+    assert ".evidence-field--vadug { grid-column: 1 / -1; }" in css
+    assert "overflow-wrap: anywhere" in css
+
+
 def test_ui_has_one_logical_in_flight_guard_for_submit_keyboard_and_reset() -> None:
     app = create_app(config=_config())
     with _client(app) as client:

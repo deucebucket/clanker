@@ -40,13 +40,19 @@ function addTurn(speakerName, text, evidence) {
   if (evidence) {
     const rail = element("dl", "evidence-rail");
     const fields = [
-      ["Answer", evidence.answer_status],
-      ["Source", evidence.source],
-      ["Memory", `r${evidence.memory_revision}`],
-      ["VADUG", Object.entries(evidence.vadug).map(([key, value]) => `${key.toUpperCase()}${value}`).join(" · ")],
+      { label: "Answer", value: evidence.answer_status },
+      { label: "Truth", value: evidence.truth },
+      { label: "Source", value: evidence.source },
+      { label: "Certainty", value: `${evidence.certainty} / 255` },
+      { label: "Memory", value: `r${evidence.memory_revision}` },
+      {
+        label: "VADUG",
+        value: Object.entries(evidence.vadug).map(([key, value]) => `${key.toUpperCase()}${value}`).join(" · "),
+        modifier: "evidence-field--vadug",
+      },
     ];
-    fields.forEach(([label, value], index) => {
-      const field = element("div", `evidence-field${index === 3 ? " evidence-field--vadug" : ""}`);
+    fields.forEach(({ label, value, modifier = "" }) => {
+      const field = element("div", `evidence-field${modifier ? ` ${modifier}` : ""}`);
       field.append(element("dt", "", label), element("dd", "", String(value)));
       rail.append(field);
     });
