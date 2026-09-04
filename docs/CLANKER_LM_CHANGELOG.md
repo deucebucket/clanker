@@ -15,7 +15,55 @@ left `engine/` unchanged.
 
 ---
 
-## Unreleased — Private browser workbench
+## Unreleased — Reviewed shipped-changes feed
+
+**Issue:** [#112](https://github.com/deucebucket/clanker/issues/112)
+
+Added a visible **Changelog** entry point to the existing private semantic
+workbench. The dialog keeps the graphite/warm-paper/amber-teal visual language,
+works as a full-height mobile reading surface, uses native dialog keyboard
+behavior, restores focus on close, and preserves the six-field answer evidence
+rail.
+
+The feed is repository-backed by a bounded packaged JSON artifact. Application
+startup validates its schema, newest-first dates, unique release IDs, exact
+package-version/milestone agreement, `pr-N`/pull-request and milestone/commit
+evidence links, URL allowlists, pinned private deployment URL, and absence of
+private-content fields. A separate required deployed configuration value reports
+the exact running build through the API and UI. CI asks GitHub to prove every
+milestone PR is merged at its recorded commit. The browser creates dynamic
+content with `textContent`; it uses no HTML insertion or external assets.
+
+Only the reviewed, merged, and deployed PR #106 baseline appears in the initial
+feed. Issue #107 and later roadmap work are explicitly not represented as
+shipped. This branch has not changed or redeployed the live service.
+
+The first implementation commit `2c16f69` was rejected because it reused PR
+#106's milestone commit as if that proved the running build. The corrected
+contract keeps `milestone_commit` in the ledger and injects
+`deployed_build_commit` from `WebConfig`, the CLI, and the deployment environment.
+It rejects missing, abbreviated, uppercase, invalid, or all-zero deployed build
+IDs. The checked-in feed contains no self-referential build SHA.
+
+Local validation on the current tree:
+
+```text
+151 focused web/config/CLI/verifier/DOM tests passed
+2,754 full-suite tests passed, 2 expected xfails
+29/29 deterministic acceptance turns
+real Chromium DOM wiring passed; hostile text remained text with no overflow
+1440×1000, 360×800, and 300×700: runtime/milestone split visible; focus restored
+GitHub verified PR #106 merged at 9ae77f0
+fresh wheel contains the verifier and all four web assets
+workflow YAML, compile, JavaScript syntax, diff, and no-engine checks clean
+```
+
+---
+
+## 2026-09-04 — Private browser workbench
+
+**PR:** [#106](https://github.com/deucebucket/clanker/pull/106)
+**Merge commit:** `9ae77f072f8afda0b1d2b757ab492757cabff0f8`
 
 Added a small Starlette/Uvicorn interface for the deterministic runtime and
 deployed it as the `clanker-lm-web.service` systemd user service.
@@ -50,10 +98,10 @@ compile, JavaScript syntax, and diff checks clean
 engine/ and clanker_engine.py unchanged
 ```
 
-An independent web reviewer returned **ACCEPT** before rebase and before the live
-link fix. The current exact tree passed the dedicated, full, benchmark, compile,
-JavaScript syntax, diff, and engine-boundary gates. Final exact-head independent
-review is not yet claimed. Operational details are in `docs/CLANKER_LM_WEB.md`.
+The final exact-head release gate returned **APPROVE** on
+`780d77b4673aa45a692fc5a1f8af144a41f09fd0`: Python 3.10/3.12 CI, automated
+review, and independent security/UX judgment were green before the PR was
+squash-merged. Operational details are in `docs/CLANKER_LM_WEB.md`.
 
 ---
 

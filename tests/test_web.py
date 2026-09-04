@@ -9,6 +9,7 @@ suite is meant to catch.
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import re
 from dataclasses import dataclass, field
@@ -19,13 +20,15 @@ import httpx
 import pytest
 from starlette.testclient import TestClient
 
-from clanker_lm import ClankerLM, HeuristicAffectBackend
+from clanker_lm import ClankerLM, HeuristicAffectBackend, __version__
+from clanker_lm import web as web_module
 from clanker_lm.web import WebConfig, create_app, run_server
 
 
 PUBLIC_ORIGIN = "https://clanker.example.ts.net"
 ALLOWED_LOGIN = "owner@example.com"
 LOGIN_HEADER = "Tailscale-User-Login"
+BUILD_COMMIT = "b" * 40
 
 
 def _config(**logical_overrides: Any) -> WebConfig:
@@ -38,6 +41,7 @@ def _config(**logical_overrides: Any) -> WebConfig:
     values: dict[str, Any] = {
         "public_origin": PUBLIC_ORIGIN,
         "deployed": True,
+        "build_commit": BUILD_COMMIT,
         "allowed_users": (ALLOWED_LOGIN,),
     }
     values.update({aliases.get(name, name): value for name, value in logical_overrides.items()})
@@ -209,6 +213,7 @@ def test_web_config_rejects_every_nonloopback_bind_host(
     if deployed:
         kwargs.update(
             public_origin=PUBLIC_ORIGIN,
+            build_commit=BUILD_COMMIT,
             allowed_users=(ALLOWED_LOGIN,),
         )
     with pytest.raises(ValueError):
@@ -225,6 +230,7 @@ def test_web_config_accepts_only_the_supported_loopback_spellings(
     if deployed:
         kwargs.update(
             public_origin=PUBLIC_ORIGIN,
+            build_commit=BUILD_COMMIT,
             allowed_users=(ALLOWED_LOGIN,),
         )
     assert WebConfig(**kwargs).host == host
@@ -251,6 +257,7 @@ def test_deployed_public_origin_rejects_noncanonical_or_unsafe_forms(origin: str
         WebConfig(
             deployed=True,
             public_origin=origin,
+            build_commit=BUILD_COMMIT,
             allowed_users=(ALLOWED_LOGIN,),
         )
 
@@ -268,6 +275,7 @@ def test_deployed_public_origin_accepts_canonical_https_and_nondefault_port(
     config = WebConfig(
         deployed=True,
         public_origin=origin,
+        build_commit=BUILD_COMMIT,
         allowed_users=(ALLOWED_LOGIN,),
     )
     assert config.allowed_origin == origin
@@ -276,6 +284,39 @@ def test_deployed_public_origin_accepts_canonical_https_and_nondefault_port(
 def test_local_mode_may_retain_an_explicit_http_origin() -> None:
     config = WebConfig(public_origin="http://localhost:8765")
     assert config.allowed_origin == "http://localhost:8765"
+    assert config.resolved_build_commit == "0" * 40
+
+
+@pytest.mark.parametrize(
+    "build_commit",
+    [
+        None,
+        "",
+        "a" * 39,
+        "a" * 41,
+        "A" * 40,
+        "g" * 40,
+        "0" * 40,
+        True,
+    ],
+)
+def test_deployed_mode_rejects_missing_or_nonexact_build_commit(
+    build_commit: Any,
+) -> None:
+    with pytest.raises(ValueError):
+        WebConfig(
+            deployed=True,
+            public_origin=PUBLIC_ORIGIN,
+            build_commit=build_commit,
+            allowed_users=(ALLOWED_LOGIN,),
+        )
+
+
+def test_local_and_deployed_configs_preserve_an_explicit_exact_build_commit() -> None:
+    assert WebConfig(build_commit=BUILD_COMMIT).resolved_build_commit == BUILD_COMMIT
+    deployed = _config(build_commit="c" * 40)
+    assert deployed.build_commit == "c" * 40
+    assert deployed.resolved_build_commit == "c" * 40
 
 
 def test_run_server_rechecks_loopback_before_calling_uvicorn(
@@ -855,8 +896,10 @@ def test_malformed_chat_requests_fail_closed(body: bytes, content_type: str) -> 
         ("GET", "/api/chat", 405),
         ("GET", "/api/reset", 405),
         ("POST", "/api/export", 405),
+        ("POST", "/api/releases", 405),
         ("PUT", "/", 405),
         ("GET", "/api/import", 404),
+        ("GET", "/assets/releases.json", 404),
         ("GET", "/assets/%2e%2e/web.py", 404),
         ("GET", "/assets/%2fetc%2fpasswd", 404),
     ],
@@ -885,6 +928,365 @@ def test_health_is_minimal_public_and_does_not_create_or_leak_a_session() -> Non
     assert "memory" not in lowered
     assert "cobalt-seven" not in lowered
     _assert_hardened(response)
+
+
+def _release_feed_fixture() -> dict[str, Any]:
+    assets = web_module._load_assets()
+    return json.loads(assets["releases.json"].decode("utf-8"))
+
+
+def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> None:
+    app = create_app(config=_config())
+    with _client(app) as client:
+        response = client.get("/api/releases", headers=_headers(origin=None))
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+    feed = response.json()
+    assert set(feed) == {
+        "schema_version",
+        "running_package_version",
+        "deployed_build_commit",
+        "latest_shipped_release",
+        "releases",
+    }
+    assert feed["schema_version"] == 1
+    assert feed["running_package_version"] == __version__ == "0.2.0"
+    assert feed["deployed_build_commit"] == BUILD_COMMIT
+    assert feed["releases"]
+    assert [release["date"] for release in feed["releases"]] == sorted(
+        (release["date"] for release in feed["releases"]),
+        reverse=True,
+    )
+    assert len({release["release_id"] for release in feed["releases"]}) == len(
+        feed["releases"]
+    )
+
+    current = feed["releases"][0]
+    assert feed["latest_shipped_release"] == {
+        "release_id": current["release_id"],
+        "package_version": current["package_version"],
+        "milestone_commit": current["milestone_commit"],
+    }
+    assert current["release_id"] == "pr-106"
+    assert current["package_version"] == feed["running_package_version"]
+    assert current["milestone_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+    assert feed["deployed_build_commit"] != current["milestone_commit"]
+    assert current["date"] == "2026-09-04"
+    assert current["deployment"] == {
+        "state": "live",
+        "label": "Live · private Tailnet",
+        "detail": "Reviewed PR #106 is the deployed baseline. No later roadmap milestone is claimed as shipped.",
+        "url": "https://bazzite.tail85f65f.ts.net:8444/",
+    }
+    assert current["capabilities"]
+    assert current["limitations"]
+    assert {link["url"] for link in current["evidence"]} >= {
+        "https://github.com/deucebucket/clanker/pull/106",
+        "https://github.com/deucebucket/clanker/commit/9ae77f072f8afda0b1d2b757ab492757cabff0f8",
+    }
+    assert "pr-107" not in response.text.lower()
+    _assert_hardened(response)
+
+
+def test_release_endpoint_reports_the_exact_configured_runtime_build() -> None:
+    configured_build = "d" * 40
+    app = create_app(config=_config(build_commit=configured_build))
+    with _client(app) as client:
+        response = client.get("/api/releases", headers=_headers(origin=None))
+    assert response.status_code == 200
+    assert response.json()["deployed_build_commit"] == configured_build
+    assert response.json()["latest_shipped_release"]["milestone_commit"] != configured_build
+
+
+def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() -> None:
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+    with _client(app) as client:
+        missing = client.get("/api/releases")
+        wrong = client.get(
+            "/api/releases",
+            headers=_headers(origin=None, login=f"{ALLOWED_LOGIN}.evil"),
+        )
+        accepted = client.get(
+            "/api/releases",
+            headers=_headers(origin=None),
+        )
+
+    for denied in (missing, wrong):
+        assert denied.status_code == 403
+        assert denied.json()["error"]["code"] == "forbidden"
+        assert "set-cookie" not in denied.headers
+    assert accepted.status_code == 200
+    assert "set-cookie" not in accepted.headers
+    assert factory.instances == []
+    assert app.state.session_registry.active_count == 0
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        pytest.param(
+            lambda feed: feed.update(schema_version=True),
+            id="boolean-schema-version",
+        ),
+        pytest.param(
+            lambda feed: feed["latest_shipped_release"].update(package_version="99.0.0"),
+            id="running-version-mismatch",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(
+                milestone_commit="9ae77f0"
+            ),
+            id="abbreviated-commit",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0]["evidence"][0].update(
+                url="https://example.com/private"
+            ),
+            id="external-evidence",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(
+                raw="private transcript"
+            ),
+            id="raw-content-field",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0]["capabilities"].__setitem__(
+                0, "/acl chatall: private envelope"
+            ),
+            id="private-envelope-copy",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"].append(
+                {
+                    **copy.deepcopy(feed["releases"][0]),
+                    "release_id": "pr-106",
+                    "date": "2026-09-03",
+                }
+            ),
+            id="duplicate-release-id",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"].append(
+                {
+                    **copy.deepcopy(feed["releases"][0]),
+                    "release_id": "pr-105",
+                    "date": "2026-09-05",
+                    "evidence": [
+                        {
+                            "label": "Merged PR #105",
+                            "url": "https://github.com/deucebucket/clanker/pull/105",
+                        },
+                        *copy.deepcopy(feed["releases"][0]["evidence"])[1:],
+                    ],
+                }
+            ),
+            id="out-of-order",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(date="2026-02-30"),
+            id="invalid-date",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0]["deployment"].update(
+                url="https://bazzite.tail85f65f.ts.net:8445/"
+            ),
+            id="wrong-deployment-url",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(capabilities=[]),
+            id="empty-capabilities",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(limitations=["bounded"] * 13),
+            id="too-many-limitations",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(title="x" * 121),
+            id="oversized-title",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(title="line one\nline two"),
+            id="multiline-title",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(release_id="106"),
+            id="non-pr-release-id",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0].update(release_id="pr-0106"),
+            id="noncanonical-pr-release-id",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0]["evidence"][0].update(
+                url="https://github.com/deucebucket/clanker/pull/107"
+            ),
+            id="release-id-pr-link-mismatch",
+        ),
+        pytest.param(
+            lambda feed: feed["releases"][0]["evidence"][1].update(
+                url="https://github.com/deucebucket/clanker/commit/" + "e" * 40
+            ),
+            id="milestone-commit-link-mismatch",
+        ),
+        pytest.param(
+            lambda feed: feed.update(deployed_build_commit="f" * 40),
+            id="self-referential-build-field",
+        ),
+    ],
+)
+def test_release_feed_validation_fails_closed(mutate: Any) -> None:
+    feed = _release_feed_fixture()
+    mutate(feed)
+    with pytest.raises(ValueError):
+        web_module._validate_release_feed(feed)
+
+
+def test_release_feed_byte_boundary_and_malformed_encoding_fail_closed() -> None:
+    compact = json.dumps(_release_feed_fixture(), separators=(",", ":")).encode("utf-8")
+    exact = compact + b" " * (64 * 1024 - len(compact))
+    assert len(exact) == 64 * 1024
+    assert web_module._load_release_feed(exact)["releases"]
+
+    for rejected in (
+        exact + b" ",
+        b"\xff\xfe",
+        b"{",
+        b"[]",
+    ):
+        with pytest.raises(ValueError):
+            web_module._load_release_feed(rejected)
+
+
+@pytest.mark.parametrize(
+    "hostile_url",
+    [
+        "https://github.com/deucebucket/clanker/pull/106?private=yes",
+        "https://github.com/deucebucket/clanker/pull/106#private",
+        "https://user@github.com/deucebucket/clanker/pull/106",
+        "https://github.com.evil/deucebucket/clanker/pull/106",
+        "https://github.com/deucebucket/clanker/issues/106",
+        "https://github.com/deucebucket/clanker/pull/106/",
+        "http://github.com/deucebucket/clanker/pull/106",
+    ],
+)
+def test_release_feed_rejects_hostile_evidence_url_variants(hostile_url: str) -> None:
+    feed = _release_feed_fixture()
+    feed["releases"][0]["evidence"][0]["url"] = hostile_url
+    with pytest.raises(ValueError):
+        web_module._validate_release_feed(feed)
+
+
+def test_hostile_release_copy_stays_json_data_and_uses_only_safe_dom_text_sinks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    marker = '<img src=x onerror="window.privateTranscript=1">'
+    feed = _release_feed_fixture()
+    feed["releases"][0]["title"] = marker
+    feed["releases"][0]["capabilities"][0] = marker
+    assets = dict(web_module._load_assets())
+    assets["releases.json"] = json.dumps(feed).encode("utf-8")
+    monkeypatch.setattr(web_module, "_load_assets", lambda: assets)
+
+    app = create_app(config=_config())
+    with _client(app) as client:
+        shell = client.get("/", headers=_headers(origin=None))
+        endpoint = client.get("/api/releases", headers=_headers(origin=None))
+        script = client.get("/assets/app.js", headers=_headers(origin=None))
+
+    assert endpoint.status_code == 200
+    assert endpoint.json()["releases"][0]["title"] == marker
+    assert marker not in shell.text
+    assert "innerHTML" not in script.text
+    assert "insertAdjacentHTML" not in script.text
+    assert "document.write" not in script.text
+    assert "node.textContent = text" in script.text
+    assert "latestReleaseLabel.textContent" in script.text
+    assert "deployedVersion.textContent" in script.text
+    assert "deployedBuildCommit.textContent" in script.text
+    assert "deployedState.textContent" in script.text
+
+
+def test_release_feed_contains_no_private_or_raw_conversation_fields() -> None:
+    feed = _release_feed_fixture()
+    forbidden_keys = {
+        "attachment",
+        "body",
+        "message",
+        "prompt",
+        "raw",
+        "receipt_token",
+        "response",
+        "session",
+        "transcript",
+    }
+
+    def keys(value: Any) -> set[str]:
+        if isinstance(value, dict):
+            return set(value) | set().union(*(keys(child) for child in value.values()))
+        if isinstance(value, list):
+            return set().union(*(keys(child) for child in value)) if value else set()
+        return set()
+
+    assert not ({key.lower() for key in keys(feed)} & forbidden_keys)
+    serialized = json.dumps(feed).lower()
+    for private_marker in (
+        "/acl",
+        "chatall",
+        "receipt_token",
+        "cobalt-seven",
+        "private-message-8c7dbf",
+    ):
+        assert private_marker not in serialized
+
+
+def test_changelog_dialog_has_keyboard_focus_mobile_and_loading_error_hooks() -> None:
+    app = create_app(config=_config())
+    with _client(app) as client:
+        shell = client.get("/", headers=_headers(origin=None))
+        script = client.get("/assets/app.js", headers=_headers(origin=None))
+        styles = client.get("/assets/app.css", headers=_headers(origin=None))
+
+    html = re.sub(r"\s+", " ", shell.text)
+    js = script.text
+    css = re.sub(r"\s+", " ", styles.text)
+    assert '<button id="changelog-open"' in html
+    assert 'aria-haspopup="dialog"' in html
+    assert 'aria-controls="changelog-dialog"' in html
+    assert '<dialog id="changelog-dialog"' in html
+    assert 'aria-labelledby="changelog-title"' in html
+    assert 'aria-describedby="changelog-intro"' in html
+    assert 'id="changelog-close"' in html
+    assert 'aria-label="Close changelog"' in html
+    assert 'id="changelog-retry"' in html
+    assert 'id="release-list"' in html
+    assert 'aria-busy="true"' in html
+    assert "changelogDialog.showModal()" in js
+    assert "changelogClose.focus()" in js
+    assert 'changelogDialog.addEventListener("close"' in js
+    assert "changelogOpen.focus()" in js
+    assert "event.target === changelogDialog" in js
+    assert 'requestJson("/api/releases"' in js
+    assert "feed.releases.map(renderRelease)" in js
+    assert "The reviewed release record could not be loaded." in js
+    assert ".changelog-body {" in css and "overflow-y: auto" in css
+    assert "@media (max-width: 640px)" in css
+    assert ".changelog-dialog { width: 100%; height: 100%; max-height: none;" in css
+    assert ".changelog-trigger {" in css and "min-height: 44px" in css
+
+
+def test_packaging_declares_the_repository_release_feed() -> None:
+    pyproject = (Path(__file__).resolve().parent.parent / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    web_assets = re.search(
+        r'''(?m)^"clanker_lm\.web_assets"\s*=\s*\[(.*?)\]$''',
+        pyproject,
+    )
+    assert web_assets is not None
+    assert "*.json" in web_assets.group(1)
 
 
 def test_ui_uses_safe_dom_apis_local_assets_and_accessibility_hooks() -> None:

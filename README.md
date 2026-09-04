@@ -19,7 +19,10 @@ for the allowlisted Tailnet login `jerrymares@gmail.com`. It is served through
 Tailscale Serve on port 8444, is **tailnet only**, and has no Funnel/public
 exposure. Each browser session gets isolated memory and each reply displays its
 six evidence fields: **Answer**, **Truth**, **Source**, **Certainty**,
-**Memory**, and **VADUG**. See
+**Memory**, and **VADUG**. Issue #112 prepares a **Changelog** control that
+separates the exact runtime build commit from each packaged milestone's merge
+commit, capabilities, evidence, limitations, and deployment state; it remains
+unshipped until the documented post-merge release-row and deployment gates. See
 [`docs/CLANKER_LM_WEB.md`](docs/CLANKER_LM_WEB.md) for operation, verification,
 security boundaries, and rollback.
 

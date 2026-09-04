@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "latest_shipped_release": {
+    "release_id": "pr-106",
+    "package_version": "0.2.0",
+    "milestone_commit": "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+  },
+  "releases": [
+    {
+      "release_id": "pr-106",
+      "package_version": "0.2.0",
+      "milestone_commit": "9ae77f072f8afda0b1d2b757ab492757cabff0f8",
+      "date": "2026-09-04",
+      "title": "Private semantic workbench",
+      "capabilities": [
+        "Allowlisted Tailnet users can talk with one isolated deterministic Clanker-LM runtime per browser session.",
+        "Every answer keeps six evidence fields visible: Answer, Truth, Source, Certainty, Memory, and VADUG.",
+        "The browser can export an inspectable snapshot or reset its ephemeral session memory."
+      ],
+      "evidence": [
+        {
+          "label": "Merged PR #106",
+          "url": "https://github.com/deucebucket/clanker/pull/106"
+        },
+        {
+          "label": "Merge commit 9ae77f0",
+          "url": "https://github.com/deucebucket/clanker/commit/9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+        },
+        {
+          "label": "Exact-head CI run",
+          "url": "https://github.com/deucebucket/clanker/actions/runs/33853472850"
+        }
+      ],
+      "limitations": [
+        "This is a bounded research-alpha workbench, not a claim of unrestricted conversation.",
+        "Session memory is ephemeral; a service restart clears state that was not exported.",
+        "The service is private and Tailnet-only. It has no Funnel or public route."
+      ],
+      "deployment": {
+        "state": "live",
+        "label": "Live · private Tailnet",
+        "detail": "Reviewed PR #106 is the deployed baseline. No later roadmap milestone is claimed as shipped.",
+        "url": "https://bazzite.tail85f65f.ts.net:8444/"
+      }
+    }
+  ]
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import List, Optional
 
@@ -285,6 +286,7 @@ def cmd_web(args: argparse.Namespace) -> int:
         port=args.port,
         public_origin=args.public_origin,
         deployed=args.deployed,
+        build_commit=args.build_commit,
         allowed_users=tuple(args.allowed_users),
         session_idle_seconds=args.session_idle_seconds,
         max_sessions=args.max_sessions,
@@ -385,6 +387,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--deployed",
         action="store_true",
         help="Require an exact Tailscale-User-Login allowlist",
+    )
+    web.add_argument(
+        "--build-commit",
+        default=os.environ.get("CLANKER_LM_BUILD_COMMIT"),
+        metavar="FULL_SHA",
+        help=(
+            "Exact 40-character commit of the running artifact; required in "
+            "deployed mode (defaults to CLANKER_LM_BUILD_COMMIT)"
+        ),
     )
     web.add_argument(
         "--allow-user",

@@ -14,7 +14,8 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 # web.env contains non-secret deployment coordinates, for example:
 # CLANKER_LM_PUBLIC_ORIGIN=https://clanker.example-tailnet.ts.net
 # CLANKER_LM_ALLOWED_USER=operator@example.com
-ExecStart=/opt/clanker-lm/venv/bin/clanker-lm web --host 127.0.0.1 --port 8765 --deployed --public-origin ${CLANKER_LM_PUBLIC_ORIGIN} --allow-user ${CLANKER_LM_ALLOWED_USER}
+# CLANKER_LM_BUILD_COMMIT=<full 40-character SHA from the installed artifact>
+ExecStart=/opt/clanker-lm/venv/bin/clanker-lm web --host 127.0.0.1 --port 8765 --deployed --build-commit ${CLANKER_LM_BUILD_COMMIT} --public-origin ${CLANKER_LM_PUBLIC_ORIGIN} --allow-user ${CLANKER_LM_ALLOWED_USER}
 Restart=on-failure
 RestartSec=3s
 TimeoutStopSec=20s

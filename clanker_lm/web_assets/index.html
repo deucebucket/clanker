@@ -22,9 +22,15 @@
             <small>semantic workbench</small>
           </span>
         </a>
-        <div class="runtime-state" aria-label="Runtime status">
-          <span class="status-lamp" aria-hidden="true"></span>
-          <span>Local runtime</span>
+        <div class="masthead-actions">
+          <button id="changelog-open" class="changelog-trigger" type="button" aria-haspopup="dialog" aria-controls="changelog-dialog">
+            <span>Changelog</span>
+            <small id="latest-release-label">Reviewed releases</small>
+          </button>
+          <div class="runtime-state" aria-label="Runtime status">
+            <span class="status-lamp" aria-hidden="true"></span>
+            <span>Local runtime</span>
+          </div>
         </div>
       </header>
 
@@ -86,5 +92,37 @@
         </aside>
       </main>
     </div>
+
+    <dialog id="changelog-dialog" class="changelog-dialog" aria-labelledby="changelog-title" aria-describedby="changelog-intro">
+      <div class="changelog-frame">
+        <header class="changelog-heading">
+          <div>
+            <p class="eyebrow">Shipped change record</p>
+            <h2 id="changelog-title">Reviewed, then visible.</h2>
+            <p id="changelog-intro">This ordered feed records merged capabilities and their evidence. Experiments stay out until they ship.</p>
+          </div>
+          <button id="changelog-close" class="changelog-close" type="button" aria-label="Close changelog">
+            <span>Close</span><span aria-hidden="true">×</span>
+          </button>
+        </header>
+
+        <section class="release-specimen" aria-labelledby="deployed-release-title">
+          <p id="deployed-release-title" class="release-specimen__label">Running artifact</p>
+          <dl>
+            <div><dt>Runtime package</dt><dd id="deployed-version">—</dd></div>
+            <div><dt>Runtime build</dt><dd><code id="deployed-build-commit">—</code></dd></div>
+            <div><dt>State</dt><dd id="deployed-state">Loading</dd></div>
+          </dl>
+        </section>
+
+        <div class="changelog-body">
+          <div class="changelog-state">
+            <p id="changelog-status" role="status">Loading reviewed releases…</p>
+            <button id="changelog-retry" class="button button--ink" type="button" hidden>Try again</button>
+          </div>
+          <ol id="release-list" class="release-list" aria-label="Shipped releases" aria-busy="true"></ol>
+        </div>
+      </div>
+    </dialog>
   </body>
 </html>
