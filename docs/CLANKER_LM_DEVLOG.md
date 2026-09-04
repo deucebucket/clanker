@@ -980,3 +980,104 @@ Obtain exact-head review and CI, merge the final promotion, deploy that merge
 SHA as `CLANKER_LM_BUILD_COMMIT`, and verify health, authenticated API identity,
 canonical live/history cards, responsive overflow, focus restoration, and
 console/page errors. Issue closure depends on those measured results.
+
+---
+
+## 2026-09-04 — RR devlog: issue #41 held-out evaluation core candidate
+
+- **Audience:** evaluation reviewer, Clanker-LM maintainer, and future #107
+  tuning owner
+- **Scope:** versioned conversation corpus, deterministic evaluator, integrity
+  gates, CI, and documentation; no language-runtime behavior changes and no
+  held-out baseline publication yet
+- **Goal and success condition:** freeze at least 500 whole held-out turns with
+  auditable rights, keep open development data separate, bind the measured
+  production tree, and make every report/integrity boundary fail closed before
+  any tuning can see held-out evidence
+
+### Rundown
+
+**Proven:** the selected `conversation-v1` generation contains 56 held-out
+conversations / 520 turns and 10 open-development conversations / 60 turns.
+The held-out split spans public-domain drama, public-domain novels, raw NASA
+technical air-to-ground exchanges, and original CC0 synthetic structural
+stress cases. The held-out and development split digests did not change while
+the evaluator and release provenance were corrected.
+
+**Proven:** corpus root
+`7e0f03f335866c982c6225b805b2d1efb52a9de67e3c65dae5dd33cdf59582f0`
+binds compiler, evaluator, schema, split policy, source provenance, and the
+exact production/package tree at
+`c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e`. Production Python, language seed,
+and packaged web assets are all included in that tree digest. Evaluation code
+is excluded from built packages and production has no corpus injection API.
+
+**Unknown:** the baseline metrics are intentionally absent. Two detached
+reviewers must accept this exact clean core before the 520-turn, three-mode
+held-out run is allowed. Until that report is generated from the accepted core
+commit and committed separately, issue #41 is not complete.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | Whole-conversation scale and split separation meet the corpus floor. | Held-out 56/520; development 10/60; compiler manifest under `evaluation/conversations/data/generations/7e0f03f…/`. |
+| Proven | Real-human material is bounded to raw NASA technical transcript windows with authoritative public-use provenance. | NTRS `20160014392`, NASA raw transcript index/download locators, frozen raw digest, and source manifest. |
+| Proven | Literary affect/outcome annotations remain weak supervision; synthetic structural gold is excluded from affect scoring. | Per-turn supervision fields and evaluator strata. |
+| Proven | Integrity checks reject policy mutation, leakage, near-duplicates, source/schema corruption, split/report TOCTOU swaps, symlink escapes, partial publication, free-form response channels, and production-tree drift. | 94 evaluator tests passed with the baseline test deselected; `verify` reports zero overlap/reference/text-leak hits. |
+| Unknown | Final semantic/entity/transition scores and confidence intervals. | Baseline run is held pending independent ACCEPT verdicts. |
+
+### How it works, in plain language
+
+`CURRENT` is one atomic pointer to one content-addressed corpus directory. A
+reader hashes and parses the same bytes, validates the exact directory
+inventory, and refuses training or replay access to held-out rows. Reports use
+the same one-generation-pointer pattern, so a crash cannot select a report,
+failure ledger, and checksum from different runs. Cluster bootstrap samples
+whole conversations, preserving turn-weighted point estimates and paired mode
+draws.
+
+The truth boundary is intentionally conservative: literary and archival next
+turns show what followed in their source, not what a Clanker response caused.
+Synthetic conversations provide structural labels, not real-human outcome
+ground truth. No private chat, ACL transcript, user-supplied conversation, or
+copyright-ambiguous source is present.
+
+### Evidence and conditions
+
+```text
+production base:     c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e
+core milestone:      ed171f553d655056bc00c2279493bb4556bb00fa
+corpus root:         7e0f03f335866c982c6225b805b2d1efb52a9de67e3c65dae5dd33cdf59582f0
+production digest:   b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f
+held-out split:      05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18
+development split:   5018d7d3f2b60207333b6c50fec594b6b46411a6065962ec322038f0b75f0e43
+focused evaluator:   94 passed, 1 baseline test deliberately deselected
+full repository:     2,861 passed, 2 expected xfails, 1 expected missing-baseline failure
+benchmark:           29/29 deterministic turns
+integrity verify:    520 held-out + 60 development; 0 exact overlap; 0 near overlap;
+                     0 production references; 0 production/test text leakage
+visual evidence:     not applicable; this milestone has no UI surface
+```
+
+### Negative results and open questions
+
+- Several earlier baseline attempts were invalidated before publication by
+  scorer, annotation, provenance, and transactional-integrity findings. They
+  are not evidence and are not present in the repository.
+- The full suite's sole failure is the deliberately absent
+  `post_113_heldout_v1.current`; this proves the release gate has not been
+  bypassed, not that baseline acceptance passed.
+- Static production-reference analysis covers resolvable literals,
+  concatenation, constant f-strings, named constants, imports, loader calls,
+  and path joins. It does not claim to analyze arbitrary dynamic code; the
+  production API exposes no dynamic corpus path/module injection surface.
+
+### Next step / blocker
+
+Nominate the final clean core commit for both detached reviewers. Only after
+both return ACCEPT: run all three modes over the immutable 520-turn held-out
+split, transactionally publish the aggregate-only report/failure/checksum
+generation, commit those baseline artifacts separately, rerun the full suite,
+and create the documented immutable release tag after merge. Held-out text and
+labels remain forbidden inputs to #107 training or teacher replay.
