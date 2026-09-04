@@ -12,6 +12,7 @@ import asyncio
 import json
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -126,10 +127,63 @@ class TrackingFactory:
         return runtime
 
 
+@dataclass
+class LargeOutputRuntime(TrackedRuntime):
+    chat_text: str = ""
+    export_text: str = ""
+
+    def process(self, message: str) -> Any:
+        result = super().process(message)
+        if self.chat_text:
+            result.response = self.chat_text
+        return result
+
+    def to_dict(self) -> dict[str, Any]:
+        if self.export_text:
+            return {"oversized_private_snapshot": self.export_text}
+        return super().to_dict()
+
+
+class LargeOutputFactory(TrackingFactory):
+    def __init__(self, *, chat_text: str = "", export_text: str = "") -> None:
+        super().__init__()
+        self.chat_text = chat_text
+        self.export_text = export_text
+
+    def __call__(self) -> LargeOutputRuntime:
+        runtime = LargeOutputRuntime(
+            ClankerLM(affect_backend=HeuristicAffectBackend()),
+            chat_text=self.chat_text,
+            export_text=self.export_text,
+        )
+        self.instances.append(runtime)
+        return runtime
+
+
 def _cookie_pair(client: TestClient) -> tuple[str, str]:
     cookies = list(client.cookies.items())
     assert len(cookies) == 1, cookies
     return cookies[0]
+
+
+def test_test_extra_declares_an_explicit_bounded_httpx_requirement() -> None:
+    pyproject = (Path(__file__).resolve().parent.parent / "pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    optional_dependencies = re.search(
+        r"(?ms)^\[project\.optional-dependencies\]\s*(.*?)(?=^\[)",
+        pyproject,
+    )
+    assert optional_dependencies is not None
+    test_extra = re.search(
+        r"(?ms)^test\s*=\s*\[(.*?)\]",
+        optional_dependencies.group(1),
+    )
+    assert test_extra is not None
+    requirements = re.findall(r'''["']([^"']+)["']''', test_extra.group(1))
+    assert [requirement for requirement in requirements if requirement.startswith("httpx")] == [
+        "httpx>=0.27,<1"
+    ]
 
 
 @pytest.mark.parametrize("deployed", [False, True], ids=["local", "deployed"])
@@ -174,6 +228,54 @@ def test_web_config_accepts_only_the_supported_loopback_spellings(
     assert WebConfig(**kwargs).host == host
 
 
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "http://clanker.example.ts.net",
+        "HTTPS://clanker.example.ts.net",
+        "https://CLANKER.example.ts.net",
+        "https://clanker.example.ts.net.",
+        "https://user@clanker.example.ts.net",
+        "https://user:password@clanker.example.ts.net",
+        "https://clanker.example.ts.net/",
+        "https://clanker.example.ts.net/path",
+        "https://clanker.example.ts.net?query=yes",
+        "https://clanker.example.ts.net#fragment",
+        "https://clanker.example.ts.net:443",
+    ],
+)
+def test_deployed_public_origin_rejects_noncanonical_or_unsafe_forms(origin: str) -> None:
+    with pytest.raises(ValueError):
+        WebConfig(
+            deployed=True,
+            public_origin=origin,
+            allowed_users=(ALLOWED_LOGIN,),
+        )
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://clanker.example.ts.net",
+        "https://clanker.example.ts.net:8444",
+    ],
+)
+def test_deployed_public_origin_accepts_canonical_https_and_nondefault_port(
+    origin: str,
+) -> None:
+    config = WebConfig(
+        deployed=True,
+        public_origin=origin,
+        allowed_users=(ALLOWED_LOGIN,),
+    )
+    assert config.allowed_origin == origin
+
+
+def test_local_mode_may_retain_an_explicit_http_origin() -> None:
+    config = WebConfig(public_origin="http://localhost:8765")
+    assert config.allowed_origin == "http://localhost:8765"
+
+
 def test_run_server_rechecks_loopback_before_calling_uvicorn(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -211,6 +313,45 @@ def test_index_bootstraps_one_secure_session_and_reuses_it() -> None:
     assert "httponly" in set_cookie
     assert "samesite=strict" in set_cookie
     assert factory.instances[0].close_calls == 1
+
+
+@pytest.mark.parametrize("fetch_site", ["same-site", "cross-site", "other"])
+def test_deployed_cross_site_shell_bootstrap_is_rejected_without_allocation(
+    fetch_site: str,
+) -> None:
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+    headers = {
+        LOGIN_HEADER: ALLOWED_LOGIN,
+        "Sec-Fetch-Site": fetch_site,
+    }
+    with _client(app) as client:
+        response = client.get("/", headers=headers)
+
+        assert response.status_code == 403
+        assert response.json()["error"]["code"] == "forbidden_site"
+        assert "set-cookie" not in response.headers
+        assert list(client.cookies.items()) == []
+        assert factory.instances == []
+        assert app.state.session_registry.active_count == 0
+
+
+@pytest.mark.parametrize("fetch_site", [None, "none", "same-origin"])
+def test_direct_and_same_origin_shell_navigation_bootstrap_one_session(
+    fetch_site: str | None,
+) -> None:
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+    headers = {LOGIN_HEADER: ALLOWED_LOGIN}
+    if fetch_site is not None:
+        headers["Sec-Fetch-Site"] = fetch_site
+
+    with _client(app) as client:
+        response = client.get("/", headers=headers)
+        assert response.status_code == 200
+        assert "set-cookie" in response.headers
+        assert len(factory.instances) == 1
+        assert app.state.session_registry.active_count == 1
 
 
 def test_concurrent_first_turns_from_bootstrapped_cookie_share_one_ordered_runtime() -> None:
@@ -349,6 +490,50 @@ def test_export_is_a_reloadable_clanker_snapshot_with_session_state() -> None:
         restored.close()
 
 
+def test_oversized_chat_response_fails_closed_below_the_hard_byte_ceiling() -> None:
+    limit = 1024
+    secret = "private-chat-output:" + "é" * limit
+    assert len(secret.encode("utf-8")) > limit
+    factory = LargeOutputFactory(chat_text=secret)
+    app = create_app(
+        config=_config(max_chat_response_bytes=limit),
+        runtime_factory=factory,
+    )
+    with _client(app) as client:
+        response = client.post(
+            "/api/chat",
+            json={"message": "Hello."},
+            headers=_headers(),
+        )
+
+    assert response.status_code == 507
+    assert response.json()["error"]["code"] == "response_too_large"
+    assert secret not in response.text
+    assert "private-chat-output" not in response.text
+    assert len(response.content) <= limit
+
+
+def test_oversized_export_fails_closed_below_the_hard_byte_ceiling() -> None:
+    limit = 1024
+    secret = "private-export-output:" + "é" * limit
+    assert len(secret.encode("utf-8")) > limit
+    factory = LargeOutputFactory(export_text=secret)
+    app = create_app(
+        config=_config(max_export_bytes=limit),
+        runtime_factory=factory,
+    )
+    with _client(app) as client:
+        shell = client.get("/", headers=_headers())
+        assert shell.status_code == 200
+        response = client.get("/api/export", headers=_headers(origin=None))
+
+    assert response.status_code == 507
+    assert response.json()["error"]["code"] == "response_too_large"
+    assert secret not in response.text
+    assert "private-export-output" not in response.text
+    assert len(response.content) <= limit
+
+
 def test_idle_expiry_closes_runtime_and_forgets_its_memory() -> None:
     clock = ManualClock()
     factory = TrackingFactory()
@@ -368,7 +553,7 @@ def test_idle_expiry_closes_runtime_and_forgets_its_memory() -> None:
         assert result["evidence"]["answer_status"] != "answered"
 
 
-def test_capacity_is_bounded_and_evicts_the_true_lru_runtime() -> None:
+def test_full_active_capacity_rejects_new_session_without_evicting_or_forgetting() -> None:
     clock = ManualClock()
     factory = TrackingFactory()
     app = create_app(
@@ -385,15 +570,22 @@ def test_capacity_is_bounded_and_evicts_the_true_lru_runtime() -> None:
         second_runtime = factory.instances[-1]
         clock.advance(1.0)
 
-        # Refresh the first session, making the second the least recently used.
-        retained = _chat(first, "When is the launch?")
-        assert "monday" in retained["response"].lower()
-        clock.advance(1.0)
-
-        _chat(third, "The appointment is on Wednesday.")
+        rejected = third.get("/", headers=_headers())
+        assert rejected.status_code == 503
+        assert rejected.json()["error"]["code"] == "session_capacity"
+        assert "set-cookie" not in rejected.headers
         assert app.state.session_registry.active_count == 2
+        assert len(factory.instances) == 2
         assert first_runtime.close_calls == 0
-        assert second_runtime.close_calls == 1
+        assert second_runtime.close_calls == 0
+
+        first_retained = _chat(first, "When is the launch?")
+        second_retained = _chat(second, "When is the concert?")
+        assert "monday" in first_retained["response"].lower()
+        assert "tuesday" in second_retained["response"].lower()
+
+    assert first_runtime.close_calls == 1
+    assert second_runtime.close_calls == 1
 
 
 @pytest.mark.parametrize(
