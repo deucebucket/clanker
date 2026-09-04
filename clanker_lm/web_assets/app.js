@@ -23,9 +23,14 @@ function setStatus(text, isError = false) {
   formStatus.classList.toggle("is-error", isError);
 }
 
-function updateMessageState() {
+function updateMessageCount() {
   const bytes = encoder.encode(message.value).length;
   messageCount.textContent = String(bytes);
+  return bytes;
+}
+
+function updateMessageState() {
+  const bytes = updateMessageCount();
   if (bytes > 4096) setStatus("Message exceeds the 4 KiB limit.", true);
   else if (!send.disabled) setStatus("Enter to send · Shift + Enter for a new line");
 }
@@ -117,7 +122,7 @@ async function submitMessage() {
     send.disabled = false;
     reset.disabled = false;
     message.focus();
-    updateMessageState();
+    updateMessageCount();
   }
 }
 
