@@ -187,14 +187,19 @@ narrow mobile viewport without horizontal clipping.
 The source of truth is
 `clanker_lm/web_assets/releases.json`. A merged and independently reviewed but
 not-yet-deployed milestone may appear only as `pending`, after the current live
-row; it must not replace `latest_shipped_release`. After live verification,
-promote it to the top `live` row and retire the previous live marker. The top
-entry and `latest_shipped_release` must agree exactly on release ID, package
-version, and full 40-character milestone commit. Every `pr-N` row must contain
-the exact `/pull/N` evidence URL and an evidence URL for its exact milestone
-commit. Run `python -m clanker_lm.web_release_verify` to prove through GitHub
-that the PR is merged at that commit. Use only evidence links below the
-`deucebucket/clanker` GitHub repository and keep the direct deployment URL pinned exactly as
+row; it must not replace `latest_shipped_release`. There must be exactly one
+`live` row, at index zero, and it must match `latest_shipped_release`. Zero or
+more `pending` rows come next, newest date first within that group. `retired`
+and `rolled_back` history follows, also newest date first within the history
+group. A pending row may therefore have a later date than the current live row.
+After live verification, promote it to the top `live` row and retire the
+previous live marker. The top entry and `latest_shipped_release` must agree
+exactly on release ID, package version, and full 40-character milestone commit.
+Every `pr-N` row must contain the exact `/pull/N` evidence URL and an evidence
+URL for its exact milestone commit. Run
+`python -m clanker_lm.web_release_verify` to prove through GitHub that the PR is
+merged at that commit. Use only evidence links below the `deucebucket/clanker`
+GitHub repository and keep the direct deployment URL pinned exactly as
 `https://bazzite.tail85f65f.ts.net:8444/`.
 
 Do not copy ACL, browser, session, prompt, response, or raw transcript content

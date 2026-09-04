@@ -48,6 +48,21 @@ def test_changelog_wiring_executes_in_a_real_browser_dom() -> None:
             )
             assert page.locator("#release-list img").count() == 0
             assert page.locator("#release-list").evaluate("node => node.scrollWidth") <= 360
+            assert page.locator("#changelog-status").text_content() == (
+                "2 reviewed releases: 1 current live, 1 pending, 0 history."
+            )
+            assert page.locator(".release-card--live").count() == 1
+            assert page.locator(".release-card--live").get_attribute("aria-current") == "true"
+            assert page.locator(".release-card--pending").count() == 1
+            assert page.locator(".release-card--pending h4").first.text_content() == (
+                "What passed review"
+            )
+            assert page.locator(".deployment-badge--pending").text_content() == (
+                "Pending · live verification"
+            )
+            assert page.locator(".release-card--pending").get_by_role(
+                "link", name="Open current live baseline"
+            ).count() == 1
             assert page.locator("#changelog-close").evaluate(
                 "node => node === document.activeElement"
             )

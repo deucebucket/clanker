@@ -192,6 +192,9 @@ textarea::placeholder { color: #8b928d; }
 .button--ink:hover { border-color: var(--graphite-900); background: rgba(32, 37, 34, 0.05); }
 .release-list { display: grid; gap: 24px; margin: 0; padding: 0; list-style: none; }
 .release-card { overflow: hidden; background: #fffdf7; border: 1px solid var(--line); border-radius: 3px 18px 18px 18px; box-shadow: 0 10px 28px rgba(32, 37, 34, 0.065); }
+.release-card--live { border-color: rgba(40, 125, 120, 0.42); box-shadow: inset 4px 0 0 var(--teal), 0 10px 28px rgba(32, 37, 34, 0.065); }
+.release-card--pending { border-color: rgba(181, 112, 28, 0.45); box-shadow: inset 4px 0 0 var(--amber), 0 10px 28px rgba(32, 37, 34, 0.065); }
+.release-card--pending .release-card__heading { background: rgba(216, 139, 45, 0.07); }
 .release-card__heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: start; padding: 25px 26px 20px; border-bottom: 1px solid var(--line); }
 .release-marker { margin: 0 0 6px; color: var(--amber-dark); font: 700 0.61rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.14em; text-transform: uppercase; }
 .release-card h3 { margin: 0; overflow-wrap: anywhere; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.55rem, 3vw, 2.25rem); font-weight: 400; line-height: 1.08; }
@@ -211,8 +214,12 @@ textarea::placeholder { color: #8b928d; }
 .release-link:hover { color: #1e625e; }
 .release-deployment { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 15px; align-items: center; margin-top: 24px; padding: 17px 26px; background: var(--teal-pale); border-top: 1px solid rgba(40, 125, 120, 0.2); }
 .release-deployment p { margin: 0; color: #375b56; font-size: 0.78rem; line-height: 1.45; }
+.release-card--pending .release-deployment { background: #fbedd8; border-top-color: rgba(181, 112, 28, 0.25); }
+.release-card--pending .release-deployment p { color: #694a23; }
 .deployment-badge { display: inline-flex; min-height: 28px; align-items: center; padding: 0 10px; border-radius: 999px; font: 750 0.59rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.05em; text-transform: uppercase; }
 .deployment-badge--live { color: #154f4b; background: rgba(40, 125, 120, 0.16); border: 1px solid rgba(40, 125, 120, 0.35); }
+.deployment-badge--pending { color: #724811; background: rgba(216, 139, 45, 0.18); border: 1px solid rgba(181, 112, 28, 0.4); }
+.deployment-badge--history { color: #4e5752; background: rgba(78, 88, 82, 0.1); border: 1px solid rgba(78, 88, 82, 0.25); }
 
 @keyframes enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 

@@ -15,7 +15,7 @@ left `engine/` unchanged.
 
 ---
 
-## 2026-09-04 — Reviewed shipped-changes feed
+## 2026-09-04 — Reviewed release feed
 
 **Issue:** [#112](https://github.com/deucebucket/clanker/issues/112)
 **PR:** [#113](https://github.com/deucebucket/clanker/pull/113)
@@ -28,13 +28,16 @@ behavior, restores focus on close, and preserves the six-field answer evidence
 rail.
 
 The feed is repository-backed by a bounded packaged JSON artifact. Application
-startup validates its schema, newest-first dates, unique release IDs, exact
-package-version/milestone agreement, `pr-N`/pull-request and milestone/commit
-evidence links, URL allowlists, pinned private deployment URL, and absence of
-private-content fields. A separate required deployed configuration value reports
-the exact running build through the API and UI. CI asks GitHub to prove every
-milestone PR is merged at its recorded commit. The browser creates dynamic
-content with `textContent`; it uses no HTML insertion or external assets.
+startup validates its schema, unique release IDs, exact package-version and
+milestone agreement, `pr-N`/pull-request and milestone/commit evidence links,
+URL allowlists, pinned private deployment URL, and absence of private-content
+fields. It also requires exactly one current-live row first, followed by
+newest-first pending rows and then newest-first history; a pending milestone may
+be newer than the live baseline. A separate required deployed configuration
+value reports the exact running build through the API and UI. CI asks GitHub to
+prove every milestone PR is merged at its recorded commit. The browser creates
+dynamic content with `textContent`; it uses no HTML insertion or external
+assets.
 
 The initial pre-merge feed contained only reviewed PR #106. After the
 implementation merged as PR #113, this follow-up release artifact added the
@@ -54,12 +57,12 @@ IDs. The checked-in feed contains no self-referential build SHA.
 Local validation on the current tree:
 
 ```text
-151 focused web/config/CLI/verifier/DOM tests passed
-2,754 full-suite tests passed, 2 expected xfails
+154 focused web/config/CLI/verifier/DOM tests passed
+2,757 full-suite tests passed, 2 expected xfails
 29/29 deterministic acceptance turns
 real Chromium DOM wiring passed; hostile text remained text with no overflow
 1440×1000, 360×800, and 300×700: runtime/milestone split visible; focus restored
-GitHub verified PR #106 merged at 9ae77f0
+GitHub verified PR #106 at 9ae77f0 and PR #113 at 66b85de
 fresh wheel contains the verifier and all four web assets
 workflow YAML, compile, JavaScript syntax, diff, and no-engine checks clean
 ```
