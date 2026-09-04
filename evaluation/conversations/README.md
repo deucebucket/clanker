@@ -46,6 +46,14 @@ fresh store per whole conversation. Transition correction reads an immutable
 development-only store while held-out observations go to a separate ephemeral
 store, so an earlier held-out turn cannot tune a later one.
 
+The `evaluation` package is excluded from built distributions. A repository
+gate also parses every declared production source and rejects statically
+resolvable references to the evaluation module, corpus paths, `CURRENT`, or a
+held-out loader call, including literal concatenation, constant f-strings, and
+named constants. This enforceable static boundary is paired with the fact that
+production exposes no runtime corpus-path, split-name, or module-injection API;
+it does not claim to prove properties of arbitrary dynamically executed code.
+
 ## Reproduce
 
 ```bash

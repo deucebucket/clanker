@@ -57,9 +57,9 @@
       "required": ["python_version", "implementation", "operating_system", "machine"],
       "properties": {
         "python_version": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "integer", "minimum": 0}},
-        "implementation": {"type": "string", "pattern": "^[a-z0-9_.+-]{1,32}$"},
-        "operating_system": {"type": "string", "pattern": "^[a-z0-9_.+-]{1,32}$"},
-        "machine": {"type": "string", "pattern": "^[a-z0-9_.+-]{1,32}$"}
+        "implementation": {"enum": ["cpython", "pypy", "graalpy"]},
+        "operating_system": {"enum": ["linux", "darwin", "windows", "freebsd", "openbsd"]},
+        "machine": {"enum": ["x86_64", "amd64", "aarch64", "arm64", "i386", "i686", "ppc64le", "s390x", "riscv64", "unknown"]}
       }
     },
     "limitations": {
@@ -164,7 +164,18 @@
         "memory_relations_growth_mean": {"type": "number"}, "memory_relations_growth_max": {"type": "number"},
         "memory_serialized_bytes_growth_mean": {"type": "number"}, "memory_serialized_bytes_growth_max": {"type": "number"},
         "sqlite_allocated_bytes_growth_mean": {"type": "number"}, "sqlite_allocated_bytes_growth_max": {"type": "number"},
-        "sqlite_row_growth_maxima": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "sqlite_row_growth_maxima": {
+          "type": "object", "additionalProperties": false,
+          "required": ["atoms", "grammar_rules", "gate_rules", "learned_terms", "learned_senses", "lexical_evidence", "resolver_observations", "trajectory_turns", "transition_stats", "corpus_profiles", "trajectory_chunks", "template_tables"],
+          "properties": {
+            "atoms": {"type": "integer", "minimum": 0}, "grammar_rules": {"type": "integer", "minimum": 0},
+            "gate_rules": {"type": "integer", "minimum": 0}, "learned_terms": {"type": "integer", "minimum": 0},
+            "learned_senses": {"type": "integer", "minimum": 0}, "lexical_evidence": {"type": "integer", "minimum": 0},
+            "resolver_observations": {"type": "integer", "minimum": 0}, "trajectory_turns": {"type": "integer", "minimum": 0},
+            "transition_stats": {"type": "integer", "minimum": 0}, "corpus_profiles": {"type": "integer", "minimum": 0},
+            "trajectory_chunks": {"type": "integer", "minimum": 0}, "template_tables": {"type": "integer", "minimum": 0}
+          }
+        },
         "growth_slopes_per_turn": {"type": "object", "additionalProperties": false, "required": ["memory_serialized_bytes", "sqlite_allocated_bytes"], "properties": {"memory_serialized_bytes": {"type": ["number", "null"]}, "sqlite_allocated_bytes": {"type": ["number", "null"]}}},
         "construction_latency_ms": {"$ref": "#/$defs/constructionLatency"},
         "tracemalloc_peak_bytes": {"type": "integer", "minimum": 0}, "process_lifetime_maxrss_peak": {"type": "number", "minimum": 0},

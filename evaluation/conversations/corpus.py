@@ -7,6 +7,7 @@ contract rather than from the system being measured.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import re
@@ -121,10 +122,13 @@ def _atomic_replace_path(source: Path, target: Path) -> None:
 
 def _selected_data_dir(data_dir: Path) -> Path:
     pointer = data_dir / CURRENT_POINTER
+    generations = data_dir / GENERATIONS_DIRECTORY
+    if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
+        raise CorpusIntegrityError("corpus generations parent must be a regular directory")
     if pointer.is_symlink():
         raise CorpusIntegrityError("corpus CURRENT pointer cannot be a symlink")
     if not pointer.is_file():
-        if (data_dir / GENERATIONS_DIRECTORY).exists():
+        if generations.exists():
             raise CorpusIntegrityError(
                 "corpus CURRENT pointer is required once immutable generations exist"
             )
@@ -205,6 +209,133 @@ def production_tree_sha256(repo_root: Path = REPO_ROOT) -> str:
     return _sha256_bytes(_canonical_json(_production_tree_payload(repo_root)).encode("utf-8"))
 
 
+def _ast_dotted_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = _ast_dotted_name(node.value)
+        return f"{prefix}.{node.attr}" if prefix else node.attr
+    return ""
+
+
+def _static_string_values(node: ast.AST, names: Mapping[str, set[str]]) -> set[str]:
+    """Resolve bounded, statically knowable strings used by production source."""
+
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return {node.value}
+    if isinstance(node, ast.Name):
+        return set(names.get(node.id, ()))
+    if isinstance(node, ast.FormattedValue):
+        return _static_string_values(node.value, names)
+    if isinstance(node, ast.JoinedStr):
+        values = {""}
+        for item in node.values:
+            pieces = _static_string_values(item, names)
+            if not pieces:
+                return set()
+            values = {left + right for left in values for right in pieces}
+            if len(values) > 64:
+                return set()
+        return values
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Div)):
+        left_values = _static_string_values(node.left, names)
+        right_values = _static_string_values(node.right, names)
+        separator = "/" if isinstance(node.op, ast.Div) else ""
+        return {
+            f"{left}{separator}{right}"
+            for left in left_values
+            for right in right_values
+        }
+    if isinstance(node, ast.Call):
+        call_name = _ast_dotted_name(node.func)
+        if call_name.rsplit(".", 1)[-1] in {"Path", "PurePath", "PurePosixPath"}:
+            values = {""}
+            for argument in node.args:
+                pieces = _static_string_values(argument, names)
+                if not pieces:
+                    return set()
+                values = {
+                    f"{left.rstrip('/')}/{right.lstrip('/')}" if left else right
+                    for left in values
+                    for right in pieces
+                }
+            return values
+    return set()
+
+
+def _static_name_bindings(tree: ast.AST) -> Dict[str, set[str]]:
+    bindings: Dict[str, set[str]] = {}
+    assignments: List[tuple[str, ast.AST]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            if node.value is None:
+                continue
+            assignments.extend(
+                (target.id, node.value) for target in targets if isinstance(target, ast.Name)
+            )
+    for _ in range(len(assignments) + 1):
+        changed = False
+        for name, value in assignments:
+            resolved = _static_string_values(value, bindings)
+            if resolved and not resolved <= bindings.get(name, set()):
+                bindings.setdefault(name, set()).update(resolved)
+                changed = True
+        if not changed:
+            break
+    return bindings
+
+
+def _ast_has_forbidden_production_reference(
+    text: str,
+    *,
+    content_address: str,
+) -> bool:
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    names = _static_name_bindings(tree)
+    forbidden_strings = {
+        "heldout_v1.jsonl",
+        content_address,
+        "evaluation.conversations",
+        "evaluation/conversations",
+        "evaluation\\conversations",
+    }
+    for node in ast.walk(tree):
+        resolved = _static_string_values(node, names)
+        for value in resolved:
+            normalized = value.replace("\\", "/")
+            if (
+                any(needle.replace("\\", "/") in normalized for needle in forbidden_strings)
+                or normalized == CURRENT_POINTER
+            ):
+                return True
+        if not isinstance(node, ast.Call):
+            continue
+        call_name = _ast_dotted_name(node.func).lower()
+        if call_name.endswith("selected_manifest_path"):
+            return True
+        if call_name.endswith("load_split"):
+            split_nodes = list(node.args[:1]) + [
+                keyword.value for keyword in node.keywords if keyword.arg == "split"
+            ]
+            if any(
+                value.lower() == "heldout"
+                for split_node in split_nodes
+                for value in _static_string_values(split_node, names)
+            ):
+                return True
+        if call_name.endswith("import_module") and node.args:
+            if any(
+                "evaluation.conversations" in value.replace("/", ".").replace("\\", ".")
+                for value in _static_string_values(node.args[0], names)
+            ):
+                return True
+    return False
+
+
 def _production_reference_hits(
     manifest: Mapping[str, Any], *, repo_root: Path = REPO_ROOT
 ) -> List[str]:
@@ -228,9 +359,85 @@ def _production_reference_hits(
             continue
         if any(needle in text for needle in literal_needles) or (
             path.suffix == ".py" and any(pattern.search(text) for pattern in access_patterns)
+        ) or (
+            path.suffix == ".py"
+            and _ast_has_forbidden_production_reference(
+                text, content_address=str(manifest["content_address"])
+            )
         ):
             hits.append(path.relative_to(repo_root).as_posix())
     return hits
+
+
+def verify_additive_generations(
+    base_ref: str,
+    *,
+    repo_root: Path = REPO_ROOT,
+    data_dir: Path = DATA_DIR,
+) -> Dict[str, int | bool]:
+    """Prove every previously committed corpus generation remains byte-exact."""
+
+    try:
+        relative_data = data_dir.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError as exc:
+        raise CorpusIntegrityError("corpus data directory must be inside the repository") from exc
+    generations = data_dir / GENERATIONS_DIRECTORY
+    if generations.is_symlink() or not generations.is_dir():
+        raise CorpusIntegrityError("corpus generations parent must be a regular directory")
+    for directory in generations.iterdir():
+        if not re.fullmatch(r"[0-9a-f]{64}", directory.name):
+            raise CorpusIntegrityError("corpus generation directory name is invalid")
+        if directory.is_symlink() or not directory.is_dir():
+            raise CorpusIntegrityError("corpus generation must be a regular directory")
+        _validate_generation_members(directory, GENERATION_FILES, "corpus generation")
+
+    pointer_spec = f"{base_ref}:{relative_data}/{CURRENT_POINTER}"
+    try:
+        baseline_pointer = subprocess.check_output(
+            ["git", "show", pointer_spec], cwd=repo_root, stderr=subprocess.DEVNULL
+        )
+    except subprocess.CalledProcessError:
+        return {"baseline_present": False, "verified_generations": 0}
+    except OSError as exc:
+        raise CorpusIntegrityError("cannot inspect baseline corpus pointer") from exc
+    pointer = data_dir / CURRENT_POINTER
+    if pointer.is_symlink() or not pointer.is_file() or pointer.read_bytes() != baseline_pointer:
+        raise CorpusIntegrityError("committed corpus CURRENT pointer was modified")
+
+    prefix = f"{relative_data}/{GENERATIONS_DIRECTORY}"
+    try:
+        listing = subprocess.check_output(
+            ["git", "ls-tree", "-r", "-z", base_ref, "--", prefix],
+            cwd=repo_root,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise CorpusIntegrityError("cannot inspect baseline corpus generations") from exc
+    baseline: Dict[str, Dict[str, tuple[str, str]]] = {}
+    for raw_entry in listing.split(b"\0"):
+        if not raw_entry:
+            continue
+        metadata, raw_path = raw_entry.split(b"\t", 1)
+        mode, kind, _object_id = metadata.decode("ascii").split()
+        path = raw_path.decode("utf-8")
+        parts = Path(path).relative_to(prefix).parts
+        if len(parts) != 2 or not re.fullmatch(r"[0-9a-f]{64}", parts[0]):
+            raise CorpusIntegrityError("baseline corpus generation layout is invalid")
+        baseline.setdefault(parts[0], {})[parts[1]] = (mode, kind)
+    for generation, entries in baseline.items():
+        directory = generations / generation
+        if directory.is_symlink() or not directory.is_dir():
+            raise CorpusIntegrityError("committed corpus generation was deleted or replaced")
+        if set(entries) != GENERATION_FILES:
+            raise CorpusIntegrityError("baseline corpus generation inventory is invalid")
+        _validate_generation_members(directory, GENERATION_FILES, "committed corpus generation")
+        for filename, (mode, kind) in entries.items():
+            if mode not in {"100644", "100755"} or kind != "blob":
+                raise CorpusIntegrityError("baseline corpus generation contains a non-file entry")
+            spec = f"{base_ref}:{prefix}/{generation}/{filename}"
+            expected = subprocess.check_output(["git", "show", spec], cwd=repo_root)
+            if (directory / filename).read_bytes() != expected:
+                raise CorpusIntegrityError("committed corpus generation bytes were modified")
+    return {"baseline_present": True, "verified_generations": len(baseline)}
 
 
 def _baseline_production_tree_payload(
@@ -946,6 +1153,10 @@ def compile_corpora(
 ) -> Dict[str, Any]:
     """Compile all source documents into canonical JSONL splits and a manifest."""
 
+    generations = output_dir / GENERATIONS_DIRECTORY
+    if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
+        raise CorpusIntegrityError("corpus generations parent must be a regular directory")
+
     documents: List[tuple[Path, Mapping[str, Any]]] = []
     for path in sorted(source_dir.glob("*.json")):
         try:
@@ -1070,7 +1281,8 @@ def compile_corpora(
         "manifest_v1.json": manifest_payload,
         "ROOT.sha256": (root_sha256 + "\n").encode("ascii"),
     }
-    generations = output_dir / GENERATIONS_DIRECTORY
+    if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
+        raise CorpusIntegrityError("corpus generations parent must be a regular directory")
     generations.mkdir(parents=True, exist_ok=True)
     generation_dir = generations / root_sha256
     with tempfile.TemporaryDirectory(prefix=".conversation-compile-", dir=output_dir) as staging_name:
