@@ -4,8 +4,8 @@ This directory is the executable contract for GitHub issue
 [#41](https://github.com/deucebucket/clanker/issues/41). Corpus version
 `conversation-v1` is compiled as one canonical JSON object per complete
 conversation. It measures the exact production code at
-`66b85de66337789fa83292ecf683c6b23cc0af55`, the merge result of the reviewed
-post-#106 web release in #113.
+`c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e`, the final reviewed live-promotion
+main for the post-#106 web lineage through PR #115.
 
 ## Truth and copyright boundaries
 
@@ -34,7 +34,7 @@ IDs and aggregates, not source text or generated responses.
 generation. The manifest records the full split policy and counts, every
 whole-conversation digest, raw-source digests, compiler/evaluator digests, and
 a digest of the exact production code and runtime-data bytes at the named
-post-#113 commit. `ROOT.sha256` anchors all of those constituents. The compiler
+release commit. `ROOT.sha256` anchors all of those constituents. The compiler
 and runner fail if local production bytes differ.
 A correction requires `conversation-v2`; changing v1 in
 place is forbidden. The release tag for the merge commit is the external,
@@ -101,5 +101,6 @@ files with `load_published_artifacts`. The runner captures HEAD and all
 compiler/evaluator/production digests at startup and fails if they or the
 measured worktree change during the run.
 
-The first baseline sets no accuracy threshold: it records the honest post-#113
-result. Later thresholds must name both the corpus root and baseline fingerprint.
+The first baseline sets no accuracy threshold: it records the honest result at
+the exact manifest-bound release commit. Later thresholds must name both the
+corpus root and baseline fingerprint.

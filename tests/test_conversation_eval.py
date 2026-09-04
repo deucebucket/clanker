@@ -74,7 +74,7 @@ def test_manifest_has_frozen_whole_conversation_corpus():
     manifest = load_manifest()
     heldout = manifest["splits"]["heldout"]
     development = manifest["splits"]["development"]
-    assert manifest["baseline_code_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
+    assert manifest["baseline_code_commit"] == "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e"
     assert heldout["turn_count"] >= 500
     assert development["turn_count"] >= 60
     assert heldout["domain_turns"] == {
@@ -1245,7 +1245,7 @@ runner._publish_artifacts(
 
 def test_artifact_generation_has_no_backup_basename_collision(tmp_path):
     report_path = tmp_path / ".backup-0"
-    failure_path = tmp_path / ".backup-1"
+    failure_path = tmp_path / ".backup-1.jsonl"
     expected_report = {"aggregate": 1}
     expected_failures = [{"turn_id": "id", "category": "metric"}]
     _publish_artifacts(
@@ -1421,7 +1421,7 @@ def test_execution_errors_fail_the_release_runner():
 def test_baseline_is_aggregate_only_and_exact_post_113():
     report_path = ROOT / "evaluation/conversations/baselines/post_113_heldout_v1.json"
     report, failures, generation_dir = load_published_artifacts(report_path)
-    assert report["production_code_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
+    assert report["production_code_commit"] == "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e"
     assert set(report["modes"]) == {"sentence_only", "stateful", "transition_corrected"}
     assert report["development_correction_bundle"]["lookup_store_unchanged"] is True
     subprocess.run(

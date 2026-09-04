@@ -1,11 +1,11 @@
 {
-  "baseline_code_commit": "66b85de66337789fa83292ecf683c6b23cc0af55",
+  "baseline_code_commit": "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e",
   "compiler": "evaluation.conversations.corpus:compile_corpora",
-  "compiler_sha256": "e73ed1da15bfe5e10468acdbd1a87ab7f091ecc89b04dfacf9d7bf4086f7dc39",
+  "compiler_sha256": "a9e023d257b09e86205f52f8c3f98fc79e2fe477304faabdb3ce2b49a6bd16a6",
   "content_address": "sha256:05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
-  "corpus_root_sha256": "aa65b092bfe912b6c4a15309d5ca3077e9f1c851754a4486753344ebc2442c89",
+  "corpus_root_sha256": "8fd81062dbd06f6bcac8f01e3ae4b99d2b5b8d5d0696a9ee7cbb2789e32b4a8f",
   "corpus_version": "conversation-v1",
-  "evaluator_sha256": "06cb310b34a08ceab08e2fed9966d2183381eae9bf204c1c8b48b2c0ac293f37",
+  "evaluator_sha256": "1e15fda3e3ce850e77748d3c3f4420791fc578f42aff6c055b4a0ebc897f221b",
   "frozen_date": "2026-09-04",
   "immutability_policy": "heldout-v1 bytes and labels are frozen; corrections require a new corpus version",
   "manifest_schema_version": 1,
@@ -92,11 +92,27 @@
     },
     {
       "path": "clanker_lm/web.py",
-      "sha256": "01f31a2847f1b834db0c0583fd4fc6a8125dba30d1b764f31c6ce981eb6d447c"
+      "sha256": "479c3b6092d9732fd4f6baea8ac2e527a42fbf737ba67d944a594a8dbfe50617"
     },
     {
       "path": "clanker_lm/web_assets/__init__.py",
       "sha256": "a25cedc97e2acf0da4c37f596703d39ab95d9cd86f5fc836f5d0787ba125e1ac"
+    },
+    {
+      "path": "clanker_lm/web_assets/app.css",
+      "sha256": "99ccd97971bb2c3b5a69b490d585e2d37e6297635c8a8787b6b9bc416c1c1481"
+    },
+    {
+      "path": "clanker_lm/web_assets/app.js",
+      "sha256": "b8111afeca16bed34f4b9bfdabf539439ce6787d00fea7c892212082026fc484"
+    },
+    {
+      "path": "clanker_lm/web_assets/index.html",
+      "sha256": "2afec8e0d09da6a5593d5b8451486b0018eda6c7193321137a1a9f86a5504f88"
+    },
+    {
+      "path": "clanker_lm/web_assets/releases.json",
+      "sha256": "35236db654fca160e67a0115e2242609382d5e28fb369a6adb169e22697fc937"
     },
     {
       "path": "clanker_lm/web_release_verify.py",
@@ -235,11 +251,11 @@
       "sha256": "513ddbe1a02dd1361cf1dd0fa24a7195394cf076087ac5eb9fc68bde330553e3"
     }
   ],
-  "production_code_sha256": "71c24c0e25d5cdbcf0fcede2d300ad672a812d648d1700e690cec09393852593",
+  "production_code_sha256": "b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f",
   "schema_sha256": {
     "conversation-v1.schema.json": "560f2ee2fe18822589985125ff0138d6d18d685ddc5d56a05c5bee319c83da66",
-    "failure-v1.schema.json": "0bfc93e0b6e522e69b1482fd54eadc7395d4327b6461823ca215be9f94c7beca",
-    "report-v1.schema.json": "d97b9248cf712eec5093130ece75966e86a1a27485febaf3eb17d921668fe271",
+    "failure-v1.schema.json": "0be1bb6a74a32c8f062d41aa127f8b8913f26a016641c145d62bc2d5549d76a6",
+    "report-v1.schema.json": "3f05b97b8841c30021317a7e4c9167ef48d3f971362cd0d843c35ec452de3d6a",
     "source-v1.schema.json": "78a766470871e1c7df6d870b134b2e06bdfb6200eb3e552c18d8389517fffc79"
   },
   "sources": [

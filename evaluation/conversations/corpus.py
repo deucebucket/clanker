@@ -33,7 +33,7 @@ GENERATION_FILES = frozenset({
     "heldout_v1.jsonl", "development_v1.jsonl", "manifest_v1.json", "ROOT.sha256",
 })
 REPO_ROOT = ROOT.parent.parent
-BASELINE_CODE_COMMIT = "66b85de66337789fa83292ecf683c6b23cc0af55"
+BASELINE_CODE_COMMIT = "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e"
 PRODUCTION_PATHS = ("clanker_lm", "engine", "clanker_engine.py")
 SPLIT_POLICIES = {
     "heldout": {
@@ -477,7 +477,7 @@ def assert_production_tree(
     actual = production_tree_sha256(repo_root)
     if actual != expected_sha256:
         raise CorpusIntegrityError(
-            "local production module bytes do not match the manifest-bound post-#113 baseline"
+            "local production module bytes do not match the manifest-bound release baseline"
         )
 
 
