@@ -41,6 +41,11 @@ SPLIT_POLICIES = {
         "teacher_replay_eligible": True,
     },
 }
+SUPPORTED_LICENSES = {
+    "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "Public Domain in the USA": "https://www.gutenberg.org/policy/license.html",
+    "U.S. Government Work / Public Use Permitted": "https://ntrs.nasa.gov/citations/20160014392",
+}
 
 ALLOWED_DIALOGUE_ACTS = {
     "assert",
@@ -494,14 +499,22 @@ def _strict_validate_source_document(path: Path, document: Mapping[str, Any]) ->
         domain = source["domain"]
         if source["is_real_human"] != (domain == "public_domain_real_human"):
             raise CorpusIntegrityError(f"{path}: source {source_id} real-human flag disagrees with domain")
-        if source["is_public_domain"] is not True or not any(
-            marker in str(source["license_name"]).lower()
-            for marker in ("public domain", "cc0", "u.s. government", "us government")
+        if (
+            source["is_public_domain"] is not True
+            or source["license_name"] not in SUPPORTED_LICENSES
+            or source["license_url"] != SUPPORTED_LICENSES[source["license_name"]]
         ):
             raise CorpusIntegrityError(f"{path}: source {source_id} has no supported public-domain grant")
         structural_only = domain in {"synthetic_adversarial", "open_development"}
-        if structural_only != (source.get("structural_only") is True):
+        if structural_only and source.get("structural_only") is not True:
             raise CorpusIntegrityError(f"{path}: source {source_id} structural_only disagrees with domain")
+        if not structural_only and "structural_only" in source:
+            raise CorpusIntegrityError(f"{path}: source {source_id} cannot declare structural_only")
+        if "rights_index_url" in source and (
+            not isinstance(source["rights_index_url"], str)
+            or not source["rights_index_url"].startswith("https://")
+        ):
+            raise CorpusIntegrityError(f"{path}: source {source_id} rights_index_url must use HTTPS")
         if structural_only != (source["supervision_level"] == "gold_structural"):
             raise CorpusIntegrityError(f"{path}: source {source_id} supervision disagrees with domain")
         if split in SPLIT_POLICIES:
@@ -525,6 +538,13 @@ def _strict_validate_source_document(path: Path, document: Mapping[str, Any]) ->
             location=f"{path}: conversation",
         )
         identifier = str(conversation["source_conversation_id"])
+        if len(conversation.get("participants", [])) < 2:
+            raise CorpusIntegrityError(f"{path}: {identifier} requires at least two participants")
+        for field in ("lineage_id", "template_id"):
+            if field in conversation and (
+                not isinstance(conversation[field], str) or not conversation[field].strip()
+            ):
+                raise CorpusIntegrityError(f"{path}: {field} must be nonempty text")
         for field in ("entity_bindings", "template_variables"):
             if field in conversation and (
                 not isinstance(conversation[field], Mapping)

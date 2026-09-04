@@ -1079,6 +1079,7 @@ def _assert_provenance_unchanged(
 _FORBIDDEN_ARTIFACT_KEYS = {
     "text", "raw_text", "source_text", "input_text", "response", "generated_response",
     "message", "messages", "event", "events", "parse", "candidates", "turn_payload",
+    "body", "content", "payload", "output", "reply", "utterance",
 }
 
 
@@ -1095,12 +1096,57 @@ def _validate_aggregate_artifacts(
         for turn in conversation["turns"]
     ]
 
+    if "report_schema_version" in report:
+        expected_report_keys = {
+            "report_schema_version", "corpus_version", "split", "corpus_sha256",
+            "corpus_root_sha256", "compiler_sha256", "evaluator_sha256", "schema_sha256",
+            "production_code_commit", "production_code_sha256", "evaluation_commit",
+            "backend", "clock", "timezone", "modes", "development_correction_bundle",
+            "paired_mode_differences", "semantic_fingerprint", "metric_supervision",
+            "failure_count", "failure_counts", "environment", "limitations",
+        }
+        if set(report) != expected_report_keys:
+            raise CorpusIntegrityError("aggregate report top-level schema is not exact")
+        if set(report["modes"]) != set(MODES):
+            raise CorpusIntegrityError("aggregate report mode schema is not exact")
+        mode_keys = {
+            "overall", "by_domain", "by_outcome", "by_supervision_level",
+            "latency", "resource_growth", "execution_errors",
+        }
+        summary_keys = {
+            "turn_count", "conversation_count", "ci_stability", "metrics",
+            "unknown_classification", "conflict_classification", "uncertainty_calibration",
+            "drift", "outcome_counts", "confidence_interval_method",
+        }
+        metric_keys = {
+            "value", "n_turns", "n_conversations", "ci95_conversation_cluster_bootstrap",
+        }
+        for mode in MODES:
+            mode_report = report["modes"][mode]
+            if set(mode_report) != mode_keys:
+                raise CorpusIntegrityError(f"aggregate report {mode} schema is not exact")
+            summaries = [mode_report["overall"]]
+            for stratum in ("by_domain", "by_outcome", "by_supervision_level"):
+                summaries.extend(mode_report[stratum].values())
+            for summary in summaries:
+                if set(summary) != summary_keys:
+                    raise CorpusIntegrityError("aggregate summary schema is not exact")
+                if any(set(metric) != metric_keys for metric in summary["metrics"].values()):
+                    raise CorpusIntegrityError("aggregate metric schema is not exact")
+        failure_keys = {"conversation_id", "turn_id", "domain", "mode", "category"}
+        for failure in failures:
+            if not isinstance(failure, Mapping) or not failure_keys <= set(failure):
+                raise CorpusIntegrityError("failure ledger row is malformed")
+            if set(failure) - failure_keys - {"exception"}:
+                raise CorpusIntegrityError("failure ledger row contains an unexpected field")
+
     def walk(value: Any, location: str) -> None:
         if isinstance(value, Mapping):
             for key, item in value.items():
                 normalized_key = str(key).lower()
                 if normalized_key in _FORBIDDEN_ARTIFACT_KEYS or normalized_key.endswith("_text"):
                     raise CorpusIntegrityError(f"aggregate artifact contains forbidden payload key at {location}.{key}")
+                walk(str(key), f"{location}.<key>")
                 walk(item, f"{location}.{key}")
         elif isinstance(value, list):
             for index, item in enumerate(value):
@@ -1176,6 +1222,18 @@ def _publish_artifacts(
             raise
 
 
+def _enforce_zero_execution_errors(failures: Sequence[Mapping[str, Any]]) -> None:
+    execution_errors = [item for item in failures if item.get("category") == "execution_error"]
+    if execution_errors:
+        first = execution_errors[0]
+        raise RuntimeError(
+            "conversation evaluation aborted after "
+            f"{len(execution_errors)} execution error(s); first at "
+            f"{first.get('conversation_id')} / {first.get('turn_id')} "
+            f"({first.get('exception', 'unknown exception')})"
+        )
+
+
 def run_evaluation(
     *,
     split: str = "development",
@@ -1247,6 +1305,7 @@ def run_evaluation(
     finally:
         correction_store.close()
 
+    _enforce_zero_execution_errors(all_failures)
     paired_differences = _paired_mode_differences(mode_records, seed_base=seed_base)
     semantic_payload = {
         "modes": {

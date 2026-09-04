@@ -49,6 +49,7 @@ from evaluation.conversations.runner import (
     _correction_store_digest,
     _drift,
     _entity_exact,
+    _enforce_zero_execution_errors,
     _metric_summary,
     _paired_mode_differences,
     _pooled_cluster_mean,
@@ -161,6 +162,13 @@ def test_source_schema_rejects_container_and_participant_corruption():
         lambda item: item["sources"][0].update({"retrieval_date": "2026-02-30"}),
         lambda item: item["sources"][0].update({"is_real_human": True}),
         lambda item: item["sources"][0].update({"license_name": "Proprietary"}),
+        lambda item: item["sources"][0].update({"rights_index_url": 7}),
+        lambda item: item["sources"][0].update({"rights_index_url": "file:///rights"}),
+        lambda item: item["conversations"][0].update({"lineage_id": True}),
+        lambda item: item["conversations"][0].update({"template_id": 7}),
+        lambda item: item["conversations"][0].update(
+            {"participants": item["conversations"][0]["participants"][:1]}
+        ),
         lambda item: item["conversations"][0]["turns"][0]["annotation_overrides"].update(
             {"ambiguity": "false"}
         ),
@@ -174,6 +182,26 @@ def test_source_schema_rejects_nested_and_rights_corruption(mutation):
     document = json.loads(path.read_text())
     mutation(document)
     with pytest.raises(CorpusIntegrityError):
+        _validate_source_document(path, document)
+
+
+def test_public_literary_source_rejects_structural_only_marker():
+    path = SOURCE_DIR / "heldout_drama_v1.json"
+    document = json.loads(path.read_text())
+    document["sources"][0]["structural_only"] = "false"
+    with pytest.raises(CorpusIntegrityError, match="structural_only"):
+        _validate_source_document(path, document)
+
+
+@pytest.mark.parametrize(
+    "license_name",
+    ["Not public domain; proprietary", "public domain status disputed", "CC0 revoked"],
+)
+def test_rights_gate_rejects_negated_or_disputed_license_names(license_name):
+    path = SOURCE_DIR / "development_v1.json"
+    document = json.loads(path.read_text())
+    document["sources"][0]["license_name"] = license_name
+    with pytest.raises(CorpusIntegrityError, match="public-domain grant"):
         _validate_source_document(path, document)
 
 
@@ -650,6 +678,10 @@ def test_aggregate_artifact_guard_checks_every_turn_and_recursive_payload_keys()
         _validate_aggregate_artifacts({"nested": {"value": last_text}}, [], conversations)
     with pytest.raises(CorpusIntegrityError, match="payload key"):
         _validate_aggregate_artifacts({"nested": {"raw_text": "redacted"}}, [], conversations)
+    with pytest.raises(CorpusIntegrityError, match="payload key"):
+        _validate_aggregate_artifacts({"nested": {"body": "invented reply"}}, [], conversations)
+    with pytest.raises(CorpusIntegrityError, match="turn content"):
+        _validate_aggregate_artifacts({last_text: 1}, [], conversations)
     _validate_aggregate_artifacts({"candidate_count": 3, "turn_id": "heldout-id"}, [], conversations)
 
 
@@ -714,6 +746,19 @@ def test_artifact_publish_rolls_back_every_public_target_on_replace_failure(
         )
     for path in (report_path, failures_path, checksum_path):
         assert path.read_text() == "sentinel\n"
+
+
+def test_execution_errors_fail_the_release_runner():
+    with pytest.raises(RuntimeError, match="1 execution error"):
+        _enforce_zero_execution_errors([
+            {
+                "conversation_id": "c",
+                "turn_id": "t",
+                "category": "execution_error",
+                "exception": "ValueError",
+            }
+        ])
+    _enforce_zero_execution_errors([{"category": "semantic_parse_exact"}])
 
 
 def test_baseline_is_aggregate_only_and_exact_post_106():
