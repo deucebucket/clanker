@@ -31,7 +31,10 @@ IDs and aggregates, not source text or generated responses.
 `data/CURRENT` atomically selects one immutable directory under
 `data/generations/<corpus-root>/`. That directory contains `heldout_v1.jsonl`,
 `development_v1.jsonl`, `manifest_v1.json`, and `ROOT.sha256` as one complete
-generation. The manifest records the full split policy and counts, every
+generation. `data/HISTORY.json` binds the byte digest and `100644` mode of
+every generation ever selected on this branch. The `verify-history` gate walks
+the candidate's own Git ancestry, rather than only its merge base, and refuses
+deletion or alteration of any prior selection. The manifest records the full split policy and counts, every
 whole-conversation digest, raw-source digests, compiler/evaluator digests, and
 a digest of the exact production code and runtime-data bytes at the named
 release commit. `ROOT.sha256` anchors all of those constituents. The compiler
@@ -71,6 +74,7 @@ the raw-source attestation remains a project claim.
 ```bash
 python -m evaluation.conversations compile
 python -m evaluation.conversations verify
+python -m evaluation.conversations verify-history --ref HEAD
 python -m evaluation.conversations run --split development
 python -m evaluation.conversations run --split heldout \
   --output evaluation/conversations/baselines/post_113_heldout_v1.json \
@@ -95,6 +99,11 @@ recall, and F1 intervals use the same fixed-seed, domain-stratified
 whole-conversation cluster bootstrap. Latency/resource observations are
 excluded from the deterministic semantic fingerprint; process max-RSS is an
 observational process-lifetime peak and is not a paired mode comparison.
+Every deterministic metric carries ID-only per-conversation/per-turn
+sufficient statistics. Validation rebuilds point estimates and fixed-seed
+cluster intervals from those observations, binds UNKNOWN/CONFLICT predictions
+to gold statuses, and derives the failure ledger from the exact zero-valued
+turn metrics. No source utterance or generated response is included.
 
 VADUGWI labels are produced only by the frozen weak rule. Sources marked
 `structural_only` are scored for their gold semantic/entity structure but are
@@ -107,9 +116,12 @@ a response-only `vadugwi_after -> observed_next_state` estimand.
 
 Reports and ID-only failure ledgers are validated against every held-out turn.
 The runner writes each report, ledger, and checksum as one immutable generation
-and then atomically switches a `.current` pointer, so an exception or abrupt
-process death cannot select a mixed generation. Resolve and verify the selected
-files with `load_published_artifacts`. The runner captures HEAD and all
+and exposes the three conventional paths through fixed role symlinks beneath a
+single atomically switched `.current` directory symlink. File and parent-directory
+`fsync` calls make the generation durable before selection, so an exception or
+abrupt process death cannot select a mixed generation. `load_published_artifacts`
+hashes and parses the same buffers, then validates the aggregate schema, corpus
+provenance, and evaluation-commit ancestry by default. The runner captures HEAD and all
 compiler/evaluator/production digests at startup and fails if they or the
 measured worktree change during the run.
 

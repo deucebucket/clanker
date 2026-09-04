@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -38,7 +40,9 @@ jobs:
         run: python -m compileall -q engine clanker_lm evaluation tests
 
       - name: Verify frozen conversation corpus
-        run: python -m evaluation.conversations verify
+        run: |
+          python -m evaluation.conversations verify
+          python -m evaluation.conversations verify-history --ref HEAD
 
       - name: Enforce additive-only held-out versions
         run: |

@@ -12,6 +12,7 @@ from .corpus import (
     compile_corpora,
     verify_additive_generations,
     verify_corpus,
+    verify_generation_history,
 )
 
 
@@ -22,6 +23,8 @@ def main() -> int:
     compile_parser.add_argument("--source-dir", type=Path, default=SOURCE_DIR)
     compile_parser.add_argument("--output-dir", type=Path, default=DATA_DIR)
     subparsers.add_parser("verify")
+    history_parser = subparsers.add_parser("verify-history")
+    history_parser.add_argument("--ref", default="HEAD")
     additive_parser = subparsers.add_parser("verify-additive")
     additive_parser.add_argument("--base", default="origin/main")
     run_parser = subparsers.add_parser("run")
@@ -35,6 +38,9 @@ def main() -> int:
         return 0
     if args.command == "verify":
         print(json.dumps(verify_corpus(), indent=2, sort_keys=True))
+        return 0
+    if args.command == "verify-history":
+        print(json.dumps(verify_generation_history(args.ref), indent=2, sort_keys=True))
         return 0
     if args.command == "verify-additive":
         print(json.dumps(verify_additive_generations(args.base), indent=2, sort_keys=True))

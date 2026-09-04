@@ -91,11 +91,25 @@
     "interval": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
     "metric": {
       "type": "object", "additionalProperties": false,
-      "required": ["value", "n_turns", "n_conversations", "ci95_conversation_cluster_bootstrap"],
+      "required": ["value", "n_turns", "n_conversations", "ci95_conversation_cluster_bootstrap", "clusters"],
       "properties": {
         "value": {"type": "number"}, "n_turns": {"type": "integer", "minimum": 0},
         "n_conversations": {"type": "integer", "minimum": 0},
-        "ci95_conversation_cluster_bootstrap": {"oneOf": [{"$ref": "#/$defs/interval"}, {"type": "null"}]}
+        "ci95_conversation_cluster_bootstrap": {"oneOf": [{"$ref": "#/$defs/interval"}, {"type": "null"}]},
+        "clusters": {"type": "array", "items": {"$ref": "#/$defs/metricCluster"}}
+      }
+    },
+    "metricCluster": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain", "conversation_id", "observations"],
+      "properties": {
+        "domain": {"type": "string", "minLength": 1},
+        "conversation_id": {"type": "string", "minLength": 1},
+        "observations": {"type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["turn_id", "value"],
+          "properties": {"turn_id": {"type": "string", "minLength": 1}, "value": {"type": "number"}}
+        }}
       }
     },
     "classification": {
@@ -107,12 +121,21 @@
         "clusters": {
           "type": "array", "items": {
             "type": "object", "additionalProperties": false,
-            "required": ["domain", "conversation_id", "tp", "fp", "fn", "tn"],
+            "required": ["domain", "conversation_id", "tp", "fp", "fn", "tn", "observations"],
             "properties": {
               "domain": {"type": "string", "minLength": 1},
               "conversation_id": {"type": "string", "minLength": 1},
               "tp": {"type": "integer", "minimum": 0}, "fp": {"type": "integer", "minimum": 0},
-              "fn": {"type": "integer", "minimum": 0}, "tn": {"type": "integer", "minimum": 0}
+              "fn": {"type": "integer", "minimum": 0}, "tn": {"type": "integer", "minimum": 0},
+              "observations": {"type": "array", "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["turn_id", "expected_status", "actual_status"],
+                "properties": {
+                  "turn_id": {"type": "string", "minLength": 1},
+                  "expected_status": {"type": "string", "minLength": 1},
+                  "actual_status": {"type": "string", "minLength": 1}
+                }
+              }}
             }
           }
         },
@@ -127,7 +150,7 @@
       }
     },
     "calibration": {
-      "type": "object", "additionalProperties": false, "required": ["ece_10_bin", "n", "bins"],
+      "type": "object", "additionalProperties": false, "required": ["ece_10_bin", "n", "bins", "observations"],
       "properties": {
         "ece_10_bin": {"type": "number"}, "n": {"type": "integer", "minimum": 0},
         "bins": {"type": "array", "items": {
@@ -136,9 +159,20 @@
           "properties": {
             "lower": {"type": "number"}, "upper": {"type": "number"},
             "n": {"type": "integer", "minimum": 0},
-            "confidence_sum": {"type": "number"}, "correct_sum": {"type": "number"},
+            "confidence_sum": {"type": "number"}, "correct_sum": {"type": "integer"},
             "squared_error_sum": {"type": "number"},
             "confidence": {"type": "number"}, "accuracy": {"type": "number"}
+          }
+        }},
+        "observations": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["domain", "conversation_id", "turn_id", "confidence", "correct"],
+          "properties": {
+            "domain": {"type": "string", "minLength": 1},
+            "conversation_id": {"type": "string", "minLength": 1},
+            "turn_id": {"type": "string", "minLength": 1},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "correct": {"type": "integer", "minimum": 0, "maximum": 1}
           }
         }}
       }
@@ -149,11 +183,29 @@
     },
     "drift": {
       "type": "object", "additionalProperties": false,
-      "required": ["terminal_distance_mean", "distance_slope_mean", "terminal_signed_bias_by_axis", "absolute_residual_slope_by_axis", "n_conversations"],
+      "required": ["terminal_distance_mean", "distance_slope_mean", "terminal_signed_bias_by_axis", "absolute_residual_slope_by_axis", "n_conversations", "clusters"],
       "properties": {
         "terminal_distance_mean": {"type": ["number", "null"]}, "distance_slope_mean": {"type": ["number", "null"]},
         "terminal_signed_bias_by_axis": {"$ref": "#/$defs/axes"}, "absolute_residual_slope_by_axis": {"$ref": "#/$defs/axes"},
-        "n_conversations": {"type": "integer", "minimum": 0}
+        "n_conversations": {"type": "integer", "minimum": 0},
+        "clusters": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["domain", "conversation_id", "observations"],
+          "properties": {
+            "domain": {"type": "string", "minLength": 1},
+            "conversation_id": {"type": "string", "minLength": 1},
+            "observations": {"type": "array", "minItems": 1, "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["turn_id", "next_state_distance", "residual_by_axis", "absolute_residual_by_axis"],
+              "properties": {
+                "turn_id": {"type": "string", "minLength": 1},
+                "next_state_distance": {"type": "number", "minimum": 0, "maximum": 255},
+                "residual_by_axis": {"$ref": "#/$defs/axes"},
+                "absolute_residual_by_axis": {"$ref": "#/$defs/axes"}
+              }
+            }}
+          }
+        }}
       }
     },
     "confidenceMethod": {

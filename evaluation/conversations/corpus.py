@@ -10,6 +10,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import os
 import re
 import stat
 import subprocess
@@ -29,6 +30,7 @@ SOURCE_DIR = ROOT / "sources"
 DATA_DIR = ROOT / "data"
 MANIFEST_PATH = DATA_DIR / "manifest_v1.json"
 CURRENT_POINTER = "CURRENT"
+HISTORY_LEDGER = "HISTORY.json"
 GENERATIONS_DIRECTORY = "generations"
 GENERATION_FILES = frozenset({
     "heldout_v1.jsonl", "development_v1.jsonl", "manifest_v1.json", "ROOT.sha256",
@@ -121,6 +123,25 @@ def _atomic_replace_path(source: Path, target: Path) -> None:
     source.replace(target)
 
 
+def _write_durable(path: Path, payload: bytes) -> None:
+    """Write one staged file and force its bytes to stable storage."""
+
+    with path.open("wb") as stream:
+        stream.write(payload)
+        stream.flush()
+        os.fsync(stream.fileno())
+    path.chmod(0o644)
+
+
+def _fsync_directory(path: Path) -> None:
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    descriptor = os.open(path, flags)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def _reject_symlink_chain(path: Path) -> None:
     current = path.absolute()
     while True:
@@ -150,11 +171,17 @@ def _selected_data_dir(data_dir: Path) -> Path:
         raise CorpusIntegrityError("corpus generations parent must be a regular directory")
     if pointer.is_symlink():
         raise CorpusIntegrityError("corpus CURRENT pointer cannot be a symlink")
-    if not pointer.is_file():
+    if not pointer.is_file() or stat.S_IMODE(pointer.stat().st_mode) != 0o644:
         raise CorpusIntegrityError("corpus CURRENT pointer is required")
-    generation = pointer.read_text(encoding="ascii").strip()
+    try:
+        generation = pointer.read_bytes().decode("ascii").strip()
+    except (OSError, UnicodeError) as exc:
+        raise CorpusIntegrityError("corpus CURRENT pointer is malformed") from exc
     if not re.fullmatch(r"[0-9a-f]{64}", generation):
         raise CorpusIntegrityError("corpus CURRENT pointer is malformed")
+    history = _load_history_ledger(data_dir, verify_files=False)
+    if generation not in history["generations"]:
+        raise CorpusIntegrityError("corpus CURRENT pointer is absent from immutable history")
     selected = data_dir / GENERATIONS_DIRECTORY / generation
     if not selected.is_dir() or selected.is_symlink():
         raise CorpusIntegrityError("corpus CURRENT pointer selects a missing generation")
@@ -176,6 +203,122 @@ def _validate_generation_members(directory: Path, expected: frozenset[str], loca
         member.is_symlink() or not member.is_file() for member in members
     ):
         raise CorpusIntegrityError(f"{location} file inventory is not exact")
+
+
+def _generation_history_entry(directory: Path) -> Dict[str, Any]:
+    _validate_generation_members(directory, GENERATION_FILES, "corpus history generation")
+    files: Dict[str, Dict[str, str]] = {}
+    for name in sorted(GENERATION_FILES):
+        path = directory / name
+        mode = stat.S_IMODE(path.stat().st_mode)
+        if mode != 0o644:
+            raise CorpusIntegrityError("corpus history generation file mode must be 100644")
+        files[name] = {"mode": "100644", "sha256": _sha256_file(path)}
+    return {"files": files}
+
+
+def _history_payload_from_disk(data_dir: Path) -> Dict[str, Any]:
+    generations = data_dir / GENERATIONS_DIRECTORY
+    if generations.is_symlink() or not generations.is_dir():
+        raise CorpusIntegrityError("corpus generations parent must be a regular directory")
+    entries: Dict[str, Any] = {}
+    for directory in sorted(generations.iterdir(), key=lambda item: item.name):
+        if not re.fullmatch(r"[0-9a-f]{64}", directory.name):
+            raise CorpusIntegrityError("corpus generation directory name is invalid")
+        if directory.is_symlink() or not directory.is_dir():
+            raise CorpusIntegrityError("corpus generation must be a regular directory")
+        entries[directory.name] = _generation_history_entry(directory)
+    return {
+        "history_schema_version": 1,
+        "generation_files": sorted(GENERATION_FILES),
+        "generations": entries,
+    }
+
+
+def _validate_history_payload(
+    payload: Any,
+    *,
+    data_dir: Path,
+    require_exact_inventory: bool = False,
+    verify_files: bool = True,
+) -> Dict[str, Any]:
+    if not isinstance(payload, Mapping):
+        raise CorpusIntegrityError("corpus history ledger must be an object")
+    _require_exact_keys(
+        payload,
+        required={"history_schema_version", "generation_files", "generations"},
+        location="corpus history ledger",
+    )
+    if type(payload["history_schema_version"]) is not int or payload["history_schema_version"] != 1:
+        raise CorpusIntegrityError("unsupported corpus history schema")
+    if payload["generation_files"] != sorted(GENERATION_FILES):
+        raise CorpusIntegrityError("corpus history file inventory contract is invalid")
+    entries = payload["generations"]
+    if not isinstance(entries, Mapping) or not entries:
+        raise CorpusIntegrityError("corpus history ledger has no generations")
+    generations = data_dir / GENERATIONS_DIRECTORY
+    actual_names = {
+        item.name for item in generations.iterdir()
+        if item.is_dir() and not item.is_symlink()
+    }
+    if require_exact_inventory and actual_names != set(entries):
+        raise CorpusIntegrityError("corpus generation history inventory is incomplete")
+    for generation, entry in entries.items():
+        if not isinstance(generation, str) or not re.fullmatch(r"[0-9a-f]{64}", generation):
+            raise CorpusIntegrityError("corpus history generation ID is invalid")
+        if not isinstance(entry, Mapping):
+            raise CorpusIntegrityError("corpus history generation entry must be an object")
+        _require_exact_keys(entry, required={"files"}, location=f"corpus history {generation}")
+        files = entry["files"]
+        if not isinstance(files, Mapping) or set(files) != GENERATION_FILES:
+            raise CorpusIntegrityError("corpus history generation inventory is invalid")
+        directory = generations / generation
+        if directory.is_symlink() or not directory.is_dir():
+            raise CorpusIntegrityError("corpus history generation was deleted or replaced")
+        if verify_files:
+            _validate_generation_members(directory, GENERATION_FILES, "corpus history generation")
+        for name, record in files.items():
+            if not isinstance(record, Mapping):
+                raise CorpusIntegrityError("corpus history file entry must be an object")
+            _require_exact_keys(
+                record, required={"mode", "sha256"},
+                location=f"corpus history {generation}/{name}",
+            )
+            if record["mode"] != "100644":
+                raise CorpusIntegrityError("corpus history generation file mode was modified")
+            if (
+                not isinstance(record["sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])
+            ):
+                raise CorpusIntegrityError("corpus history generation bytes were modified")
+            if verify_files:
+                path = directory / name
+                if stat.S_IMODE(path.stat().st_mode) != 0o644:
+                    raise CorpusIntegrityError("corpus history generation file mode was modified")
+                if _sha256_file(path) != record["sha256"]:
+                    raise CorpusIntegrityError("corpus history generation bytes were modified")
+    return dict(payload)
+
+
+def _load_history_ledger(
+    data_dir: Path,
+    *,
+    require_exact_inventory: bool = False,
+    verify_files: bool = True,
+) -> Dict[str, Any]:
+    path = data_dir / HISTORY_LEDGER
+    if path.is_symlink() or not path.is_file() or stat.S_IMODE(path.stat().st_mode) != 0o644:
+        raise CorpusIntegrityError("corpus history ledger is missing or not a regular 100644 file")
+    try:
+        payload = json.loads(path.read_bytes().decode("utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise CorpusIntegrityError("corpus history ledger is unreadable") from exc
+    return _validate_history_payload(
+        payload,
+        data_dir=data_dir,
+        require_exact_inventory=require_exact_inventory,
+        verify_files=verify_files,
+    )
 
 
 def _require_exact_keys(
@@ -455,6 +598,7 @@ def _static_asset_has_forbidden_production_reference(
             or "evaluation.conversations" in normalized
             or "heldout_v1.jsonl" in normalized
             or normalized == "heldout"
+            or normalized == CURRENT_POINTER.lower()
             or content_address.lower() in normalized
         ):
             return True
@@ -510,6 +654,81 @@ def _promotion_invariants(manifest: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
+def verify_generation_history(
+    ref: str = "HEAD",
+    *,
+    repo_root: Path = REPO_ROOT,
+    data_dir: Path = DATA_DIR,
+) -> Dict[str, int | str]:
+    """Verify every generation ever selected on ``ref`` remains byte-exact.
+
+    Unlike a comparison with ``origin/main``, this walks the candidate's own
+    ancestry.  That makes deletion of a branch-local generation observable even
+    when the merge base predates the corpus.
+    """
+
+    try:
+        _reject_symlink_chain(data_dir)
+        relative_data = data_dir.absolute().relative_to(repo_root.absolute()).as_posix()
+    except ValueError as exc:
+        raise CorpusIntegrityError("corpus data directory must be inside the repository") from exc
+    ledger = _load_history_ledger(data_dir, require_exact_inventory=True)
+    pointer_path = data_dir / CURRENT_POINTER
+    if pointer_path.is_symlink() or not pointer_path.is_file() or stat.S_IMODE(pointer_path.stat().st_mode) != 0o644:
+        raise CorpusIntegrityError("corpus CURRENT pointer must be a regular 100644 file")
+    pointer_relative = f"{relative_data}/{CURRENT_POINTER}"
+    try:
+        commits = subprocess.check_output(
+            ["git", "log", "--format=%H", ref, "--", pointer_relative],
+            cwd=repo_root,
+            text=True,
+        ).splitlines()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise CorpusIntegrityError("cannot inspect corpus selection history") from exc
+    if not commits:
+        raise CorpusIntegrityError("corpus selection history is absent from candidate ancestry")
+    selections: Dict[str, str] = {}
+    prefix = f"{relative_data}/{GENERATIONS_DIRECTORY}"
+    for commit in commits:
+        try:
+            pointer_bytes = subprocess.check_output(
+                ["git", "show", f"{commit}:{pointer_relative}"], cwd=repo_root
+            )
+            generation = pointer_bytes.decode("ascii").strip()
+        except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
+            raise CorpusIntegrityError("cannot read historical corpus selection") from exc
+        if not re.fullmatch(r"[0-9a-f]{64}", generation):
+            raise CorpusIntegrityError("historical corpus selection is malformed")
+        selections.setdefault(generation, commit)
+    if set(selections) != set(ledger["generations"]):
+        raise CorpusIntegrityError("corpus history ledger does not match candidate selection ancestry")
+    for generation, commit in selections.items():
+        directory = data_dir / GENERATIONS_DIRECTORY / generation
+        for filename in sorted(GENERATION_FILES):
+            relative = f"{prefix}/{generation}/{filename}"
+            try:
+                metadata = subprocess.check_output(
+                    ["git", "ls-tree", "-z", commit, "--", relative], cwd=repo_root
+                ).rstrip(b"\0")
+                raw_meta, raw_path = metadata.split(b"\t", 1)
+                mode, kind, _object_id = raw_meta.decode("ascii").split()
+                expected = subprocess.check_output(
+                    ["git", "show", f"{commit}:{raw_path.decode('utf-8')}"], cwd=repo_root
+                )
+            except (OSError, subprocess.SubprocessError, UnicodeError, ValueError) as exc:
+                raise CorpusIntegrityError("historical selected corpus generation is incomplete") from exc
+            if mode != "100644" or kind != "blob":
+                raise CorpusIntegrityError("historical corpus generation mode/type is invalid")
+            path = directory / filename
+            if stat.S_IMODE(path.stat().st_mode) != 0o644 or path.read_bytes() != expected:
+                raise CorpusIntegrityError("historical selected corpus generation was modified")
+    return {
+        "history_ref": ref,
+        "verified_generations": len(selections),
+        "current_generation": pointer_path.read_text(encoding="ascii").strip(),
+    }
+
+
 def verify_additive_generations(
     base_ref: str,
     *,
@@ -536,6 +755,8 @@ def verify_additive_generations(
         _validate_generation_members(directory, GENERATION_FILES, "corpus generation")
         if any((directory / name).stat().st_mode & 0o111 for name in GENERATION_FILES):
             raise CorpusIntegrityError("corpus generation file mode must not be executable")
+
+    current_ledger = _load_history_ledger(data_dir, require_exact_inventory=True)
 
     prefix = f"{relative_data}/{GENERATIONS_DIRECTORY}"
     try:
@@ -591,6 +812,23 @@ def verify_additive_generations(
         or observed_pointer_mode != pointer_mode
     ):
         raise CorpusIntegrityError("committed corpus CURRENT pointer was modified")
+
+    history_spec = f"{base_ref}:{relative_data}/{HISTORY_LEDGER}"
+    try:
+        baseline_history = json.loads(subprocess.check_output(
+            ["git", "show", history_spec], cwd=repo_root, stderr=subprocess.DEVNULL
+        ))
+    except subprocess.CalledProcessError:
+        baseline_history = None
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CorpusIntegrityError("cannot inspect baseline corpus history ledger") from exc
+    if baseline_history is not None:
+        baseline_entries = baseline_history.get("generations") if isinstance(baseline_history, Mapping) else None
+        if not isinstance(baseline_entries, Mapping):
+            raise CorpusIntegrityError("baseline corpus history ledger is invalid")
+        for generation, entry in baseline_entries.items():
+            if current_ledger["generations"].get(generation) != entry:
+                raise CorpusIntegrityError("committed corpus history entry was modified or deleted")
     current_pointer = pointer.read_bytes()
     if current_pointer != baseline_pointer:
         try:
@@ -1370,6 +1608,18 @@ def compile_corpora(
     generations = output_dir / GENERATIONS_DIRECTORY
     if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
         raise CorpusIntegrityError("corpus generations parent must be a regular directory")
+    history_path = output_dir / HISTORY_LEDGER
+    if history_path.is_symlink():
+        raise CorpusIntegrityError("corpus history ledger cannot be a symlink")
+    if generations.exists() and any(generations.iterdir()) and not history_path.is_file():
+        raise CorpusIntegrityError("existing corpus generations require an immutable history ledger")
+    existing_history = (
+        _load_history_ledger(output_dir) if history_path.is_file() else {
+            "history_schema_version": 1,
+            "generation_files": sorted(GENERATION_FILES),
+            "generations": {},
+        }
+    )
 
     documents: List[tuple[Path, Mapping[str, Any]]] = []
     for path in sorted(source_dir.glob("*.json")):
@@ -1498,13 +1748,15 @@ def compile_corpora(
     if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
         raise CorpusIntegrityError("corpus generations parent must be a regular directory")
     generations.mkdir(parents=True, exist_ok=True)
+    _fsync_directory(output_dir)
     generation_dir = generations / root_sha256
     with tempfile.TemporaryDirectory(prefix=".conversation-compile-", dir=output_dir) as staging_name:
         staging_root = Path(staging_name)
         staging = staging_root / "generation"
         staging.mkdir()
         for filename, payload in publish_payloads.items():
-            (staging / filename).write_bytes(payload)
+            _write_durable(staging / filename, payload)
+        _fsync_directory(staging)
         if generation_dir.exists():
             if not generation_dir.is_dir() or generation_dir.is_symlink():
                 raise CorpusIntegrityError("existing corpus generation is not a regular directory")
@@ -1516,9 +1768,24 @@ def compile_corpora(
                     raise CorpusIntegrityError("existing immutable corpus generation differs from compiled bytes")
         else:
             _atomic_replace_path(staging, generation_dir)
+            _fsync_directory(generations)
+        history = json.loads(_canonical_json(existing_history))
+        generated_entry = _generation_history_entry(generation_dir)
+        old_entry = history["generations"].get(root_sha256)
+        if old_entry is not None and old_entry != generated_entry:
+            raise CorpusIntegrityError("existing immutable corpus history entry differs")
+        history["generations"][root_sha256] = generated_entry
+        history_stage = staging_root / HISTORY_LEDGER
+        _write_durable(
+            history_stage,
+            (json.dumps(history, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        )
+        _atomic_replace_path(history_stage, history_path)
+        _fsync_directory(output_dir)
         pointer_stage = staging_root / CURRENT_POINTER
-        pointer_stage.write_text(root_sha256 + "\n", encoding="ascii")
+        _write_durable(pointer_stage, (root_sha256 + "\n").encode("ascii"))
         _atomic_replace_path(pointer_stage, output_dir / CURRENT_POINTER)
+        _fsync_directory(output_dir)
     return manifest
 
 
