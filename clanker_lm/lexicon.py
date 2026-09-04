@@ -247,6 +247,8 @@ IRREGULAR_LEMMAS: Dict[str, str] = {
     "does": "do", "did": "do", "done": "do",
     "went": "go", "gone": "go",
     "left": "leave",
+    "began": "begin", "begun": "begin",
+    "dying": "die", "lying": "lie", "tying": "tie", "vying": "vie",
     # ``-ied`` usually maps to ``-y`` (tried -> try), but these high-frequency
     # verbs retain a final silent e.  Keep the exceptions explicit rather than
     # guessing from suffix shape.
@@ -316,6 +318,7 @@ IRREGULAR_PAST: Dict[str, str] = {
     "sleep": "slept", "wake": "woke", "know": "knew", "mean": "meant",
     "hurt": "hurt", "hit": "hit", "put": "put", "cut": "cut", "let": "let",
     "upset": "upset", "set": "set", "spread": "spread", "cost": "cost",
+    "begin": "began",
 }
 
 IRREGULAR_PARTICIPLE: Dict[str, str] = {
@@ -323,7 +326,7 @@ IRREGULAR_PARTICIPLE: Dict[str, str] = {
     "be": "been", "do": "done", "go": "gone", "give": "given", "see": "seen",
     "take": "taken", "eat": "eaten", "drink": "drunk", "drive": "driven",
     "write": "written", "speak": "spoken", "break": "broken", "fall": "fallen",
-    "wake": "woken", "know": "known", "get": "gotten",
+    "wake": "woken", "know": "known", "get": "gotten", "begin": "begun",
 }
 
 KNOWN_VERBS: Set[str] = {
@@ -345,7 +348,8 @@ KNOWN_VERBS: Set[str] = {
     "propose", "marry", "graduate", "pass", "fail", "receive", "order", "pick",
     "upset", "belong", "offer", "hand", "walk", "fly", "return", "collapse",
     "explode", "melt", "freeze", "function", "operate", "notice", "possess",
-    "claim", "owe", "contain", "include", "need", "anger", "piss",
+    "claim", "owe", "contain", "include", "need", "anger", "piss", "begin",
+    "enjoy", "avoid", "continue", "smoke", "talk", "swim",
 }
 
 PHRASAL_VERBS: Dict[Tuple[str, str], str] = {
@@ -537,6 +541,26 @@ def participle_form(base: str) -> str:
     return past_form(base)
 
 
+def gerund_form(base: str) -> str:
+    """Return a deterministic present-participle form for supported lemmas."""
+
+    base = lemma(base)
+    if base == "be":
+        return "being"
+    if base.endswith("ie"):
+        return base[:-2] + "ying"
+    if base.endswith("e") and base not in {"see", "flee", "knee"}:
+        return base[:-1] + "ing"
+    if base in {
+        "stop", "plan", "drop", "rob", "hop", "chat", "nod", "hug",
+        "beg", "drag", "slip", "trip", "grab", "sit", "run", "swim",
+        "get", "put", "cut", "let", "win", "admit", "commit", "prefer",
+        "occur", "begin",
+    }:
+        return base + base[-1] + "ing"
+    return base + "ing"
+
+
 def is_probable_verb(word: str, previous: Optional[str] = None, following: Optional[str] = None) -> bool:
     w = word.lower()
     base = lemma(w)
@@ -545,10 +569,10 @@ def is_probable_verb(word: str, previous: Optional[str] = None, following: Optio
     # meeting``), even when the same spelling can be a verb.
     if previous in DETERMINERS | POSSESSIVES and w not in AUXILIARIES:
         return False
-    # A gerund between a determiner and a finite copula is normally a noun:
-    # ``the meeting is at three``.  Without this guard, ``meeting`` is
-    # incorrectly selected as the sentence predicate.
-    if w.endswith("ing") and previous in DETERMINERS | POSSESSIVES and following in COPULAS:
+    # An ``-ing`` form immediately before a finite copula heads its subject NP:
+    # ``reading is fun`` / ``the meeting is at three``.  Without this guard,
+    # the nominal is incorrectly selected as the sentence predicate.
+    if w.endswith("ing") and following in COPULAS:
         return False
     if w in AUXILIARIES or base in KNOWN_VERBS:
         return True

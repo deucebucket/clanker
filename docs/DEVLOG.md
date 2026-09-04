@@ -231,3 +231,43 @@ README gained a "Live demo" section; CLAUDE.md gained a "Live showcase" note so
 future sessions know the pet exists, runs this engine, and feeds findings back to
 docs/v8_audit_log.md (it's how findings #7-#10 were found). Engine work stays here;
 pet work stays in clanker-pet-space.
+
+---
+
+## 2026-09-04 — Clanker-LM runtime and parser program recorded
+
+The deterministic language-runtime work is now tracked separately from the V8
+engine play-by-play in `docs/CLANKER_LM_DEVLOG.md`, with a release-oriented
+history in `docs/CLANKER_LM_CHANGELOG.md`.
+
+Current state:
+
+- `engine/` remains the tuned V8 affect kernel and was not modified by the
+  Clanker-LM parser deliveries;
+- `clanker_lm/` owns semantic parsing, symbolic memory, evidence binding,
+  active lexical learning, live resolvers, trajectory calibration, atomic
+  realization, and V8-backed candidate ranking;
+- no completed response sentence is stored as a template, including unknown,
+  conflict, probe, and safety responses;
+- finite content complements (#86), infinitival control/raising (#88), and
+  embedded interrogative attribution (#89) are merged;
+- **Proven:** the issue #90 branch now implements typed gerund content,
+  aspectual start/stop/continuation, and perception-participial relations while
+  preserving separate matrix/complement events and attributed truth boundaries;
+- **Proven:** the local branch gate is 285 dedicated passes (including exactly
+  160 generated cases), 2,606 full-suite passes with the same two expected V8
+  xfails, 29/29 deterministic acceptance turns, and 7 benchmark cases / 29
+  turns; compile/diff checks are clean and `engine/`/`clanker_engine.py` are
+  unchanged;
+- **Proven:** local independent correctness and truth-boundary reviewers returned
+  ACCEPT with no blockers after modality/future, specificity, provenance,
+  conflict, snapshot, and atomicity fixes; test/code acceptance was clean;
+- **Unknown:** exact-head CI, automated review, and merge outcome are recorded
+  on PR #105 after this devlog commit and are not predicted here;
+- issues #84 and #90-#101 define the remaining modifier/complement closure
+  program, including held-out evaluation, predicate licensing, realization
+  reverse validation, migration, fuzzing, observability, compatibility,
+  performance, and adversarial attribution tests.
+
+All future bounded parser deliveries must update the dedicated Clanker-LM logs
+before review and preserve the permanent boundaries documented there.

@@ -14,6 +14,8 @@ from .model import (
     EntityKind,
     Evidence,
     EventFrame,
+    GerundRelation,
+    GerundRelationType,
     HowKind,
     InfinitivalRelation,
     QuestionFrame,
@@ -104,6 +106,9 @@ class QuestionAnswerer:
         attributed = self._answer_attributed_content_request(question, memory)
         if attributed is not None:
             return attributed
+        gerund = self._answer_gerund_request(question, memory)
+        if gerund is not None:
+            return gerund
         infinitival = self._answer_infinitival_request(question, memory)
         if infinitival is not None:
             return infinitival
@@ -585,6 +590,597 @@ class QuestionAnswerer:
     INFINITIVAL_QUERY_PREDICATES = {
         "plan", "intend", "hope", "want", "tell", "ask", "seem", "appear",
     }
+    GERUND_QUERY_PREDICATES = {
+        "enjoy", "avoid", "start", "begin", "stop", "keep", "continue",
+        "see", "watch", "hear", "notice",
+    }
+
+    def _answer_gerund_request(
+        self,
+        question: QuestionFrame,
+        memory: ConversationMemory,
+    ) -> Optional[AnswerContract]:
+        """Answer through a selected gerund/participial matrix relation.
+
+        The answer may expose the selected content, its controller, or one of
+        its open arguments, but the embedded frame remains qualified by the
+        matrix predicate.  In particular, enjoying, avoiding, or perceiving an
+        event never stores that event as an unqualified direct fact.
+        """
+
+        predicate = lexicon.lemma(question.event.predicate)
+        if predicate not in self.GERUND_QUERY_PREDICATES:
+            return None
+
+        source_ref = (
+            question.event.arguments.get("agent")
+            or question.event.arguments.get("experiencer")
+            or question.event.arguments.get("subject")
+        )
+        relations = list(memory.gerunds)
+        if source_ref is not None and not source_ref.is_variable:
+            if source_ref.kind != RefKind.ENTITY:
+                return None
+            relations = [
+                item for item in relations
+                if item.source_entity_id == source_ref.key
+            ]
+        relations = [
+            item for item in relations
+            if item.matrix_predicate == predicate
+            and self._gerund_relation_matches_question(item, question, memory)
+        ]
+        if not relations:
+            return None
+
+        if question.kind == QuestionKind.YES_NO:
+            # A plain matrix question such as ``Did I see Sarah?`` belongs to
+            # ordinary event QA.  This path is only for a selected -ing
+            # proposition such as ``Did I see Sarah leaving?``.
+            if not any(
+                self._gerund_question_selects_complement(
+                    question,
+                    memory.get_event(item.complement_event_id),
+                )
+                for item in relations
+            ):
+                return None
+
+            supporting: List[GerundRelation] = []
+            contradicting: List[GerundRelation] = []
+            for relation in relations:
+                complement = memory.get_event(relation.complement_event_id)
+                if complement is None:
+                    continue
+                matrix_polarity, embedded_polarity = (
+                    self._gerund_question_polarities(question, complement)
+                )
+                exact = relation.licensed == matrix_polarity
+                if embedded_polarity is not None:
+                    exact = exact and complement.polarity == embedded_polarity
+                (supporting if exact else contradicting).append(relation)
+
+            if supporting and contradicting:
+                combined = supporting + contradicting
+                matrix_events = [
+                    event
+                    for item in combined
+                    if (event := memory.get_event(item.matrix_event_id)) is not None
+                ]
+                return AnswerContract(
+                    status=AnswerStatus.CONFLICT,
+                    question=question,
+                    proposition=memory.get_event(supporting[0].matrix_event_id),
+                    truth=TruthValue.CONFLICT,
+                    evidence=self._gerund_evidence(combined, memory),
+                    certainty=min(item.certainty for item in combined),
+                    source=self._combine_sources(matrix_events),
+                    reason=(
+                        "stored matrix/embedded polarity pairs conflict with "
+                        "the selected -ing proposition"
+                    ),
+                    response_goal="warn",
+                    required_slots={
+                        "gerund": "true",
+                        "relation_ids": ",".join(
+                            item.relation_id for item in combined
+                        ),
+                    },
+                    forbidden_claims=[
+                        "promote_gerund_to_unqualified_event",
+                    ],
+                )
+
+            winner_pool = supporting or contradicting
+            if not winner_pool:
+                return None
+            winner = max(
+                winner_pool,
+                key=lambda item: (
+                    memory.get_event(item.matrix_event_id).turn_index
+                    if memory.get_event(item.matrix_event_id) is not None
+                    else -1,
+                    item.certainty,
+                ),
+            )
+            matrix = memory.get_event(winner.matrix_event_id)
+            if matrix is None:
+                return None
+            truth = bool(supporting)
+            return AnswerContract(
+                status=AnswerStatus.TRUE if truth else AnswerStatus.FALSE,
+                question=question,
+                proposition=matrix,
+                truth=TruthValue.TRUE if truth else TruthValue.FALSE,
+                evidence=self._gerund_evidence([winner], memory),
+                certainty=winner.certainty,
+                source=matrix.source,
+                reason=(
+                    "typed gerund/participial proposition match"
+                    if truth
+                    else "typed opposite gerund/participial proposition match"
+                ),
+                response_goal="answer",
+                required_slots=self._gerund_slots(winner),
+                forbidden_claims=[
+                    "promote_gerund_to_unqualified_event",
+                ],
+            )
+
+        licensed = [item for item in relations if item.licensed]
+        if not licensed:
+            return AnswerContract(
+                status=AnswerStatus.UNKNOWN,
+                question=question,
+                certainty=0,
+                source=SourceKind.ATTRIBUTED,
+                reason="only a negated gerund/participial relation is stored",
+                response_goal="answer",
+                required_slots={
+                    "unknown_object": "content",
+                    "gerund": "true",
+                    "matrix_predicate": predicate,
+                },
+                forbidden_claims=[
+                    "invert_negated_gerund_relation",
+                    "promote_gerund_to_unqualified_event",
+                ],
+            )
+
+        requested = question.requested_role or ""
+        tail = self._gerund_question_tail(question)
+        if (
+            question.kind == QuestionKind.WHAT
+            and requested in {"patient", "content"}
+            and (
+                not tail
+                or self._gerund_tail_is_content_placeholder(tail)
+            )
+        ):
+            latest = self._latest_gerund_relations(licensed, memory)
+            phrases: Dict[str, Tuple[GerundRelation, SemanticRef]] = {}
+            for relation in latest:
+                complement = memory.get_event(relation.complement_event_id)
+                if complement is None:
+                    continue
+                phrase = self._gerund_event_phrase(complement, relation, memory)
+                phrases.setdefault(
+                    phrase,
+                    (
+                        relation,
+                        SemanticRef.literal(phrase, phrase, EntityKind.ABSTRACT),
+                    ),
+                )
+            if not phrases:
+                return None
+            if len(phrases) > 1:
+                selected = [item[0] for item in phrases.values()]
+                return AnswerContract(
+                    status=AnswerStatus.MULTIPLE_MATCHES,
+                    question=question,
+                    values=[item[1] for item in phrases.values()],
+                    evidence=self._gerund_evidence(selected, memory),
+                    certainty=min(item.certainty for item in selected),
+                    source=SourceKind.ATTRIBUTED,
+                    reason=(
+                        "multiple qualified -ing contents are stored for the "
+                        "latest turn"
+                    ),
+                    response_goal="clarify",
+                    required_slots={
+                        "gerund": "true",
+                        "relation_ids": ",".join(
+                            item.relation_id for item in selected
+                        ),
+                    },
+                    forbidden_claims=[
+                        "promote_gerund_to_unqualified_event",
+                    ],
+                )
+            relation, value = next(iter(phrases.values()))
+            complement = memory.get_event(relation.complement_event_id)
+            if complement is None:
+                return None
+            return AnswerContract(
+                status=AnswerStatus.ANSWERED,
+                question=question,
+                proposition=complement,
+                values=[value],
+                evidence=self._gerund_evidence([relation], memory),
+                certainty=relation.certainty,
+                source=SourceKind.ATTRIBUTED,
+                reason=(
+                    "bound selected -ing content through its qualified "
+                    "matrix relation"
+                ),
+                response_goal="answer",
+                required_slots=self._gerund_slots(relation),
+                forbidden_claims=[
+                    "promote_gerund_to_unqualified_event",
+                ],
+            )
+
+        # Bind WH/open slots through the typed relation rather than through
+        # the nonassertive complement in the ordinary fact store.
+        bound: List[Tuple[GerundRelation, SemanticRef, str]] = []
+        for relation in licensed:
+            selected = self._gerund_open_slot_value(
+                relation,
+                question,
+                memory,
+            )
+            if selected is not None:
+                value, actual_role = selected
+                bound.append((relation, value, actual_role))
+        if not bound:
+            return None
+
+        grouped: Dict[Tuple[str, str], List[Tuple[GerundRelation, SemanticRef, str]]] = defaultdict(list)
+        for item in bound:
+            grouped[(item[1].kind.value, item[1].key)].append(item)
+        if len(grouped) > 1:
+            representatives = [items[0] for items in grouped.values()]
+            selected_relations = [item[0] for item in representatives]
+            return AnswerContract(
+                status=AnswerStatus.MULTIPLE_MATCHES,
+                question=question,
+                values=[item[1] for item in representatives],
+                evidence=self._gerund_evidence(selected_relations, memory),
+                certainty=min(item.certainty for item in selected_relations),
+                source=SourceKind.ATTRIBUTED,
+                reason="multiple values satisfy the qualified -ing open slot",
+                response_goal="clarify",
+                required_slots={
+                    "gerund": "true",
+                    "relation_ids": ",".join(
+                        item.relation_id for item in selected_relations
+                    ),
+                },
+                forbidden_claims=[
+                    "promote_gerund_to_unqualified_event",
+                ],
+            )
+
+        candidates = next(iter(grouped.values()))
+        relation, value, actual_role = max(
+            candidates,
+            key=lambda item: (
+                memory.get_event(item[0].matrix_event_id).turn_index
+                if memory.get_event(item[0].matrix_event_id) is not None
+                else -1,
+                item[0].certainty,
+            ),
+        )
+        complement = memory.get_event(relation.complement_event_id)
+        if complement is None:
+            return None
+        slots = self._gerund_slots(relation)
+        slots.update({
+            "requested_role": requested,
+            "actual_role": actual_role,
+        })
+        return AnswerContract(
+            status=AnswerStatus.ANSWERED,
+            question=question,
+            proposition=complement,
+            values=[value],
+            evidence=self._gerund_evidence(
+                [item[0] for item in candidates],
+                memory,
+            ),
+            certainty=max(item[0].certainty for item in candidates),
+            source=SourceKind.ATTRIBUTED,
+            reason="bound open slot through a qualified -ing relation",
+            response_goal="answer",
+            required_slots=slots,
+            forbidden_claims=[
+                "promote_gerund_to_unqualified_event",
+            ],
+        )
+
+    def _gerund_relation_matches_question(
+        self,
+        relation: GerundRelation,
+        question: QuestionFrame,
+        memory: ConversationMemory,
+    ) -> bool:
+        matrix = memory.get_event(relation.matrix_event_id)
+        complement = memory.get_event(relation.complement_event_id)
+        if matrix is None or complement is None:
+            return False
+        if question.event.tense and matrix.tense != question.event.tense:
+            return False
+        if question.event.aspect != matrix.aspect:
+            return False
+        if question.event.modality != matrix.modality:
+            return False
+
+        tail = self._gerund_question_tail(question)
+        selects_complement = self._gerund_question_selects_complement(
+            question,
+            complement,
+        )
+        for role, expected in question.event.arguments.items():
+            if expected.is_variable:
+                continue
+            if role in {"agent", "experiencer", "subject", "possessor"}:
+                actual = (
+                    matrix.arguments.get(role)
+                    or matrix.arguments.get("agent")
+                    or matrix.arguments.get("experiencer")
+                    or matrix.arguments.get("subject")
+                    or matrix.arguments.get("possessor")
+                )
+                if actual is None or not memory.refs_equal(expected, actual):
+                    return False
+                continue
+            if role in {"patient", "recipient"} and selects_complement:
+                # The ordinary clause parser represents the selected surface
+                # as a nominal matrix object in questions.  Match it against
+                # the typed complement below, not against that placeholder.
+                continue
+            actual = matrix.arguments.get(role)
+            if actual is None or not memory.refs_equal(expected, actual):
+                return False
+
+        if not tail:
+            return True
+        if not selects_complement:
+            return False
+        actual_phrase = self._gerund_event_phrase(complement, relation, memory)
+        requested = " ".join(tail)
+        if self._gerund_tail_is_content_placeholder(tail):
+            focus = " ".join(tail[:-1]).strip()
+            return not focus or (
+                actual_phrase == focus
+                or actual_phrase.startswith(focus + " ")
+            )
+        # Embedded polarity is compared independently by the polar-answer
+        # branch.  Surface negation therefore must not prevent the underlying
+        # selected proposition from reaching that comparison.
+        requested_content = " ".join(
+            word for word in requested.split()
+            if word not in lexicon.NEGATORS
+        )
+        actual_content = " ".join(
+            word for word in actual_phrase.split()
+            if word not in lexicon.NEGATORS
+        )
+        return (
+            requested_content == actual_content
+            or actual_content.startswith(requested_content + " ")
+            or (
+                relation.relation_type
+                == GerundRelationType.PERCEPTION_PARTICIPIAL
+                and actual_content.endswith(" " + requested_content)
+            )
+        )
+
+    @staticmethod
+    def _latest_gerund_relations(
+        relations: Sequence[GerundRelation],
+        memory: ConversationMemory,
+    ) -> List[GerundRelation]:
+        latest_turn = max(
+            (
+                memory.get_event(item.matrix_event_id).turn_index
+                if memory.get_event(item.matrix_event_id) is not None
+                else -1
+            )
+            for item in relations
+        )
+        return [
+            item for item in relations
+            if (
+                memory.get_event(item.matrix_event_id).turn_index
+                if memory.get_event(item.matrix_event_id) is not None
+                else -1
+            ) == latest_turn
+        ]
+
+    @staticmethod
+    def _gerund_question_tail(question: QuestionFrame) -> List[str]:
+        items = [
+            token
+            for token in lexicon.tokenize(question.raw_text)
+            if token.norm not in lexicon.PUNCTUATION
+        ]
+        predicate = lexicon.lemma(question.event.predicate)
+        predicate_index = next(
+            (
+                index for index, token in enumerate(items)
+                if lexicon.lemma(token.norm) == predicate
+            ),
+            -1,
+        )
+        if predicate_index < 0:
+            return []
+        return [token.norm for token in items[predicate_index + 1 :]]
+
+    @staticmethod
+    def _gerund_tail_is_content_placeholder(tail: Sequence[str]) -> bool:
+        return bool(tail) and tail[-1] in {
+            "do", "doing", "something", "anything",
+        }
+
+    def _gerund_question_selects_complement(
+        self,
+        question: QuestionFrame,
+        complement: Optional[EventFrame],
+    ) -> bool:
+        if complement is None:
+            return False
+        tail = self._gerund_question_tail(question)
+        if self._gerund_tail_is_content_placeholder(tail):
+            return True
+        return any(
+            lexicon.lemma(word) == complement.predicate
+            and (word.endswith("ing") or word == complement.predicate)
+            for word in tail
+        )
+
+    def _gerund_question_polarities(
+        self,
+        question: QuestionFrame,
+        complement: EventFrame,
+    ) -> Tuple[bool, Optional[bool]]:
+        matrix_polarity = (
+            question.matrix_polarity
+            if question.matrix_polarity is not None
+            else question.event.polarity
+        )
+        if question.embedded_polarity is not None:
+            return matrix_polarity, question.embedded_polarity
+
+        tail = self._gerund_question_tail(question)
+        predicate_index = next(
+            (
+                index for index, word in enumerate(tail)
+                if lexicon.lemma(word) == complement.predicate
+            ),
+            -1,
+        )
+        if predicate_index >= 0 and any(
+            word in lexicon.NEGATORS for word in tail[:predicate_index]
+        ):
+            return True, False
+        return matrix_polarity, None
+
+    def _gerund_open_slot_value(
+        self,
+        relation: GerundRelation,
+        question: QuestionFrame,
+        memory: ConversationMemory,
+    ) -> Optional[Tuple[SemanticRef, str]]:
+        requested = question.requested_role or ""
+        if requested in {"agent", "subject", "experiencer", "possessor"}:
+            entity = memory.get_entity(relation.source_entity_id)
+            return (entity.to_ref(), "source") if entity is not None else None
+
+        if (
+            relation.relation_type
+            == GerundRelationType.PERCEPTION_PARTICIPIAL
+            and requested in {"patient", "recipient"}
+        ):
+            entity = memory.get_entity(relation.controller_entity_id)
+            return (entity.to_ref(), "controller") if entity is not None else None
+
+        complement = memory.get_event(relation.complement_event_id)
+        if complement is None:
+            return None
+        for role in self._candidate_roles(question):
+            value = complement.arguments.get(role)
+            if value is not None and not value.is_variable:
+                if (
+                    value.kind == RefKind.ENTITY
+                    and value.key == relation.controller_entity_id
+                ):
+                    continue
+                return value, role
+        return None
+
+    @staticmethod
+    def _gerund_event_phrase(
+        event: EventFrame,
+        relation: GerundRelation,
+        memory: ConversationMemory,
+    ) -> str:
+        terms: List[str] = []
+        if relation.relation_type == GerundRelationType.PERCEPTION_PARTICIPIAL:
+            controller = memory.get_entity(relation.controller_entity_id)
+            if controller is not None:
+                terms.append(controller.canonical_name.lower())
+        if not event.polarity:
+            terms.append("not")
+        terms.append(lexicon.gerund_form(event.predicate))
+        for role in (
+            "patient", "recipient", "destination", "location", "time",
+            "method", "manner",
+        ):
+            value = event.arguments.get(role)
+            if value is None or value.is_variable:
+                continue
+            if (
+                value.kind == RefKind.ENTITY
+                and value.key == relation.controller_entity_id
+            ):
+                continue
+            if value.kind == RefKind.ENTITY:
+                entity = memory.get_entity(value.key)
+                terms.append(
+                    entity.canonical_name.lower()
+                    if entity is not None
+                    else (value.surface or value.key).lower()
+                )
+            else:
+                terms.append((value.surface or value.key).lower())
+        return " ".join(" ".join(terms).split())
+
+    @staticmethod
+    def _gerund_slots(relation: GerundRelation) -> Dict[str, str]:
+        return {
+            "gerund": "true",
+            "relation_id": relation.relation_id,
+            "matrix_event_id": relation.matrix_event_id,
+            "complement_event_id": relation.complement_event_id,
+            "source_entity_id": relation.source_entity_id,
+            "controller_entity_id": relation.controller_entity_id,
+            "embedded_subject_entity_id": relation.embedded_subject_entity_id,
+            "matrix_predicate": relation.matrix_predicate,
+            "relation_type": relation.relation_type.value,
+            "content_status": relation.content_status.value,
+            "predicate_family": relation.predicate_family,
+            "entailed": "true" if relation.entailed else "false",
+        }
+
+    @staticmethod
+    def _gerund_evidence(
+        relations: Sequence[GerundRelation],
+        memory: ConversationMemory,
+    ) -> List[Evidence]:
+        evidence: List[Evidence] = []
+        seen: set[Tuple[str, str]] = set()
+        for relation in relations:
+            matrix = memory.get_event(relation.matrix_event_id)
+            complement = memory.get_event(relation.complement_event_id)
+            if matrix is not None and (matrix.event_id, "matrix") not in seen:
+                evidence.append(
+                    Evidence(matrix, matched_roles=["matrix"], score=1.0)
+                )
+                seen.add((matrix.event_id, "matrix"))
+            if (
+                complement is not None
+                and (complement.event_id, "gerund") not in seen
+            ):
+                evidence.append(
+                    Evidence(
+                        complement,
+                        matched_roles=["gerund"],
+                        score=0.8,
+                    )
+                )
+                seen.add((complement.event_id, "gerund"))
+        return evidence
 
     def _answer_infinitival_request(
         self,
@@ -1198,7 +1794,14 @@ class QuestionAnswerer:
 
     def _answer_yes_no(self, question: QuestionFrame, memory: ConversationMemory) -> AnswerContract:
         query = question.event
-        matches = memory.match_events(query, include_opposite_polarity=True)
+        matches = [
+            match
+            for match in memory.match_events(
+                query,
+                include_opposite_polarity=True,
+            )
+            if self._event_aspects_compatible(query, match.event)
+        ]
         same = [match for match in matches if match.event.polarity == query.polarity]
         opposite = [match for match in matches if match.event.polarity != query.polarity]
 
@@ -1249,7 +1852,8 @@ class QuestionAnswerer:
         attributed = [
             match
             for match in attributed
-            if match.event.discourse_role == "content"
+            if self._event_aspects_compatible(query, match.event)
+            and match.event.discourse_role == "content"
             and any(
                 relation.attributed
                 and relation.content_event_id == match.event.event_id
@@ -1296,6 +1900,13 @@ class QuestionAnswerer:
                 diagnostics=[reason],
             )
 
+        gerund = self._answer_gerund_truth_boundary(
+            question,
+            memory,
+        )
+        if gerund is not None:
+            return gerund
+
         infinitival = self._answer_infinitival_truth_boundary(
             question,
             memory,
@@ -1321,6 +1932,196 @@ class QuestionAnswerer:
             forbidden_claims=["convert_absence_of_evidence_to_false"],
             diagnostics=diagnostics,
         )
+
+    def _answer_gerund_truth_boundary(
+        self,
+        question: QuestionFrame,
+        memory: ConversationMemory,
+    ) -> Optional[AnswerContract]:
+        """Keep selected ``-ing`` content qualified in direct-event QA.
+
+        Reviewed aspectual relations can license a derived phase inference.
+        Enjoyment, avoidance, and perception only supply qualified context and
+        therefore leave the unqualified proposition unknown.
+        """
+
+        query = question.event
+        matches: List[GerundRelation] = []
+        for relation in memory.gerunds:
+            if not relation.licensed:
+                continue
+            complement = memory.get_event(relation.complement_event_id)
+            if complement is None or complement.predicate != query.predicate:
+                continue
+            fixed = query.fixed_arguments()
+            if any(
+                not self._gerund_argument_matches(
+                    role,
+                    expected,
+                    complement,
+                    memory,
+                )
+                for role, expected in fixed.items()
+            ):
+                continue
+            matches.append(relation)
+        if not matches:
+            return None
+
+        statuses = sorted({item.content_status.value for item in matches})
+        sources = sorted({item.source_entity_id for item in matches})
+        relation_ids = ",".join(item.relation_id for item in matches)
+        required_slots = {
+            "gerund": "true",
+            "gerund_evidence": "true",
+            "relation_ids": relation_ids,
+            "source_entity_ids": ",".join(sources),
+            "content_statuses": ",".join(statuses),
+        }
+        forbidden = [
+            "promote_gerund_to_unqualified_event",
+            "erase_gerund_phase_or_attribution_qualification",
+        ]
+
+        entailed = [
+            item for item in matches
+            if item.entailed
+            and self._gerund_phase_query_supported(item, query, memory)
+        ]
+        if entailed:
+            same = [
+                item for item in entailed
+                if (
+                    memory.get_event(item.complement_event_id) is not None
+                    and memory.get_event(item.complement_event_id).polarity
+                    == query.polarity
+                )
+            ]
+            opposite = [item for item in entailed if item not in same]
+            if same and opposite:
+                return AnswerContract(
+                    status=AnswerStatus.CONFLICT,
+                    question=question,
+                    proposition=query,
+                    truth=TruthValue.CONFLICT,
+                    evidence=self._gerund_evidence(entailed, memory),
+                    certainty=min(item.certainty for item in entailed),
+                    source=SourceKind.INFERRED,
+                    reason=(
+                        "qualified aspectual phase inferences support opposing "
+                        "event polarities"
+                    ),
+                    response_goal="warn",
+                    required_slots=required_slots,
+                    forbidden_claims=forbidden,
+                    diagnostics=[
+                        "phase entailment is derived from a typed aspectual relation",
+                    ],
+                )
+
+            supports = same or opposite
+            truth = bool(same)
+            required_slots.update({
+                "gerund": "true",
+                "derived_phase_inference": "true",
+                "relation_id": supports[0].relation_id,
+                "relation_type": supports[0].relation_type.value,
+                "content_status": supports[0].content_status.value,
+            })
+            return AnswerContract(
+                status=AnswerStatus.TRUE if truth else AnswerStatus.FALSE,
+                question=question,
+                proposition=query,
+                truth=TruthValue.TRUE if truth else TruthValue.FALSE,
+                evidence=self._gerund_evidence(supports, memory),
+                certainty=min(item.certainty for item in supports),
+                source=SourceKind.INFERRED,
+                reason=(
+                    "typed aspectual relation supports a qualified derived "
+                    "phase inference"
+                ),
+                response_goal="answer",
+                required_slots=required_slots,
+                forbidden_claims=forbidden,
+                diagnostics=[
+                    "the event is supported only as an aspectually qualified inference",
+                ],
+            )
+
+        polarities = {
+            memory.get_event(item.complement_event_id).polarity
+            for item in matches
+            if memory.get_event(item.complement_event_id) is not None
+        }
+        reason = (
+            "qualified -ing sources contain opposing embedded polarities"
+            if len(polarities) > 1
+            else (
+                "only perception-qualified participial content supports the proposition"
+                if any(
+                    item.relation_type
+                    == GerundRelationType.PERCEPTION_PARTICIPIAL
+                    for item in matches
+                )
+                else "only non-entailed gerund content supports the proposition"
+            )
+        )
+        return AnswerContract(
+            status=AnswerStatus.UNKNOWN,
+            question=question,
+            proposition=query,
+            truth=TruthValue.UNKNOWN,
+            evidence=self._gerund_evidence(matches, memory),
+            certainty=0,
+            source=SourceKind.ATTRIBUTED,
+            reason=reason,
+            response_goal="answer",
+            required_slots=required_slots,
+            forbidden_claims=forbidden,
+            diagnostics=[reason],
+        )
+
+    @staticmethod
+    def _gerund_phase_query_supported(
+        relation: GerundRelation,
+        query: EventFrame,
+        memory: ConversationMemory,
+    ) -> bool:
+        """Limit phase entailment to the reviewed prior-activity reading.
+
+        A past-simple event question can ask whether the activity occurred.
+        It cannot establish a present progressive state, and a negated
+        embedded phase requires temporal semantics beyond this slice.
+        """
+
+        complement = memory.get_event(relation.complement_event_id)
+        if complement is None or not complement.polarity:
+            return False
+        return query.tense == "past" and query.aspect == "simple"
+
+    @staticmethod
+    def _gerund_argument_matches(
+        role: str,
+        expected: SemanticRef,
+        complement: EventFrame,
+        memory: ConversationMemory,
+    ) -> bool:
+        actual = complement.arguments.get(role)
+        if actual is None and role in {
+            "agent", "experiencer", "subject", "possessor"
+        }:
+            actual = (
+                complement.arguments.get("agent")
+                or complement.arguments.get("experiencer")
+                or complement.arguments.get("subject")
+                or complement.arguments.get("possessor")
+            )
+        if actual is None and role in {"patient", "recipient"}:
+            actual = (
+                complement.arguments.get("patient")
+                or complement.arguments.get("recipient")
+            )
+        return actual is not None and memory.refs_equal(expected, actual)
 
     def _answer_infinitival_truth_boundary(
         self,
@@ -1393,7 +2194,11 @@ class QuestionAnswerer:
         if query.predicate == "attribute":
             matches = self._match_attribute_query(question, memory)
         else:
-            matches = memory.related_events(query, requested)
+            matches = [
+                match
+                for match in memory.related_events(query, requested)
+                if self._event_aspects_compatible(query, match.event)
+            ]
 
         if not matches:
             return AnswerContract(
@@ -1549,6 +2354,17 @@ class QuestionAnswerer:
         if requested == "event":
             return ("event",)
         return (requested,)
+
+    @staticmethod
+    def _event_aspects_compatible(query: EventFrame, event: EventFrame) -> bool:
+        """Keep direct QA inside the stored event's aspect boundary.
+
+        Simple, progressive, perfect, and perfect-progressive propositions are
+        distinct facts.  Any licensed implication between them must come from
+        an explicit typed relation rather than the general event matcher.
+        """
+
+        return query.aspect == event.aspect
 
     @staticmethod
     def _to_evidence(match: EventMatch) -> Evidence:

@@ -336,7 +336,7 @@ def test_nested_embedded_interrogatives_fail_closed() -> None:
     assert "configured depth" in result.embedded_interrogative_ambiguities[0].reason
 
 
-def test_relation_round_trip_and_memory_snapshot_version_five() -> None:
+def test_relation_round_trip_and_memory_snapshot_version_six() -> None:
     relation = EmbeddedInterrogativeRelation(
         relation_type=EmbeddedInterrogativeType.WH,
         content_status=EmbeddedInterrogativeStatus.ASKED,
@@ -360,8 +360,8 @@ def test_relation_round_trip_and_memory_snapshot_version_five() -> None:
 
     restored = ClankerLM.loads(snapshot, affect_backend=HeuristicAffectBackend())
     try:
-        assert restored.SNAPSHOT_VERSION == 5
-        assert restored.memory.SNAPSHOT_VERSION == 5
+        assert restored.SNAPSHOT_VERSION == 6
+        assert restored.memory.SNAPSHOT_VERSION == 6
         assert len(restored.memory.embedded_interrogatives) == 1
         stored = restored.memory.embedded_interrogatives[0]
         assert stored.relation_id
@@ -405,7 +405,7 @@ def test_version_four_snapshot_migrates_with_empty_embedded_relation_store() -> 
     )
     try:
         assert restored.memory.embedded_interrogatives == []
-        assert restored.memory.SNAPSHOT_VERSION == 5
+        assert restored.memory.SNAPSHOT_VERSION == 6
     finally:
         restored.close()
 

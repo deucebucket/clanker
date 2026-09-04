@@ -1,5 +1,37 @@
 # Changelog
 
+## Clanker-LM 0.3-alpha development line (2026-09-03 to 2026-09-04)
+
+- Added an isolated deterministic language runtime under `clanker_lm/`; the tuned
+  V8 `engine/` remains unchanged.
+- Replaced whole-sentence response construction with atomic lexemes, abstract
+  grammar operations, runtime morphology, and semantic-plan validation.
+- Added symbolic entity/event memory, typed Q&A, explicit unknown/conflict
+  handling, active lexical learning, live time/date/calculation resolvers,
+  transition-residual learning, and nontextual dialogue trajectory profiles.
+- Expanded the parser through coordination, subordinate relations, relative
+  modifiers, finite attributed content (#86), infinitival control/raising (#88,
+  PR #102), and embedded interrogative attribution (#89, PR #103).
+- Implemented issue #90 on
+  `feature/clanker-lm-gerund-participial-complements`: typed gerund content,
+  aspectual start/stop/continuation, and perception-participial relations with
+  separate matrix/complement events, explicit controller/source/polarity, and
+  fail-closed truth boundaries. Avoidance is `GERUND_CONTENT` + `AVOIDED`.
+- Added version-6 snapshots (backward-compatible loading for versions 1–6),
+  corruption validation, source-qualified Q&A, and compositional realization.
+- Local review gate: `285 passed` in the dedicated suite (including exactly 160
+  generated cases); `2,606 passed, 2 xfailed` repository-wide; `29/29`
+  deterministic acceptance turns; 7 benchmark cases / 29 turns; clean compile
+  and diff checks; no `engine/` or `clanker_engine.py` changes. The two xfails
+  remain the pre-existing V8 `CARETAKER_TRANSFER` and `BROADCAST` gaps.
+- Independent review findings for modality/future boundaries, specificity,
+  provenance, conflict, snapshots, and atomic realization were fixed. Local
+  correctness and truth-boundary reviewers returned ACCEPT with no blockers,
+  and test/code acceptance was clean. Exact-head CI, automated review, and merge
+  evidence are recorded on PR #105 after this changelog commit.
+- Full history, invariants, validation, and roadmap are recorded in
+  `docs/CLANKER_LM_CHANGELOG.md` and `docs/CLANKER_LM_DEVLOG.md`.
+
 ## V8.5 (2026-06-11) -- Slang register overhaul
 
 - Vocabulary: 12 net-new slang entries (dope, rad, gnarly, elite, iconic,
@@ -290,4 +322,3 @@ All numbers below re-measured 2026-06-11 against the shipped engine.
 - 90% sarcasm detection via structural inversion
 - 156 engine tests passing
 - Clean repo (clean history)
-

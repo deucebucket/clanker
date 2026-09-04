@@ -41,8 +41,8 @@ class ClankerLM:
     A+B=C transition to select the candidate that best reaches the target state.
     """
 
-    SNAPSHOT_VERSION = 5
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4, 5}
+    SNAPSHOT_VERSION = 6
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4, 5, 6}
     MAX_BATCH_MESSAGES = 10_000
 
     def __init__(
@@ -286,6 +286,7 @@ class ClankerLM:
                 stored,
             )
             self.memory.add_infinitival_relations(parse.infinitivals, stored)
+            self.memory.add_gerund_relations(parse.gerunds, stored)
             contract = self.answerer.answer(parse.question, self.memory)
             contract.required_slots.setdefault(
                 "direct_embedded_answer_request",
@@ -330,6 +331,7 @@ class ClankerLM:
                 stored,
             )
             self.memory.add_infinitival_relations(parse.infinitivals, stored)
+            self.memory.add_gerund_relations(parse.gerunds, stored)
             acknowledged = next(
                 (
                     event
@@ -453,6 +455,7 @@ class ClankerLM:
                 stored,
             )
             self.memory.add_infinitival_relations(parsed.infinitivals, stored)
+            self.memory.add_gerund_relations(parsed.gerunds, stored)
             return stored
 
     def learn_many(

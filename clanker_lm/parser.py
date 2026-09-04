@@ -8,6 +8,7 @@ through diagnostics and stable semantic roles.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
@@ -31,6 +32,10 @@ from .model import (
     EntityKind,
     EntityModifierRelation,
     EventFrame,
+    GerundAttachmentAmbiguity,
+    GerundContentStatus,
+    GerundRelation,
+    GerundRelationType,
     Gender,
     GrammaticalNumber,
     ModifierAttachmentAmbiguity,
@@ -117,6 +122,28 @@ class InfinitivalSplit:
     complement_tokens: List[lexicon.Token]
     marker: str
     profile: InfinitivalPredicateProfile
+    controller_role: str
+    certainty: int
+    diagnostics: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class GerundPredicateProfile:
+    relation_type: GerundRelationType
+    content_status: GerundContentStatus
+    predicate_family: str
+    certainty: int
+    allows_object_controller: bool = False
+    allows_subject_controller: bool = True
+    phase_entailing: bool = False
+
+
+@dataclass
+class GerundSplit:
+    matrix_tokens: List[lexicon.Token]
+    complement_tokens: List[lexicon.Token]
+    marker: str
+    profile: GerundPredicateProfile
     controller_role: str
     certainty: int
     diagnostics: List[str] = field(default_factory=list)
@@ -246,6 +273,29 @@ class SemanticParser:
                 ],
             )
 
+        _gerund_preflight, gerund_preflight_ambiguity = (
+            self._split_gerund_clause(clean)
+        )
+        if (
+            gerund_preflight_ambiguity is not None
+            and "coordination" in gerund_preflight_ambiguity.reason
+        ):
+            unresolved = UnresolvedReference(
+                surface=gerund_preflight_ambiguity.complement_surface,
+                reason=gerund_preflight_ambiguity.reason,
+            )
+            return ParseResult(
+                speech_act=SpeechAct.ASSERT,
+                raw_text=raw,
+                gerund_ambiguities=[gerund_preflight_ambiguity],
+                unresolved=[unresolved],
+                normalized_text=normalized,
+                diagnostics=[
+                    *gerund_preflight_ambiguity.diagnostics,
+                    "gerund coordination requires staged parsing",
+                ],
+            )
+
         segments = self._split_assertion_segments(clean)
         events: List[EventFrame] = []
         relations: List[ClauseRelation] = []
@@ -261,6 +311,8 @@ class SemanticParser:
         ] = []
         infinitivals: List[InfinitivalRelation] = []
         infinitival_ambiguities: List[InfinitivalAttachmentAmbiguity] = []
+        gerunds: List[GerundRelation] = []
+        gerund_ambiguities: List[GerundAttachmentAmbiguity] = []
         unresolved: List[UnresolvedReference] = []
         entities: List[str] = []
         diagnostics: List[str] = []
@@ -413,6 +465,232 @@ class SemanticParser:
                 unresolved.extend(question_unresolved)
                 diagnostics.extend(matrix_result.diagnostics)
                 diagnostics.extend(question_diagnostics)
+                diagnostics.extend(ambiguity.diagnostics)
+                continue
+
+            gerund_split, gerund_ambiguity = self._split_gerund_clause(clause)
+            if gerund_ambiguity is not None:
+                gerund_ambiguities.append(gerund_ambiguity)
+                unresolved.append(
+                    UnresolvedReference(
+                        surface=gerund_ambiguity.complement_surface,
+                        reason=gerund_ambiguity.reason,
+                    )
+                )
+                diagnostics.extend(gerund_ambiguity.diagnostics)
+                diagnostics.append(
+                    "gerund complement boundary/controller remains ambiguous"
+                )
+                continue
+
+            if gerund_split is not None:
+                memory_checkpoint = copy.deepcopy(memory.__dict__)
+                matrix_result = self._parse_clause(
+                    gerund_split.matrix_tokens,
+                    raw,
+                    memory,
+                )
+                if matrix_result.event is not None:
+                    if (
+                        matrix_result.event.predicate == "keep"
+                        and "possessor" in matrix_result.event.arguments
+                        and "agent" not in matrix_result.event.arguments
+                    ):
+                        # KEEP is possessive in ordinary clauses, but its
+                        # selected -ing construction is aspectual.  The matrix
+                        # subject is therefore an actor/source, not a possessor.
+                        matrix_result.event.arguments["agent"] = (
+                            matrix_result.event.arguments.pop("possessor")
+                        )
+                        matrix_result.diagnostics.append(
+                            "aspectual keep subject normalized as agent"
+                        )
+                    source_entity_id = self._gerund_source_entity(
+                        matrix_result.event
+                    )
+                    controller_entity_id = self._gerund_controller_entity(
+                        matrix_result.event,
+                        gerund_split.controller_role,
+                    )
+                    if source_entity_id and controller_entity_id:
+                        internal_alias = memory.ensure_internal_alias(
+                            controller_entity_id
+                        )
+                        complement_result = self._parse_clause(
+                            [
+                                lexicon.Token(
+                                    internal_alias,
+                                    internal_alias,
+                                    -1,
+                                ),
+                                *gerund_split.complement_tokens,
+                            ],
+                            raw,
+                            memory,
+                        )
+                        if (
+                            complement_result.event is not None
+                            and not complement_result.unresolved
+                        ):
+                            matrix_result.event.discourse_role = (
+                                "main"
+                                if primary_event_count == 0
+                                else "coordinate"
+                            )
+                            participial = (
+                                gerund_split.profile.relation_type
+                                == GerundRelationType.PERCEPTION_PARTICIPIAL
+                            )
+                            complement_result.event.discourse_role = (
+                                "participle" if participial else "gerund"
+                            )
+                            complement_result.event.source = SourceKind.ATTRIBUTED
+                            complement_result.event.tense = "nonfinite"
+                            complement_result.event.aspect = (
+                                "participle"
+                                if participial
+                                else "gerund"
+                            )
+                            complement_result.event.certainty = min(
+                                complement_result.event.certainty,
+                                gerund_split.certainty,
+                            )
+                            if connector is not None:
+                                matrix_result.diagnostics.insert(
+                                    0,
+                                    f"coordinate connector={connector}",
+                                )
+                            primary_event_count += 1
+
+                            matrix_index = len(events)
+                            events.append(matrix_result.event)
+                            complement_index = len(events)
+                            events.append(complement_result.event)
+                            licensed = matrix_result.event.polarity
+                            phase_entailed = (
+                                gerund_split.profile.phase_entailing
+                                and self._is_factual_phase_matrix(
+                                    matrix_result.event,
+                                    complement_result.event,
+                                )
+                            )
+                            gerunds.append(
+                                GerundRelation(
+                                    relation_type=(
+                                        gerund_split.profile.relation_type
+                                    ),
+                                    content_status=(
+                                        gerund_split.profile.content_status
+                                    ),
+                                    matrix_event_index=matrix_index,
+                                    complement_event_index=complement_index,
+                                    marker=gerund_split.marker,
+                                    matrix_predicate=matrix_result.event.predicate,
+                                    source_entity_id=source_entity_id,
+                                    controller_entity_id=controller_entity_id,
+                                    embedded_subject_entity_id=(
+                                        controller_entity_id
+                                    ),
+                                    predicate_family=(
+                                        gerund_split.profile.predicate_family
+                                    ),
+                                    certainty=gerund_split.certainty,
+                                    licensed=licensed,
+                                    entailed=phase_entailed,
+                                    diagnostics=[
+                                        *gerund_split.diagnostics,
+                                        (
+                                            "matrix polarity=positive"
+                                            if matrix_result.event.polarity
+                                            else "matrix polarity=negative"
+                                        ),
+                                        (
+                                            "embedded polarity=positive"
+                                            if complement_result.event.polarity
+                                            else "embedded polarity=negative"
+                                        ),
+                                        (
+                                            "licensed phase entailment remains "
+                                            "derived and nonassertive"
+                                            if phase_entailed
+                                            else "modal, future-scheduled, or "
+                                            "progressive phase matrix remains "
+                                            "non-entailed"
+                                            if licensed
+                                            and gerund_split.profile.phase_entailing
+                                            else "selected -ing content remains "
+                                            "qualified and nonassertive"
+                                            if licensed
+                                            else "negated matrix does not license "
+                                            "positive -ing content"
+                                        ),
+                                    ],
+                                )
+                            )
+                            unresolved.extend(matrix_result.unresolved)
+                            entities.extend(matrix_result.entities)
+                            entities.extend(complement_result.entities)
+                            diagnostics.extend(matrix_result.diagnostics)
+                            diagnostics.extend(complement_result.diagnostics)
+                            diagnostics.extend(gerund_split.diagnostics)
+                            diagnostics.append(
+                                "gerund relation="
+                                f"{gerund_split.profile.relation_type.value} "
+                                f"status={gerund_split.profile.content_status.value} "
+                                f"controller={controller_entity_id}"
+                            )
+                            continue
+
+                        reason = (
+                            "embedded -ing event could not be parsed with its "
+                            "licensed controller"
+                        )
+                        ambiguity = self._gerund_ambiguity(
+                            clause,
+                            [len(gerund_split.matrix_tokens)],
+                            reason=reason,
+                            candidate_types=[
+                                gerund_split.profile.relation_type
+                            ],
+                        )
+                        self._restore_memory_checkpoint(
+                            memory,
+                            memory_checkpoint,
+                        )
+                        gerund_ambiguities.append(ambiguity)
+                        unresolved.extend(complement_result.unresolved)
+                        diagnostics.extend(complement_result.diagnostics)
+                        diagnostics.extend(ambiguity.diagnostics)
+                        continue
+
+                    missing = "source" if not source_entity_id else "controller"
+                    ambiguity = self._gerund_ambiguity(
+                        clause,
+                        [len(gerund_split.matrix_tokens)],
+                        reason=(
+                            f"matrix gerund predicate lacks a resolved {missing} entity"
+                        ),
+                        candidate_types=[gerund_split.profile.relation_type],
+                    )
+                    self._restore_memory_checkpoint(
+                        memory,
+                        memory_checkpoint,
+                    )
+                    gerund_ambiguities.append(ambiguity)
+                    unresolved.extend(matrix_result.unresolved)
+                    diagnostics.extend(matrix_result.diagnostics)
+                    diagnostics.extend(ambiguity.diagnostics)
+                    continue
+
+                ambiguity = self._gerund_ambiguity(
+                    clause,
+                    [len(gerund_split.matrix_tokens)],
+                    reason="selected -ing matrix event could not be parsed",
+                    candidate_types=[gerund_split.profile.relation_type],
+                )
+                self._restore_memory_checkpoint(memory, memory_checkpoint)
+                gerund_ambiguities.append(ambiguity)
+                diagnostics.extend(matrix_result.diagnostics)
                 diagnostics.extend(ambiguity.diagnostics)
                 continue
 
@@ -913,7 +1191,35 @@ class SemanticParser:
                     f"subordinate split fallback marker={subordinate_split.marker}"
                 )
 
+            unresolved_pronoun_possible = any(
+                token.norm in lexicon.PRONOUN_FEATURES
+                and lexicon.PRONOUN_FEATURES[token.norm][0] is None
+                for token in clause
+            )
+            ordinary_checkpoint = (
+                copy.deepcopy(memory.__dict__)
+                if unresolved_pronoun_possible
+                else None
+            )
             result = self._parse_clause(clause, raw, memory)
+            if (
+                result.event is not None
+                and result.unresolved
+                and not self._clause_has_resolved_subject(
+                    clause,
+                    result.event,
+                )
+            ):
+                if ordinary_checkpoint is not None:
+                    self._restore_memory_checkpoint(
+                        memory,
+                        ordinary_checkpoint,
+                    )
+                result.event = None
+                result.entities = []
+                result.diagnostics.append(
+                    "event with unresolved grammatical subject suppressed"
+                )
             if result.event:
                 result.event.discourse_role = (
                     "main" if primary_event_count == 0 else "coordinate"
@@ -948,6 +1254,8 @@ class SemanticParser:
             ),
             infinitivals=infinitivals,
             infinitival_ambiguities=infinitival_ambiguities,
+            gerunds=gerunds,
+            gerund_ambiguities=gerund_ambiguities,
             question=direct_embedded_question,
             entities=list(dict.fromkeys(entities)),
             unresolved=unresolved,
@@ -1856,6 +2164,541 @@ class SemanticParser:
                 ).hexdigest()[:16]
             ),
             diagnostics=[reason, "unsafe infinitival content suppressed"],
+        )
+
+    GERUND_PREDICATES: Dict[str, GerundPredicateProfile] = {
+        "enjoy": GerundPredicateProfile(
+            GerundRelationType.GERUND_CONTENT,
+            GerundContentStatus.ENJOYED,
+            "enjoyment",
+            205,
+        ),
+        "avoid": GerundPredicateProfile(
+            GerundRelationType.GERUND_CONTENT,
+            GerundContentStatus.AVOIDED,
+            "avoidance",
+            210,
+        ),
+        "start": GerundPredicateProfile(
+            GerundRelationType.ASPECTUAL_START,
+            GerundContentStatus.BEGUN,
+            "aspectual_onset",
+            220,
+            phase_entailing=True,
+        ),
+        "begin": GerundPredicateProfile(
+            GerundRelationType.ASPECTUAL_START,
+            GerundContentStatus.BEGUN,
+            "aspectual_onset",
+            220,
+            phase_entailing=True,
+        ),
+        "stop": GerundPredicateProfile(
+            GerundRelationType.ASPECTUAL_STOP,
+            GerundContentStatus.STOPPED,
+            "aspectual_cessation",
+            220,
+            phase_entailing=True,
+        ),
+        "keep": GerundPredicateProfile(
+            GerundRelationType.ASPECTUAL_CONTINUATION,
+            GerundContentStatus.CONTINUED,
+            "aspectual_continuation",
+            215,
+            phase_entailing=True,
+        ),
+        "continue": GerundPredicateProfile(
+            GerundRelationType.ASPECTUAL_CONTINUATION,
+            GerundContentStatus.CONTINUED,
+            "aspectual_continuation",
+            215,
+            phase_entailing=True,
+        ),
+        "see": GerundPredicateProfile(
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            "visual_perception",
+            205,
+            allows_object_controller=True,
+            allows_subject_controller=False,
+        ),
+        "hear": GerundPredicateProfile(
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            "auditory_perception",
+            200,
+            allows_object_controller=True,
+            allows_subject_controller=False,
+        ),
+        "watch": GerundPredicateProfile(
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            "visual_perception",
+            205,
+            allows_object_controller=True,
+            allows_subject_controller=False,
+        ),
+        "notice": GerundPredicateProfile(
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            "perception",
+            205,
+            allows_object_controller=True,
+            allows_subject_controller=False,
+        ),
+    }
+
+    def _split_gerund_clause(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> Tuple[
+        Optional[GerundSplit],
+        Optional[GerundAttachmentAmbiguity],
+    ]:
+        """Split one reviewed matrix predicate and selected ``-ing`` event.
+
+        Bare suffix shape is never sufficient.  The matrix predicate must be
+        catalog licensed, the complement token must be a supported verbal
+        present participle, and any perception controller must be an explicit
+        object NP.  Unsupported relation layering is returned as a typed
+        ambiguity instead of being flattened into one event.
+        """
+
+        items = [item for item in tokens if item.norm != ";"]
+        licensed_candidates: List[Tuple[int, List[int]]] = []
+        for matrix_index, token in enumerate(items):
+            predicate = lexicon.lemma(token.norm)
+            if predicate not in self.GERUND_PREDICATES:
+                continue
+            previous = items[matrix_index - 1].norm if matrix_index else None
+            following = (
+                items[matrix_index + 1].norm
+                if matrix_index + 1 < len(items)
+                else None
+            )
+            if not lexicon.is_probable_verb(
+                token.norm,
+                previous=previous,
+                following=following,
+            ):
+                continue
+            boundaries = [
+                index
+                for index in range(matrix_index + 1, len(items))
+                if self._is_selected_ing_token(items, index)
+            ]
+            if boundaries:
+                licensed_candidates.append((matrix_index, boundaries))
+
+        for matrix_index, boundaries in licensed_candidates:
+            layered = self._gerund_layering_ambiguity(
+                items,
+                matrix_index,
+                boundaries,
+            )
+            if layered is not None:
+                return None, layered
+
+        # A comma-delimited clause-edge participle is adjunct material, not a
+        # selected complement.  The flat clause parser cannot yet preserve
+        # that extra relation without swallowing it into the subject/object,
+        # so fail closed before entity creation or event storage.
+        comma_indices = [
+            index for index, item in enumerate(items) if item.norm == ","
+        ]
+        if len(comma_indices) == 1:
+            comma_index = comma_indices[0]
+            left = items[:comma_index]
+            right = items[comma_index + 1 :]
+            free_boundaries: List[int] = []
+            if self._is_independently_finite(right):
+                free_boundaries.extend(
+                    index
+                    for index in range(comma_index)
+                    if self._is_selected_ing_token(items, index)
+                )
+            if self._is_independently_finite(left):
+                free_boundaries.extend(
+                    index
+                    for index in range(comma_index + 1, len(items))
+                    if self._is_selected_ing_token(items, index)
+                )
+            if free_boundaries:
+                return None, self._gerund_ambiguity(
+                    items,
+                    free_boundaries,
+                    reason=(
+                        "comma-delimited -ing free adjunct requires staged "
+                        "parsing"
+                    ),
+                )
+
+        verb_index = self._find_main_verb(items)
+        if verb_index < 0:
+            return None, None
+        predicate = lexicon.lemma(items[verb_index].norm)
+        profile = self.GERUND_PREDICATES.get(predicate)
+        if profile is None:
+            if predicate == "feel":
+                unsupported_boundaries = [
+                    index
+                    for index in range(verb_index + 1, len(items))
+                    if self._is_selected_ing_token(items, index)
+                ]
+                if unsupported_boundaries:
+                    return None, self._gerund_ambiguity(
+                        items,
+                        unsupported_boundaries,
+                        reason=(
+                            "feel with an -ing continuation is an unsupported "
+                            "perception/controller boundary"
+                        ),
+                        candidate_types=[
+                            GerundRelationType.PERCEPTION_PARTICIPIAL
+                        ],
+                    )
+            return None, None
+
+        boundaries = [
+            index
+            for index in range(verb_index + 1, len(items))
+            if self._is_selected_ing_token(items, index)
+        ]
+        if not boundaries:
+            return None, None
+        if len(boundaries) > 1:
+            nested = lexicon.lemma(
+                items[boundaries[0]].norm
+            ) in self.GERUND_PREDICATES
+            return None, self._gerund_ambiguity(
+                items,
+                boundaries,
+                reason=(
+                    "nested selected -ing complement requires staged parsing"
+                    if nested
+                    else "multiple -ing complement boundaries remain plausible"
+                ),
+                candidate_types=[profile.relation_type],
+            )
+
+        boundary = boundaries[0]
+        matrix_tail = [
+            item
+            for item in items[verb_index + 1 : boundary]
+            if item.norm not in lexicon.PUNCTUATION
+        ]
+
+        # A trailing negative sequence belongs to the embedded event:
+        # ``did not avoid calling`` negates AVOID, while ``avoided not
+        # calling`` negates CALL.  Retain nearby intensification with the
+        # embedded negator so it cannot be mistaken for a controller NP.
+        embedded_prefix: List[lexicon.Token] = []
+        suffix_start = len(matrix_tail)
+        while (
+            suffix_start > 0
+            and matrix_tail[suffix_start - 1].norm
+            in lexicon.NEGATORS | lexicon.INTENSIFIERS
+        ):
+            suffix_start -= 1
+        trailing_scope = matrix_tail[suffix_start:]
+        if any(item.norm in lexicon.NEGATORS for item in trailing_scope):
+            embedded_prefix = trailing_scope
+            matrix_tail = matrix_tail[:suffix_start]
+
+        has_object_controller = bool(matrix_tail)
+        if has_object_controller:
+            if not profile.allows_object_controller:
+                return None, self._gerund_ambiguity(
+                    items,
+                    [boundary],
+                    reason=(
+                        f"{predicate} does not license an explicit object "
+                        "controller for selected -ing content"
+                    ),
+                    candidate_types=[profile.relation_type],
+                )
+            if not self._plausible_controller_np(matrix_tail):
+                return None, self._gerund_ambiguity(
+                    items,
+                    [boundary],
+                    reason=(
+                        "participial object-controller phrase is "
+                        "structurally unsupported"
+                    ),
+                    candidate_types=[profile.relation_type],
+                )
+            controller_role = "object"
+        else:
+            if not profile.allows_subject_controller:
+                return None, self._gerund_ambiguity(
+                    items,
+                    [boundary],
+                    reason=(
+                        f"{predicate} requires an explicit object controller "
+                        "before its participial complement"
+                    ),
+                    candidate_types=[GerundRelationType.PERCEPTION_PARTICIPIAL],
+                )
+            controller_role = "subject"
+
+        matrix = [
+            item
+            for item in items[:boundary]
+            if item not in embedded_prefix
+            and item.norm not in lexicon.PUNCTUATION
+        ]
+        complement = [
+            *embedded_prefix,
+            *[
+                item
+                for item in items[boundary:]
+                if item.norm not in lexicon.PUNCTUATION
+            ],
+        ]
+        if self._contains_nested_content_clause(complement):
+            return None, self._gerund_ambiguity(
+                items,
+                [boundary],
+                reason=(
+                    "selected -ing content containing a finite content "
+                    "clause exceeds the configured depth"
+                ),
+                candidate_types=[profile.relation_type],
+            )
+        if self._contains_selected_infinitive(complement):
+            return None, self._gerund_ambiguity(
+                items,
+                [boundary],
+                reason=(
+                    "selected -ing content containing an infinitival "
+                    "complement exceeds the configured depth"
+                ),
+                candidate_types=[profile.relation_type],
+            )
+
+        return (
+            GerundSplit(
+                matrix_tokens=matrix,
+                complement_tokens=complement,
+                marker="-ing",
+                profile=profile,
+                controller_role=controller_role,
+                certainty=profile.certainty,
+                diagnostics=[
+                    f"gerund matrix predicate={predicate}",
+                    f"gerund relation={profile.relation_type.value}",
+                    f"gerund status={profile.content_status.value}",
+                    f"gerund boundary={boundary}",
+                    f"gerund controller role={controller_role}",
+                ],
+            ),
+            None,
+        )
+
+    @staticmethod
+    def _is_selected_ing_token(
+        tokens: Sequence[lexicon.Token],
+        index: int,
+    ) -> bool:
+        token = tokens[index]
+        if not token.norm.endswith("ing") or len(token.norm) < 5:
+            return False
+        previous = tokens[index - 1].norm if index else None
+        following = tokens[index + 1].norm if index + 1 < len(tokens) else None
+        if previous in lexicon.DETERMINERS | lexicon.POSSESSIVES:
+            return False
+        predicate = lexicon.lemma(token.norm)
+        return (
+            predicate in lexicon.KNOWN_VERBS
+            and token.norm == lexicon.gerund_form(predicate)
+            and lexicon.is_probable_verb(
+                token.norm,
+                previous=previous,
+                following=following,
+            )
+        )
+
+    def _gerund_layering_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+        matrix_verb_index: int,
+        boundaries: Sequence[int],
+    ) -> Optional[GerundAttachmentAmbiguity]:
+        norms = [item.norm for item in tokens]
+        profile = self.GERUND_PREDICATES[lexicon.lemma(
+            tokens[matrix_verb_index].norm
+        )]
+        candidate_types = [profile.relation_type]
+
+        coordination = [
+            index
+            for index, norm in enumerate(norms)
+            if norm in {"and", "but", "yet", "or", "so"}
+        ]
+        if coordination:
+            return self._gerund_ambiguity(
+                tokens,
+                boundaries,
+                reason=(
+                    "selected -ing content combined with coordination "
+                    "requires staged parsing"
+                ),
+                candidate_types=candidate_types,
+            )
+
+        relative_markers = [
+            index
+            for index, norm in enumerate(norms)
+            if norm in {"who", "whom", "whose", "which"}
+            or (norm == "that" and index < matrix_verb_index)
+        ]
+        if relative_markers:
+            return self._gerund_ambiguity(
+                tokens,
+                boundaries,
+                reason=(
+                    "selected -ing content combined with a relative clause "
+                    "requires staged parsing"
+                ),
+                candidate_types=candidate_types,
+            )
+
+        commas_before = [
+            index for index in range(matrix_verb_index) if norms[index] == ","
+        ]
+        if len(commas_before) >= 2:
+            return self._gerund_ambiguity(
+                tokens,
+                boundaries,
+                reason=(
+                    "selected -ing content combined with an appositive "
+                    "requires staged parsing"
+                ),
+                candidate_types=candidate_types,
+            )
+
+        if self._split_subordinate_clause(tokens) is not None:
+            return self._gerund_ambiguity(
+                tokens,
+                boundaries,
+                reason=(
+                    "selected -ing content combined with a subordinate "
+                    "clause requires staged parsing"
+                ),
+                candidate_types=candidate_types,
+            )
+
+        first_verb = self._find_main_verb(tokens)
+        if first_verb != matrix_verb_index:
+            return self._gerund_ambiguity(
+                tokens,
+                boundaries,
+                reason=(
+                    "selected -ing content following a free adjunct or "
+                    "earlier predicate requires staged parsing"
+                ),
+                candidate_types=candidate_types,
+            )
+        if any(
+            norms[index] == ","
+            for index in range(matrix_verb_index + 1, boundaries[0])
+        ):
+            return self._gerund_ambiguity(
+                tokens,
+                boundaries,
+                reason=(
+                    "comma-delimited participial material is a possible free "
+                    "adjunct, not safely selected content"
+                ),
+                candidate_types=candidate_types,
+            )
+        return None
+
+    @staticmethod
+    def _gerund_controller_entity(
+        event: EventFrame,
+        controller_role: str,
+    ) -> str:
+        roles = (
+            ("patient", "recipient")
+            if controller_role == "object"
+            else ("agent", "experiencer", "subject", "possessor", "patient")
+        )
+        for role in roles:
+            ref = event.arguments.get(role)
+            if ref is not None and ref.kind == RefKind.ENTITY:
+                return ref.key
+        return ""
+
+    @staticmethod
+    def _gerund_source_entity(event: EventFrame) -> str:
+        for role in ("agent", "experiencer", "subject", "possessor", "source"):
+            ref = event.arguments.get(role)
+            if ref is not None and ref.kind == RefKind.ENTITY:
+                return ref.key
+        return ""
+
+    @staticmethod
+    def _restore_memory_checkpoint(
+        memory: ConversationMemory,
+        checkpoint: Dict[str, object],
+    ) -> None:
+        """Roll back entity, alias, salience, counter, and store mutations."""
+
+        memory.__dict__.clear()
+        memory.__dict__.update(checkpoint)
+
+    @staticmethod
+    def _is_factual_phase_matrix(
+        event: EventFrame,
+        complement: EventFrame,
+    ) -> bool:
+        """Return whether a phase predicate can license an actual inference."""
+
+        return (
+            event.polarity
+            and event.modality is None
+            and event.tense != "future"
+            and event.aspect in {"simple", "perfect"}
+            and not SemanticParser._has_forward_deictic_time(event)
+            and not SemanticParser._has_forward_deictic_time(complement)
+        )
+
+    @staticmethod
+    def _has_forward_deictic_time(event: EventFrame) -> bool:
+        time_ref = event.arguments.get("time")
+        if time_ref is None:
+            return False
+        words = {
+            word
+            for value in (time_ref.key, time_ref.surface)
+            for word in value.lower().split()
+        }
+        return bool(words & {"tomorrow", "later", "next"})
+
+    def _gerund_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+        boundaries: Sequence[int],
+        *,
+        reason: str,
+        candidate_types: Sequence[GerundRelationType] = (),
+    ) -> GerundAttachmentAmbiguity:
+        first = boundaries[0] if boundaries else len(tokens)
+        return GerundAttachmentAmbiguity(
+            matrix_surface=self._surface(tokens[:first]),
+            complement_surface=self._surface(tokens[first:]),
+            clause_surface=self._surface(tokens),
+            reason=reason,
+            candidate_boundaries=list(boundaries),
+            candidate_relation_types=list(candidate_types),
+            ambiguity_id=(
+                "gerund-"
+                + hashlib.sha256(
+                    " ".join(item.norm for item in tokens).encode("utf-8")
+                ).hexdigest()[:16]
+            ),
+            diagnostics=[reason, "unsafe selected -ing content suppressed"],
         )
 
     CONTENT_PREDICATES: Dict[str, Tuple[ContentRelationType, str, int]] = {
@@ -3147,6 +3990,7 @@ class SemanticParser:
             frame = result[0]
             if frame is not None:
                 self._annotate_infinitival_question_scope(frame, items)
+                self._annotate_gerund_question_scope(frame, items)
             return result
 
         first = words[0]
@@ -3423,6 +4267,58 @@ class SemanticParser:
             for token in rest[main_idx + 1 :]
         )
         return not matrix_negative, not embedded_negative
+
+    def _annotate_gerund_question_scope(
+        self,
+        frame: QuestionFrame,
+        items: Sequence[lexicon.Token],
+    ) -> None:
+        """Preserve matrix and embedded polarity in selected -ing questions."""
+
+        predicate = lexicon.lemma(frame.event.predicate)
+        if predicate not in self.GERUND_PREDICATES:
+            return
+        predicate_index = next(
+            (
+                index
+                for index, token in enumerate(items)
+                if lexicon.lemma(token.norm) == predicate
+                and lexicon.is_probable_verb(
+                    token.norm,
+                    previous=(items[index - 1].norm if index else None),
+                    following=(
+                        items[index + 1].norm
+                        if index + 1 < len(items)
+                        else None
+                    ),
+                )
+            ),
+            -1,
+        )
+        if predicate_index < 0:
+            return
+        boundary = next(
+            (
+                index
+                for index in range(predicate_index + 1, len(items))
+                if self._is_selected_ing_token(items, index)
+            ),
+            -1,
+        )
+        if boundary < 0:
+            return
+
+        matrix_negative = any(
+            token.norm in lexicon.NEGATORS
+            for token in items[:predicate_index]
+        )
+        embedded_negative = any(
+            token.norm in lexicon.NEGATORS
+            for token in items[predicate_index + 1 :]
+        )
+        frame.matrix_polarity = not matrix_negative
+        frame.embedded_polarity = not embedded_negative
+        frame.event.polarity = frame.matrix_polarity
 
     def _parse_who(
         self,
@@ -3888,6 +4784,35 @@ class SemanticParser:
     # Declarative clause parser
     # ------------------------------------------------------------------
 
+    def _clause_has_resolved_subject(
+        self,
+        tokens: Sequence[lexicon.Token],
+        event: EventFrame,
+    ) -> bool:
+        """Return whether the surface clause resolved its grammatical subject."""
+
+        items = [
+            token for token in tokens if token.norm not in lexicon.PUNCTUATION
+        ]
+        main_items, _cause_items = self._split_cause(items)
+        verb_index = self._find_main_verb(main_items)
+        if verb_index < 0:
+            return False
+        predicate = lexicon.lemma(main_items[verb_index].norm)
+        auxiliary_tokens = [
+            token.norm
+            for token in main_items[:verb_index]
+            if token.norm in lexicon.AUXILIARIES
+        ]
+        passive = (
+            predicate != "be"
+            and any(word in lexicon.COPULAS for word in auxiliary_tokens)
+            and any(
+                token.norm == "by" for token in main_items[verb_index + 1 :]
+            )
+        )
+        return self._subject_role(predicate, passive) in event.arguments
+
     def _parse_clause(
         self,
         tokens: Sequence[lexicon.Token],
@@ -3914,13 +4839,35 @@ class SemanticParser:
         predicate = lexicon.lemma(main_token.norm)
         auxiliary_tokens = [token.norm for token in main_items[:verb_idx] if token.norm in lexicon.AUXILIARIES]
         modality = next((word for word in auxiliary_tokens if word in lexicon.MODALS), None)
-        polarity = "not" not in [token.norm for token in main_items]
+        polarity = not any(
+            token.norm in lexicon.NEGATORS for token in main_items
+        )
         tense = lexicon.detect_tense(main_token.norm, auxiliary_tokens[0] if auxiliary_tokens else None)
         if "will" in auxiliary_tokens or "shall" in auxiliary_tokens:
             tense = "future"
-        aspect = "perfect" if any(word in lexicon.AUX_HAVE for word in auxiliary_tokens) else "simple"
-        if aspect == "perfect" and tense != "future":
+        perfect = any(word in lexicon.AUX_HAVE for word in auxiliary_tokens)
+        progressive = (
+            (
+                main_token.norm.endswith("ing")
+                and any(word in lexicon.COPULAS for word in auxiliary_tokens)
+            )
+            or "being" in auxiliary_tokens
+        )
+        if perfect and progressive:
+            aspect = "perfect_progressive"
+        elif perfect:
+            aspect = "perfect"
+        elif progressive:
+            aspect = "progressive"
+        else:
+            aspect = "simple"
+        if perfect and tense != "future":
             tense = "past" if "had" in auxiliary_tokens else "present"
+        elif progressive and tense != "future":
+            if any(word in {"was", "were"} for word in auxiliary_tokens):
+                tense = "past"
+            else:
+                tense = "present"
 
         # Passive voice: "The coat was bought by Sarah".
         passive = (
@@ -3931,7 +4878,9 @@ class SemanticParser:
 
         subject_tokens = [
             token for token in main_items[:verb_idx]
-            if token.norm not in lexicon.AUXILIARIES and token.norm not in lexicon.NEGATORS
+            if token.norm not in lexicon.AUXILIARIES
+            and token.norm not in lexicon.NEGATORS
+            and token.norm not in lexicon.INTENSIFIERS
         ]
         if passive:
             subject_expected = EntityKind.THING
