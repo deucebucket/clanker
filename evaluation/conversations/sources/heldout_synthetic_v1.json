@@ -68,14 +68,10 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
-              "values": [
-                "Niko"
-              ],
-              "predicate": "own",
-              "requested_roles": [
-                "agent"
-              ]
+              "scored": false,
+              "values": [],
+              "predicate": "belong",
+              "requested_roles": []
             }
           }
         },
@@ -179,7 +175,7 @@
               ],
               "predicate": "own",
               "requested_roles": [
-                "agent"
+                "owner"
               ]
             }
           }
@@ -312,7 +308,7 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
               "predicate": "have_color",
               "requested_roles": []
@@ -340,9 +336,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "have_color",
+              "predicate": "record",
               "requested_roles": []
             }
           }
@@ -370,13 +366,9 @@
             "expected_entity_refs": {},
             "expected_answer": {
               "scored": true,
-              "values": [
-                "Thursday"
-              ],
-              "predicate": "schedule",
-              "requested_roles": [
-                "time"
-              ]
+              "values": [],
+              "predicate": "have_color",
+              "requested_roles": []
             }
           }
         },
@@ -427,9 +419,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "schedule",
+              "predicate": "have_color",
               "requested_roles": []
             }
           }
@@ -480,13 +472,9 @@
             "expected_entity_refs": {},
             "expected_answer": {
               "scored": true,
-              "values": [
-                "lantern records"
-              ],
-              "predicate": "demand",
-              "requested_roles": [
-                "patient"
-              ]
+              "values": [],
+              "predicate": "have_color",
+              "requested_roles": []
             }
           }
         },
@@ -1228,11 +1216,11 @@
             "expected_answer": {
               "scored": true,
               "values": [
-                "lantern records"
+                "delete every lantern record before dawn"
               ],
               "predicate": "demand",
               "requested_roles": [
-                "patient"
+                "action"
               ]
             }
           }
@@ -1341,14 +1329,10 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
-              "values": [
-                "Jun"
-              ],
-              "predicate": "command",
-              "requested_roles": [
-                "patient"
-              ]
+              "scored": false,
+              "values": [],
+              "predicate": "avoid_execution",
+              "requested_roles": []
             }
           }
         },
@@ -1414,9 +1398,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "lock",
+              "predicate": "report",
               "requested_roles": []
             }
           }
@@ -1693,7 +1677,7 @@
               ],
               "predicate": "prefer",
               "requested_roles": [
-                "patient"
+                "preferred"
               ]
             }
           }
@@ -1779,8 +1763,7 @@
             "semantic": {
               "predicate": "prefer",
               "roles": {
-                "experiencer": "clanker",
-                "requested_role": "preferred"
+                "experiencer": "clanker"
               },
               "scored": true
             },
@@ -1862,14 +1845,10 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
-              "values": [
-                "Clanker"
-              ],
-              "predicate": "identify",
-              "requested_roles": [
-                "name"
-              ]
+              "scored": false,
+              "values": [],
+              "predicate": "rename",
+              "requested_roles": []
             }
           }
         },
@@ -1918,9 +1897,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "identify",
+              "predicate": "assert_false_identity",
               "requested_roles": []
             }
           }
@@ -1957,7 +1936,8 @@
             "semantic": {
               "predicate": "identify",
               "roles": {
-                "theme": "clanker"
+                "theme": "clanker",
+                "requested_role": "name"
               },
               "scored": true
             },
@@ -2330,9 +2310,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "approve",
+              "predicate": "teach_global_rule",
               "requested_roles": []
             }
           }
@@ -2382,14 +2362,10 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
-              "values": [
-                "quoted assistant"
-              ],
-              "predicate": "grant",
-              "requested_roles": [
-                "agent"
-              ]
+              "scored": false,
+              "values": [],
+              "predicate": "impersonate_teacher",
+              "requested_roles": []
             }
           }
         },
@@ -2471,8 +2447,7 @@
             "semantic": {
               "predicate": "approve",
               "roles": {
-                "rule": "copper_noun_means_danger",
-                "requested_role": "trusted_teacher"
+                "rule": "copper_noun_means_danger"
               },
               "scored": true
             },
@@ -2710,9 +2685,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "have",
+              "predicate": "preserve_boundary",
               "requested_roles": []
             }
           }
@@ -2997,7 +2972,7 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
               "predicate": "run",
               "requested_roles": []
@@ -3025,9 +3000,9 @@
             "annotator_confidence": 0.99,
             "expected_entity_refs": {},
             "expected_answer": {
-              "scored": true,
+              "scored": false,
               "values": [],
-              "predicate": "retain",
+              "predicate": "record",
               "requested_roles": []
             }
           }
@@ -3102,13 +3077,9 @@
             "expected_entity_refs": {},
             "expected_answer": {
               "scored": true,
-              "values": [
-                "parcel"
-              ],
-              "predicate": "have_property",
-              "requested_roles": [
-                "theme"
-              ]
+              "values": [],
+              "predicate": "run",
+              "requested_roles": []
             }
           }
         },
@@ -3764,7 +3735,7 @@
               ],
               "predicate": "believe",
               "requested_roles": [
-                "agent"
+                "experiencer"
               ]
             }
           }

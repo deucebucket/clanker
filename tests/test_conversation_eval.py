@@ -30,10 +30,14 @@ from evaluation.conversations.corpus import (
     MANIFEST_PATH,
     SOURCE_DIR,
     CorpusIntegrityError,
+    _canonical_json,
+    _manifest_constituents,
     _validate_source_document,
+    assert_production_tree,
     compile_corpora,
     load_manifest,
     load_split,
+    production_tree_sha256,
     verify_corpus,
 )
 from evaluation.conversations.runner import (
@@ -45,6 +49,12 @@ from evaluation.conversations.runner import (
     _entity_exact,
     _metric_summary,
     _paired_mode_differences,
+    _pooled_cluster_mean,
+    _publish_artifacts,
+    _semantic_parse_exact,
+    _validate_aggregate_artifacts,
+    _assert_provenance_unchanged,
+    _whole_interaction_trajectory_metrics,
     run_evaluation,
 )
 
@@ -141,6 +151,47 @@ def test_source_schema_rejects_container_and_participant_corruption():
             _validate_source_document(path, document)
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda item: item.update({"unexpected": True}),
+        lambda item: item["sources"][0].update({"unexpected": True}),
+        lambda item: item["sources"][0].update({"retrieval_date": "2026-02-30"}),
+        lambda item: item["sources"][0].update({"is_real_human": True}),
+        lambda item: item["sources"][0].update({"license_name": "Proprietary"}),
+        lambda item: item["conversations"][0]["turns"][0]["annotation_overrides"].update(
+            {"ambiguity": "false"}
+        ),
+        lambda item: item["conversations"][0]["turns"][0]["annotation_overrides"]["semantic"].update(
+            {"scored": "false"}
+        ),
+    ],
+)
+def test_source_schema_rejects_nested_and_rights_corruption(mutation):
+    path = SOURCE_DIR / "development_v1.json"
+    document = json.loads(path.read_text())
+    mutation(document)
+    with pytest.raises(CorpusIntegrityError):
+        _validate_source_document(path, document)
+
+
+def test_structural_answer_alignment_rejects_cross_conversation_labels():
+    path = SOURCE_DIR / "development_v1.json"
+    document = json.loads(path.read_text())
+    turn = next(
+        turn
+        for conversation in document["conversations"]
+        for turn in conversation["turns"]
+        if turn["annotation_overrides"].get("expected_answer", {}).get("scored")
+    )
+    turn["annotation_overrides"]["expected_answer"]["predicate"] = "unrelated_schedule"
+    with pytest.raises(CorpusIntegrityError, match="answer predicate"):
+        _validate_source_document(path, document)
+    del turn["annotation_overrides"]["expected_answer"]
+    with pytest.raises(CorpusIntegrityError, match="lacks expected_answer"):
+        _validate_source_document(path, document)
+
+
 def test_failed_compile_does_not_overwrite_existing_artifacts(tmp_path):
     source_dir = tmp_path / "sources"
     source_dir.mkdir()
@@ -182,11 +233,49 @@ def test_unused_source_document_provenance_changes_constituent_root(tmp_path):
     first = compile_corpora(source_dir=source_dir, output_dir=tmp_path / "first")
     path = source_dir / "development_v1.json"
     document = json.loads(path.read_text())
-    document["provenance_review_note"] = "second independently reviewed note"
+    document["sources"][0]["rights_note"] += " Second independently reviewed note."
     path.write_text(json.dumps(document, indent=2) + "\n")
     second = compile_corpora(source_dir=source_dir, output_dir=tmp_path / "second")
     assert first["splits"]["heldout"]["sha256"] == second["splits"]["heldout"]["sha256"]
     assert first["corpus_root_sha256"] != second["corpus_root_sha256"]
+
+
+@pytest.mark.parametrize("field", ["allowed_uses", "training_eligible", "teacher_replay_eligible"])
+def test_manifest_policy_tampering_fails_even_when_split_bytes_do_not_change(tmp_path, field):
+    data = tmp_path / "data"
+    shutil.copytree(DATA_DIR, data)
+    manifest_path = data / "manifest_v1.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["splits"]["heldout"][field] = (
+        ["evaluation", "training"] if field == "allowed_uses" else True
+    )
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    with pytest.raises(CorpusIntegrityError):
+        load_manifest(manifest_path)
+
+    manifest["corpus_root_sha256"] = hashlib.sha256(
+        _canonical_json(_manifest_constituents(manifest)).encode()
+    ).hexdigest()
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    (data / "ROOT.sha256").write_text(manifest["corpus_root_sha256"] + "\n")
+    with pytest.raises(CorpusIntegrityError, match="policy"):
+        load_split("heldout", purpose="training", manifest_path=manifest_path)
+
+
+def test_production_tree_digest_rejects_tracked_and_untracked_byte_changes(tmp_path):
+    for directory in ("clanker_lm", "engine"):
+        shutil.copytree(ROOT / directory, tmp_path / directory)
+    shutil.copy2(ROOT / "clanker_engine.py", tmp_path / "clanker_engine.py")
+    expected = production_tree_sha256(tmp_path)
+    assert_production_tree(expected, repo_root=tmp_path)
+    model_path = tmp_path / "clanker_lm/model.py"
+    model_path.write_bytes(model_path.read_bytes() + b"\n# dirty tracked production byte\n")
+    with pytest.raises(CorpusIntegrityError, match="production module bytes"):
+        assert_production_tree(expected, repo_root=tmp_path)
+    model_path.write_bytes((ROOT / "clanker_lm/model.py").read_bytes())
+    (tmp_path / "clanker_lm/untracked_runtime.py").write_text("VALUE = 1\n")
+    with pytest.raises(CorpusIntegrityError, match="production module bytes"):
+        assert_production_tree(expected, repo_root=tmp_path)
 
 
 def test_compiler_and_full_constituent_root_are_reproducible():
@@ -221,13 +310,24 @@ def test_frozen_lookup_cannot_be_mutated_by_observations():
         observations.close()
 
 
-def _answer_result(*, predicate="lend", value="Sol", requested_role="recipient"):
-    question = SimpleNamespace(requested_role=requested_role)
+def _answer_result(
+    *,
+    predicate="lend",
+    value="Sol",
+    requested_role="recipient",
+    status=AnswerStatus.ANSWERED,
+    truth=TruthValue.TRUE,
+    proposition=True,
+):
+    question = SimpleNamespace(
+        requested_role=requested_role,
+        event=EventFrame(predicate),
+    )
     contract = SimpleNamespace(
-        status=AnswerStatus.ANSWERED,
-        truth=TruthValue.TRUE,
-        proposition=EventFrame(predicate),
-        values=[SemanticRef.literal(value)],
+        status=status,
+        truth=truth,
+        proposition=EventFrame(predicate) if proposition else None,
+        values=[SemanticRef.literal(value)] if value is not None else [],
         question=question,
     )
     return SimpleNamespace(contract=contract)
@@ -240,6 +340,84 @@ def test_structured_answer_exactness_uses_contract_value_predicate_and_question_
     assert not _answer_exact(expected, _answer_result(predicate="give"), expected_status="answered", expected_truth="true")
     assert not _answer_exact(expected, _answer_result(requested_role="agent"), expected_status="answered", expected_truth="true")
     assert not _answer_exact(expected, _answer_result(), expected_status="unknown", expected_truth="true")
+
+
+@pytest.mark.parametrize(
+    ("status", "truth"),
+    [
+        (AnswerStatus.UNKNOWN, TruthValue.UNKNOWN),
+        (AnswerStatus.CONFLICT, TruthValue.CONFLICT),
+        (AnswerStatus.FALSE, TruthValue.FALSE),
+        (AnswerStatus.UNSUPPORTED, TruthValue.UNKNOWN),
+    ],
+)
+def test_nonclaim_answer_exactness_uses_typed_question_event(status, truth):
+    expected = {
+        "scored": True,
+        "values": [],
+        "predicate": "originate",
+        "requested_roles": ["direction"],
+    }
+    result = _answer_result(
+        predicate="originate",
+        value=None,
+        requested_role="direction",
+        status=status,
+        truth=truth,
+        proposition=False,
+    )
+    assert _answer_exact(
+        expected,
+        result,
+        expected_status=status.value,
+        expected_truth=truth.value,
+    )
+    result.contract.question.event = EventFrame("unrelated")
+    assert not _answer_exact(
+        expected,
+        result,
+        expected_status=status.value,
+        expected_truth=truth.value,
+    )
+
+
+def test_semantic_exactness_canonicalizes_atoms_selects_gold_event_and_requires_exact_roles():
+    runtime = SimpleNamespace(memory=ConversationMemory())
+    conversation = {
+        "participant_bindings": {"user": "participant:user", "clanker": "participant:clanker"}
+    }
+    turn = {"speaker": "user", "addressee": "clanker"}
+    event = EventFrame(
+        "own",
+        arguments={"theme": SemanticRef.entity("compass", "brass compass")},
+    )
+    question = QuestionFrame(QuestionKind.WHO, event, requested_role="owner")
+    result = SimpleNamespace(parse=ParseResult(
+        speech_act=SpeechAct.ASK,
+        raw_text="",
+        events=[EventFrame("introduce"), event, EventFrame("trailing")],
+        question=question,
+    ))
+    expected = {
+        "predicate": "own",
+        "roles": {"theme": "brass_compass", "requested_role": "owner"},
+        "scored": True,
+    }
+    assert _semantic_parse_exact(
+        expected, result, runtime=runtime, conversation=conversation, turn=turn
+    )
+    event.arguments["location"] = SemanticRef.entity("vault", "vault")
+    assert not _semantic_parse_exact(
+        expected, result, runtime=runtime, conversation=conversation, turn=turn
+    )
+    expected["partial_roles"] = True
+    assert _semantic_parse_exact(
+        expected, result, runtime=runtime, conversation=conversation, turn=turn
+    )
+    question.requested_role = "patient"
+    assert not _semantic_parse_exact(
+        expected, result, runtime=runtime, conversation=conversation, turn=turn
+    )
 
 
 def test_entity_exactness_uses_turn_relative_local_ids_and_ambiguity_sets():
@@ -260,7 +438,7 @@ def test_entity_exactness_uses_turn_relative_local_ids_and_ambiguity_sets():
         parse=ParseResult(speech_act=SpeechAct.ASSERT, raw_text="", events=[event])
     )
     assert _entity_exact(
-        {"I": "user", "you": "clanker"},
+        {"roles": {}, "mentions": {"I": "user", "you": "clanker"}},
         result,
         runtime=runtime,
         conversation=conversation,
@@ -274,11 +452,42 @@ def test_entity_exactness_uses_turn_relative_local_ids_and_ambiguity_sets():
         )
     )
     assert _entity_exact(
-        {"they": ["user", "clanker"]},
+        {"roles": {}, "mentions": {"they": ["user", "clanker"]}},
         ambiguous,
         runtime=runtime,
         conversation=conversation,
         turn=turn,
+    )
+
+
+def test_entity_exactness_handles_theme_role_and_turn_relative_identity_without_whitelist():
+    runtime = SimpleNamespace(memory=ConversationMemory())
+    conversation = {
+        "participant_bindings": {"user": "participant:user", "clanker": "participant:clanker"}
+    }
+    user_turn = {"speaker": "user", "addressee": "clanker"}
+    result = SimpleNamespace(parse=ParseResult(
+        speech_act=SpeechAct.ASSERT,
+        raw_text="",
+        events=[EventFrame("label", arguments={
+            "theme": SemanticRef.entity("label_printer", "label printer"),
+            "agent": SemanticRef.entity("user", "I"),
+        })],
+    ))
+    assert _entity_exact(
+        {"roles": {"theme": "entity:label_printer", "agent": "participant:user"}, "mentions": {}},
+        result,
+        runtime=runtime,
+        conversation=conversation,
+        turn=user_turn,
+    )
+    clanker_turn = {"speaker": "clanker", "addressee": "user"}
+    assert not _entity_exact(
+        {"roles": {"agent": "participant:user"}, "mentions": {}},
+        result,
+        runtime=runtime,
+        conversation=conversation,
+        turn=clanker_turn,
     )
 
 
@@ -311,6 +520,8 @@ def test_cluster_bootstrap_preserves_turn_weighted_statistic_for_uneven_conversa
     assert summary["value"] == 0.75
     low, high = summary["ci95_conversation_cluster_bootstrap"]
     assert low <= summary["value"] <= high
+    assert _pooled_cluster_mean([[0.0], [1.0, 1.0, 1.0]]) == 0.75
+    assert _pooled_cluster_mean([[0.0], [1.0, 1.0, 1.0]]) != 0.5
 
 
 def test_metric_summary_is_deterministic_for_fixed_seed_and_records():
@@ -335,6 +546,7 @@ def test_development_semantic_report_is_reproducible():
     assert first["semantic_fingerprint"] == second["semantic_fingerprint"]
     assert first["paired_mode_differences"] == second["paired_mode_differences"]
     for mode in ("sentence_only", "stateful", "transition_corrected"):
+        assert "mae_v" not in first["modes"][mode]["overall"]["metrics"]
         for section in ("overall", "by_domain", "by_outcome", "by_supervision_level"):
             assert first["modes"][mode][section] == second["modes"][mode][section]
 
@@ -350,6 +562,19 @@ def test_drift_reports_terminal_bias_and_axis_slopes():
     drift = _drift(records)
     assert drift["terminal_signed_bias_by_axis"]["v"] == 1.0
     assert drift["absolute_residual_slope_by_axis"]["v"] == 2.0
+
+
+def test_trajectory_direction_uses_declared_whole_interaction_g0():
+    before = {axis: 100 for axis in "vadugwi"}
+    after_current = {axis: 160 for axis in "vadugwi"}
+    observed_next = {axis: 150 for axis in "vadugwi"}
+    predicted = {axis: 170 for axis in "vadugwi"}
+    target = {axis: 180 for axis in "vadugwi"}
+    metrics = _whole_interaction_trajectory_metrics(before, observed_next, predicted, target)
+    assert metrics["direction_v"] == 1.0
+    assert (predicted["v"] - after_current["v"]) * (
+        observed_next["v"] - after_current["v"]
+    ) < 0
 
 
 def test_resource_growth_subtracts_seed_baseline_and_reports_slope():
@@ -375,6 +600,47 @@ def test_resource_growth_subtracts_seed_baseline_and_reports_slope():
     assert result["growth_slopes_per_turn"]["sqlite_allocated_bytes"] == 10.0
 
 
+def test_aggregate_artifact_guard_checks_every_turn_and_recursive_payload_keys():
+    conversations = load_split("heldout", purpose="evaluation")
+    last_text = conversations[-1]["turns"][-1]["text"]
+    with pytest.raises(CorpusIntegrityError, match="turn content"):
+        _validate_aggregate_artifacts({"nested": {"value": last_text}}, [], conversations)
+    with pytest.raises(CorpusIntegrityError, match="payload key"):
+        _validate_aggregate_artifacts({"nested": {"raw_text": "redacted"}}, [], conversations)
+    _validate_aggregate_artifacts({"candidate_count": 3, "turn_id": "heldout-id"}, [], conversations)
+
+
+def test_provenance_race_guard_rejects_changed_commit_or_hash():
+    initial = {
+        "evaluation_commit": "a" * 40,
+        "evaluator_sha256": "b" * 64,
+        "compiler_sha256": "c" * 64,
+        "production_code_sha256": "d" * 64,
+    }
+    changed = dict(initial)
+    changed["evaluation_commit"] = "e" * 40
+    with pytest.raises(CorpusIntegrityError, match="changed while"):
+        _assert_provenance_unchanged(initial, {}, current=changed)
+
+
+def test_artifact_publish_stages_every_file_before_replacing(tmp_path):
+    report_path = tmp_path / "report.json"
+    failures_path = tmp_path / "report_failures.jsonl"
+    checksum_path = tmp_path / "report.sha256"
+    for path in (report_path, failures_path, checksum_path):
+        path.write_text("sentinel\n")
+    with pytest.raises(RuntimeError, match="simulated provenance race"):
+        _publish_artifacts(
+            {"aggregate": 1},
+            [{"turn_id": "id", "category": "metric"}],
+            output_path=report_path,
+            failures_path=failures_path,
+            provenance_check=lambda: (_ for _ in ()).throw(RuntimeError("simulated provenance race")),
+        )
+    for path in (report_path, failures_path, checksum_path):
+        assert path.read_text() == "sentinel\n"
+
+
 def test_baseline_is_aggregate_only_and_exact_post_106():
     report_path = ROOT / "evaluation/conversations/baselines/post_106_heldout_v1.json"
     failure_path = ROOT / "evaluation/conversations/baselines/post_106_heldout_v1_failures.jsonl"
@@ -394,9 +660,9 @@ def test_baseline_is_aggregate_only_and_exact_post_106():
         expected_hashes[filename] = digest
     assert hashlib.sha256(report_path.read_bytes()).hexdigest() == expected_hashes[report_path.name]
     assert hashlib.sha256(failure_path.read_bytes()).hexdigest() == expected_hashes[failure_path.name]
-    first_text = load_split("heldout", purpose="evaluation")[0]["turns"][0]["text"]
-    assert first_text not in report_path.read_text()
-    assert first_text not in failure_path.read_text()
+    conversations = load_split("heldout", purpose="evaluation")
+    failures = [json.loads(line) for line in failure_path.read_text().splitlines() if line]
+    _validate_aggregate_artifacts(report, failures, conversations)
 
 
 def test_distribution_artifacts_exclude_evaluation_corpus(tmp_path):

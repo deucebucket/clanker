@@ -3,13 +3,67 @@
   "$id": "https://github.com/deucebucket/clanker/evaluation/conversations/report-v1.schema.json",
   "title": "Clanker conversation evaluation report v1",
   "type": "object",
-  "required": ["report_schema_version", "corpus_version", "split", "corpus_sha256", "corpus_root_sha256", "compiler_sha256", "evaluator_sha256", "production_code_commit", "evaluation_commit", "backend", "modes", "development_correction_bundle", "paired_mode_differences", "semantic_fingerprint", "failure_count", "limitations"],
+  "additionalProperties": false,
+  "required": ["report_schema_version", "corpus_version", "split", "corpus_sha256", "corpus_root_sha256", "compiler_sha256", "evaluator_sha256", "schema_sha256", "production_code_commit", "production_code_sha256", "evaluation_commit", "backend", "clock", "timezone", "modes", "development_correction_bundle", "paired_mode_differences", "semantic_fingerprint", "metric_supervision", "failure_count", "failure_counts", "environment", "limitations"],
   "properties": {
     "report_schema_version": {"const": 1},
+    "corpus_version": {"const": "conversation-v1"},
+    "split": {"enum": ["heldout", "development"]},
+    "corpus_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "corpus_root_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "compiler_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evaluator_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "schema_sha256": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "production_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "production_code_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evaluation_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "backend": {"const": "clanker-v8"},
+    "clock": {"type": "string"},
+    "timezone": {"const": "UTC"},
     "modes": {
       "type": "object",
-      "required": ["sentence_only", "stateful", "transition_corrected"]
+      "additionalProperties": false,
+      "required": ["sentence_only", "stateful", "transition_corrected"],
+      "properties": {
+        "sentence_only": {"$ref": "#/$defs/mode"},
+        "stateful": {"$ref": "#/$defs/mode"},
+        "transition_corrected": {"$ref": "#/$defs/mode"}
+      }
     },
-    "semantic_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    "development_correction_bundle": {"type": "object"},
+    "paired_mode_differences": {"type": "object"},
+    "semantic_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "metric_supervision": {"type": "object", "additionalProperties": false, "required": ["semantic_and_entity", "affect_and_trajectory", "outcome"], "properties": {"semantic_and_entity": {"type": "string"}, "affect_and_trajectory": {"type": "string"}, "outcome": {"type": "string"}}},
+    "failure_count": {"type": "integer", "minimum": 0},
+    "failure_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "environment": {"type": "object", "additionalProperties": false, "required": ["python", "platform", "processor"], "properties": {"python": {"type": "string"}, "platform": {"type": "string"}, "processor": {"type": "string"}}},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "mode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "by_domain", "by_outcome", "by_supervision_level", "latency", "resource_growth", "execution_errors"],
+      "properties": {
+        "overall": {"$ref": "#/$defs/summary"},
+        "by_domain": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
+        "by_outcome": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
+        "by_supervision_level": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
+        "latency": {"type": "object"},
+        "resource_growth": {"type": "object"},
+        "execution_errors": {"type": "integer", "minimum": 0}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["turn_count", "conversation_count", "ci_stability", "metrics", "unknown_classification", "conflict_classification", "uncertainty_calibration", "drift", "outcome_counts", "confidence_interval_method"],
+      "properties": {
+        "turn_count": {"type": "integer"}, "conversation_count": {"type": "integer"}, "ci_stability": {"type": "string"},
+        "metrics": {"type": "object"}, "unknown_classification": {"type": "object"}, "conflict_classification": {"type": "object"},
+        "uncertainty_calibration": {"type": ["object", "null"]}, "drift": {"type": ["object", "null"]},
+        "outcome_counts": {"type": "object", "additionalProperties": {"type": "integer"}}, "confidence_interval_method": {"type": "object"}
+      }
+    }
   }
 }

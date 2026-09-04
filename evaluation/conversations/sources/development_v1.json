@@ -838,7 +838,7 @@
               ],
               "predicate": "prefer",
               "requested_roles": [
-                "patient"
+                "preferred"
               ]
             }
           }
@@ -877,8 +877,7 @@
             "semantic": {
               "predicate": "prefer",
               "roles": {
-                "experiencer": "roommate",
-                "requested_role": "preferred"
+                "experiencer": "roommate"
               },
               "scored": true
             },
@@ -1432,7 +1431,7 @@
               ],
               "predicate": "suspect",
               "requested_roles": [
-                "agent"
+                "experiencer"
               ]
             }
           }
@@ -1776,7 +1775,7 @@
               ],
               "predicate": "glinter",
               "requested_roles": [
-                "patient"
+                "theme"
               ]
             }
           }

@@ -13,6 +13,7 @@ import math
 import os
 import platform
 import random
+import re
 import resource
 import statistics
 import subprocess
@@ -32,7 +33,17 @@ from clanker_lm.model import AffectVector, TurnResult
 from clanker_lm.runtime import ClankerLM
 from clanker_lm.trajectory import TrajectoryController
 
-from .corpus import AXES, MANIFEST_PATH, _canonical_json, load_manifest, load_split
+from .corpus import (
+    AXES,
+    MANIFEST_PATH,
+    REPO_ROOT,
+    CorpusIntegrityError,
+    _canonical_json,
+    _sha256_file,
+    assert_production_tree,
+    load_manifest,
+    load_split,
+)
 
 
 METRIC_SCHEMA_VERSION = 1
@@ -203,24 +214,55 @@ def _norm(value: Any) -> str:
     return " ".join(str(value).lower().replace("’", "'").split())
 
 
-def _actual_semantic(result: TurnResult) -> Dict[str, Any]:
-    event = result.parse.events[-1] if result.parse.events else None
-    if event is None:
-        return {"predicate": None, "roles": {}}
-    roles = {
-        role: _norm(reference.surface or reference.key)
-        for role, reference in event.arguments.items()
-        if not reference.is_variable
-    }
-    return {"predicate": _norm(event.predicate), "roles": roles}
+def _semantic_atom(value: Any) -> str:
+    """Canonical corpus atom shared by symbolic gold and parsed surfaces."""
+
+    return "_".join(re.findall(r"[a-z0-9']+", str(value).lower().replace("’", "'")))
 
 
-def _semantic_parse_exact(expected: Mapping[str, Any], result: TurnResult) -> bool:
-    actual = _actual_semantic(result)
-    if _norm(expected.get("predicate")) != _norm(actual["predicate"]):
-        return False
-    expected_roles = {str(role): _norm(value) for role, value in dict(expected.get("roles", {})).items()}
-    return all(actual["roles"].get(role) == value for role, value in expected_roles.items())
+def _semantic_parse_exact(
+    expected: Mapping[str, Any],
+    result: TurnResult,
+    *,
+    runtime: ClankerLM,
+    conversation: Mapping[str, Any],
+    turn: Mapping[str, Any],
+) -> bool:
+    expected_predicate = _semantic_atom(expected.get("predicate"))
+    expected_roles: Dict[str, str] = {}
+    for role, value in dict(expected.get("roles", {})).items():
+        normalized_role = _semantic_atom(role)
+        expected_roles[normalized_role] = (
+            _semantic_atom(value)
+            if normalized_role == "requested_role"
+            else _expected_local_id(value, conversation=conversation, turn=turn)
+        )
+    question = result.parse.question
+    events = list(result.parse.events)
+    if question is not None and question.event not in events:
+        events.append(question.event)
+    for event in events:
+        if _semantic_atom(event.predicate) != expected_predicate:
+            continue
+        actual_roles = {
+            _semantic_atom(role): _local_entity_id(
+                reference,
+                runtime=runtime,
+                conversation=conversation,
+                turn=turn,
+            )
+            for role, reference in event.arguments.items()
+            if not reference.is_variable
+        }
+        if question is not None and _semantic_atom(question.event.predicate) == expected_predicate:
+            if question.requested_role:
+                actual_roles["requested_role"] = _semantic_atom(question.requested_role)
+        if bool(expected.get("partial_roles")):
+            if all(actual_roles.get(role) == value for role, value in expected_roles.items()):
+                return True
+        elif actual_roles == expected_roles:
+            return True
+    return False
 
 
 def _answer_exact(
@@ -232,20 +274,22 @@ def _answer_exact(
 ) -> bool:
     if result.contract.status.value != expected_status or result.contract.truth.value != expected_truth:
         return False
-    proposition = result.contract.proposition
-    actual_predicate = _norm(proposition.predicate) if proposition is not None else None
-    actual_values = sorted(_norm(item.surface or item.key) for item in result.contract.values)
-    expected_values = sorted(_norm(item) for item in expected.get("values", []))
+    event = result.contract.proposition
+    if event is None and result.contract.question is not None:
+        event = result.contract.question.event
+    actual_predicate = _semantic_atom(event.predicate) if event is not None else None
+    actual_values = sorted(_semantic_atom(item.surface or item.key) for item in result.contract.values)
+    expected_values = sorted(_semantic_atom(item) for item in expected.get("values", []))
     expected_predicate = expected.get("predicate")
-    if expected_predicate is not None and _norm(expected_predicate) != actual_predicate:
+    if expected_predicate is not None and _semantic_atom(expected_predicate) != actual_predicate:
         return False
     if expected_values != actual_values:
         return False
-    requested_roles = sorted(str(item) for item in expected.get("requested_roles", []))
+    requested_roles = sorted(_semantic_atom(item) for item in expected.get("requested_roles", []))
     actual_roles = []
     if result.contract.question is not None and result.contract.question.requested_role:
-        actual_roles.append(str(result.contract.question.requested_role))
-    return not requested_roles or requested_roles == actual_roles
+        actual_roles.append(_semantic_atom(result.contract.question.requested_role))
+    return requested_roles == actual_roles
 
 
 def _local_entity_id(
@@ -323,15 +367,28 @@ def _entity_exact(
                 )
             )
         actual_by_surface[_norm(unresolved.surface)].update(candidates)
-    role_names = {"agent", "patient", "recipient", "location", "instrument", "possessor"}
-    for mention_or_role, value in expected.items():
+    if set(expected) != {"roles", "mentions"}:
+        return False
+    expected_roles = expected["roles"]
+    expected_mentions = expected["mentions"]
+    if not isinstance(expected_roles, Mapping) or not isinstance(expected_mentions, Mapping):
+        return False
+    for role, value in expected_roles.items():
         values = value if isinstance(value, list) else [value]
         expected_ids = {
             _expected_local_id(item, conversation=conversation, turn=turn)
             for item in values
         }
-        key = str(mention_or_role)
-        actual_ids = actual_by_role.get(key, set()) if key in role_names else actual_by_surface.get(_norm(key), set())
+        actual_ids = actual_by_role.get(str(role), set())
+        if actual_ids != expected_ids:
+            return False
+    for mention, value in expected_mentions.items():
+        values = value if isinstance(value, list) else [value]
+        expected_ids = {
+            _expected_local_id(item, conversation=conversation, turn=turn)
+            for item in values
+        }
+        actual_ids = actual_by_surface.get(_norm(mention), set())
         if actual_ids != expected_ids:
             return False
     return True
@@ -361,6 +418,38 @@ def _store_shape(store: LanguageStore) -> Dict[str, Any]:
     }
 
 
+def _whole_interaction_trajectory_metrics(
+    expected_before: Mapping[str, int],
+    expected_next: Mapping[str, int],
+    predicted: Mapping[str, int],
+    target: Mapping[str, int],
+) -> Dict[str, float]:
+    """Score the declared g0-before-current to g1-after-next interaction."""
+
+    metrics: Dict[str, float] = {}
+    for axis in AXES:
+        metrics[f"residual_{axis}"] = predicted[axis] - int(expected_next[axis])
+        metrics[f"absolute_residual_{axis}"] = abs(metrics[f"residual_{axis}"])
+        metrics[f"mae_{axis}"] = abs(predicted[axis] - int(expected_next[axis]))
+        metrics[f"mae_normalized_{axis}"] = metrics[f"mae_{axis}"] / 255.0
+        metrics[f"direction_{axis}"] = float(
+            _sign(predicted[axis] - int(expected_before[axis]))
+            == _sign(int(expected_next[axis]) - int(expected_before[axis]))
+        )
+    gold = AffectVector(**expected_next)
+    before = AffectVector(**expected_before)
+    predicted_vector = AffectVector(**predicted)
+    target_vector = AffectVector(**target)
+    metrics["next_state_distance"] = predicted_vector.distance(gold)
+    metrics["target_attainment"] = max(
+        0.0, min(1.0, 1.0 - gold.distance(target_vector) / 160.0)
+    )
+    metrics["target_distance_improvement"] = (
+        before.distance(target_vector) - gold.distance(target_vector)
+    )
+    return metrics
+
+
 def _score_turn(
     conversation: Mapping[str, Any],
     turn: Mapping[str, Any],
@@ -384,6 +473,9 @@ def _score_turn(
         "turn_id": turn["turn_id"],
         "domain": conversation["domain"],
         "supervision_level": annotation["supervision_level"],
+        "semantic_supervision_level": annotation["semantic_supervision_level"],
+        "affect_supervision_level": annotation["affect_supervision_level"],
+        "affect_scored": float(bool(annotation["affect_scored"])),
         "outcome_evidence": annotation["outcome_evidence"],
         "outcome": annotation["outcome"],
         "mode": mode,
@@ -399,7 +491,15 @@ def _score_turn(
     }
     semantic = annotation["semantic"]
     if bool(semantic.get("scored")):
-        record["semantic_parse_exact"] = float(_semantic_parse_exact(semantic, result))
+        record["semantic_parse_exact"] = float(
+            _semantic_parse_exact(
+                semantic,
+                result,
+                runtime=runtime,
+                conversation=conversation,
+                turn=turn,
+            )
+        )
     expected_answer = annotation["expected_answer"]
     if bool(expected_answer.get("scored")):
         record["semantic_answer_exact"] = float(
@@ -426,22 +526,12 @@ def _score_turn(
             float(record["answer_status_correct"] == 1.0 and record["truth_correct"] == 1.0),
         )
         record["brier"] = (record["answer_confidence"] - record["answer_correct"]) ** 2
-    if expected_next is not None:
-        for axis in AXES:
-            record[f"residual_{axis}"] = predicted[axis] - int(expected_next[axis])
-            record[f"absolute_residual_{axis}"] = abs(record[f"residual_{axis}"])
-            record[f"mae_{axis}"] = abs(predicted[axis] - int(expected_next[axis]))
-            record[f"mae_normalized_{axis}"] = record[f"mae_{axis}"] / 255.0
-            record[f"direction_{axis}"] = float(
-                _sign(predicted[axis] - int(expected_before[axis]))
-                == _sign(int(expected_next[axis]) - int(expected_before[axis]))
+    if expected_next is not None and bool(annotation["affect_scored"]):
+        record.update(
+            _whole_interaction_trajectory_metrics(
+                expected_before, expected_next, predicted, target
             )
-        gold = AffectVector(**expected_next)
-        before = AffectVector(**expected_before)
-        target_vector = AffectVector(**target)
-        record["next_state_distance"] = result.predicted_state.distance(gold)
-        record["target_attainment"] = max(0.0, min(1.0, 1.0 - gold.distance(target_vector) / 160.0))
-        record["target_distance_improvement"] = before.distance(target_vector) - gold.distance(target_vector)
+        )
     return record
 
 
@@ -455,7 +545,6 @@ def _evaluate_mode(
     failures: List[Dict[str, Any]] = []
     resource_observations: List[Dict[str, Any]] = []
     construction_ms: List[float] = []
-    rss_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     tracemalloc.start()
     with tempfile.TemporaryDirectory(prefix=f"clanker-{mode}-") as tmp:
         for conversation_index, conversation in enumerate(conversations):
@@ -528,12 +617,13 @@ def _evaluate_mode(
                     shared_runtime.close()
     _, traced_peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
-    rss_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    rss_peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     resources = _aggregate_resources(resource_observations)
     resources["construction_latency_ms"] = _distribution(construction_ms)
     resources["tracemalloc_peak_bytes"] = traced_peak
-    resources["process_maxrss_delta"] = max(0, rss_after - rss_before)
+    resources["process_lifetime_maxrss_peak"] = rss_peak
     resources["process_maxrss_units"] = "KiB on Linux; bytes on macOS"
+    resources["process_maxrss_comparability"] = "observational_process_lifetime_peak_mode_order_dependent"
     return records, failures, resources
 
 
@@ -561,12 +651,15 @@ def _bootstrap_ci(records: Sequence[Mapping[str, Any]], metric: str, *, seed_mat
             for _, domain_clusters in sorted(clusters_by_domain.items())
             for _ in domain_clusters
         ]
-        estimates.append(
-            sum(sum(values) for values in sampled_clusters)
-            / sum(len(values) for values in sampled_clusters)
-        )
+        estimates.append(_pooled_cluster_mean(sampled_clusters))
     estimates.sort()
     return [estimates[round(0.025 * (len(estimates) - 1))], estimates[round(0.975 * (len(estimates) - 1))]]
+
+
+def _pooled_cluster_mean(clusters: Sequence[Sequence[float]]) -> float:
+    """Return the published turn-weighted point statistic for sampled clusters."""
+
+    return sum(sum(values) for values in clusters) / sum(len(values) for values in clusters)
 
 
 def _metric_summary(records: Sequence[Mapping[str, Any]], metric: str, *, seed_material: str) -> Dict[str, Any] | None:
@@ -581,23 +674,67 @@ def _metric_summary(records: Sequence[Mapping[str, Any]], metric: str, *, seed_m
     }
 
 
-def _classification(records: Sequence[Mapping[str, Any]], label: str) -> Dict[str, Any]:
+def _classification(
+    records: Sequence[Mapping[str, Any]],
+    label: str,
+    *,
+    seed_material: str,
+) -> Dict[str, Any]:
     tp = sum(record.get("expected_status") == label and record.get("actual_status") == label for record in records)
     fp = sum(record.get("expected_status") != label and record.get("actual_status") == label for record in records)
     fn = sum(record.get("expected_status") == label and record.get("actual_status") != label for record in records)
     precision = tp / (tp + fp) if tp + fp else None
     recall = tp / (tp + fn) if tp + fn else None
     f1 = 2 * precision * recall / (precision + recall) if precision is not None and recall is not None and precision + recall else None
-    return {
+    result = {
         "tp": tp,
         "fp": fp,
         "fn": fn,
         "precision": precision,
-        "precision_ci95_wilson": _wilson(tp, tp + fp),
         "recall": recall,
-        "recall_ci95_wilson": _wilson(tp, tp + fn),
         "f1": f1,
     }
+    clusters_by_domain: Dict[str, List[List[Mapping[str, Any]]]] = defaultdict(list)
+    grouped: Dict[Tuple[str, str], List[Mapping[str, Any]]] = defaultdict(list)
+    for record in records:
+        grouped[(str(record["domain"]), str(record["conversation_id"]))].append(record)
+    for (domain, _), items in sorted(grouped.items()):
+        clusters_by_domain[domain].append(items)
+    if not grouped:
+        return result
+    rng = random.Random(int.from_bytes(
+        hashlib.sha256(f"{seed_material}|classification|{label}".encode("utf-8")).digest()[:8],
+        "big",
+    ))
+    estimates: Dict[str, List[float]] = {"precision": [], "recall": [], "f1": []}
+    for _ in range(BOOTSTRAP_DRAWS):
+        sampled = [
+            item
+            for _, clusters in sorted(clusters_by_domain.items())
+            for _ in clusters
+            for item in clusters[rng.randrange(len(clusters))]
+        ]
+        sample_tp = sum(item.get("expected_status") == label and item.get("actual_status") == label for item in sampled)
+        sample_fp = sum(item.get("expected_status") != label and item.get("actual_status") == label for item in sampled)
+        sample_fn = sum(item.get("expected_status") == label and item.get("actual_status") != label for item in sampled)
+        sample_precision = sample_tp / (sample_tp + sample_fp) if sample_tp + sample_fp else 0.0
+        sample_recall = sample_tp / (sample_tp + sample_fn) if sample_tp + sample_fn else 0.0
+        sample_f1 = (
+            2 * sample_precision * sample_recall / (sample_precision + sample_recall)
+            if sample_precision + sample_recall
+            else 0.0
+        )
+        estimates["precision"].append(sample_precision)
+        estimates["recall"].append(sample_recall)
+        estimates["f1"].append(sample_f1)
+    result["ci95_conversation_cluster_bootstrap"] = {
+        name: [
+            sorted(values)[round(0.025 * (len(values) - 1))],
+            sorted(values)[round(0.975 * (len(values) - 1))],
+        ]
+        for name, values in estimates.items()
+    }
+    return result
 
 
 def _wilson(successes: int, total: int) -> List[float] | None:
@@ -698,8 +835,12 @@ def _summarize(records: Sequence[Mapping[str, Any]], *, seed_material: str) -> D
         "conversation_count": conversation_count,
         "ci_stability": "stable" if conversation_count >= 20 else "unstable_fewer_than_20_conversations",
         "metrics": metrics,
-        "unknown_classification": _classification(records, "unknown"),
-        "conflict_classification": _classification(records, "conflict"),
+        "unknown_classification": _classification(
+            records, "unknown", seed_material=f"{seed_material}|unknown"
+        ),
+        "conflict_classification": _classification(
+            records, "conflict", seed_material=f"{seed_material}|conflict"
+        ),
         "uncertainty_calibration": _ece(records),
         "drift": _drift(records),
         "outcome_counts": dict(sorted(Counter(str(record["outcome"]) for record in records).items())),
@@ -866,6 +1007,136 @@ def _git_commit() -> str:
         return "unknown"
 
 
+def _capture_provenance(manifest: Mapping[str, Any]) -> Dict[str, str]:
+    evaluator_sha256 = _sha256_file(Path(__file__))
+    compiler_sha256 = _sha256_file(Path(__file__).with_name("corpus.py"))
+    if evaluator_sha256 != manifest["evaluator_sha256"]:
+        raise CorpusIntegrityError("loaded evaluator bytes do not match the frozen manifest")
+    if compiler_sha256 != manifest["compiler_sha256"]:
+        raise CorpusIntegrityError("loaded compiler bytes do not match the frozen manifest")
+    schema_hashes = {
+        path.name: _sha256_file(path)
+        for path in sorted(Path(__file__).with_name("schema").glob("*.json"))
+    }
+    if schema_hashes != manifest["schema_sha256"]:
+        raise CorpusIntegrityError("evaluation schema bytes do not match the frozen manifest")
+    assert_production_tree(str(manifest["production_code_sha256"]))
+    measured_paths = (
+        "clanker_lm", "engine", "clanker_engine.py",
+        "evaluation/conversations/runner.py", "evaluation/conversations/corpus.py",
+        "evaluation/conversations/schema", "evaluation/conversations/sources",
+        "evaluation/conversations/data",
+    )
+    try:
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain", "--untracked-files=all", "--", *measured_paths],
+            cwd=REPO_ROOT,
+            text=True,
+        ).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise CorpusIntegrityError("cannot establish evaluation git provenance") from exc
+    if dirty:
+        raise CorpusIntegrityError("measured evaluator/corpus/production tree is dirty")
+    commit = _git_commit()
+    if commit == "unknown":
+        raise CorpusIntegrityError("cannot establish evaluation commit")
+    return {
+        "evaluation_commit": commit,
+        "evaluator_sha256": evaluator_sha256,
+        "compiler_sha256": compiler_sha256,
+        "schema_sha256": hashlib.sha256(_canonical_json(schema_hashes).encode("utf-8")).hexdigest(),
+        "production_code_sha256": str(manifest["production_code_sha256"]),
+    }
+
+
+def _assert_provenance_unchanged(
+    initial: Mapping[str, str],
+    manifest: Mapping[str, Any],
+    *,
+    current: Mapping[str, str] | None = None,
+) -> None:
+    observed = dict(current) if current is not None else _capture_provenance(manifest)
+    if observed != dict(initial):
+        raise CorpusIntegrityError("evaluation provenance changed while the run was in progress")
+
+
+_FORBIDDEN_ARTIFACT_KEYS = {
+    "text", "raw_text", "source_text", "input_text", "response", "generated_response",
+    "message", "messages", "event", "events", "parse", "candidates", "turn_payload",
+}
+
+
+def _validate_aggregate_artifacts(
+    report: Mapping[str, Any],
+    failures: Sequence[Mapping[str, Any]],
+    conversations: Sequence[Mapping[str, Any]],
+) -> None:
+    """Fail if aggregate artifacts contain raw conversational payloads."""
+
+    heldout_texts = [
+        str(turn["text"])
+        for conversation in conversations
+        for turn in conversation["turns"]
+    ]
+
+    def walk(value: Any, location: str) -> None:
+        if isinstance(value, Mapping):
+            for key, item in value.items():
+                normalized_key = str(key).lower()
+                if normalized_key in _FORBIDDEN_ARTIFACT_KEYS or normalized_key.endswith("_text"):
+                    raise CorpusIntegrityError(f"aggregate artifact contains forbidden payload key at {location}.{key}")
+                walk(item, f"{location}.{key}")
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                walk(item, f"{location}[{index}]")
+        elif isinstance(value, str):
+            normalized_value = _norm(value)
+            for raw_text in heldout_texts:
+                normalized_text = _norm(raw_text)
+                if normalized_value == normalized_text or (
+                    len(normalized_text) >= 16 and normalized_text in normalized_value
+                ):
+                    raise CorpusIntegrityError(
+                        f"aggregate artifact contains held-out turn content at {location}"
+                    )
+
+    walk(report, "report")
+    walk(list(failures), "failures")
+
+
+def _publish_artifacts(
+    report: Mapping[str, Any],
+    failures: Sequence[Mapping[str, Any]],
+    *,
+    output_path: Path,
+    failures_path: Path | None,
+    provenance_check: Any,
+) -> None:
+    if failures_path is not None and failures_path.parent.resolve() != output_path.parent.resolve():
+        raise CorpusIntegrityError("report, failures, and checksum must share one publish directory")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    failure_target = failures_path or output_path.with_name(f"{output_path.stem}_failures.jsonl")
+    checksum_path = output_path.with_suffix(".sha256")
+    report_bytes = (json.dumps(report, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    failure_bytes = "".join(_canonical_json(item) + "\n" for item in failures).encode("utf-8")
+    checksum_bytes = (
+        f"{hashlib.sha256(report_bytes).hexdigest()}  {output_path.name}\n"
+        f"{hashlib.sha256(failure_bytes).hexdigest()}  {failure_target.name}\n"
+    ).encode("ascii")
+    with tempfile.TemporaryDirectory(prefix=".conversation-report-", dir=output_path.parent) as staging_name:
+        staging = Path(staging_name)
+        staged = {
+            output_path: report_bytes,
+            failure_target: failure_bytes,
+            checksum_path: checksum_bytes,
+        }
+        for target, payload in staged.items():
+            (staging / target.name).write_bytes(payload)
+        provenance_check()
+        for target in (output_path, failure_target, checksum_path):
+            (staging / target.name).replace(target)
+
+
 def run_evaluation(
     *,
     split: str = "development",
@@ -876,6 +1147,7 @@ def run_evaluation(
     """Run all three modes and return an aggregate-only, text-free report."""
 
     manifest = load_manifest(manifest_path)
+    run_provenance = _capture_provenance(manifest)
     conversations = load_split(split, purpose="evaluation", manifest_path=manifest_path)
     development = load_split("development", purpose="development", manifest_path=manifest_path)
     correction_store, correction_bundle = _build_development_corrections(development)
@@ -959,8 +1231,10 @@ def run_evaluation(
         "corpus_root_sha256": manifest["corpus_root_sha256"],
         "compiler_sha256": manifest["compiler_sha256"],
         "evaluator_sha256": manifest["evaluator_sha256"],
+        "schema_sha256": manifest["schema_sha256"],
         "production_code_commit": manifest["baseline_code_commit"],
-        "evaluation_commit": _git_commit(),
+        "production_code_sha256": manifest["production_code_sha256"],
+        "evaluation_commit": run_provenance["evaluation_commit"],
         "backend": "clanker-v8",
         "clock": FIXED_INSTANT.isoformat(),
         "timezone": "UTC",
@@ -968,6 +1242,11 @@ def run_evaluation(
         "development_correction_bundle": correction_bundle,
         "paired_mode_differences": paired_differences,
         "semantic_fingerprint": semantic_fingerprint,
+        "metric_supervision": {
+            "semantic_and_entity": "turn semantic_supervision_level",
+            "affect_and_trajectory": "weak_rule_v1 only; structural_only sources excluded",
+            "outcome": "weak or counterfactual stratum only; no outcome accuracy is claimed",
+        },
         "failure_count": len(all_failures),
         "failure_counts": dict(sorted(Counter(item["category"] for item in all_failures).items())),
         "environment": {
@@ -979,16 +1258,20 @@ def run_evaluation(
             "Literary and archival next-state/outcome labels are weak supervision, not causal Clanker exposure.",
             "ClankerLM.process accepts no speaker/addressee; participant-aware scores expose that interface limit.",
             "Latency and resource measurements are observational and excluded from semantic_fingerprint.",
+            "Process max-RSS is a process-lifetime peak and is mode-order dependent, not a paired mode comparison.",
             "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed.",
         ],
     }
+    _validate_aggregate_artifacts(report, all_failures, conversations)
+    _assert_provenance_unchanged(run_provenance, manifest)
     if output_path is not None:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    if failures_path is not None:
-        failures_path.parent.mkdir(parents=True, exist_ok=True)
-        failures_path.write_text(
-            "".join(_canonical_json(item) + "\n" for item in all_failures),
-            encoding="utf-8",
+        _publish_artifacts(
+            report,
+            all_failures,
+            output_path=output_path,
+            failures_path=failures_path,
+            provenance_check=lambda: _assert_provenance_unchanged(run_provenance, manifest),
         )
+    elif failures_path is not None:
+        raise CorpusIntegrityError("failures_path requires output_path for transactional publication")
     return report

@@ -1,14 +1,238 @@
 {
   "baseline_code_commit": "9ae77f072f8afda0b1d2b757ab492757cabff0f8",
   "compiler": "evaluation.conversations.corpus:compile_corpora",
-  "compiler_sha256": "efc493d275fd63729f07b508e1623c821578547e06dddfdc0b5c4c2fcfc73018",
-  "content_address": "sha256:5400e430232bdc9fbb9fd41218e24a57d3fdb05104901aa9e0f4ea70e1330cd4",
-  "corpus_root_sha256": "ae16fbf480704fd74dccb5a7b31fdc332f98a981a3525361a860e55a395031a4",
+  "compiler_sha256": "5ef6885663d1b23f30f4585817419eed3c2b44377cd673afd3558f4ea84719a3",
+  "content_address": "sha256:05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
+  "corpus_root_sha256": "c53eb972bf3f0c3afcc57cf39f00fc0a73631e1a9c5ef8da9472a6660bf3a878",
   "corpus_version": "conversation-v1",
-  "evaluator_sha256": "5a71c160a5b7a9ea16f05cbc5730b16a0bcc5e47c8287e4949eca4951ddb0048",
+  "evaluator_sha256": "4ee53b2eadb5674a687b1f6173f12148c0eec0549e9a3df1a0eab0ca66e3054d",
   "frozen_date": "2026-09-04",
   "immutability_policy": "heldout-v1 bytes and labels are frozen; corrections require a new corpus version",
   "manifest_schema_version": 1,
+  "production_code_files": [
+    {
+      "path": "clanker_engine.py",
+      "sha256": "e0cb1f91f7b0916dc05377e70f9649c94210e9d42913eabec7861801b034bb99"
+    },
+    {
+      "path": "clanker_lm/__init__.py",
+      "sha256": "faf09d83e519ad3652b1e95c372339d4f089b8c61fdb36dbe57ef0ef9e476a9b"
+    },
+    {
+      "path": "clanker_lm/__main__.py",
+      "sha256": "e3176a1d9dbb9ab74a18d4a60382f81035a41b5daad22d4332b217aa3693fd1a"
+    },
+    {
+      "path": "clanker_lm/affect.py",
+      "sha256": "36bfc83b4b75c2ae326be10365346f2c620c7ceca872ce193a76a7d205f237ce"
+    },
+    {
+      "path": "clanker_lm/contracts.py",
+      "sha256": "856086498e275bb02f36d5d739b4e9b4ffc4906571563adf7be21f729ce2a368"
+    },
+    {
+      "path": "clanker_lm/data/__init__.py",
+      "sha256": "46c9664e7f5619b4c33f3951cf67ea358d02ef4a400e00b45f44a386027477ee"
+    },
+    {
+      "path": "clanker_lm/database.py",
+      "sha256": "55af69551c097310bee1246854689363573a72a8ffaa61c4bf303484c63ee1da"
+    },
+    {
+      "path": "clanker_lm/gates.py",
+      "sha256": "0a5791a0d00837e65c34cc8bb4bd66fc57a832dbb89ee9572b5efa8cfd7fcf2e"
+    },
+    {
+      "path": "clanker_lm/learning.py",
+      "sha256": "a1ddeb881430b30f1607bc1cfab631173e7bb8270f946bd2637e757e076f96a2"
+    },
+    {
+      "path": "clanker_lm/lexicon.py",
+      "sha256": "8a98b6432153dcc6684482630bd9ba81a889396c30971427ed9d05af83a86a8a"
+    },
+    {
+      "path": "clanker_lm/memory.py",
+      "sha256": "f3793221d2110e43207ffe9a9fdff1c84736e463bfb7f6083793beb4e22127ec"
+    },
+    {
+      "path": "clanker_lm/model.py",
+      "sha256": "c7f7d225c6e5aa71e44968a4a7986f5be4109e3f4e9f22e36983904bc0489388"
+    },
+    {
+      "path": "clanker_lm/parser.py",
+      "sha256": "34c65af6529219bb633d0ccfee8ec1d24a1d3c9b5c865609c8e743d86d734693"
+    },
+    {
+      "path": "clanker_lm/qa.py",
+      "sha256": "a8c28d86af1188d982974f80385ce17c4268f63ef5a95e9d017dc5af4ac4cd58"
+    },
+    {
+      "path": "clanker_lm/realize.py",
+      "sha256": "5a93d32f634a01312146eff8615d6521750277d770f9deb4f40246a347dfe2e6"
+    },
+    {
+      "path": "clanker_lm/resolvers.py",
+      "sha256": "61f782bdd7f81c27dfc9d0a5426e03ac551d2bd864400679788871df37a0f71e"
+    },
+    {
+      "path": "clanker_lm/response_policy.py",
+      "sha256": "85009b15f4e14fff5468161a7ebb94339a27561ebab18daf1082f7c0f5eeb401"
+    },
+    {
+      "path": "clanker_lm/runtime.py",
+      "sha256": "d5a71f23a680325ced2a4fd100e7e9b843a0ace699585225190ef0870b522a8a"
+    },
+    {
+      "path": "clanker_lm/trajectory.py",
+      "sha256": "1e87c590f14a41b261d8b2d4e3316f390c0d7b47094e05a3726002aa2bf0be8d"
+    },
+    {
+      "path": "clanker_lm/web.py",
+      "sha256": "85a889374ad641e9ec44b8c99003a24dc33136e56037d0863b95839b7c969a53"
+    },
+    {
+      "path": "clanker_lm/web_assets/__init__.py",
+      "sha256": "a25cedc97e2acf0da4c37f596703d39ab95d9cd86f5fc836f5d0787ba125e1ac"
+    },
+    {
+      "path": "engine/__init__.py",
+      "sha256": "d2c07fcf1328ccc328a4af2cee5420492d55cb0eb5e48b4c2c3b8f25d11ab49f"
+    },
+    {
+      "path": "engine/anomaly.py",
+      "sha256": "863aee3f2655894ab1626dbcded8422b9ac5ad4c3f5cc99f3fbc114d2c504ca8"
+    },
+    {
+      "path": "engine/battleship.py",
+      "sha256": "fdafe832244585528868da9d62336cad7e8faa323a5319567f954027120e43a7"
+    },
+    {
+      "path": "engine/crisis.py",
+      "sha256": "70f9e3c240379ddb80984605d233d28ac473ae49b6951f2e78a7c348bf901e29"
+    },
+    {
+      "path": "engine/force_flow.py",
+      "sha256": "43713d58091e3b209946192f9bb0b1808a9a7942051ea6d48151ba4295fbbafd"
+    },
+    {
+      "path": "engine/forces_curated.py",
+      "sha256": "59db2de454d1e67c82c4fbf31d2cc831afb7cad0b614fbed56ee9c0685dd1c5f"
+    },
+    {
+      "path": "engine/fuzzy.py",
+      "sha256": "c0abb03f1c09e472504e85ad12a1898d310f0053a32ab72362efd0b40aed25b8"
+    },
+    {
+      "path": "engine/pendulum.py",
+      "sha256": "8101933ae2311e051bb05ae909c88b7bb36ddd476365b32cd4edeea23e1fb7e0"
+    },
+    {
+      "path": "engine/personality.py",
+      "sha256": "49ef3abfc7fca0e5e9594af3c6c7d9111793a166499068be6577ee800d1ee8b7"
+    },
+    {
+      "path": "engine/phase.py",
+      "sha256": "0ce87c53b077ddb04fc172185df50825857b54313fae3d74eaff4d308034506e"
+    },
+    {
+      "path": "engine/proximity.py",
+      "sha256": "c776a418a847ba139d8d2a75610159a08bca932a09705d9b38d5a87877818557"
+    },
+    {
+      "path": "engine/shared.py",
+      "sha256": "7bb036894fb6df9c3706e20771a391a81e9ceb807c6fe158eb70c093d660891e"
+    },
+    {
+      "path": "engine/solver.py",
+      "sha256": "e10b8c8e4974ad06ad5bbf1b9dbf815440514232e4bb7b82d81c6215c16e4338"
+    },
+    {
+      "path": "engine/structures.py",
+      "sha256": "4a65c0248eb567aacf76a40415eae6b0afa5043298efa5e7056006382775c742"
+    },
+    {
+      "path": "engine/tests/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "engine/tests/test_battleship.py",
+      "sha256": "ee80a29ae8cb3af83bbc16644296b7819a0ebde1d5dd1f8045aac2fd3a0fc227"
+    },
+    {
+      "path": "engine/tests/test_crisis.py",
+      "sha256": "8162409387a6e76283baad4a37def40e0d53f0bda81b19d94d7b19d2a2c08d9f"
+    },
+    {
+      "path": "engine/tests/test_neutralizer.py",
+      "sha256": "64bb77de4d7eddf96bf68fc31ad738de2d79b94055800dcd35e45266197cf3d1"
+    },
+    {
+      "path": "engine/tests/test_novel.py",
+      "sha256": "a336b2bc784da47df3868a2f0fc9aa50b8222244140a5f8c37b11afd8fb29508"
+    },
+    {
+      "path": "engine/tests/test_pa_structures.py",
+      "sha256": "ad6dcc97c3e4236a097607770597e7f6d5c8621906381de0fbe6662f05279fb8"
+    },
+    {
+      "path": "engine/tests/test_pendulum.py",
+      "sha256": "ff127a411f78b17d13feadb1bfd6dfca1bca5fef34d4d90e405a909ffafc6d34"
+    },
+    {
+      "path": "engine/tests/test_proximity.py",
+      "sha256": "7650b982e3265a32fec3e7b68db8fcb0c947101b6086073f1a46c684ab0471a0"
+    },
+    {
+      "path": "engine/tests/test_scaffold.py",
+      "sha256": "0332248dd40ae955022d6a0514becc91b0bb581f64f8f853809a185653cc462a"
+    },
+    {
+      "path": "engine/tests/test_slang_register.py",
+      "sha256": "5d729f08d2c7d6780d6df0e0c17b25ff27bb42778a6187f81d447fb2a2351bd9"
+    },
+    {
+      "path": "engine/tests/test_solver.py",
+      "sha256": "eef8b893f0c74a67420148c03c87397e2d2b2d9a325b7d105f8f89dbb1f339fe"
+    },
+    {
+      "path": "engine/tests/test_structures.py",
+      "sha256": "d0397c82343e3cd143d4664f5e3672fb1cda34a0b29549e309957f935bb20d8f"
+    },
+    {
+      "path": "engine/tests/test_w_channel.py",
+      "sha256": "d200b7584c429fef998f066836a85500931b68856d408f09249f2a61d650f546"
+    },
+    {
+      "path": "engine/tests/test_word_classifier.py",
+      "sha256": "5ca2474640620c207f47c4354113c7d60799f74cbc601347271c00fcfdc07c52"
+    },
+    {
+      "path": "engine/trace.py",
+      "sha256": "4a33436d0c533cb61a0be2669d1dab2369a53657235f1779fd556be596466f55"
+    },
+    {
+      "path": "engine/vocabulary.py",
+      "sha256": "ae382cc207451df532185f06e874f5b058150c873fb16abd0775777ef9b43eea"
+    },
+    {
+      "path": "engine/word_classifier.py",
+      "sha256": "10e455ced4bd939a22c03ccf6edc4eab2ebcdf964cadfef23c9273928f2ddec6"
+    },
+    {
+      "path": "engine/zones.py",
+      "sha256": "d2b825ca9aae372e1335d348595e175d057f75053c3b14626b9166887f0de642"
+    },
+    {
+      "path": "engine/zones_impl.py",
+      "sha256": "513ddbe1a02dd1361cf1dd0fa24a7195394cf076087ac5eb9fc68bde330553e3"
+    }
+  ],
+  "production_code_sha256": "79117f124c276bd6cbb69d4be705f17a4b9040cfcf263f1f1380f859d06491b5",
+  "schema_sha256": {
+    "conversation-v1.schema.json": "560f2ee2fe18822589985125ff0138d6d18d685ddc5d56a05c5bee319c83da66",
+    "report-v1.schema.json": "99b1f296eb56bc69be940dc36f04e87e7ef349f13609288ce0745c110c3ab6ca",
+    "source-v1.schema.json": "78a766470871e1c7df6d870b134b2e06bdfb6200eb3e552c18d8389517fffc79"
+  },
   "sources": [
     {
       "annotation_method": "literary_weak_supervision_v1",
@@ -422,7 +646,7 @@
       "retrieval_date": "2026-09-04",
       "rights_note": "Original synthetic development conversations dedicated to the public domain under CC0 1.0; open for training, tuning, and teacher replay.",
       "source_document": "sources/development_v1.json",
-      "source_document_sha256": "9bc5f2a391af4ba7a8ce3d46b394745cc4b28e203f9c5aa1bac4f8dcba4d1a3b",
+      "source_document_sha256": "e8a67b842c4d8be4daca146b5a81a51d4313b522a35155a2c9ecf52591ae8f5e",
       "source_download_url": "https://github.com/deucebucket/clanker/issues/41",
       "source_id": "open-development-synthetic-v1",
       "source_url": "https://github.com/deucebucket/clanker/issues/41",
@@ -451,7 +675,7 @@
       "retrieval_date": "2026-09-04",
       "rights_note": "Original synthetic conversations dedicated to the public domain under CC0 1.0; immutable evaluation-only material.",
       "source_document": "sources/heldout_synthetic_v1.json",
-      "source_document_sha256": "15fcc0ee37d501ba5a338adc7aeaf4da2afdb44b69b912087935fed051e48f61",
+      "source_document_sha256": "4ce9e12a4dcb56cf804ede91b67ece5caf29465570fdb0ee05809ca7ff614a62",
       "source_download_url": "https://github.com/deucebucket/clanker/issues/41",
       "source_id": "synthetic-adversarial-v1",
       "source_url": "https://github.com/deucebucket/clanker/issues/41",
@@ -471,16 +695,16 @@
       ],
       "conversation_count": 10,
       "conversation_hashes": {
-        "development-open-01": "7ee5781ca6682ad8e7a49c59b411598f1f23c9ef9a7530dc64a75f58f86ab54c",
-        "development-open-02": "ea92b2702958acdafe3d5193121e8e10c7b07fbf5f81c707fd9b368fdf8751b8",
-        "development-open-03": "21dee3bbfb5eda47a1d43479bfe8fb1fa8c9720206e5ddd8761675b6e6094b50",
-        "development-open-04": "ebe1ef175f45fe9a482b61ab02e78b59dd2cac8a71a2868cf70953603ad40625",
-        "development-open-05": "18d1461f77f362a2b7908df05c63e658bed3d1247f6fc37a3d545b2392f5bea9",
-        "development-open-06": "82ec9a4a3452c575c45b221c3a77d3e24a63d12606c566c60e1c7b94ff64db8a",
-        "development-open-07": "4aa41feb1cee7bd415abb0520ab9b4d56d16fcc2e5b0620633e2f5bb0216b1db",
-        "development-open-08": "35b5a5e23449e64efd90ef7bd24b91fe65e5215b10ad5afc6d4b2cf1900e4ff5",
-        "development-open-09": "7f46874d8200c63eb91aaa343e2f3ecec9a8199cc50aa3f0a5663115f5da1c52",
-        "development-open-10": "2f34ad15b4b70ccfde9d7e795571d04f75a42e14fc989d08b8b42d83fc643ad8"
+        "development-open-01": "90883d7033e0f066426e0866b25aec3f1f965032c62b347c4bdcd8e1317633e8",
+        "development-open-02": "952036c5fc241b89cf66f5c51de80f417c9fe63c52308a467668c5ce81bbb0c2",
+        "development-open-03": "e96d10972b33a21dc1c9a6b06bfc4f2043ebfb68b8775c81ec26b77f0804c063",
+        "development-open-04": "5408653459dfc8cd7edcf63a763ed4097d25b54b29b3d2e5f12de69f5aae923f",
+        "development-open-05": "0b05223ac47e74a0d434ceb77e9930c948d8d51e19f6c58d5506bc91c5528af8",
+        "development-open-06": "4505484b84e4d110085353ec5a75164af6a48c411d19275f75ed911e9161f1e2",
+        "development-open-07": "553e8bc564496b29ff7ae4a61a289038e02333ea49dac401e432c57d4c8a8160",
+        "development-open-08": "19becb4a18b7c3ade78db3ec1bce8ee1d62645d9a71300d097f9bccbf1c6cb44",
+        "development-open-09": "40e03c285f6c0bd89c613a64f4a331b326dabdad47f4f3373add39b7a2007f45",
+        "development-open-10": "d609da64f947b422777eae6545a78ff4c1cd6ef58b302cb59340a464d129b8bf"
       },
       "domain_conversations": {
         "open_development": 10
@@ -489,7 +713,7 @@
         "open_development": 60
       },
       "path": "development_v1.jsonl",
-      "sha256": "f804ae879422d3b8dd7b2480f57027ee170941e9d53da4085318a625dce527a4",
+      "sha256": "5018d7d3f2b60207333b6c50fec594b6b46411a6065962ec322038f0b75f0e43",
       "teacher_replay_eligible": true,
       "training_eligible": true,
       "turn_count": 60
@@ -500,62 +724,62 @@
       ],
       "conversation_count": 56,
       "conversation_hashes": {
-        "gutenberg_844_act_1_jack_courts_gwendolen": "8af834a97575ed427957f7996b1d9d94f564838cc9e143b2530069d7345b03bb",
-        "gutenberg_844_act_1_marriage_interview": "13428b8a7e253481b4a9c8fa35452eaf3af56236b6e1e9b5faf2a54051c16bfb",
-        "gutenberg_844_act_1_music_and_champagne": "f066a9ac2c42aa3aab33b4cbc034e50d83c4592b3991dbf1fb023d6e039a15f9",
-        "gutenberg_844_act_1_town_and_country": "0f1e7084867145a0d20a6e8ca70c0b8d98e30315d95588d933cda77b1fb1b4ee",
-        "gutenberg_844_act_2_bunbury_argument": "9a8eda3719b10b0473fa80eb9636014286bff8fc27a03b6b93c6e6f6a0811c79",
-        "gutenberg_844_act_2_cousins_meet": "3f7cafbe7de76d9f1269bd70a2f1007ab58d4ec7116507fcbda4ac4c4e34d58c",
-        "gutenberg_844_act_2_false_bereavement": "79127fe1fb9ed754af248d8851319ad1d26bb6dbe2a3eaa0ddfac18e7232f577",
-        "gutenberg_844_act_2_german_lesson": "b2edfccdb1839a527ff8921df51f7899bc7a4cd809d69dab4709e2b2b4f3c81e",
-        "gutenberg_844_act_2_guardian_confusion": "923a0cac3f19e25b65c614b2ef47ed8f6e9ed82bdb2e63ea579e87b3a8735e18",
-        "gutenberg_844_act_2_painful_parting": "7d9e30d2e77bc780cd5d2e101365738bc86a1dbe4a85614ae86fd9613d68b5cf",
-        "gutenberg_844_act_3_cecily_fortune": "b222e824cdb497bc91514cd107ab764ae727c8b17f33c5d8c99eeaf83542863c",
-        "gutenberg_844_act_3_dignified_silence": "2c8b2041f869eabf8432ffc6bc23080d521c1070b846b491849b37ff75c6547d",
-        "heldout-synthetic-01": "df50ff109851bdd3bf4ff4c615f80dbc7a894b4047fca7aa68dab40a2e64150b",
-        "heldout-synthetic-02": "6d1b569e5fac0b9c521a6b83fc41b6b56b0d4f9dfda17e0778e5db1f8a2ed7db",
-        "heldout-synthetic-03": "231fd51779fa651d14d1782bf149cd6a46e5a2b2dc18a9fe3bd22ab0d0fbc400",
-        "heldout-synthetic-04": "fff8a6893c2fca92839f42ff4a8a97be8a1be7aeb14b572b2f9f0331b366727e",
-        "heldout-synthetic-05": "5757d9c824e0b0e5673f39ccd8c6b0ec61f102b0d965819e8bb169f9cd2a2c4d",
-        "heldout-synthetic-06": "7f8062f56cd840a902ee90b09caeb62fc5d868a867799730f79500a8e7f9b2b3",
-        "heldout-synthetic-07": "00ead6e050168ca269ee2c9b71d56b2fd11dd10f4ea175b8d94eda19b7005fed",
-        "heldout-synthetic-08": "3010077b889bc7ebd5f93f657e824b71da44e7f6984fd0a9f86e5136a2a2f504",
-        "heldout-synthetic-09": "60abbb7d7311911c4168eba510f3e85b0bd85018932825e0d89dae08f91ed81c",
-        "heldout-synthetic-10": "f07b1a606f1560e3ee1bcd39a723bc704d5a69190343755de8504dcf533d4f8e",
-        "heldout-synthetic-11": "893c3f86d04b5279bde314667df97f4c0c45c7d843ad6730a7da3ccc4da9455f",
-        "heldout-synthetic-12": "a73548cd87d6bbf671ec78ecc33efb557674ff94fc4c2a6ff5c1691dac87c234",
-        "heldout-synthetic-13": "97d50f1e91dbabb3d2cb00cdbd09460c6b0dbcf906d57daeaf0c9d0f3b1e758a",
-        "heldout-synthetic-14": "6d73b54e233273f43bfae1a9daae87d0cdb635f907581dbb715b51c60488cee4",
-        "heldout-synthetic-15": "e3e32a504ef46d8615e6681dd1bf22106c247c5c1fdf355b06c7dd7a19d850a5",
-        "heldout-synthetic-16": "830f085055c29f721c9a37ce77aedb072fc537043f534234ee0bd05763f6e60c",
-        "heldout-synthetic-17": "e4315079b583091cbc2c1cfea8554a85f221a64e62f3a03dbcf9f554a3733422",
-        "heldout-synthetic-18": "433e710663f44e7d8bcbe1e2fff313f38c6c813c93c72bc5e62a403804a196ed",
-        "heldout-synthetic-19": "01cf7b2ec54755ac1a55ffb004f917c5b8e0f65949c62a3dc2b1e5a36a7ef089",
-        "heldout-synthetic-20": "5198e6c77d3f6a3dd21ef5bc35a9fffd3d5154bc4ca9f69e6df8353d4f207c17",
-        "nasa_a11_entry_preparation_08012508": "79b1c9409cc10b9d405104767a3c85e2d3b3be34a49a7410bfa6e28e3dc556a0",
-        "nasa_a11_first_steps_lunar_surface_04132248": "a78fd732ecd5cb8dc94db213fbbac7c0af5fa83e7db200433cd4418826b269fa",
-        "nasa_a11_launch_mode_1_charlie_00000102": "cf4ec98b06400d73685fc2cad67e9751b693a3ec6197db9315d821c6bc12a2b5",
-        "nasa_a11_launch_orbit_insertion_00000852": "e7eb9e9c3830eadde233228d1d29ccaf458c0db29629b0a1ad390d540ebd68bd",
-        "nasa_a11_lm_hatch_television_02073045": "08fa55cf122c2fa5046544af0a4c880ad220b2bb109589487385ec40cdc10cba",
-        "nasa_a11_lunar_orbit_accumulator_03012021": "4db975081668f1d196c1b6e484d8ce30fdc5f10008dd06a82d4f914cb8c5f27a",
-        "nasa_a11_midcourse_correction_2_01014920": "d37d54845297065ec1a21b491270a18f3731c8d50e3a706f48079ebaf9376a65",
-        "nasa_a11_orbit_alignment_results_00005303": "855fadda92966720cf7f8ac4b453996c988bde9b48937a888454b7e466a8aaa3",
-        "nasa_a11_post_rendezvous_cabin_check_05095102": "4b5e47ba1ba7da88b9c7227ddb6751b4b61acc57e30cfc0c426bc267a65c8a59",
-        "nasa_a11_powered_descent_go_relay_04062808": "54984fb31982bd9c6032bf73508e91faf2ac3aae183920353cd77c978cd71fd1",
-        "nasa_a11_return_coast_cabin_moisture_06115725": "8ecbc1e1457515f5bc061f2a5be030cc34e5dbc468d71880f0f28e7bad2ade96",
-        "nasa_a11_tli_go_and_radio_check_00022638": "32d88e92f87ced6412a794b1a021ec854fe5a488bda74a84e6e5dcdba5f75702",
-        "novel_v1_alice_cheshire_directions": "a4edb06a7d199d06917c4480fe1f72d1d1c4ee50596e7ec630ebd826d601e20a",
-        "novel_v1_anne_cordelia_name": "e94d295b054697a568b2b98e64e7db1ebc20ce841c1d40a5d12b0439b373f5e6",
-        "novel_v1_frankenstein_companion_bargain": "e70f9f832377d4da1cd10ea13f238d560cda3a620659db522b56840899e2430f",
-        "novel_v1_jane_eyre_handsome": "1c5df8e2af69a784930ac6ae07f67ac34018b3fa292bfbdcc2e7124bb9ec5ad3",
-        "novel_v1_little_women_jo_laurie_names": "a62ab31b3b207508ade54b1170ce6419349079e4f665dcbeb58ace0834c229a4",
-        "novel_v1_oz_dorothy_scarecrow": "527d137ebba891eaf525d0713316bb9d7270d3eade133c50bc18a5009cf138d2",
-        "novel_v1_peter_wendy_shadow": "18201dc9cd915381cbb27515df81de890a1a507c8f3ae0f59fd97b8753aca0d4",
-        "novel_v1_pride_prejudice_bennet_netherfield": "feaca7a69942b567a86a168efd2a3b0194cd35805302368c9e08310a74f715ef",
-        "novel_v1_study_scarlet_roommates": "f0bd7cd44b5f46d8fd85e07a6ede2bddc709333ffa627a98dd8ecb2774773945",
-        "novel_v1_treasure_island_silver_embassy": "0e6dad05162a30ef10224572eb6e78e6154e407ed095e02d4dce64c69b4c11aa",
-        "novel_v1_wind_willows_first_boat": "1990566886bd9fd2b16091bc1bde746c06380b72030fe793aef6c6aeac8c6b9b",
-        "novel_v1_wuthering_edgar_catechism": "78cd3819839801a0c46edd36c113a07faed1bd00f3f46734a4f98c4dab1475e0"
+        "gutenberg_844_act_1_jack_courts_gwendolen": "0af7201efbc21a74e69a9fbcd09de21294a2584c5ba4def3e4b23d0758eaed83",
+        "gutenberg_844_act_1_marriage_interview": "3fa49121ddf9332460eb4266093e4f4bf5cb98e110b3eb82123c42e4afbc016e",
+        "gutenberg_844_act_1_music_and_champagne": "7ef2e09c35a6f4de901866fa1a5d181ca19939294905d05762ae1b7cea16ae11",
+        "gutenberg_844_act_1_town_and_country": "cf057fa0267e238451b8a2e2f08d99d00448be0b0562297f26552ddc1e5be2a7",
+        "gutenberg_844_act_2_bunbury_argument": "d66fbce807051a87dabd809531927039392c871d78ffa0983522f29ac72373a9",
+        "gutenberg_844_act_2_cousins_meet": "eb47066660d3f8bca47874d9e1925b04580f113e9a7c25c222d10462e21d6e5f",
+        "gutenberg_844_act_2_false_bereavement": "36a3b1292d5debf351b3f8a661d301791153c0780c849d6db18e8062c76d122b",
+        "gutenberg_844_act_2_german_lesson": "3649e72a626a969520edf5bb2704cbe2180488352ea45850f9f74e30fafc46b8",
+        "gutenberg_844_act_2_guardian_confusion": "09ea17f28643871ec1900b7bd615c5e454ede9d0cd16614a614006e42a65f19a",
+        "gutenberg_844_act_2_painful_parting": "5df2955e81ee043d0e09cfe1d3f2981ccd13a3f3db0cd503b28fbe02dfb35ab3",
+        "gutenberg_844_act_3_cecily_fortune": "b543c27e0d49279cf67136627f6bd957ca9726c4fae6820d327a7eb6a8cec65a",
+        "gutenberg_844_act_3_dignified_silence": "da2cf4a5067a19981d707aec737284fe539ad7353f95ba49e9337a8ffb9453f6",
+        "heldout-synthetic-01": "12b1f07d3cf29b481780a57c712de159d974cffd306b26e3737ab2dd414ef0ff",
+        "heldout-synthetic-02": "c201664501d388500c12b5cc083324b91c3112f08f61dad1b854d332121f5978",
+        "heldout-synthetic-03": "a50e215d016318aa9e19b8c52e6cbca7464a19fa4dc9c39e5a189e87804f55d3",
+        "heldout-synthetic-04": "6e571843253678d72a97dfb00eba731c045f2b65c38a858fac37916fa3be2719",
+        "heldout-synthetic-05": "179d359af337380861028b1e5bcf9473a13416e1a74b912acc8fcfe7ca081bbd",
+        "heldout-synthetic-06": "647795f42fbfe069abcf925977651165a0bd3d05e598f99ff7e74880457ae6f0",
+        "heldout-synthetic-07": "07c52fd7c0427b8104853861c0f93a844daca1c0ce19bc7888bcbd7caeafbd47",
+        "heldout-synthetic-08": "45351fe805239a07ecfa289e9ef339679e06f814429874d4fac0b0d82dc3c8da",
+        "heldout-synthetic-09": "9718984ce3a0a42d44e1e41a78aaf67a3d7bb7cf8fb9031a8302d4b799538b92",
+        "heldout-synthetic-10": "6dc7b06c773b5d5b53bd5a030527d7725c15b9deb426a202a5ec897d89ab7e1d",
+        "heldout-synthetic-11": "b05941d0bb3cf48b8c25c406761b82f92b7cb40157d812ee1367088b2bf94c43",
+        "heldout-synthetic-12": "056a0262dfc71c4e25fc6dc85e726a8df2dd62d5b8c84da9cf051c0cf28c90d3",
+        "heldout-synthetic-13": "afa9b562876a48629b9003163ae6905747a6a48356fd2f80a6f13308999ce168",
+        "heldout-synthetic-14": "b6f2203e8445846206485f5d6ecb00dd4f59798e38f781ea5cd45d7e57cc4c7b",
+        "heldout-synthetic-15": "238df6127a2a8c1790a947893f2cd0e4217aebcc0a8e935000f0ea4d41200b98",
+        "heldout-synthetic-16": "28d863d39f86cd8a60657483f3e973f632c9aa574821790f96fd39dc277be73d",
+        "heldout-synthetic-17": "cbf08dbc38d12c1619a66df7f0d89e2598dee055596dbbade6761b3917887267",
+        "heldout-synthetic-18": "edc3df558811eaa73eb6e921f516fff89a3e400880d721d061838ae3dd297345",
+        "heldout-synthetic-19": "2a84f0eeb6d9083ffd3ca17029dc3926a7261d13d3d2ea61bb90d00ecaa8a82a",
+        "heldout-synthetic-20": "98f763ef32b9140a7637cb09f0d5d79d7858acbb4a32d6fe35796a4ad40e5705",
+        "nasa_a11_entry_preparation_08012508": "4dbecf57e9bc2df531c31f217a21d76c45ea8a7cb13f9cead6ea5eefba1f1b72",
+        "nasa_a11_first_steps_lunar_surface_04132248": "d215157f7122d5413d1d610f0e749c635d9378ba3258d839ca524ccf6f9510cb",
+        "nasa_a11_launch_mode_1_charlie_00000102": "f3994bf80577c0536050db20045049925935d642e7ae93aa1be76e81c343b284",
+        "nasa_a11_launch_orbit_insertion_00000852": "0a6abaf7f64f0e060c511deab9876e25a8c7c8233f8a64354a7d2a8a745f69d4",
+        "nasa_a11_lm_hatch_television_02073045": "c18f09dbd6d1ecd6229e374a02e87b073fb40848d5388af8ff9fa504ce7997db",
+        "nasa_a11_lunar_orbit_accumulator_03012021": "94233fea6f912e7dbbfa0ab485af22f9f80bfa1ad2b330238ac14f6c16f6a451",
+        "nasa_a11_midcourse_correction_2_01014920": "0dd48b884fb952d9d5df38a82a4aec0714cb07ba9014d21ab2e16e1d502da900",
+        "nasa_a11_orbit_alignment_results_00005303": "71bd56fd3d56e6e53f288e1be9a6c1737477103ff243ce2d2307379ec1e495ec",
+        "nasa_a11_post_rendezvous_cabin_check_05095102": "83cb00618c6a72b0648926a7bad524918da8a08b996d60786c62f7e52afec62b",
+        "nasa_a11_powered_descent_go_relay_04062808": "fd0b6828e8660a9b568f6c3e97421fba48d629c750fdf4d1ba51884c98942e66",
+        "nasa_a11_return_coast_cabin_moisture_06115725": "ed81e10d68b3aaea955375a0ddc3bf934cad879a581f2b425070d60c4a2780ba",
+        "nasa_a11_tli_go_and_radio_check_00022638": "67fcf59902620ccdc7925e3f93ece2063699fff9aef899bbbc661d542e48ae63",
+        "novel_v1_alice_cheshire_directions": "0cba96ae85b614ba8d6d4694dbc7beeb58f9ff8422fb1dda3e31b661432b7cae",
+        "novel_v1_anne_cordelia_name": "1109941ca1e062d933081759d5134c54411237926fdceea3d317656854277290",
+        "novel_v1_frankenstein_companion_bargain": "5774c31811abe49e8b3273a30b799647c87d7b849e961a9ac7b8917fe6247a4b",
+        "novel_v1_jane_eyre_handsome": "363a42fb8d57e2d6b936df6efc34e9d02074b585e9b3111124021a93e8de1f09",
+        "novel_v1_little_women_jo_laurie_names": "0f64ee3eb83279dfecf1bd4e4f37785db264b1f5388fd0b25a3b5806c6645ef5",
+        "novel_v1_oz_dorothy_scarecrow": "846cb88433988de930b118182b7e9c2ddf0844af4844d14a9d0c915e12278f8c",
+        "novel_v1_peter_wendy_shadow": "33dbd0c786d3ebc3b6751ce8770f1790c0886a526a871c5a477a532ba01acb9d",
+        "novel_v1_pride_prejudice_bennet_netherfield": "dc12301a3b263191c7081d33290254e8ac72c13e601ca46d041321d2ec125a03",
+        "novel_v1_study_scarlet_roommates": "06c935e3382b40de7d54e49511c6b520c0dea0ad100fb1f0235919745798251c",
+        "novel_v1_treasure_island_silver_embassy": "552dd11c20156023753ae42996c87ecc60c24dd993008a7491218c3743e5ba8a",
+        "novel_v1_wind_willows_first_boat": "a0a2ca84852e3196a2aa380303527b83b6c5dd0ada66488b17929912185926ef",
+        "novel_v1_wuthering_edgar_catechism": "89c5aec5331ffedfdab8bb7711f91942f0360490fbe199f6d85336d284b1383e"
       },
       "domain_conversations": {
         "public_domain_drama": 12,
@@ -570,7 +794,7 @@
         "synthetic_adversarial": 160
       },
       "path": "heldout_v1.jsonl",
-      "sha256": "5400e430232bdc9fbb9fd41218e24a57d3fdb05104901aa9e0f4ea70e1330cd4",
+      "sha256": "05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
       "teacher_replay_eligible": false,
       "training_eligible": false,
       "turn_count": 520

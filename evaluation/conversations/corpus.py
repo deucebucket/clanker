@@ -10,8 +10,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 import tempfile
 from collections import Counter
+from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Mapping
 
@@ -24,6 +26,21 @@ ROOT = Path(__file__).resolve().parent
 SOURCE_DIR = ROOT / "sources"
 DATA_DIR = ROOT / "data"
 MANIFEST_PATH = DATA_DIR / "manifest_v1.json"
+REPO_ROOT = ROOT.parent.parent
+BASELINE_CODE_COMMIT = "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+PRODUCTION_PATHS = ("clanker_lm", "engine", "clanker_engine.py")
+SPLIT_POLICIES = {
+    "heldout": {
+        "allowed_uses": ["evaluation"],
+        "training_eligible": False,
+        "teacher_replay_eligible": False,
+    },
+    "development": {
+        "allowed_uses": ["development", "evaluation", "teacher_replay"],
+        "training_eligible": True,
+        "teacher_replay_eligible": True,
+    },
+}
 
 ALLOWED_DIALOGUE_ACTS = {
     "assert",
@@ -86,6 +103,87 @@ def _sha256_bytes(payload: bytes) -> str:
 
 def _sha256_file(path: Path) -> str:
     return _sha256_bytes(path.read_bytes())
+
+
+def _require_exact_keys(
+    value: Mapping[str, Any],
+    *,
+    required: set[str],
+    optional: set[str] = frozenset(),
+    location: str,
+) -> None:
+    keys = set(value)
+    missing = required - keys
+    extra = keys - required - optional
+    if missing or extra:
+        details = []
+        if missing:
+            details.append(f"missing {sorted(missing)}")
+        if extra:
+            details.append(f"unexpected {sorted(extra)}")
+        raise CorpusIntegrityError(f"{location}: {'; '.join(details)}")
+
+
+def _production_files(repo_root: Path = REPO_ROOT) -> List[Path]:
+    files: List[Path] = []
+    for relative in PRODUCTION_PATHS:
+        path = repo_root / relative
+        if path.is_dir():
+            files.extend(item for item in path.rglob("*.py") if item.is_file())
+        elif path.is_file():
+            files.append(path)
+    return sorted(files, key=lambda item: item.relative_to(repo_root).as_posix())
+
+
+def _production_tree_payload(repo_root: Path = REPO_ROOT) -> List[Dict[str, str]]:
+    return [
+        {
+            "path": path.relative_to(repo_root).as_posix(),
+            "sha256": _sha256_file(path),
+        }
+        for path in _production_files(repo_root)
+    ]
+
+
+def production_tree_sha256(repo_root: Path = REPO_ROOT) -> str:
+    return _sha256_bytes(_canonical_json(_production_tree_payload(repo_root)).encode("utf-8"))
+
+
+def _baseline_production_tree_payload(
+    commit: str,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> List[Dict[str, str]]:
+    try:
+        names = subprocess.check_output(
+            ["git", "ls-tree", "-r", "--name-only", commit, "--", *PRODUCTION_PATHS],
+            cwd=repo_root,
+            text=True,
+        ).splitlines()
+        relevant = sorted(name for name in names if name.endswith(".py"))
+        return [
+            {
+                "path": name,
+                "sha256": _sha256_bytes(
+                    subprocess.check_output(["git", "show", f"{commit}:{name}"], cwd=repo_root)
+                ),
+            }
+            for name in relevant
+        ]
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise CorpusIntegrityError(f"cannot resolve production baseline commit {commit}") from exc
+
+
+def assert_production_tree(
+    expected_sha256: str,
+    *,
+    repo_root: Path = REPO_ROOT,
+) -> None:
+    actual = production_tree_sha256(repo_root)
+    if actual != expected_sha256:
+        raise CorpusIntegrityError(
+            "local production module bytes do not match the manifest-bound post-#106 baseline"
+        )
 
 
 def _normalized_text(text: str) -> str:
@@ -232,9 +330,238 @@ def infer_outcome(current: Mapping[str, Any], following: Mapping[str, Any] | Non
     return "continued"
 
 
+def _validate_annotation_overrides(path: Path, conversation_id: str, value: Any) -> None:
+    location = f"{path}: {conversation_id} annotation_overrides"
+    if not isinstance(value, Mapping):
+        raise CorpusIntegrityError(f"{location} must be an object")
+    _require_exact_keys(
+        value,
+        required=set(),
+        optional={
+            "ambiguity", "annotator_confidence", "dialogue_act", "expected_answer",
+            "expected_answer_status", "expected_entity_refs", "expected_response_act",
+            "expected_truth", "outcome", "semantic",
+        },
+        location=location,
+    )
+    enum_fields = {
+        "dialogue_act": ALLOWED_DIALOGUE_ACTS,
+        "expected_response_act": ALLOWED_RESPONSE_ACTS,
+        "expected_answer_status": ALLOWED_ANSWER_STATUS,
+        "expected_truth": ALLOWED_TRUTH,
+        "outcome": ALLOWED_OUTCOMES,
+    }
+    for field, allowed in enum_fields.items():
+        if field in value and (not isinstance(value[field], str) or value[field] not in allowed):
+            raise CorpusIntegrityError(f"{location}: invalid {field}")
+    if "ambiguity" in value and type(value["ambiguity"]) is not bool:
+        raise CorpusIntegrityError(f"{location}: ambiguity must be boolean")
+    if "annotator_confidence" in value and (
+        isinstance(value["annotator_confidence"], bool)
+        or not isinstance(value["annotator_confidence"], (int, float))
+        or not 0.0 <= value["annotator_confidence"] <= 1.0
+    ):
+        raise CorpusIntegrityError(f"{location}: invalid annotator_confidence")
+
+    semantic = value.get("semantic")
+    if semantic is not None:
+        if not isinstance(semantic, Mapping):
+            raise CorpusIntegrityError(f"{location}: semantic must be an object")
+        _require_exact_keys(
+            semantic,
+            required={"predicate", "roles", "scored"},
+            optional={"partial_roles"},
+            location=f"{location}.semantic",
+        )
+        if not isinstance(semantic["predicate"], str) or not semantic["predicate"].strip():
+            raise CorpusIntegrityError(f"{location}: semantic predicate must be nonempty text")
+        if not isinstance(semantic["roles"], Mapping) or not all(
+            isinstance(role, str) and role.strip()
+            and isinstance(role_value, str) and role_value.strip()
+            for role, role_value in semantic["roles"].items()
+        ):
+            raise CorpusIntegrityError(f"{location}: semantic roles must map nonempty strings")
+        if type(semantic["scored"]) is not bool:
+            raise CorpusIntegrityError(f"{location}: semantic.scored must be boolean")
+        if "partial_roles" in semantic and type(semantic["partial_roles"]) is not bool:
+            raise CorpusIntegrityError(f"{location}: semantic.partial_roles must be boolean")
+
+    answer = value.get("expected_answer")
+    if answer is not None:
+        if not isinstance(answer, Mapping):
+            raise CorpusIntegrityError(f"{location}: expected_answer must be an object")
+        _require_exact_keys(
+            answer,
+            required={"scored", "values", "predicate", "requested_roles"},
+            location=f"{location}.expected_answer",
+        )
+        if type(answer["scored"]) is not bool:
+            raise CorpusIntegrityError(f"{location}: expected_answer.scored must be boolean")
+        if not isinstance(answer["predicate"], str) or not answer["predicate"].strip():
+            raise CorpusIntegrityError(f"{location}: expected_answer predicate must be nonempty text")
+        for field in ("values", "requested_roles"):
+            if not isinstance(answer[field], list) or not all(
+                isinstance(item, str) and item.strip() for item in answer[field]
+            ):
+                raise CorpusIntegrityError(f"{location}: expected_answer.{field} must be a text array")
+        if semantic is None or answer["predicate"] != semantic["predicate"]:
+            raise CorpusIntegrityError(f"{location}: answer predicate must match semantic predicate")
+        requested = semantic["roles"].get("requested_role")
+        if answer["requested_roles"] != ([requested] if requested else []):
+            raise CorpusIntegrityError(f"{location}: answer roles must match the typed question role")
+        if answer["scored"] != (value.get("dialogue_act") == "ask"):
+            raise CorpusIntegrityError(f"{location}: only explicit structural questions may score answers")
+        if (
+            answer["scored"]
+            and value.get("expected_answer_status") in {"false", "unknown", "conflict"}
+            and answer["values"]
+        ):
+            raise CorpusIntegrityError(f"{location}: non-positive answer cannot carry gold values")
+
+    refs = value.get("expected_entity_refs")
+    if refs is not None and (
+        not isinstance(refs, Mapping)
+        or not all(
+            isinstance(key, str) and key.strip()
+            and (
+                isinstance(ref, str) and ref.strip()
+                or isinstance(ref, list)
+                and ref
+                and all(isinstance(item, str) and item.strip() for item in ref)
+            )
+            for key, ref in refs.items()
+        )
+    ):
+        raise CorpusIntegrityError(f"{location}: expected_entity_refs is malformed")
+
+
+def _strict_validate_source_document(path: Path, document: Mapping[str, Any]) -> None:
+    _require_exact_keys(
+        document,
+        required={"source_schema_version", "split", "learning_allowed", "sources", "conversations"},
+        optional={"transcription_policy"},
+        location=str(path),
+    )
+    split = document.get("split")
+    if type(document.get("learning_allowed")) is not bool or (
+        split in SPLIT_POLICIES
+        and document["learning_allowed"] != SPLIT_POLICIES[str(split)]["training_eligible"]
+    ):
+        raise CorpusIntegrityError(f"{path}: learning_allowed disagrees with split policy")
+    if "transcription_policy" in document and (
+        not isinstance(document["transcription_policy"], str)
+        or not document["transcription_policy"].strip()
+    ):
+        raise CorpusIntegrityError(f"{path}: transcription_policy must be nonempty text")
+    required_source = {
+        "source_id", "domain", "title", "creator", "publication_year",
+        "source_url", "license_name", "license_url", "rights_note",
+        "extraction_method", "annotation_method", "is_real_human", "is_public_domain",
+        "training_eligible", "teacher_replay_eligible", "source_download_url",
+        "provenance_evidence_url", "retrieval_date", "raw_source_sha256",
+        "extraction_locator_schema", "extractor_version", "supervision_level",
+        "outcome_evidence", "authoritative_source_url",
+    }
+    for source in document.get("sources", []):
+        if not isinstance(source, Mapping):
+            raise CorpusIntegrityError(f"{path}: each source must be an object")
+        _require_exact_keys(
+            source,
+            required=required_source,
+            optional={"rights_index_url", "structural_only"},
+            location=f"{path}: source",
+        )
+        source_id = source["source_id"]
+        if not isinstance(source["retrieval_date"], str):
+            raise CorpusIntegrityError(f"{path}: source {source_id} has invalid retrieval_date")
+        try:
+            date.fromisoformat(source["retrieval_date"])
+        except ValueError as exc:
+            raise CorpusIntegrityError(f"{path}: source {source_id} has invalid retrieval_date") from exc
+        domain = source["domain"]
+        if source["is_real_human"] != (domain == "public_domain_real_human"):
+            raise CorpusIntegrityError(f"{path}: source {source_id} real-human flag disagrees with domain")
+        if source["is_public_domain"] is not True or not any(
+            marker in str(source["license_name"]).lower()
+            for marker in ("public domain", "cc0", "u.s. government", "us government")
+        ):
+            raise CorpusIntegrityError(f"{path}: source {source_id} has no supported public-domain grant")
+        structural_only = domain in {"synthetic_adversarial", "open_development"}
+        if structural_only != (source.get("structural_only") is True):
+            raise CorpusIntegrityError(f"{path}: source {source_id} structural_only disagrees with domain")
+        if structural_only != (source["supervision_level"] == "gold_structural"):
+            raise CorpusIntegrityError(f"{path}: source {source_id} supervision disagrees with domain")
+        if split in SPLIT_POLICIES:
+            policy = SPLIT_POLICIES[str(split)]
+            if source["training_eligible"] != policy["training_eligible"]:
+                raise CorpusIntegrityError(f"{path}: source {source_id} training policy disagrees with split")
+            if source["teacher_replay_eligible"] != policy["teacher_replay_eligible"]:
+                raise CorpusIntegrityError(f"{path}: source {source_id} replay policy disagrees with split")
+    sources_by_id = {
+        str(source["source_id"]): source
+        for source in document.get("sources", [])
+        if isinstance(source, Mapping) and "source_id" in source
+    }
+    for conversation in document.get("conversations", []):
+        if not isinstance(conversation, Mapping):
+            raise CorpusIntegrityError(f"{path}: each conversation must be an object")
+        _require_exact_keys(
+            conversation,
+            required={"source_conversation_id", "source_id", "relationship_context", "participants", "turns"},
+            optional={"entity_bindings", "lineage_id", "template_id", "template_variables"},
+            location=f"{path}: conversation",
+        )
+        identifier = str(conversation["source_conversation_id"])
+        for field in ("entity_bindings", "template_variables"):
+            if field in conversation and (
+                not isinstance(conversation[field], Mapping)
+                or not all(
+                    isinstance(key, str) and key.strip()
+                    and isinstance(item, str) and item.strip()
+                    for key, item in conversation[field].items()
+                )
+            ):
+                raise CorpusIntegrityError(f"{path}: {field} must map nonempty strings")
+        for turn in conversation.get("turns", []):
+            if not isinstance(turn, Mapping):
+                raise CorpusIntegrityError(f"{path}: {identifier} turn must be an object")
+            _require_exact_keys(
+                turn,
+                required={"speaker", "addressee", "text"},
+                optional={"source_locator", "annotation_overrides"},
+                location=f"{path}: {identifier} turn",
+            )
+            if "source_locator" in turn and not isinstance(turn["source_locator"], str):
+                raise CorpusIntegrityError(f"{path}: source_locator must be text")
+            overrides = turn.get("annotation_overrides", {})
+            _validate_annotation_overrides(path, identifier, overrides)
+            source = sources_by_id.get(str(conversation.get("source_id")))
+            if source is not None and source.get("supervision_level") == "gold_structural":
+                required = {
+                    "dialogue_act", "semantic", "expected_response_act", "expected_answer_status",
+                    "expected_truth", "outcome", "ambiguity", "annotator_confidence",
+                    "expected_entity_refs",
+                }
+                missing = required - set(overrides)
+                if missing:
+                    raise CorpusIntegrityError(
+                        f"{path}: {identifier} structural annotation missing {sorted(missing)}"
+                    )
+                if overrides["dialogue_act"] == "ask" and "expected_answer" not in overrides:
+                    raise CorpusIntegrityError(
+                        f"{path}: {identifier} structural question lacks expected_answer"
+                    )
+
+
 def _validate_source_document(path: Path, document: Mapping[str, Any]) -> None:
     if not isinstance(document, Mapping):
         raise CorpusIntegrityError(f"{path}: source document must be an object")
+    try:
+        _strict_validate_source_document(path, document)
+    except CorpusIntegrityError:
+        raise
+    except (KeyError, TypeError, ValueError) as exc:
+        raise CorpusIntegrityError(f"{path}: malformed source document") from exc
     schema_version = document.get("source_schema_version")
     if type(schema_version) is not int or schema_version != SOURCE_SCHEMA_VERSION:
         raise CorpusIntegrityError(f"{path}: unsupported source schema")
@@ -406,7 +733,22 @@ def _compile_conversation(
         expected_answer.setdefault("values", [])
         expected_answer.setdefault("predicate", semantic.get("predicate"))
         expected_answer.setdefault("requested_roles", [])
-        ambiguity = bool(overrides.get("ambiguity", "..." in text or "[inaudible]" in text.lower()))
+        ambiguity = overrides.get("ambiguity", "..." in text or "[inaudible]" in text.lower())
+        flat_refs = dict(overrides.get("expected_entity_refs", {}))
+        semantic_role_names = set(dict(semantic.get("roles", {}))) - {"requested_role"}
+        expected_entity_refs = (
+            {
+                "roles": {
+                    key: value for key, value in flat_refs.items() if key in semantic_role_names
+                },
+                "mentions": {
+                    key: value for key, value in flat_refs.items() if key not in semantic_role_names
+                },
+            }
+            if flat_refs
+            else {}
+        )
+        structural_only = source.get("structural_only") is True
         annotation = {
             "dialogue_act": dialogue_act,
             "semantic": semantic,
@@ -419,9 +761,12 @@ def _compile_conversation(
             "outcome": str(overrides.get("outcome", "continued")),
             "ambiguity": ambiguity,
             "annotator_confidence": turn_confidence,
-            "expected_entity_refs": dict(overrides.get("expected_entity_refs", {})),
+            "expected_entity_refs": expected_entity_refs,
             "expected_answer": expected_answer,
             "supervision_level": str(source["supervision_level"]),
+            "semantic_supervision_level": str(source["supervision_level"]),
+            "affect_supervision_level": "weak_rule_v1",
+            "affect_scored": not structural_only,
             "outcome_evidence": str(source["outcome_evidence"]),
         }
         turns.append(
@@ -471,17 +816,30 @@ def _compile_conversation(
         },
         "turns": turns,
     }
+    conversation["source"]["structural_only"] = source.get("structural_only") is True
     digest = _sha256_bytes(_canonical_json(conversation).encode("utf-8"))
     conversation["conversation_sha256"] = digest
     conversation["conversation_id"] = f"{raw['source_conversation_id']}@sha256:{digest}"
     return conversation
 
 
+def _manifest_constituents(manifest: Mapping[str, Any]) -> Dict[str, Any]:
+    """Return every immutable and policy-relevant field bound by ROOT.sha256."""
+
+    fields = (
+        "manifest_schema_version", "corpus_version", "content_address", "frozen_date",
+        "baseline_code_commit", "production_code_sha256", "production_code_files",
+        "compiler", "compiler_sha256", "evaluator_sha256", "schema_sha256", "immutability_policy",
+        "splits", "sources",
+    )
+    return {field: manifest[field] for field in fields}
+
+
 def compile_corpora(
     *,
     source_dir: Path = SOURCE_DIR,
     output_dir: Path = DATA_DIR,
-    baseline_code_commit: str = "9ae77f072f8afda0b1d2b757ab492757cabff0f8",
+    baseline_code_commit: str = BASELINE_CODE_COMMIT,
 ) -> Dict[str, Any]:
     """Compile all source documents into canonical JSONL splits and a manifest."""
 
@@ -560,9 +918,7 @@ def compile_corpora(
             "domain_conversations": dict(sorted(domain_counts.items())),
             "domain_turns": dict(sorted(domain_turns.items())),
             "conversation_hashes": dict(sorted(conversation_hashes.items())),
-            "allowed_uses": ["evaluation"] if split == "heldout" else ["development", "evaluation", "teacher_replay"],
-            "training_eligible": split == "development",
-            "teacher_replay_eligible": split == "development",
+            **SPLIT_POLICIES[split],
         }
 
     if split_entries["heldout"]["turn_count"] < 500:
@@ -573,34 +929,37 @@ def compile_corpora(
     compiler_sha256 = _sha256_file(Path(__file__))
     evaluator_path = ROOT / "runner.py"
     evaluator_sha256 = _sha256_file(evaluator_path) if evaluator_path.is_file() else None
-    constituent_root = {
-        "compiler_sha256": compiler_sha256,
-        "evaluator_sha256": evaluator_sha256,
-        "source_document_sha256": {
-            item["source_document"]: item["source_document_sha256"]
-            for item in source_manifest
-        },
-        "split_sha256": {
-            split: entry["sha256"] for split, entry in sorted(split_entries.items())
-        },
+    schema_sha256 = {
+        path.name: _sha256_file(path)
+        for path in sorted((ROOT / "schema").glob("*.json"))
     }
-    root_sha256 = _sha256_bytes(_canonical_json(constituent_root).encode("utf-8"))
-    manifest = {
+    production_files = _production_tree_payload()
+    baseline_files = _baseline_production_tree_payload(baseline_code_commit)
+    if production_files != baseline_files:
+        raise CorpusIntegrityError(
+            "local production module bytes differ from the requested baseline commit"
+        )
+    production_sha256 = _sha256_bytes(_canonical_json(production_files).encode("utf-8"))
+    manifest: Dict[str, Any] = {
         "manifest_schema_version": 1,
         "corpus_version": CORPUS_VERSION,
         "content_address": f"sha256:{split_entries['heldout']['sha256']}",
         "frozen_date": "2026-09-04",
         "baseline_code_commit": baseline_code_commit,
+        "production_code_sha256": production_sha256,
+        "production_code_files": production_files,
         "compiler": "evaluation.conversations.corpus:compile_corpora",
         "compiler_sha256": compiler_sha256,
         "evaluator_sha256": evaluator_sha256,
-        "corpus_root_sha256": root_sha256,
+        "schema_sha256": schema_sha256,
         "immutability_policy": (
             "heldout-v1 bytes and labels are frozen; corrections require a new corpus version"
         ),
         "splits": split_entries,
         "sources": sorted(source_manifest, key=lambda item: item["source_id"]),
     }
+    root_sha256 = _sha256_bytes(_canonical_json(_manifest_constituents(manifest)).encode("utf-8"))
+    manifest["corpus_root_sha256"] = root_sha256
     manifest_payload = (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
     output_dir.mkdir(parents=True, exist_ok=True)
     publish_payloads = {
@@ -620,13 +979,54 @@ def compile_corpora(
 def load_manifest(path: Path = MANIFEST_PATH) -> Dict[str, Any]:
     if not path.is_file():
         raise CorpusIntegrityError(f"missing corpus manifest: {path}")
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    if manifest.get("corpus_version") != CORPUS_VERSION:
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise CorpusIntegrityError(f"unreadable corpus manifest: {path}") from exc
+    if not isinstance(manifest, Mapping):
+        raise CorpusIntegrityError("corpus manifest must be an object")
+    _require_exact_keys(
+        manifest,
+        required={
+            "manifest_schema_version", "corpus_version", "content_address", "frozen_date",
+            "baseline_code_commit", "production_code_sha256", "production_code_files",
+            "compiler", "compiler_sha256", "evaluator_sha256", "schema_sha256", "corpus_root_sha256",
+            "immutability_policy", "splits", "sources",
+        },
+        location=str(path),
+    )
+    if type(manifest["manifest_schema_version"]) is not int or manifest["manifest_schema_version"] != 1:
+        raise CorpusIntegrityError("unsupported manifest schema")
+    if manifest["corpus_version"] != CORPUS_VERSION:
         raise CorpusIntegrityError("unsupported corpus version")
+    if not isinstance(manifest["splits"], Mapping) or set(manifest["splits"]) != set(SPLIT_POLICIES):
+        raise CorpusIntegrityError("manifest split inventory is invalid")
+    split_keys = {
+        "path", "sha256", "conversation_count", "turn_count", "domain_conversations",
+        "domain_turns", "conversation_hashes", "allowed_uses", "training_eligible",
+        "teacher_replay_eligible",
+    }
+    for split, expected_policy in SPLIT_POLICIES.items():
+        entry = manifest["splits"][split]
+        if not isinstance(entry, Mapping):
+            raise CorpusIntegrityError(f"manifest split {split} must be an object")
+        _require_exact_keys(entry, required=split_keys, location=f"manifest split {split}")
+        for field, expected in expected_policy.items():
+            if entry[field] != expected or type(entry[field]) is not type(expected):
+                raise CorpusIntegrityError(f"manifest split {split} violates immutable {field} policy")
+        if type(entry["conversation_count"]) is not int or type(entry["turn_count"]) is not int:
+            raise CorpusIntegrityError(f"manifest split {split} counts must be integers")
+        if not isinstance(entry["path"], str) or Path(entry["path"]).name != entry["path"]:
+            raise CorpusIntegrityError(f"manifest split {split} path is invalid")
+        if not isinstance(entry["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", entry["sha256"]):
+            raise CorpusIntegrityError(f"manifest split {split} digest is invalid")
+    expected_root = _sha256_bytes(_canonical_json(_manifest_constituents(manifest)).encode("utf-8"))
+    if manifest["corpus_root_sha256"] != expected_root:
+        raise CorpusIntegrityError("manifest policy/provenance constituent root is inconsistent")
     root_path = path.parent / "ROOT.sha256"
-    if not root_path.is_file() or root_path.read_text(encoding="ascii").strip() != manifest.get("corpus_root_sha256"):
+    if not root_path.is_file() or root_path.read_text(encoding="ascii").strip() != expected_root:
         raise CorpusIntegrityError("corpus root digest is missing or inconsistent")
-    return manifest
+    return dict(manifest)
 
 
 def load_split(
@@ -645,6 +1045,8 @@ def load_split(
     if split not in manifest["splits"]:
         raise CorpusIntegrityError(f"unknown split: {split}")
     entry = manifest["splits"][split]
+    if split == "heldout" and purpose != "evaluation":
+        raise CorpusIntegrityError(f"split {split} is forbidden for purpose {purpose}")
     if purpose not in entry["allowed_uses"]:
         raise CorpusIntegrityError(f"split {split} is forbidden for purpose {purpose}")
     path = manifest_path.parent / str(entry["path"])
@@ -692,15 +1094,15 @@ def verify_corpus(
     """Recompile and enforce licensing, immutability, and leakage gates."""
 
     manifest = load_manifest(manifest_path)
+    assert_production_tree(str(manifest["production_code_sha256"]))
     with tempfile.TemporaryDirectory(prefix="clanker-conversation-eval-") as tmp:
         regenerated = compile_corpora(
             source_dir=source_dir,
             output_dir=Path(tmp),
             baseline_code_commit=str(manifest["baseline_code_commit"]),
         )
-        for split, entry in manifest["splits"].items():
-            if regenerated["splits"][split]["sha256"] != entry["sha256"]:
-                raise CorpusIntegrityError(f"compiled {split} bytes are not reproducible")
+        if regenerated["splits"] != manifest["splits"]:
+            raise CorpusIntegrityError("compiled split bytes or policy metadata are not reproducible")
         if regenerated["corpus_root_sha256"] != manifest["corpus_root_sha256"]:
             raise CorpusIntegrityError("compiler/evaluator/provenance constituent root changed")
         if regenerated["sources"] != manifest["sources"]:
@@ -763,7 +1165,12 @@ def verify_corpus(
         if not path.is_file() or path.suffix.lower() not in relevant_suffixes:
             continue
         relative = path.relative_to(repo_root)
-        if relative.parts[0] in {".git", "evaluation", "dist", "build", "__pycache__"}:
+        if relative.parts[0] in {".git", "dist", "build", "__pycache__"}:
+            continue
+        if relative.parts[:3] in {
+            ("evaluation", "conversations", "data"),
+            ("evaluation", "conversations", "sources"),
+        }:
             continue
         try:
             normalized_file = _normalized_text(path.read_text(encoding="utf-8"))
