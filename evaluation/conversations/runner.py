@@ -26,7 +26,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from clanker_lm.affect import ClankerAffectBackend
 from clanker_lm.database import LanguageStore
@@ -95,6 +95,20 @@ SQLITE_ROW_TABLES = frozenset({
     "lexical_evidence", "resolver_observations", "trajectory_turns", "transition_stats",
     "corpus_profiles", "trajectory_chunks", "template_tables",
 })
+MEMORY_GROWTH_FIELDS = ("entities", "events", "relations", "serialized_bytes")
+MEMORY_OBSERVATION_FIELDS = {
+    "entities": "entity_count", "events": "event_count",
+    "relations": "relation_count", "serialized_bytes": "serialized_bytes",
+}
+EVALUATION_COMMIT_PATHS = (
+    "clanker_lm", "engine", "clanker_engine.py",
+    "evaluation/conversations/runner.py", "evaluation/conversations/corpus.py",
+    "evaluation/conversations/schema", "evaluation/conversations/sources",
+    "evaluation/conversations/data",
+)
+VADUGWI_DISTANCE_WEIGHTS = {
+    "v": 1.0, "a": 0.7, "d": 0.8, "u": 1.0, "g": 0.8, "w": 0.7, "i": 0.9,
+}
 _EXPECTED_CORRECTION_CACHE: Dict[Tuple[str, str], Dict[str, Any]] = {}
 _METRIC_REBUILD_CACHE: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
 _CLASSIFICATION_REBUILD_CACHE: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
@@ -587,7 +601,7 @@ def _evaluate_mode(
     records: List[Dict[str, Any]] = []
     failures: List[Dict[str, Any]] = []
     resource_observations: List[Dict[str, Any]] = []
-    construction_ms: List[float] = []
+    construction_observations: List[Dict[str, Any]] = []
     tracemalloc.start()
     with tempfile.TemporaryDirectory(prefix=f"clanker-{mode}-") as tmp:
         for conversation_index, conversation in enumerate(conversations):
@@ -597,7 +611,12 @@ def _evaluate_mode(
                 construction_started = time.perf_counter_ns()
                 store = LanguageStore(Path(tmp) / f"conversation-{conversation_index:04d}.sqlite3")
                 shared_runtime = _runtime(store, mode=mode, correction_store=correction_store)
-                construction_ms.append((time.perf_counter_ns() - construction_started) / 1_000_000.0)
+                construction_observations.append({
+                    "domain": str(conversation["domain"]),
+                    "conversation_id": str(conversation["conversation_id"]),
+                    "turn_id": str(conversation["turns"][0]["turn_id"]),
+                    "milliseconds": (time.perf_counter_ns() - construction_started) / 1_000_000.0,
+                })
                 shared_baseline = {"memory": _memory_shape(shared_runtime), "store": _store_shape(store)}
             try:
                 for turn_index, turn in enumerate(conversation["turns"]):
@@ -607,7 +626,12 @@ def _evaluate_mode(
                         construction_started = time.perf_counter_ns()
                         store = LanguageStore(Path(tmp) / f"sentence-{conversation_index:04d}-{turn_index:04d}.sqlite3")
                         runtime = _runtime(store, mode=mode, correction_store=correction_store)
-                        construction_ms.append((time.perf_counter_ns() - construction_started) / 1_000_000.0)
+                        construction_observations.append({
+                            "domain": str(conversation["domain"]),
+                            "conversation_id": str(conversation["conversation_id"]),
+                            "turn_id": str(turn["turn_id"]),
+                            "milliseconds": (time.perf_counter_ns() - construction_started) / 1_000_000.0,
+                        })
                         baseline = {"memory": _memory_shape(runtime), "store": _store_shape(store)}
                     assert baseline is not None
                     try:
@@ -624,7 +648,9 @@ def _evaluate_mode(
                         )
                         records.append(record)
                         resource_observations.append({
-                            "conversation_id": conversation["conversation_id"],
+                            "domain": str(conversation["domain"]),
+                            "conversation_id": str(conversation["conversation_id"]),
+                            "turn_id": str(turn["turn_id"]),
                             "turn_number": turn_index + 1,
                             "baseline": baseline,
                             "current": {"memory": _memory_shape(runtime), "store": _store_shape(runtime.store)},
@@ -662,7 +688,9 @@ def _evaluate_mode(
     tracemalloc.stop()
     rss_peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     resources = _aggregate_resources(resource_observations)
-    resources["construction_latency_ms"] = _distribution(construction_ms)
+    resources["construction_latency_ms"] = _observed_distribution(
+        construction_observations
+    )
     resources["tracemalloc_peak_bytes"] = traced_peak
     resources["process_lifetime_maxrss_peak"] = rss_peak
     resources["process_maxrss_units"] = "KiB on Linux; bytes on macOS"
@@ -1004,40 +1032,70 @@ def _summarize(records: Sequence[Mapping[str, Any]], *, seed_material: str) -> D
 def _aggregate_resources(shapes: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
     if not shapes:
         return {}
-    result: Dict[str, Any] = {"turn_samples": len(shapes)}
-    for memory_key in ("entities", "events", "relations", "serialized_bytes"):
+    observations = [
+        {
+            "domain": str(item["domain"]),
+            "conversation_id": str(item["conversation_id"]),
+            "turn_id": str(item["turn_id"]),
+            "turn_number": int(item["turn_number"]),
+            "memory_growth": {
+                MEMORY_OBSERVATION_FIELDS[key]: int(item["current"]["memory"][key])
+                - int(item["baseline"]["memory"][key])
+                for key in MEMORY_GROWTH_FIELDS
+            },
+            "sqlite_allocated_bytes_growth": (
+                int(item["current"]["store"]["allocated_bytes"])
+                - int(item["baseline"]["store"]["allocated_bytes"])
+            ),
+            "sqlite_row_growth": {
+                table: int(item["current"]["store"]["rows"].get(table, 0))
+                - int(item["baseline"]["store"]["rows"].get(table, 0))
+                for table in sorted(SQLITE_ROW_TABLES)
+            },
+        }
+        for item in shapes
+    ]
+    observations.sort(
+        key=lambda item: (
+            item["domain"], item["conversation_id"], item["turn_number"], item["turn_id"]
+        )
+    )
+    return {**_summarize_resource_observations(observations), "observations": observations}
+
+
+def _summarize_resource_observations(
+    observations: Sequence[Mapping[str, Any]],
+) -> Dict[str, Any]:
+    """Rebuild every growth aggregate from the report's ID-only observations."""
+
+    result: Dict[str, Any] = {"turn_samples": len(observations)}
+    for memory_key in MEMORY_GROWTH_FIELDS:
         values = [
-            int(item["current"]["memory"][memory_key]) - int(item["baseline"]["memory"][memory_key])
-            for item in shapes
+            int(item["memory_growth"][MEMORY_OBSERVATION_FIELDS[memory_key]])
+            for item in observations
         ]
         result[f"memory_{memory_key}_growth_mean"] = sum(values) / len(values)
         result[f"memory_{memory_key}_growth_max"] = max(values)
-    allocated = [
-        int(item["current"]["store"]["allocated_bytes"])
-        - int(item["baseline"]["store"]["allocated_bytes"])
-        for item in shapes
-    ]
+    allocated = [int(item["sqlite_allocated_bytes_growth"]) for item in observations]
     result["sqlite_allocated_bytes_growth_mean"] = sum(allocated) / len(allocated)
     result["sqlite_allocated_bytes_growth_max"] = max(allocated)
-    row_maxima: Dict[str, int] = {}
-    for item in shapes:
-        for table, count in item["current"]["store"]["rows"].items():
-            growth = int(count) - int(item["baseline"]["store"]["rows"].get(table, 0))
-            row_maxima[table] = max(row_maxima.get(table, 0), growth)
-    result["sqlite_row_growth_maxima"] = dict(sorted(row_maxima.items()))
+    result["sqlite_row_growth_maxima"] = {
+        table: max(int(item["sqlite_row_growth"][table]) for item in observations)
+        for table in sorted(SQLITE_ROW_TABLES)
+    }
     by_conversation: Dict[str, List[Mapping[str, Any]]] = defaultdict(list)
-    for item in shapes:
+    for item in observations:
         by_conversation[str(item["conversation_id"])].append(item)
     result["growth_slopes_per_turn"] = {
         "memory_serialized_bytes": _mean_growth_slope(
             by_conversation,
-            lambda item: int(item["current"]["memory"]["serialized_bytes"])
-            - int(item["baseline"]["memory"]["serialized_bytes"]),
+            lambda item: int(
+                item["memory_growth"][MEMORY_OBSERVATION_FIELDS["serialized_bytes"]]
+            ),
         ),
         "sqlite_allocated_bytes": _mean_growth_slope(
             by_conversation,
-            lambda item: int(item["current"]["store"]["allocated_bytes"])
-            - int(item["baseline"]["store"]["allocated_bytes"]),
+            lambda item: int(item["sqlite_allocated_bytes_growth"]),
         ),
     }
     return result
@@ -1064,7 +1122,10 @@ def _distribution(values: Sequence[float]) -> Dict[str, Any]:
     ordered = sorted(values)
     if not ordered:
         return {}
-    percentile = lambda q: ordered[round(q * (len(ordered) - 1))]
+
+    def percentile(q: float) -> float:
+        return ordered[round(q * (len(ordered) - 1))]
+
     return {
         "n": len(ordered),
         "mean_ms": statistics.mean(ordered),
@@ -1076,11 +1137,31 @@ def _distribution(values: Sequence[float]) -> Dict[str, Any]:
     }
 
 
+def _observed_distribution(observations: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+    canonical = sorted(
+        (dict(item) for item in observations),
+        key=lambda item: (item["domain"], item["conversation_id"], item["turn_id"]),
+    )
+    return {
+        **_distribution([float(item["milliseconds"]) for item in canonical]),
+        "observations": canonical,
+    }
+
+
 def _latency_summary(records: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
-    values = sorted(float(record["latency_ms"]) for record in records)
+    observations = [
+        {
+            "domain": str(record["domain"]),
+            "conversation_id": str(record["conversation_id"]),
+            "turn_id": str(record["turn_id"]),
+            "milliseconds": float(record["latency_ms"]),
+        }
+        for record in records
+    ]
+    distribution = _observed_distribution(observations)
+    values = [float(item["milliseconds"]) for item in distribution["observations"]]
     if not values:
         return {}
-    distribution = _distribution(values)
     total_seconds = sum(values) / 1000.0
     return {
         **distribution,
@@ -1145,11 +1226,16 @@ def _paired_mode_differences(
     return output
 
 
-def _git_commit() -> str:
+def _evaluation_producer_commit() -> str:
+    """Return the newest commit defining the measured executable snapshot."""
+
     try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[2], text=True
+        commit = subprocess.check_output(
+            ["git", "log", "-1", "--format=%H", "HEAD", "--", *EVALUATION_COMMIT_PATHS],
+            cwd=Path(__file__).resolve().parents[2],
+            text=True,
         ).strip()
+        return commit or "unknown"
     except (OSError, subprocess.SubprocessError):
         return "unknown"
 
@@ -1168,15 +1254,12 @@ def _capture_provenance(manifest: Mapping[str, Any]) -> Dict[str, str]:
     if schema_hashes != manifest["schema_sha256"]:
         raise CorpusIntegrityError("evaluation schema bytes do not match the frozen manifest")
     assert_production_tree(str(manifest["production_code_sha256"]))
-    measured_paths = (
-        "clanker_lm", "engine", "clanker_engine.py",
-        "evaluation/conversations/runner.py", "evaluation/conversations/corpus.py",
-        "evaluation/conversations/schema", "evaluation/conversations/sources",
-        "evaluation/conversations/data",
-    )
     try:
         dirty = subprocess.check_output(
-            ["git", "status", "--porcelain", "--untracked-files=all", "--", *measured_paths],
+            [
+                "git", "status", "--porcelain", "--untracked-files=all", "--",
+                *EVALUATION_COMMIT_PATHS,
+            ],
             cwd=REPO_ROOT,
             text=True,
         ).strip()
@@ -1184,7 +1267,7 @@ def _capture_provenance(manifest: Mapping[str, Any]) -> Dict[str, str]:
         raise CorpusIntegrityError("cannot establish evaluation git provenance") from exc
     if dirty:
         raise CorpusIntegrityError("measured evaluator/corpus/production tree is dirty")
-    commit = _git_commit()
+    commit = _evaluation_producer_commit()
     if commit == "unknown":
         raise CorpusIntegrityError("cannot establish evaluation commit")
     return {
@@ -1222,6 +1305,231 @@ def _require_artifact_keys(value: Any, expected: set[str], location: str) -> Map
 
 def _is_artifact_number(value: Any) -> bool:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
+
+
+def _validate_observed_distribution(
+    value: Any,
+    location: str,
+    *,
+    expected_n: int,
+    include_throughput: bool,
+) -> List[Mapping[str, Any]]:
+    keys = {
+        "n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms",
+        "observational_nondeterministic", "observations",
+    }
+    if include_throughput:
+        keys.add("turns_per_second")
+    distribution = _require_artifact_keys(value, keys, location)
+    if not isinstance(distribution["observations"], list):
+        raise CorpusIntegrityError(f"{location}.observations must be an array")
+    observations: List[Mapping[str, Any]] = []
+    identities: set[tuple[str, str]] = set()
+    for raw in distribution["observations"]:
+        observation = _require_artifact_keys(
+            raw,
+            {"domain", "conversation_id", "turn_id", "milliseconds"},
+            f"{location}.observation",
+        )
+        identity = (observation["conversation_id"], observation["turn_id"])
+        if (
+            observation["domain"] not in ALLOWED_DOMAINS
+            or not all(
+                isinstance(observation[field], str) and observation[field]
+                for field in ("conversation_id", "turn_id")
+            )
+            or identity in identities
+            or not _is_artifact_number(observation["milliseconds"])
+            or observation["milliseconds"] < 0
+        ):
+            raise CorpusIntegrityError(f"{location}.observation is invalid")
+        identities.add(identity)
+        observations.append(observation)
+    canonical = sorted(
+        observations,
+        key=lambda item: (item["domain"], item["conversation_id"], item["turn_id"]),
+    )
+    if observations != canonical or len(observations) != expected_n:
+        raise CorpusIntegrityError(f"{location}.observation population is invalid")
+    rebuilt: Dict[str, Any] = _observed_distribution(observations)
+    if include_throughput:
+        total_seconds = sum(float(item["milliseconds"]) for item in observations) / 1000.0
+        rebuilt["turns_per_second"] = expected_n / total_seconds if total_seconds else None
+    if dict(distribution) != rebuilt:
+        raise CorpusIntegrityError(f"{location} disagrees with sufficient-stat observations")
+    return observations
+
+
+def _validate_resource_growth(
+    value: Any,
+    location: str,
+    *,
+    expected_n: int,
+) -> List[Mapping[str, Any]]:
+    resource_keys = {
+        "turn_samples", "sqlite_allocated_bytes_growth_mean",
+        "sqlite_allocated_bytes_growth_max", "sqlite_row_growth_maxima",
+        "growth_slopes_per_turn", "construction_latency_ms", "tracemalloc_peak_bytes",
+        "process_lifetime_maxrss_peak", "process_maxrss_units",
+        "process_maxrss_comparability", "observations",
+    } | {
+        f"memory_{memory_key}_growth_{stat}"
+        for memory_key in MEMORY_GROWTH_FIELDS
+        for stat in ("mean", "max")
+    }
+    resources = _require_artifact_keys(value, resource_keys, location)
+    if not isinstance(resources["observations"], list):
+        raise CorpusIntegrityError(f"{location}.observations must be an array")
+    observations: List[Mapping[str, Any]] = []
+    identities: set[tuple[str, str]] = set()
+    for raw in resources["observations"]:
+        observation = _require_artifact_keys(
+            raw,
+            {
+                "domain", "conversation_id", "turn_id", "turn_number", "memory_growth",
+                "sqlite_allocated_bytes_growth", "sqlite_row_growth",
+            },
+            f"{location}.observation",
+        )
+        identity = (observation["conversation_id"], observation["turn_id"])
+        memory = _require_artifact_keys(
+            observation["memory_growth"], set(MEMORY_OBSERVATION_FIELDS.values()),
+            f"{location}.observation.memory_growth",
+        )
+        rows = _require_artifact_keys(
+            observation["sqlite_row_growth"], set(SQLITE_ROW_TABLES),
+            f"{location}.observation.sqlite_row_growth",
+        )
+        if (
+            observation["domain"] not in ALLOWED_DOMAINS
+            or not all(
+                isinstance(observation[field], str) and observation[field]
+                for field in ("conversation_id", "turn_id")
+            )
+            or identity in identities
+            or type(observation["turn_number"]) is not int
+            or observation["turn_number"] <= 0
+            or type(observation["sqlite_allocated_bytes_growth"]) is not int
+            or observation["sqlite_allocated_bytes_growth"] < 0
+            or any(type(item) is not int or item < 0 for item in memory.values())
+            or any(type(item) is not int or item < 0 for item in rows.values())
+        ):
+            raise CorpusIntegrityError(f"{location}.observation is invalid")
+        identities.add(identity)
+        observations.append(observation)
+    canonical = sorted(
+        observations,
+        key=lambda item: (
+            item["domain"], item["conversation_id"], item["turn_number"], item["turn_id"]
+        ),
+    )
+    if observations != canonical or len(observations) != expected_n:
+        raise CorpusIntegrityError(f"{location}.observation population is invalid")
+    rebuilt = _summarize_resource_observations(observations)
+    if any(resources[key] != expected for key, expected in rebuilt.items()):
+        raise CorpusIntegrityError(f"{location} disagrees with sufficient-stat observations")
+    if (
+        type(resources["tracemalloc_peak_bytes"]) is not int
+        or resources["tracemalloc_peak_bytes"] < 0
+        or not _is_artifact_number(resources["process_lifetime_maxrss_peak"])
+        or resources["process_lifetime_maxrss_peak"] < 0
+        or resources["process_maxrss_units"] != "KiB on Linux; bytes on macOS"
+        or resources["process_maxrss_comparability"]
+        != "observational_process_lifetime_peak_mode_order_dependent"
+    ):
+        raise CorpusIntegrityError(f"{location} process observation is invalid")
+    return observations
+
+
+def _metric_observation_map(
+    metric: Mapping[str, Any],
+) -> Dict[tuple[str, str], tuple[str, float]]:
+    return {
+        (str(cluster["conversation_id"]), str(observation["turn_id"])): (
+            str(cluster["domain"]), float(observation["value"])
+        )
+        for cluster in metric["clusters"]
+        for observation in cluster["observations"]
+    }
+
+
+def _validate_drift_metric_bindings(
+    drift: Mapping[str, Any],
+    metrics: Mapping[str, Any],
+    *,
+    expected_identities: set[tuple[str, str]],
+    turn_domains: Mapping[tuple[str, str], str],
+    location: str,
+) -> None:
+    """Bind drift rows to the same population and values as next-state/MAE."""
+
+    drift_rows = {
+        (str(cluster["conversation_id"]), str(observation["turn_id"])): (
+            str(cluster["domain"]), observation
+        )
+        for cluster in drift["clusters"]
+        for observation in cluster["observations"]
+    }
+    next_state_rows = _metric_observation_map(metrics["next_state_distance"])
+    mae_rows = {
+        axis: _metric_observation_map(metrics[f"mae_{axis}"]) for axis in AXES
+    }
+    normalized_rows = {
+        axis: _metric_observation_map(metrics[f"mae_normalized_{axis}"])
+        for axis in AXES
+    }
+    if (
+        set(drift_rows) != expected_identities
+        or set(next_state_rows) != expected_identities
+        or any(set(items) != expected_identities for items in mae_rows.values())
+        or any(set(items) != expected_identities for items in normalized_rows.values())
+    ):
+        raise CorpusIntegrityError(f"{location}.drift population is inconsistent")
+    weight_total = sum(VADUGWI_DISTANCE_WEIGHTS.values())
+    for identity, (domain, observation) in drift_rows.items():
+        residuals = observation["residual_by_axis"]
+        absolutes = observation["absolute_residual_by_axis"]
+        reconstructed_distance = math.sqrt(
+            sum(
+                VADUGWI_DISTANCE_WEIGHTS[axis] * float(residuals[axis]) ** 2
+                for axis in AXES
+            ) / weight_total
+        )
+        if (
+            domain != turn_domains[identity]
+            or domain != next_state_rows[identity][0]
+            or not math.isclose(
+                float(observation["next_state_distance"]),
+                next_state_rows[identity][1],
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            )
+            or not math.isclose(
+                float(observation["next_state_distance"]),
+                reconstructed_distance,
+                rel_tol=0.0,
+                abs_tol=1e-12,
+            )
+            or any(
+                domain != mae_rows[axis][identity][0]
+                or not math.isclose(
+                    float(absolutes[axis]),
+                    mae_rows[axis][identity][1],
+                    rel_tol=0.0,
+                    abs_tol=1e-12,
+                )
+                or not math.isclose(
+                    float(absolutes[axis]) / 255.0,
+                    normalized_rows[axis][identity][1],
+                    rel_tol=0.0,
+                    abs_tol=1e-12,
+                )
+                for axis in AXES
+            )
+        ):
+            raise CorpusIntegrityError(
+                f"{location}.drift observations disagree with next-state/MAE metrics"
+            )
 
 
 def _validate_metric_summary(
@@ -1924,118 +2232,29 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             mode_report["resource_growth"], Mapping
         ):
             raise CorpusIntegrityError(f"modes.{mode} observations must be objects")
-        latency = _require_artifact_keys(
+        _validate_observed_distribution(
             mode_report["latency"],
-            {
-                "n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms",
-                "observational_nondeterministic", "turns_per_second",
-            },
             f"modes.{mode}.latency",
+            expected_n=mode_report["overall"]["turn_count"],
+            include_throughput=True,
         )
-        if (
-            type(latency["n"]) is not int
-            or latency["n"] < 0
-            or latency["n"] != mode_report["overall"]["turn_count"]
-            or latency["observational_nondeterministic"] is not True
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.latency types are invalid")
-        if not all(
-            _is_artifact_number(latency[field])
-            for field in ("mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "turns_per_second")
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.latency values are invalid")
-        if (
-            any(latency[field] < 0 for field in ("mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms"))
-            or latency["turns_per_second"] <= 0
-            or not latency["p50_ms"] <= latency["p95_ms"] <= latency["p99_ms"] <= latency["max_ms"]
-            or latency["mean_ms"] > latency["max_ms"]
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.latency values are outside their domains")
-        resource_keys = {
-            "turn_samples", "sqlite_allocated_bytes_growth_mean",
-            "sqlite_allocated_bytes_growth_max", "sqlite_row_growth_maxima",
-            "growth_slopes_per_turn", "construction_latency_ms", "tracemalloc_peak_bytes",
-            "process_lifetime_maxrss_peak", "process_maxrss_units", "process_maxrss_comparability",
-        } | {
-            f"memory_{memory_key}_growth_{stat}"
-            for memory_key in ("entities", "events", "relations", "serialized_bytes")
-            for stat in ("mean", "max")
-        }
-        resources = _require_artifact_keys(
-            mode_report["resource_growth"], resource_keys, f"modes.{mode}.resource_growth"
-        )
-        if (
-            type(resources["turn_samples"]) is not int
-            or resources["turn_samples"] < 0
-            or resources["turn_samples"] != mode_report["overall"]["turn_count"]
-            or type(resources["tracemalloc_peak_bytes"]) is not int
-            or resources["tracemalloc_peak_bytes"] < 0
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.resource counts are invalid")
-        numeric_resources = resource_keys - {
-            "sqlite_row_growth_maxima", "growth_slopes_per_turn", "construction_latency_ms",
-            "process_maxrss_units", "process_maxrss_comparability",
-        }
-        if any(not _is_artifact_number(resources[field]) for field in numeric_resources):
-            raise CorpusIntegrityError(f"modes.{mode}.resource values are invalid")
-        if resources["process_lifetime_maxrss_peak"] < 0 or any(
-            resources[field] < 0
-            for field in numeric_resources
-            if field != "process_lifetime_maxrss_peak"
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.resource values are outside their domains")
-        if not isinstance(resources["process_maxrss_units"], str) or not isinstance(
-            resources["process_maxrss_comparability"], str
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.resource labels are invalid")
-        if resources["process_maxrss_units"] != "KiB on Linux; bytes on macOS" or resources[
-            "process_maxrss_comparability"
-        ] != "observational_process_lifetime_peak_mode_order_dependent":
-            raise CorpusIntegrityError(f"modes.{mode}.resource labels are invalid")
-        if (
-            not isinstance(resources["sqlite_row_growth_maxima"], Mapping)
-            or set(resources["sqlite_row_growth_maxima"]) != SQLITE_ROW_TABLES
-            or not all(
-                type(count) is int and count >= 0
-                for count in resources["sqlite_row_growth_maxima"].values()
-            )
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.resource row counts are invalid")
-        slopes = _require_artifact_keys(
-            resources["growth_slopes_per_turn"],
-            {"memory_serialized_bytes", "sqlite_allocated_bytes"},
-            f"modes.{mode}.resource slopes",
-        )
-        if any(value is not None and not _is_artifact_number(value) for value in slopes.values()):
-            raise CorpusIntegrityError(f"modes.{mode}.resource slopes are invalid")
-        construction = _require_artifact_keys(
-            resources["construction_latency_ms"],
-            {"n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic"},
-            f"modes.{mode}.construction latency",
+        resources = mode_report["resource_growth"]
+        _validate_resource_growth(
+            resources,
+            f"modes.{mode}.resource_growth",
+            expected_n=mode_report["overall"]["turn_count"],
         )
         expected_constructions = (
             mode_report["overall"]["turn_count"]
             if mode == "sentence_only"
             else mode_report["overall"]["conversation_count"]
         )
-        if (
-            type(construction["n"]) is not int
-            or construction["n"] < 0
-            or construction["n"] != expected_constructions
-            or construction["observational_nondeterministic"] is not True
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.construction latency types are invalid")
-        if not all(
-            _is_artifact_number(construction[field])
-            for field in ("mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms")
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.construction latency values are invalid")
-        if (
-            any(construction[field] < 0 for field in ("mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms"))
-            or not construction["p50_ms"] <= construction["p95_ms"] <= construction["p99_ms"] <= construction["max_ms"]
-            or construction["mean_ms"] > construction["max_ms"]
-        ):
-            raise CorpusIntegrityError(f"modes.{mode}.construction latency is outside its domain")
+        _validate_observed_distribution(
+            resources["construction_latency_ms"],
+            f"modes.{mode}.construction_latency_ms",
+            expected_n=expected_constructions,
+            include_throughput=False,
+        )
     correction_keys = {
         "source_split", "source_conversation_count", "context_count", "sample_count",
         "expected_finalized_sample_count", "terminal_pending_turns_excluded",
@@ -2230,6 +2449,15 @@ def _validate_aggregate_artifacts(
         for conversation in conversations
         for turn in conversation["turns"]
     }
+    turn_numbers = {
+        (str(conversation["conversation_id"]), str(turn["turn_id"])): index
+        for conversation in conversations
+        for index, turn in enumerate(conversation["turns"], start=1)
+    }
+    first_turn_identities = {
+        (str(conversation["conversation_id"]), str(conversation["turns"][0]["turn_id"]))
+        for conversation in conversations
+    }
 
     if not isinstance(report, Mapping) or report.get("report_schema_version") != METRIC_SCHEMA_VERSION:
         raise CorpusIntegrityError("aggregate report discriminator is missing or unsupported")
@@ -2263,6 +2491,10 @@ def _validate_aggregate_artifacts(
     )
     if commit_check.returncode != 0 or ancestry_check.returncode != 0:
         raise CorpusIntegrityError("aggregate report evaluation commit is not in local ancestry")
+    if evaluation_commit != _evaluation_producer_commit():
+        raise CorpusIntegrityError(
+            "aggregate report evaluation commit is not the producing executable commit"
+        )
     correction = report["development_correction_bundle"]
     development = bound_manifest["splits"]["development"]
     if (
@@ -2647,6 +2879,19 @@ def _validate_aggregate_artifacts(
                 or summary["drift"]["n_conversations"] != len(affect_conversations)
             ):
                 raise CorpusIntegrityError(f"{location}.drift population is inconsistent")
+            expected_affect_identities = {
+                (conversation_id, str(turn["turn_id"]))
+                for conversation_id, turn in rows
+                if turn["annotation"]["affect_scored"] is True
+                and turn["annotation"]["observed_next_state"] is not None
+            }
+            _validate_drift_metric_bindings(
+                summary["drift"],
+                summary["metrics"],
+                expected_identities=expected_affect_identities,
+                turn_domains=turn_domains,
+                location=location,
+            )
         elif summary["drift"] is not None:
             raise CorpusIntegrityError(f"{location}.drift must be unavailable without affect rows")
 
@@ -2657,6 +2902,43 @@ def _validate_aggregate_artifacts(
             or mode_report["overall"]["conversation_count"] != total_conversations
         ):
             raise CorpusIntegrityError(f"aggregate report {mode} overall population is incomplete")
+        latency_rows = {
+            (str(item["conversation_id"]), str(item["turn_id"])): str(item["domain"])
+            for item in mode_report["latency"]["observations"]
+        }
+        resource_rows = {
+            (str(item["conversation_id"]), str(item["turn_id"])): item
+            for item in mode_report["resource_growth"]["observations"]
+        }
+        if (
+            set(latency_rows) != set(turn_domains)
+            or set(resource_rows) != set(turn_domains)
+            or any(domain != turn_domains[identity] for identity, domain in latency_rows.items())
+            or any(
+                item["domain"] != turn_domains[identity]
+                or item["turn_number"] != turn_numbers[identity]
+                for identity, item in resource_rows.items()
+            )
+        ):
+            raise CorpusIntegrityError(
+                f"aggregate report {mode} resource/latency population is inconsistent"
+            )
+        construction_rows = {
+            (str(item["conversation_id"]), str(item["turn_id"])): str(item["domain"])
+            for item in mode_report["resource_growth"]["construction_latency_ms"][
+                "observations"
+            ]
+        }
+        expected_construction = (
+            set(turn_domains) if mode == "sentence_only" else first_turn_identities
+        )
+        if set(construction_rows) != expected_construction or any(
+            domain != turn_domains[identity]
+            for identity, domain in construction_rows.items()
+        ):
+            raise CorpusIntegrityError(
+                f"aggregate report {mode} construction population is inconsistent"
+            )
         validate_metric_population(
             mode_report["overall"], "overall", all_rows, f"aggregate report {mode}.overall"
         )
@@ -2792,10 +3074,10 @@ def _reject_report_symlink_chain(path: Path) -> None:
 
 def _write_report_durable(path: Path, payload: bytes) -> None:
     with path.open("wb") as stream:
+        path.chmod(0o644)
         stream.write(payload)
         stream.flush()
         os.fsync(stream.fileno())
-    path.chmod(0o644)
 
 
 def _fsync_report_directory(path: Path) -> None:
@@ -2830,6 +3112,10 @@ def _publish_artifacts(
     failures_path: Path | None,
     provenance_check: Any,
 ) -> None:
+    if output_path.suffix == ".jsonl":
+        raise CorpusIntegrityError(
+            "aggregate report target must not use the .jsonl failure role"
+        )
     failure_target = failures_path or output_path.with_name(f"{output_path.stem}_failures.jsonl")
     checksum_path = output_path.with_suffix(".sha256")
     pointer_path = output_path.with_suffix(".current")
@@ -3028,14 +3314,10 @@ def load_published_artifacts(
         evaluation_commit = str(report.get("evaluation_commit", ""))
         if not re.fullmatch(r"[0-9a-f]{40}", evaluation_commit):
             raise CorpusIntegrityError("published report evaluation commit is invalid")
-        result = subprocess.run(
-            ["git", "merge-base", "--is-ancestor", evaluation_commit, "HEAD"],
-            cwd=REPO_ROOT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        if result.returncode != 0:
-            raise CorpusIntegrityError("published report evaluation commit is not in local ancestry")
+        if evaluation_commit != _evaluation_producer_commit():
+            raise CorpusIntegrityError(
+                "published report evaluation commit is not the producing executable commit"
+            )
     return report, failures, generation_dir
 
 

@@ -127,10 +127,10 @@ def _write_durable(path: Path, payload: bytes) -> None:
     """Write one staged file and force its bytes to stable storage."""
 
     with path.open("wb") as stream:
+        path.chmod(0o644)
         stream.write(payload)
         stream.flush()
         os.fsync(stream.fileno())
-    path.chmod(0o644)
 
 
 def _fsync_directory(path: Path) -> None:
@@ -321,6 +321,49 @@ def _load_history_ledger(
     )
 
 
+def _history_entries_from_payload(payload: Any) -> Dict[str, Mapping[str, Any]]:
+    """Validate a history snapshot without consulting the current filesystem."""
+
+    if not isinstance(payload, Mapping):
+        raise CorpusIntegrityError("corpus history ledger must be an object")
+    _require_exact_keys(
+        payload,
+        required={"history_schema_version", "generation_files", "generations"},
+        location="corpus history ledger",
+    )
+    if payload["history_schema_version"] != 1 or type(payload["history_schema_version"]) is not int:
+        raise CorpusIntegrityError("unsupported corpus history schema")
+    if payload["generation_files"] != sorted(GENERATION_FILES):
+        raise CorpusIntegrityError("corpus history file inventory contract is invalid")
+    entries = payload["generations"]
+    if not isinstance(entries, Mapping) or not entries:
+        raise CorpusIntegrityError("corpus history ledger has no generations")
+    for generation, entry in entries.items():
+        if not isinstance(generation, str) or not re.fullmatch(r"[0-9a-f]{64}", generation):
+            raise CorpusIntegrityError("corpus history generation ID is invalid")
+        if not isinstance(entry, Mapping):
+            raise CorpusIntegrityError("corpus history generation entry must be an object")
+        _require_exact_keys(entry, required={"files"}, location=f"corpus history {generation}")
+        files = entry["files"]
+        if not isinstance(files, Mapping) or set(files) != GENERATION_FILES:
+            raise CorpusIntegrityError("corpus history generation inventory is invalid")
+        for name, record in files.items():
+            if not isinstance(record, Mapping):
+                raise CorpusIntegrityError("corpus history file entry must be an object")
+            _require_exact_keys(
+                record,
+                required={"mode", "sha256"},
+                location=f"corpus history {generation}/{name}",
+            )
+            if (
+                record["mode"] != "100644"
+                or not isinstance(record["sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])
+            ):
+                raise CorpusIntegrityError("corpus history generation bytes or mode are invalid")
+    return dict(entries)
+
+
 def _require_exact_keys(
     value: Mapping[str, Any],
     *,
@@ -387,11 +430,28 @@ def _static_string_values(node: ast.AST, names: Mapping[str, set[str]]) -> set[s
         return {node.value}
     if isinstance(node, ast.Name):
         return set(names.get(node.id, ()))
+    if isinstance(node, ast.IfExp):
+        return _static_string_values(node.body, names) | _static_string_values(
+            node.orelse, names
+        )
+    if isinstance(node, ast.BoolOp):
+        values: set[str] = set()
+        for item in node.values:
+            values.update(_static_string_values(item, names))
+            if len(values) > 64:
+                return set()
+        return values
+    if isinstance(node, ast.NamedExpr):
+        return _static_string_values(node.value, names)
     if isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant):
         if isinstance(node.value, (ast.List, ast.Tuple)) and type(node.slice.value) is int:
             index = node.slice.value
             if -len(node.value.elts) <= index < len(node.value.elts):
                 return _static_string_values(node.value.elts[index], names)
+        if isinstance(node.value, ast.Dict):
+            for key, value in zip(node.value.keys, node.value.values):
+                if isinstance(key, ast.Constant) and key.value == node.slice.value:
+                    return _static_string_values(value, names)
     if isinstance(node, ast.FormattedValue):
         return _static_string_values(node.value, names)
     if isinstance(node, ast.JoinedStr):
@@ -660,11 +720,13 @@ def verify_generation_history(
     repo_root: Path = REPO_ROOT,
     data_dir: Path = DATA_DIR,
 ) -> Dict[str, int | str]:
-    """Verify every generation ever selected on ``ref`` remains byte-exact.
+    """Verify every first-introduced history generation remains byte-exact.
 
-    Unlike a comparison with ``origin/main``, this walks the candidate's own
-    ancestry.  That makes deletion of a branch-local generation observable even
-    when the merge base predates the corpus.
+    GitHub squash-merges collapse intermediate ``CURRENT`` commits.  ``HISTORY``
+    is therefore the durable selection lineage: each history-changing commit
+    may import one or more prior branch generations, and the first commit that
+    names a generation must contain the exact recorded files and modes.  The
+    candidate ledger must retain the union of every such first introduction.
     """
 
     try:
@@ -677,54 +739,76 @@ def verify_generation_history(
     if pointer_path.is_symlink() or not pointer_path.is_file() or stat.S_IMODE(pointer_path.stat().st_mode) != 0o644:
         raise CorpusIntegrityError("corpus CURRENT pointer must be a regular 100644 file")
     pointer_relative = f"{relative_data}/{CURRENT_POINTER}"
+    history_relative = f"{relative_data}/{HISTORY_LEDGER}"
     try:
         commits = subprocess.check_output(
-            ["git", "log", "--format=%H", ref, "--", pointer_relative],
+            ["git", "log", "--reverse", "--format=%H", ref, "--", history_relative],
             cwd=repo_root,
             text=True,
         ).splitlines()
     except (OSError, subprocess.SubprocessError) as exc:
         raise CorpusIntegrityError("cannot inspect corpus selection history") from exc
     if not commits:
-        raise CorpusIntegrityError("corpus selection history is absent from candidate ancestry")
-    selections: Dict[str, str] = {}
+        raise CorpusIntegrityError("corpus HISTORY is absent from candidate ancestry")
+    introductions: Dict[str, tuple[str, Mapping[str, Any]]] = {}
     prefix = f"{relative_data}/{GENERATIONS_DIRECTORY}"
     for commit in commits:
         try:
+            history_bytes = subprocess.check_output(
+                ["git", "show", f"{commit}:{history_relative}"], cwd=repo_root
+            )
+            snapshot = json.loads(history_bytes.decode("utf-8"))
+            entries = _history_entries_from_payload(snapshot)
             pointer_bytes = subprocess.check_output(
                 ["git", "show", f"{commit}:{pointer_relative}"], cwd=repo_root
             )
-            generation = pointer_bytes.decode("ascii").strip()
-        except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
-            raise CorpusIntegrityError("cannot read historical corpus selection") from exc
-        if not re.fullmatch(r"[0-9a-f]{64}", generation):
-            raise CorpusIntegrityError("historical corpus selection is malformed")
-        selections.setdefault(generation, commit)
-    if set(selections) != set(ledger["generations"]):
+            selected = pointer_bytes.decode("ascii").strip()
+        except (
+            OSError, subprocess.SubprocessError, UnicodeError, json.JSONDecodeError
+        ) as exc:
+            raise CorpusIntegrityError("cannot read historical corpus HISTORY/CURRENT") from exc
+        if not re.fullmatch(r"[0-9a-f]{64}", selected) or selected not in entries:
+            raise CorpusIntegrityError("historical corpus selection is absent from its HISTORY")
+        for generation, entry in entries.items():
+            prior = introductions.get(generation)
+            if prior is not None:
+                if prior[1] != entry:
+                    raise CorpusIntegrityError(
+                        "corpus first-introduction HISTORY entry was modified"
+                    )
+                continue
+            for filename, record in entry["files"].items():
+                relative = f"{prefix}/{generation}/{filename}"
+                try:
+                    metadata = subprocess.check_output(
+                        ["git", "ls-tree", "-z", commit, "--", relative], cwd=repo_root
+                    ).rstrip(b"\0")
+                    raw_meta, raw_path = metadata.split(b"\t", 1)
+                    mode, kind, _object_id = raw_meta.decode("ascii").split()
+                    payload = subprocess.check_output(
+                        ["git", "show", f"{commit}:{raw_path.decode('utf-8')}"],
+                        cwd=repo_root,
+                    )
+                except (
+                    OSError, subprocess.SubprocessError, UnicodeError, ValueError
+                ) as exc:
+                    raise CorpusIntegrityError(
+                        "first-introduced corpus history generation is incomplete"
+                    ) from exc
+                if (
+                    mode != record["mode"]
+                    or kind != "blob"
+                    or _sha256_bytes(payload) != record["sha256"]
+                ):
+                    raise CorpusIntegrityError(
+                        "first-introduced corpus history generation disagrees with HISTORY"
+                    )
+            introductions[generation] = (commit, entry)
+    if set(introductions) != set(ledger["generations"]):
         raise CorpusIntegrityError("corpus history ledger does not match candidate selection ancestry")
-    for generation, commit in selections.items():
-        directory = data_dir / GENERATIONS_DIRECTORY / generation
-        for filename in sorted(GENERATION_FILES):
-            relative = f"{prefix}/{generation}/{filename}"
-            try:
-                metadata = subprocess.check_output(
-                    ["git", "ls-tree", "-z", commit, "--", relative], cwd=repo_root
-                ).rstrip(b"\0")
-                raw_meta, raw_path = metadata.split(b"\t", 1)
-                mode, kind, _object_id = raw_meta.decode("ascii").split()
-                expected = subprocess.check_output(
-                    ["git", "show", f"{commit}:{raw_path.decode('utf-8')}"], cwd=repo_root
-                )
-            except (OSError, subprocess.SubprocessError, UnicodeError, ValueError) as exc:
-                raise CorpusIntegrityError("historical selected corpus generation is incomplete") from exc
-            if mode != "100644" or kind != "blob":
-                raise CorpusIntegrityError("historical corpus generation mode/type is invalid")
-            path = directory / filename
-            if stat.S_IMODE(path.stat().st_mode) != 0o644 or path.read_bytes() != expected:
-                raise CorpusIntegrityError("historical selected corpus generation was modified")
     return {
         "history_ref": ref,
-        "verified_generations": len(selections),
+        "verified_generations": len(introductions),
         "current_generation": pointer_path.read_text(encoding="ascii").strip(),
     }
 

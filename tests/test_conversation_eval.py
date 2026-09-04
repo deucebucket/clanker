@@ -29,7 +29,6 @@ from clanker_lm.model import (
 )
 from evaluation.conversations.corpus import (
     DATA_DIR,
-    MANIFEST_PATH,
     SOURCE_DIR,
     CorpusIntegrityError,
     _canonical_json,
@@ -203,6 +202,41 @@ def test_candidate_ancestry_gate_rejects_branch_local_generation_deletion(tmp_pa
     old_root.chmod(0o755)
     with pytest.raises(CorpusIntegrityError, match="mode"):
         verify_generation_history("HEAD", repo_root=repo, data_dir=data)
+
+
+def test_first_introduction_history_survives_squash_merge(tmp_path):
+    repo = tmp_path / "repo"
+    data = repo / "evaluation/conversations/data"
+    generations = data / "generations"
+    generations.mkdir(parents=True)
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    (repo / "README.md").write_text("base\n")
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "base"], cwd=repo, check=True)
+    subprocess.run(["git", "checkout", "-qb", "feature"], cwd=repo, check=True)
+
+    for generation, marker in (("a" * 64, "old"), ("b" * 64, "new")):
+        directory = generations / generation
+        directory.mkdir()
+        for name in sorted(conversation_corpus.GENERATION_FILES):
+            (directory / name).write_text(f"{marker}:{name}\n")
+            (directory / name).chmod(0o644)
+        _write_history_ledger(data)
+        (data / "CURRENT").write_text(generation + "\n")
+        (data / "CURRENT").chmod(0o644)
+        subprocess.run(["git", "add", "."], cwd=repo, check=True)
+        subprocess.run(["git", "commit", "-qm", f"select {marker}"], cwd=repo, check=True)
+
+    subprocess.run(["git", "checkout", "-q", "main"], cwd=repo, check=True)
+    subprocess.run(["git", "merge", "--squash", "feature"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "squashed evaluator history"], cwd=repo, check=True)
+    assert verify_generation_history("HEAD", repo_root=repo, data_dir=data) == {
+        "history_ref": "HEAD",
+        "verified_generations": 2,
+        "current_generation": "b" * 64,
+    }
 
 
 def test_shipped_history_covers_every_selected_generation():
@@ -803,6 +837,18 @@ def test_production_tree_digest_binds_packaged_web_runtime_assets(tmp_path):
             "LOADER = getattr(importlib, ''.join(NAME).lower())\nLOADER('unrelated')\n",
         ),
         (
+            "clanker_lm/conditional_probe.py",
+            "from evaluation.conversations.corpus import load_split\n"
+            "SPLIT = 'heldout' if feature_enabled else 'development'\n"
+            "load_split(SPLIT, purpose='evaluation')\n",
+        ),
+        (
+            "engine/dictionary_probe.py",
+            "from evaluation.conversations.corpus import load_split\n"
+            "SPLIT = {'release': 'heldout', 'dev': 'development'}['release']\n"
+            "load_split(SPLIT, purpose='evaluation')\n",
+        ),
+        (
             "clanker_lm/web_assets/reference_probe.js",
             "const root = ['evaluation','conversations','data'].join('/');\n"
             "const pointer = ['CUR','RENT'].join('');\n",
@@ -1238,11 +1284,6 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
 ):
     report = development_reports[0]
     conversations = load_split("development", purpose="development")
-    identities = [
-        (conversation["conversation_id"], turn["turn_id"], conversation["domain"])
-        for conversation in conversations
-        for turn in conversation["turns"]
-    ]
     failures = _failure_rows_from_report(report)
     assert len(failures) == report["failure_count"]
     _validate_aggregate_artifacts(report, failures, conversations)
@@ -1505,6 +1546,13 @@ def test_report_provenance_resources_and_failure_membership_fail_closed(
     with pytest.raises(CorpusIntegrityError, match="local ancestry"):
         _validate_aggregate_artifacts(forged, failures, conversations)
 
+    forged = copy.deepcopy(report)
+    forged["evaluation_commit"] = subprocess.check_output(
+        ["git", "rev-parse", f"{report['evaluation_commit']}^"], cwd=ROOT, text=True
+    ).strip()
+    with pytest.raises(CorpusIntegrityError, match="producing executable commit"):
+        _validate_aggregate_artifacts(forged, failures, conversations)
+
     for path, value in (("latency", -1.0), ("maxrss", -1)):
         forged = copy.deepcopy(report)
         if path == "latency":
@@ -1515,6 +1563,28 @@ def test_report_provenance_resources_and_failure_membership_fail_closed(
             ] = value
         with pytest.raises(CorpusIntegrityError, match="domain"):
             _validate_aggregate_artifacts(forged, failures, conversations)
+
+    forged = copy.deepcopy(report)
+    forged["modes"]["sentence_only"]["latency"]["observations"][0][
+        "milliseconds"
+    ] += 1.0
+    with pytest.raises(CorpusIntegrityError, match="sufficient-stat observations"):
+        _validate_aggregate_artifacts(forged, failures, conversations)
+
+    forged = copy.deepcopy(report)
+    resources = forged["modes"]["sentence_only"]["resource_growth"]
+    resources["memory_events_growth_max"] += 1
+    with pytest.raises(CorpusIntegrityError, match="sufficient-stat observations"):
+        _validate_aggregate_artifacts(forged, failures, conversations)
+
+    forged = copy.deepcopy(report)
+    latency_observation = forged["modes"]["sentence_only"]["latency"]["observations"][0]
+    latency_observation["domain"] = next(
+        domain for domain in conversation_corpus.ALLOWED_DOMAINS
+        if domain != latency_observation["domain"]
+    )
+    with pytest.raises(CorpusIntegrityError, match="resource/latency population"):
+        _validate_aggregate_artifacts(forged, failures, conversations)
 
     if failures:
         forged_failures = copy.deepcopy(failures)
@@ -1548,6 +1618,52 @@ def test_drift_reports_terminal_bias_and_axis_slopes():
     drift = _drift(records)
     assert drift["terminal_signed_bias_by_axis"]["v"] == 1.0
     assert drift["absolute_residual_slope_by_axis"]["v"] == 2.0
+
+
+def test_drift_population_is_bound_to_next_state_and_mae_observations():
+    residuals = {axis: float(index + 1) for index, axis in enumerate("vadugwi")}
+    distance = (
+        sum(
+            conversation_runner.VADUGWI_DISTANCE_WEIGHTS[axis] * residuals[axis] ** 2
+            for axis in "vadugwi"
+        ) / sum(conversation_runner.VADUGWI_DISTANCE_WEIGHTS.values())
+    ) ** 0.5
+    record = {
+        "domain": "open_development",
+        "conversation_id": "c",
+        "turn_id": "t1",
+        "next_state_distance": distance,
+        **{f"residual_{axis}": residuals[axis] for axis in "vadugwi"},
+        **{f"absolute_residual_{axis}": residuals[axis] for axis in "vadugwi"},
+        **{f"mae_{axis}": residuals[axis] for axis in "vadugwi"},
+        **{f"mae_normalized_{axis}": residuals[axis] / 255.0 for axis in "vadugwi"},
+    }
+    metrics = {
+        name: _metric_summary([record], name, seed_material="drift-binding")
+        for name in (
+            "next_state_distance",
+            *(f"mae_{axis}" for axis in "vadugwi"),
+            *(f"mae_normalized_{axis}" for axis in "vadugwi"),
+        )
+    }
+    drift = _drift([record])
+    conversation_runner._validate_drift_metric_bindings(
+        drift,
+        metrics,
+        expected_identities={("c", "t1")},
+        turn_domains={("c", "t1"): "open_development"},
+        location="probe",
+    )
+    forged = copy.deepcopy(drift)
+    forged["clusters"][0]["observations"][0]["next_state_distance"] += 1.0
+    with pytest.raises(CorpusIntegrityError, match="next-state/MAE"):
+        conversation_runner._validate_drift_metric_bindings(
+            forged,
+            metrics,
+            expected_identities={("c", "t1")},
+            turn_domains={("c", "t1"): "open_development"},
+            location="probe",
+        )
 
 
 def test_trajectory_direction_uses_declared_whole_interaction_g0():
@@ -1587,7 +1703,9 @@ def test_resource_growth_subtracts_seed_baseline_and_reports_slope():
     shapes = []
     for turn_number, growth in ((1, 10), (2, 20)):
         shapes.append({
+            "domain": "open_development",
             "conversation_id": "c",
+            "turn_id": f"t{turn_number}",
             "turn_number": turn_number,
             "baseline": {
                 "memory": {"entities": 2, "events": 0, "relations": 0, "serialized_bytes": 100},
@@ -1603,6 +1721,7 @@ def test_resource_growth_subtracts_seed_baseline_and_reports_slope():
     assert result["sqlite_row_growth_maxima"]["atoms"] == 0
     assert result["sqlite_row_growth_maxima"]["transition_stats"] == 2
     assert result["growth_slopes_per_turn"]["sqlite_allocated_bytes"] == 10.0
+    assert len(result["observations"]) == 2
 
 
 def test_aggregate_artifact_guard_checks_every_turn_and_recursive_payload_keys():
@@ -1679,6 +1798,31 @@ def test_artifact_publish_stages_every_file_before_replacing(tmp_path):
         )
     for path in (report_path, failures_path, checksum_path):
         assert path.read_text() == "sentinel\n"
+
+
+def test_durable_writers_set_final_mode_before_file_fsync(tmp_path, monkeypatch):
+    for module, writer, filename in (
+        (conversation_corpus, conversation_corpus._write_durable, "corpus.bin"),
+        (conversation_runner, conversation_runner._write_report_durable, "report.bin"),
+    ):
+        events = []
+        original_chmod = Path.chmod
+        original_fsync = module.os.fsync
+
+        def record_chmod(path, mode, *, follow_symlinks=True):
+            events.append(("chmod", mode))
+            return original_chmod(path, mode, follow_symlinks=follow_symlinks)
+
+        def record_fsync(descriptor):
+            events.append(("fsync", descriptor))
+            return original_fsync(descriptor)
+
+        with monkeypatch.context() as scoped:
+            scoped.setattr(Path, "chmod", record_chmod)
+            scoped.setattr(module.os, "fsync", record_fsync)
+            writer(tmp_path / filename, b"durable\n")
+        assert events[0] == ("chmod", 0o644)
+        assert events[1][0] == "fsync"
 
 
 def test_artifact_publish_pointer_failure_keeps_prior_generation_selected(tmp_path, monkeypatch):
@@ -2059,6 +2203,18 @@ def test_artifact_publish_requires_jsonl_failure_target_before_mutation(tmp_path
             failures_path=tmp_path / "failures.txt", provenance_check=lambda: None,
         )
     assert not report_path.with_suffix(".current").exists()
+
+
+def test_artifact_publish_rejects_ambiguous_jsonl_report_before_mutation(tmp_path):
+    report_path = tmp_path / "report.jsonl"
+    with pytest.raises(CorpusIntegrityError, match="must not use the .jsonl failure role"):
+        _publish_artifacts(
+            {"aggregate": 1}, [], output_path=report_path,
+            failures_path=None, provenance_check=lambda: None,
+        )
+    assert not report_path.exists()
+    assert not report_path.with_suffix(".current").exists()
+    assert not (tmp_path / "report.generations").exists()
 
 
 def test_execution_errors_fail_the_release_runner():

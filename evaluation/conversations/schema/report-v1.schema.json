@@ -228,17 +228,61 @@
     },
     "latency": {
       "type": "object", "additionalProperties": false,
-      "required": ["n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic", "turns_per_second"],
-      "properties": {"n": {"type": "integer", "minimum": 0}, "mean_ms": {"type": "number"}, "p50_ms": {"type": "number"}, "p95_ms": {"type": "number"}, "p99_ms": {"type": "number"}, "max_ms": {"type": "number"}, "observational_nondeterministic": {"type": "boolean"}, "turns_per_second": {"type": "number"}}
+      "required": ["n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic", "turns_per_second", "observations"],
+      "properties": {"n": {"type": "integer", "minimum": 0}, "mean_ms": {"type": "number"}, "p50_ms": {"type": "number"}, "p95_ms": {"type": "number"}, "p99_ms": {"type": "number"}, "max_ms": {"type": "number"}, "observational_nondeterministic": {"type": "boolean"}, "turns_per_second": {"type": ["number", "null"]}, "observations": {"type": "array", "items": {"$ref": "#/$defs/timingObservation"}}}
     },
     "constructionLatency": {
       "type": "object", "additionalProperties": false,
-      "required": ["n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic"],
-      "properties": {"n": {"type": "integer", "minimum": 0}, "mean_ms": {"type": "number"}, "p50_ms": {"type": "number"}, "p95_ms": {"type": "number"}, "p99_ms": {"type": "number"}, "max_ms": {"type": "number"}, "observational_nondeterministic": {"type": "boolean"}}
+      "required": ["n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic", "observations"],
+      "properties": {"n": {"type": "integer", "minimum": 0}, "mean_ms": {"type": "number"}, "p50_ms": {"type": "number"}, "p95_ms": {"type": "number"}, "p99_ms": {"type": "number"}, "max_ms": {"type": "number"}, "observational_nondeterministic": {"type": "boolean"}, "observations": {"type": "array", "items": {"$ref": "#/$defs/timingObservation"}}}
+    },
+    "timingObservation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain", "conversation_id", "turn_id", "milliseconds"],
+      "properties": {
+        "domain": {"type": "string", "minLength": 1},
+        "conversation_id": {"type": "string", "minLength": 1},
+        "turn_id": {"type": "string", "minLength": 1},
+        "milliseconds": {"type": "number", "minimum": 0}
+      }
+    },
+    "resourceObservation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain", "conversation_id", "turn_id", "turn_number", "memory_growth", "sqlite_allocated_bytes_growth", "sqlite_row_growth"],
+      "properties": {
+        "domain": {"type": "string", "minLength": 1},
+        "conversation_id": {"type": "string", "minLength": 1},
+        "turn_id": {"type": "string", "minLength": 1},
+        "turn_number": {"type": "integer", "minimum": 1},
+        "memory_growth": {
+          "type": "object", "additionalProperties": false,
+          "required": ["entity_count", "event_count", "relation_count", "serialized_bytes"],
+          "properties": {
+            "entity_count": {"type": "integer", "minimum": 0},
+            "event_count": {"type": "integer", "minimum": 0},
+            "relation_count": {"type": "integer", "minimum": 0},
+            "serialized_bytes": {"type": "integer", "minimum": 0}
+          }
+        },
+        "sqlite_allocated_bytes_growth": {"type": "integer", "minimum": 0},
+        "sqlite_row_growth": {"$ref": "#/$defs/sqliteRows"}
+      }
+    },
+    "sqliteRows": {
+      "type": "object", "additionalProperties": false,
+      "required": ["atoms", "grammar_rules", "gate_rules", "learned_terms", "learned_senses", "lexical_evidence", "resolver_observations", "trajectory_turns", "transition_stats", "corpus_profiles", "trajectory_chunks", "template_tables"],
+      "properties": {
+        "atoms": {"type": "integer", "minimum": 0}, "grammar_rules": {"type": "integer", "minimum": 0},
+        "gate_rules": {"type": "integer", "minimum": 0}, "learned_terms": {"type": "integer", "minimum": 0},
+        "learned_senses": {"type": "integer", "minimum": 0}, "lexical_evidence": {"type": "integer", "minimum": 0},
+        "resolver_observations": {"type": "integer", "minimum": 0}, "trajectory_turns": {"type": "integer", "minimum": 0},
+        "transition_stats": {"type": "integer", "minimum": 0}, "corpus_profiles": {"type": "integer", "minimum": 0},
+        "trajectory_chunks": {"type": "integer", "minimum": 0}, "template_tables": {"type": "integer", "minimum": 0}
+      }
     },
     "resourceGrowth": {
       "type": "object", "additionalProperties": false,
-      "required": ["turn_samples", "memory_entities_growth_mean", "memory_entities_growth_max", "memory_events_growth_mean", "memory_events_growth_max", "memory_relations_growth_mean", "memory_relations_growth_max", "memory_serialized_bytes_growth_mean", "memory_serialized_bytes_growth_max", "sqlite_allocated_bytes_growth_mean", "sqlite_allocated_bytes_growth_max", "sqlite_row_growth_maxima", "growth_slopes_per_turn", "construction_latency_ms", "tracemalloc_peak_bytes", "process_lifetime_maxrss_peak", "process_maxrss_units", "process_maxrss_comparability"],
+      "required": ["turn_samples", "memory_entities_growth_mean", "memory_entities_growth_max", "memory_events_growth_mean", "memory_events_growth_max", "memory_relations_growth_mean", "memory_relations_growth_max", "memory_serialized_bytes_growth_mean", "memory_serialized_bytes_growth_max", "sqlite_allocated_bytes_growth_mean", "sqlite_allocated_bytes_growth_max", "sqlite_row_growth_maxima", "growth_slopes_per_turn", "construction_latency_ms", "tracemalloc_peak_bytes", "process_lifetime_maxrss_peak", "process_maxrss_units", "process_maxrss_comparability", "observations"],
       "properties": {
         "turn_samples": {"type": "integer", "minimum": 0},
         "memory_entities_growth_mean": {"type": "number"}, "memory_entities_growth_max": {"type": "number"},
@@ -261,7 +305,8 @@
         "growth_slopes_per_turn": {"type": "object", "additionalProperties": false, "required": ["memory_serialized_bytes", "sqlite_allocated_bytes"], "properties": {"memory_serialized_bytes": {"type": ["number", "null"]}, "sqlite_allocated_bytes": {"type": ["number", "null"]}}},
         "construction_latency_ms": {"$ref": "#/$defs/constructionLatency"},
         "tracemalloc_peak_bytes": {"type": "integer", "minimum": 0}, "process_lifetime_maxrss_peak": {"type": "number", "minimum": 0},
-        "process_maxrss_units": {"type": "string"}, "process_maxrss_comparability": {"type": "string"}
+        "process_maxrss_units": {"type": "string"}, "process_maxrss_comparability": {"type": "string"},
+        "observations": {"type": "array", "items": {"$ref": "#/$defs/resourceObservation"}}
       }
     },
     "mode": {
