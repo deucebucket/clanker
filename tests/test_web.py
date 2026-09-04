@@ -75,7 +75,9 @@ def _chat(
         assert set(payload) >= {"response", "evidence"}
         assert set(payload["evidence"]) >= {
             "answer_status",
+            "truth",
             "source",
+            "certainty",
             "memory_revision",
             "vadug",
         }
@@ -929,9 +931,37 @@ def test_ui_evidence_rail_renders_truth_certainty_and_wraps_responsively() -> No
     js = js_response.text
     css = re.sub(r"\s+", " ", css_response.text)
 
-    assert re.search(r'label:\s*"Truth",\s*value:\s*evidence\.truth', js)
+    field_array = re.search(
+        r"const\s+fields\s*=\s*\[(.*?)\n\s*\];",
+        js,
+        re.S,
+    )
+    assert field_array is not None
+    field_source = field_array.group(1)
+    assert re.findall(r'label:\s*"([^"]+)"', field_source) == [
+        "Answer",
+        "Truth",
+        "Source",
+        "Certainty",
+        "Memory",
+        "VADUG",
+    ]
+
+    normalized_fields = re.sub(r"\s+", " ", field_source)
+    for exact_binding in (
+        '{ label: "Answer", value: evidence.answer_status }',
+        '{ label: "Truth", value: evidence.truth }',
+        '{ label: "Source", value: evidence.source }',
+        '{ label: "Certainty", value: `${evidence.certainty} / 255` }',
+        '{ label: "Memory", value: `r${evidence.memory_revision}` }',
+    ):
+        assert exact_binding in normalized_fields
     assert re.search(
-        r'label:\s*"Certainty",\s*value:\s*`\$\{evidence\.certainty\}\s*/\s*255`',
+        r'label:\s*"VADUG",\s*value:\s*Object\.entries\(evidence\.vadug\)',
+        field_source,
+    )
+    assert re.search(
+        r'addTurn\(\s*"Clanker"\s*,\s*data\.response\s*,\s*data\.evidence\s*\)',
         js,
     )
     assert "evidence-field--vadug" in js
@@ -957,6 +987,42 @@ def test_ui_has_one_logical_in_flight_guard_for_submit_keyboard_and_reset() -> N
         r'message\.addEventListener\("keydown"[\s\S]+?submitMessage\(\)',
         js,
     )
+
+    count_function = re.search(
+        r"function\s+updateMessageCount\(\)\s*\{(.*?)\n\}",
+        js,
+        re.S,
+    )
+    state_function = re.search(
+        r"function\s+updateMessageState\(\)\s*\{(.*?)\n\}",
+        js,
+        re.S,
+    )
+    submit_function = re.search(
+        r"async\s+function\s+submitMessage\(\)\s*\{(.*?)\n\}\n\ncomposer\.",
+        js,
+        re.S,
+    )
+    assert count_function is not None
+    assert state_function is not None
+    assert submit_function is not None
+    assert "messageCount.textContent" in count_function.group(1)
+    assert "setStatus(" not in count_function.group(1)
+    assert "const bytes = updateMessageCount();" in state_function.group(1)
+    assert "setStatus(" in state_function.group(1)
+
+    submit_source = submit_function.group(1)
+    finally_block = re.search(r"finally\s*\{(.*?)\n\s*\}", submit_source, re.S)
+    assert finally_block is not None
+    assert 'setStatus("Answer added with evidence.");' in submit_source
+    assert re.search(
+        r'catch\s*\(error\)[\s\S]*?setStatus\('
+        r'error instanceof Error \? error\.message : "The request failed\.", true\);',
+        submit_source,
+    )
+    assert "updateMessageCount();" in finally_block.group(1)
+    assert "updateMessageState(" not in finally_block.group(1)
+    assert "setStatus(" not in finally_block.group(1)
 
 
 def test_submitted_message_is_not_written_to_application_logs(caplog: pytest.LogCaptureFixture) -> None:
