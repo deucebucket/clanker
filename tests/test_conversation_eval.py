@@ -751,6 +751,21 @@ def test_artifact_publish_rolls_back_every_public_target_on_replace_failure(
         assert path.read_text() == "sentinel\n"
 
 
+@pytest.mark.parametrize("failure_name", ["report.json", "report.sha256"])
+def test_artifact_publish_rejects_colliding_targets_before_mutation(tmp_path, failure_name):
+    report_path = tmp_path / "report.json"
+    report_path.write_text("sentinel\n")
+    with pytest.raises(CorpusIntegrityError, match="must be distinct"):
+        _publish_artifacts(
+            {"aggregate": 1},
+            [],
+            output_path=report_path,
+            failures_path=tmp_path / failure_name,
+            provenance_check=lambda: None,
+        )
+    assert report_path.read_text() == "sentinel\n"
+
+
 def test_execution_errors_fail_the_release_runner():
     with pytest.raises(RuntimeError, match="1 execution error"):
         _enforce_zero_execution_errors([

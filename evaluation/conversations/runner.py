@@ -1178,11 +1178,14 @@ def _publish_artifacts(
     failures_path: Path | None,
     provenance_check: Any,
 ) -> None:
-    if failures_path is not None and failures_path.parent.resolve() != output_path.parent.resolve():
-        raise CorpusIntegrityError("report, failures, and checksum must share one publish directory")
-    output_path.parent.mkdir(parents=True, exist_ok=True)
     failure_target = failures_path or output_path.with_name(f"{output_path.stem}_failures.jsonl")
     checksum_path = output_path.with_suffix(".sha256")
+    targets = [output_path.resolve(), failure_target.resolve(), checksum_path.resolve()]
+    if len(set(targets)) != len(targets):
+        raise CorpusIntegrityError("report, failures, and checksum targets must be distinct")
+    if failure_target.parent.resolve() != output_path.parent.resolve():
+        raise CorpusIntegrityError("report, failures, and checksum must share one publish directory")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     report_bytes = (json.dumps(report, indent=2, sort_keys=True) + "\n").encode("utf-8")
     failure_bytes = "".join(_canonical_json(item) + "\n" for item in failures).encode("utf-8")
     checksum_bytes = (
@@ -1212,13 +1215,21 @@ def _publish_artifacts(
             for target in (output_path, failure_target, checksum_path):
                 _atomic_replace(staging / target.name, target)
                 published.append(target)
-        except Exception:
+        except Exception as publish_error:
+            rollback_errors: List[Exception] = []
             for target in reversed(published):
-                backup = backups[target]
-                if backup is None:
-                    target.unlink(missing_ok=True)
-                else:
-                    backup.replace(target)
+                try:
+                    backup = backups[target]
+                    if backup is None:
+                        target.unlink(missing_ok=True)
+                    else:
+                        backup.replace(target)
+                except Exception as rollback_error:
+                    rollback_errors.append(rollback_error)
+            if rollback_errors:
+                raise RuntimeError(
+                    f"artifact publication failed and {len(rollback_errors)} rollback action(s) failed"
+                ) from publish_error
             raise
 
 
