@@ -713,8 +713,114 @@ but do not imply that reviewer examined the final exact commit.
 
 ### Next / blocker
 
-No deployment blocker is known. Obtain final independent review of the exact
-head without treating the earlier ACCEPT as transferable. Continue normal
-service and Tailnet monitoring; after host or Tailnet maintenance, rerun the
-health and route checks in `docs/CLANKER_LM_WEB.md`. Measure sustained
-availability only if an uptime claim becomes a requirement.
+No deployment blocker was known at this checkpoint. The later final exact-head
+release gate did return **APPROVE** for
+`780d77b4673aa45a692fc5a1f8af144a41f09fd0` before PR #106 was squash-merged.
+Continue normal service and Tailnet monitoring; after host or Tailnet
+maintenance, rerun the health and route checks in `docs/CLANKER_LM_WEB.md`.
+Measure sustained availability only if an uptime claim becomes a requirement.
+
+---
+
+## 2026-09-04 — RR devlog: reviewed changes become visible
+
+- **Audience:** the workbench operator and Clanker-LM maintainers
+- **Scope:** issue #112's repository-backed browser changelog; no deployment,
+  identity milestone, language-runtime, or V8 engine change
+- **Goal and success condition:** a keyboard and mobile user can inspect an
+  ordered record of exactly what is shipped, while runtime build identity,
+  milestone provenance, evidence, limitations, and deployment state remain
+  explicit and independently verifiable
+
+### Rundown
+
+**Proven:** the branch adds an authenticated, same-origin release endpoint and
+an accessible native-dialog changelog to the existing workbench. Its packaged
+feed names only reviewed and merged PR #106, package `0.2.0`, and merge commit
+`9ae77f072f8afda0b1d2b757ab492757cabff0f8`. The corrected endpoint separately
+reports the full build commit supplied by deployed configuration. Startup
+validation fails closed on malformed, out-of-order, mismatched, externally
+linked, or private-field data, while CI verifies merged PR state through GitHub.
+
+In plain language, the interface now carries its own shipping receipt. A user
+does not need ACL history or repository archaeology to distinguish the live
+workbench baseline from work that is still under development.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | The changelog preserves the workbench's visual and evidence structure. | Existing six-field rail tests remain green; the new dialog reuses the graphite, warm-paper, amber, and teal system. |
+| Proven | Runtime build and milestone provenance are distinct. | `WebConfig.build_commit` becomes API `deployed_build_commit` and UI **Runtime build**; feed rows carry separate `milestone_commit`. |
+| Proven | Each `pr-N` row structurally matches its pull and commit evidence, and PR #106 is actually merged at the recorded commit. | Adversarial validator tests plus `python -m clanker_lm.web_release_verify`. |
+| Proven | Dynamic release copy cannot be interpreted as HTML by this implementation. | Hostile-copy regression plus exclusive `textContent`/DOM-node construction; no `innerHTML`, `insertAdjacentHTML`, or `document.write`. |
+| Proven | Reading the release endpoint requires the configured identity and does not create a runtime session. | Auth/no-allocation acceptance test. |
+| Proven | No later roadmap milestone is claimed in the initial feed. | Packaged `releases.json` contains only `pr-106`; explicit regression assertion excludes `pr-107`. |
+| Unknown | Whether the exact final branch will pass independent review and remote CI. | Those gates occur after the coherent local commit. |
+| Unknown | Whether the new changelog is live. | This lane is explicitly not authorized to deploy the service. |
+
+### Changes since the last entry
+
+- Added a visible masthead entry point and native dialog with loading, success,
+  retry/error, and empty/malformed boundaries.
+- Added a mobile full-height reader, bounded scrolling, 44-pixel controls,
+  close/Escape behavior, and focus restoration.
+- Added the packaged `releases.json` source and strict server-side validator.
+- Added a read-only `/api/releases` route that retains identity, CSP,
+  no-store, same-origin, and no-session-allocation boundaries.
+- Required a full nonzero build SHA in deployed mode and wired it through the
+  CLI/environment, systemd example, API, UI, and live-verification procedure.
+- Added a network-free runtime boundary plus a CI/release verifier that queries
+  GitHub only outside the running service.
+- Added adversarial tests for ordering, exact identity, escaping, accessibility,
+  private-content exclusion, packaging metadata, and unchanged security rules.
+
+### How it works, in plain language
+
+The JSON file is a small milestone ledger checked into the repository. On
+startup, the server validates its internal links and package agreement, then
+adds the independently supplied runtime build commit to the API response. The
+browser shows that build above the milestone cards and builds all dynamic copy
+as text. CI separately checks GitHub's merged PR record. A bad ledger or missing
+deployed build stops the app instead of producing a plausible-looking receipt.
+
+### Evidence and conditions
+
+```text
+base:      main at 9ae77f072f8afda0b1d2b757ab492757cabff0f8
+focused:   151 web/config/CLI/verifier/real-DOM tests passed
+full:      2,754 passed, 2 expected xfails
+benchmark: 29/29 deterministic turns
+browser:   1440×1000, 360×800, and 300×700; no overflow; focus restored
+identity:  injected runtime build differed visibly from PR #106 milestone
+GitHub:    PR #106 verified merged at 9ae77f0
+wheel:     verifier and all four packaged web assets present
+static:    workflow YAML, Python compile, JavaScript syntax, and diff clean
+boundary:  no engine/, clanker_engine.py, deployment, or service change
+```
+
+These are exact local-tree results before the corrected coherent commit. Remote
+CI and independent exact-head review remain before merge or deployment.
+
+### Negative results and open questions
+
+- The current live service does not yet contain this changelog. That is expected:
+  the requested lane forbids deployment, and the feed itself excludes unshipped
+  #112 work.
+- A single initial release cannot visually demonstrate multiple-date ordering;
+  synthetic validator coverage proves future out-of-order entries fail closed.
+- The original `2c16f69` design was rejected: it validated PR #106's milestone
+  commit only against the same ledger and mislabeled it as deployed code. That
+  result rules out self-consistent metadata as proof of a running artifact. The
+  corrected contract requires an independent deployed build input and shows
+  both identities.
+
+### Next step / blocker
+
+Finish the corrected local gates, commit the coherent tree, then obtain
+exact-head independent review and remote CI. After the implementation PR for
+issue #112 merges, use that PR's actual number `N` and actual squash/merge SHA
+`M` to add `pr-N` with matching `/pull/N` and `/commit/M` evidence in a
+follow-up reviewed metadata artifact before any production deployment. Close
+#112 only after runtime-build equality, milestone verification, and live UI
+probes pass.

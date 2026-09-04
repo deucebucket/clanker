@@ -37,8 +37,18 @@ jobs:
       - name: Compile source
         run: python -m compileall -q engine clanker_lm tests
 
+      - name: Install Chromium for web DOM acceptance
+        if: matrix.python-version == '3.12'
+        run: python -m playwright install --with-deps chromium
+
       - name: Run full regression suite
-        run: pytest -q
+        run: python -m pytest -q
+
+      - name: Verify web milestones are merged at their recorded commits
+        if: matrix.python-version == '3.12'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m clanker_lm.web_release_verify
 
       - name: Run deterministic Clanker-LM acceptance harness
         run: python benchmarks/clanker_lm_eval.py

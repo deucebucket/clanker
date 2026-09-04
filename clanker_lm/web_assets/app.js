@@ -8,8 +8,19 @@ const formStatus = document.querySelector("#form-status");
 const messageCount = document.querySelector("#message-count");
 const reset = document.querySelector("#reset");
 const exportLink = document.querySelector("#export");
+const changelogOpen = document.querySelector("#changelog-open");
+const changelogDialog = document.querySelector("#changelog-dialog");
+const changelogClose = document.querySelector("#changelog-close");
+const changelogRetry = document.querySelector("#changelog-retry");
+const changelogStatus = document.querySelector("#changelog-status");
+const releaseList = document.querySelector("#release-list");
+const latestReleaseLabel = document.querySelector("#latest-release-label");
+const deployedVersion = document.querySelector("#deployed-version");
+const deployedBuildCommit = document.querySelector("#deployed-build-commit");
+const deployedState = document.querySelector("#deployed-state");
 const encoder = new TextEncoder();
 let requestInFlight = false;
+let releaseFeedPromise = null;
 
 function element(name, className, text) {
   const node = document.createElement(name);
@@ -21,6 +32,148 @@ function element(name, className, text) {
 function setStatus(text, isError = false) {
   formStatus.textContent = text;
   formStatus.classList.toggle("is-error", isError);
+}
+
+function setChangelogStatus(text, isError = false) {
+  changelogStatus.textContent = text;
+  changelogStatus.classList.toggle("is-error", isError);
+}
+
+function appendTextList(parent, items, className) {
+  const list = element("ul", className);
+  items.forEach((item) => list.append(element("li", "", item)));
+  parent.append(list);
+}
+
+function repositoryEvidenceLink(record) {
+  const url = new URL(record.url);
+  const allowedPath = /^\/deucebucket\/clanker\/(pull\/\d+|commit\/[0-9a-f]{40}|actions\/runs\/\d+)$/;
+  if (url.protocol !== "https:" || url.host !== "github.com" || !allowedPath.test(url.pathname) || url.search || url.hash) {
+    throw new Error("Release evidence is outside the repository boundary.");
+  }
+  const link = element("a", "release-link", record.label);
+  link.href = url.href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  return link;
+}
+
+function deploymentLink(deployment) {
+  if (deployment.url !== "https://bazzite.tail85f65f.ts.net:8444/") {
+    throw new Error("Release deployment is outside the pinned workbench.");
+  }
+  const link = element("a", "release-link", "Open private workbench");
+  link.href = deployment.url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  return link;
+}
+
+function renderRelease(release) {
+  const item = element("li", "release-item");
+  const article = element("article", "release-card");
+  const heading = element("header", "release-card__heading");
+  const titleBlock = element("div", "");
+  const marker = element("p", "release-marker", release.release_id);
+  const title = element("h3", "", release.title);
+  titleBlock.append(marker, title);
+
+  const dateNode = element("time", "release-date", release.date);
+  dateNode.dateTime = release.date;
+  heading.append(titleBlock, dateNode);
+
+  const identity = element("dl", "release-identity");
+  const versionField = element("div", "");
+  versionField.append(element("dt", "", "Milestone package"), element("dd", "", release.package_version));
+  const commitField = element("div", "");
+  const commitValue = element("dd", "");
+  commitValue.append(element("code", "", release.milestone_commit));
+  commitField.append(element("dt", "", "Milestone commit"), commitValue);
+  identity.append(versionField, commitField);
+
+  const capabilitySection = element("section", "release-section");
+  capabilitySection.append(element("h4", "", "What shipped"));
+  appendTextList(capabilitySection, release.capabilities, "release-points");
+
+  const evidenceSection = element("section", "release-section");
+  evidenceSection.append(element("h4", "", "Evidence"));
+  const evidenceList = element("ul", "release-links");
+  release.evidence.forEach((record) => {
+    const evidenceItem = element("li", "");
+    evidenceItem.append(repositoryEvidenceLink(record));
+    evidenceList.append(evidenceItem);
+  });
+  evidenceSection.append(evidenceList);
+
+  const limitationSection = element("section", "release-section release-section--limits");
+  limitationSection.append(element("h4", "", "Known limits"));
+  appendTextList(limitationSection, release.limitations, "release-points");
+
+  const deployment = element("footer", "release-deployment");
+  deployment.append(
+    element("span", `deployment-badge deployment-badge--${release.deployment.state}`, release.deployment.label),
+    element("p", "", release.deployment.detail),
+    deploymentLink(release.deployment),
+  );
+
+  article.append(heading, identity, capabilitySection, evidenceSection, limitationSection, deployment);
+  item.append(article);
+  return item;
+}
+
+function renderReleaseFeed(feed) {
+  if (
+    !feed
+    || !Array.isArray(feed.releases)
+    || feed.releases.length === 0
+    || !feed.latest_shipped_release
+    || typeof feed.running_package_version !== "string"
+    || !/^[0-9a-f]{40}$/.test(feed.deployed_build_commit)
+  ) {
+    throw new Error("The release feed is empty or malformed.");
+  }
+  const current = feed.releases[0];
+  if (
+    current.release_id !== feed.latest_shipped_release.release_id
+    || current.package_version !== feed.latest_shipped_release.package_version
+    || current.milestone_commit !== feed.latest_shipped_release.milestone_commit
+    || current.package_version !== feed.running_package_version
+  ) {
+    throw new Error("The displayed release does not match the deployed identity.");
+  }
+
+  releaseList.replaceChildren(...feed.releases.map(renderRelease));
+  const shortCommit = current.milestone_commit.slice(0, 7);
+  latestReleaseLabel.textContent = `v${current.package_version} · ${shortCommit}`;
+  deployedVersion.textContent = `v${feed.running_package_version}`;
+  deployedBuildCommit.textContent = feed.deployed_build_commit;
+  deployedState.textContent = current.deployment.label;
+  releaseList.setAttribute("aria-busy", "false");
+  changelogRetry.hidden = true;
+  setChangelogStatus(`${feed.releases.length} reviewed release${feed.releases.length === 1 ? "" : "s"}, newest first.`);
+}
+
+async function loadReleaseFeed() {
+  releaseList.setAttribute("aria-busy", "true");
+  changelogRetry.hidden = true;
+  setChangelogStatus("Loading reviewed releases…");
+  try {
+    const feed = await requestJson("/api/releases", {
+      method: "GET",
+      credentials: "same-origin",
+    });
+    renderReleaseFeed(feed);
+  } catch (_error) {
+    releaseFeedPromise = null;
+    releaseList.setAttribute("aria-busy", "false");
+    changelogRetry.hidden = false;
+    setChangelogStatus("The reviewed release record could not be loaded.", true);
+  }
+}
+
+function ensureReleaseFeed() {
+  if (!releaseFeedPromise) releaseFeedPromise = loadReleaseFeed();
+  return releaseFeedPromise;
 }
 
 function updateMessageCount() {
@@ -177,5 +330,18 @@ reset.addEventListener("click", async () => {
 exportLink.addEventListener("click", (event) => {
   if (exportLink.getAttribute("aria-disabled") === "true") event.preventDefault();
 });
+
+changelogOpen.addEventListener("click", () => {
+  if (!changelogDialog.open) changelogDialog.showModal();
+  changelogClose.focus();
+  void ensureReleaseFeed();
+});
+
+changelogClose.addEventListener("click", () => changelogDialog.close());
+changelogRetry.addEventListener("click", () => { void ensureReleaseFeed(); });
+changelogDialog.addEventListener("click", (event) => {
+  if (event.target === changelogDialog) changelogDialog.close();
+});
+changelogDialog.addEventListener("close", () => changelogOpen.focus());
 
 updateMessageState();

@@ -9,11 +9,13 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import re
 import secrets
 import time
 from collections import OrderedDict, deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
+from datetime import date
 from importlib import resources
 from typing import Any, Callable, Deque, Mapping, Optional
 from urllib.parse import urlsplit
@@ -26,6 +28,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from . import __version__
 from .runtime import ClankerLM
 
 
@@ -33,7 +36,52 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 SESSION_COOKIE = "clanker_lm_session"
 _LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
-_ASSET_NAMES = ("index.html", "app.css", "app.js")
+_ASSET_NAMES = ("index.html", "app.css", "app.js", "releases.json")
+_RELEASE_FEED_MAX_BYTES = 64 * 1024
+_RELEASE_FEED_KEYS = frozenset(
+    {"schema_version", "latest_shipped_release", "releases"}
+)
+_RELEASE_KEYS = frozenset(
+    {
+        "release_id",
+        "package_version",
+        "milestone_commit",
+        "date",
+        "title",
+        "capabilities",
+        "evidence",
+        "limitations",
+        "deployment",
+    }
+)
+_SHIPPED_RELEASE_KEYS = frozenset(
+    {"release_id", "package_version", "milestone_commit"}
+)
+_EVIDENCE_KEYS = frozenset({"label", "url"})
+_DEPLOYMENT_KEYS = frozenset({"state", "label", "detail", "url"})
+_PRIVATE_FEED_KEYS = frozenset(
+    {
+        "attachment",
+        "body",
+        "message",
+        "prompt",
+        "raw",
+        "receipt_token",
+        "response",
+        "session",
+        "transcript",
+    }
+)
+_PRIVATE_FEED_MARKERS = (
+    "/acl ",
+    "chatall:",
+    "from_handle",
+    "has_attachment",
+    "message_id",
+    "receipt_token",
+)
+_LIVE_WORKBENCH_URL = "https://bazzite.tail85f65f.ts.net:8444/"
+_LOCAL_BUILD_COMMIT = "0" * 40
 _CONTENT_SECURITY_POLICY = (
     "default-src 'none'; base-uri 'none'; form-action 'self'; "
     "frame-ancestors 'none'; img-src 'self' data:; "
@@ -57,6 +105,7 @@ class WebConfig:
     port: int = DEFAULT_PORT
     public_origin: Optional[str] = None
     deployed: bool = False
+    build_commit: Optional[str] = None
     allowed_users: tuple[str, ...] = ()
     cookie_name: str = SESSION_COOKIE
     session_idle_seconds: float = 30 * 60
@@ -134,11 +183,18 @@ class WebConfig:
             raise ValueError("allowed_users must be a tuple of non-empty login strings")
         if len(set(self.allowed_users)) != len(self.allowed_users):
             raise ValueError("allowed_users must not contain duplicates")
+        if self.build_commit is not None and (
+            not isinstance(self.build_commit, str)
+            or re.fullmatch(r"[0-9a-f]{40}", self.build_commit) is None
+        ):
+            raise ValueError("build_commit must be a full lowercase Git commit")
         if self.deployed:
             if self.public_origin is None:
                 raise ValueError("deployed mode requires an explicit public_origin")
             if not self.allowed_users:
                 raise ValueError("deployed mode requires at least one allowed user")
+            if self.build_commit in {None, _LOCAL_BUILD_COMMIT}:
+                raise ValueError("deployed mode requires an exact build_commit")
             assert parsed_origin is not None
             hostname = parsed_origin.hostname
             assert hostname is not None
@@ -175,6 +231,12 @@ class WebConfig:
             else self.host
         )
         return self.public_origin or f"http://{host}:{self.port}"
+
+    @property
+    def resolved_build_commit(self) -> str:
+        """Return a visible commit identity, using zeros only outside deployment."""
+
+        return self.build_commit or _LOCAL_BUILD_COMMIT
 
 
 @dataclass
@@ -395,6 +457,183 @@ def _load_assets() -> Mapping[str, bytes]:
     return {name: root.joinpath(name).read_bytes() for name in _ASSET_NAMES}
 
 
+def _release_text(value: Any, *, name: str, maximum: int = 500) -> str:
+    if (
+        not isinstance(value, str)
+        or not value.strip()
+        or value != value.strip()
+        or len(value) > maximum
+        or any(character in value for character in ("\x00", "\r", "\n"))
+    ):
+        raise ValueError(f"release feed {name} must be bounded single-line text")
+    return value
+
+
+def _release_text_list(value: Any, *, name: str) -> list[str]:
+    if not isinstance(value, list) or not 1 <= len(value) <= 12:
+        raise ValueError(f"release feed {name} must contain 1 to 12 items")
+    return [
+        _release_text(item, name=f"{name} item")
+        for item in value
+    ]
+
+
+def _release_evidence_url(value: Any) -> str:
+    url = _release_text(value, name="evidence URL", maximum=300)
+    parsed = urlsplit(url)
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc != "github.com"
+        or parsed.query
+        or parsed.fragment
+        or not re.fullmatch(
+            r"/deucebucket/clanker/(?:pull/\d+|commit/[0-9a-f]{40}|actions/runs/\d+)",
+            parsed.path,
+        )
+    ):
+        raise ValueError("release evidence URL is outside the repository allowlist")
+    return url
+
+
+def _reject_private_feed_keys(value: Any) -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if not isinstance(key, str) or key.lower() in _PRIVATE_FEED_KEYS:
+                raise ValueError("release feed contains a private-content field")
+            _reject_private_feed_keys(child)
+    elif isinstance(value, list):
+        for child in value:
+            _reject_private_feed_keys(child)
+    elif isinstance(value, str):
+        lowered = value.lower()
+        if any(marker in lowered for marker in _PRIVATE_FEED_MARKERS):
+            raise ValueError("release feed contains private conversation metadata")
+
+
+def _validate_release_feed(value: Any) -> Mapping[str, Any]:
+    """Validate the packaged, shipped-only release record before serving it."""
+
+    if not isinstance(value, dict) or set(value) != _RELEASE_FEED_KEYS:
+        raise ValueError("release feed has an unsupported top-level shape")
+    _reject_private_feed_keys(value)
+    if type(value["schema_version"]) is not int or value["schema_version"] != 1:
+        raise ValueError("release feed has an unsupported schema version")
+
+    shipped = value["latest_shipped_release"]
+    if not isinstance(shipped, dict) or set(shipped) != _SHIPPED_RELEASE_KEYS:
+        raise ValueError("release feed shipped milestone identity is malformed")
+    shipped_id = _release_text(
+        shipped["release_id"], name="shipped release ID", maximum=80
+    )
+    shipped_version = _release_text(
+        shipped["package_version"], name="shipped package version", maximum=40
+    )
+    milestone_commit = _release_text(
+        shipped["milestone_commit"], name="shipped milestone commit", maximum=40
+    )
+    if shipped_version != __version__:
+        raise ValueError("release feed version does not match the running package")
+    if not re.fullmatch(r"[0-9a-f]{40}", milestone_commit):
+        raise ValueError("release feed milestone commit must be a full Git commit")
+
+    releases = value["releases"]
+    if not isinstance(releases, list) or not 1 <= len(releases) <= 100:
+        raise ValueError("release feed must contain 1 to 100 releases")
+
+    release_ids: set[str] = set()
+    release_dates: list[date] = []
+    for index, release in enumerate(releases):
+        if not isinstance(release, dict) or set(release) != _RELEASE_KEYS:
+            raise ValueError(f"release feed item {index} is malformed")
+        release_id = _release_text(
+            release["release_id"], name="release ID", maximum=80
+        )
+        if release_id in release_ids:
+            raise ValueError("release feed release IDs must be unique")
+        release_ids.add(release_id)
+        version = _release_text(
+            release["package_version"], name="package version", maximum=40
+        )
+        commit = _release_text(
+            release["milestone_commit"], name="milestone commit", maximum=40
+        )
+        if not re.fullmatch(r"[0-9a-f]{40}", commit):
+            raise ValueError("release feed commits must be full Git commits")
+        rendered_date = _release_text(release["date"], name="date", maximum=10)
+        try:
+            release_dates.append(date.fromisoformat(rendered_date))
+        except ValueError as exc:
+            raise ValueError("release feed dates must be ISO calendar dates") from exc
+        _release_text(release["title"], name="title", maximum=120)
+        _release_text_list(release["capabilities"], name="capabilities")
+        _release_text_list(release["limitations"], name="limitations")
+
+        evidence = release["evidence"]
+        if not isinstance(evidence, list) or not 1 <= len(evidence) <= 12:
+            raise ValueError("release evidence must contain 1 to 12 links")
+        evidence_urls: set[str] = set()
+        for link in evidence:
+            if not isinstance(link, dict) or set(link) != _EVIDENCE_KEYS:
+                raise ValueError("release evidence link is malformed")
+            _release_text(link["label"], name="evidence label", maximum=100)
+            evidence_urls.add(_release_evidence_url(link["url"]))
+
+        release_match = re.fullmatch(r"pr-(\d+)", release_id)
+        if (
+            release_match is None
+            or release_match.group(1) == "0"
+            or release_match.group(1).startswith("0")
+        ):
+            raise ValueError("release ID must identify one pull request as pr-N")
+        pull_number = release_match.group(1)
+        required_evidence = {
+            f"https://github.com/deucebucket/clanker/pull/{pull_number}",
+            f"https://github.com/deucebucket/clanker/commit/{commit}",
+        }
+        if not required_evidence <= evidence_urls:
+            raise ValueError(
+                "release ID and milestone commit require matching evidence links"
+            )
+
+        deployment = release["deployment"]
+        if not isinstance(deployment, dict) or set(deployment) != _DEPLOYMENT_KEYS:
+            raise ValueError("release deployment record is malformed")
+        deployment_state = _release_text(
+            deployment["state"], name="deployment state", maximum=20
+        )
+        if deployment_state not in {"live", "retired", "rolled_back"}:
+            raise ValueError("release deployment state is unsupported")
+        _release_text(deployment["label"], name="deployment label", maximum=100)
+        _release_text(deployment["detail"], name="deployment detail")
+        deployment_url = _release_text(
+            deployment["url"], name="deployment URL", maximum=200
+        )
+        if deployment_url != _LIVE_WORKBENCH_URL:
+            raise ValueError("release deployment URL is not the pinned workbench")
+
+        if index == 0 and (
+            release_id != shipped_id
+            or version != shipped_version
+            or commit != milestone_commit
+            or deployment_state != "live"
+        ):
+            raise ValueError("newest release does not match shipped milestone identity")
+
+    if release_dates != sorted(release_dates, reverse=True):
+        raise ValueError("release feed must be ordered newest first")
+    return value
+
+
+def _load_release_feed(data: bytes) -> Mapping[str, Any]:
+    if len(data) > _RELEASE_FEED_MAX_BYTES:
+        raise ValueError("release feed exceeds its packaged byte limit")
+    try:
+        value = json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("release feed is not valid UTF-8 JSON") from exc
+    return _validate_release_feed(value)
+
+
 async def _read_json(request: Request, *, max_bytes: int) -> Mapping[str, Any]:
     content_type = (
         request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
@@ -479,6 +718,14 @@ def create_app(
         token_factory=token_factory,
     )
     assets = _load_assets()
+    release_feed = _load_release_feed(assets["releases.json"])
+    release_payload = {
+        "schema_version": release_feed["schema_version"],
+        "running_package_version": __version__,
+        "deployed_build_commit": resolved.resolved_build_commit,
+        "latest_shipped_release": release_feed["latest_shipped_release"],
+        "releases": release_feed["releases"],
+    }
 
     def authorize(request: Request, *, mutation: bool = False) -> None:
         if resolved.deployed:
@@ -558,6 +805,14 @@ def create_app(
 
     async def health(_: Request) -> Response:
         return JSONResponse({"status": "ok"})
+
+    async def releases(request: Request) -> Response:
+        authorize(request)
+        return _limited_json_response(
+            release_payload,
+            max_bytes=_RELEASE_FEED_MAX_BYTES,
+            overflow_message="The release feed is too large.",
+        )
 
     async def chat(request: Request) -> Response:
         authorize(request, mutation=True)
@@ -679,6 +934,7 @@ def create_app(
             Route("/", index, methods=["GET"]),
             Route("/assets/{name:str}", asset, methods=["GET"]),
             Route("/healthz", health, methods=["GET"]),
+            Route("/api/releases", releases, methods=["GET"]),
             Route("/api/chat", chat, methods=["POST"]),
             Route("/api/reset", reset, methods=["POST"]),
             Route("/api/export", export, methods=["GET"]),
