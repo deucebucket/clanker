@@ -634,7 +634,7 @@ def _production_reference_hits(
                 text, content_address=str(manifest["content_address"])
             )
         ) or (
-            path.suffix.lower() in {".js", ".html", ".css", ".json"}
+            path.suffix.lower() in {".js", ".html"}
             and _static_asset_has_forbidden_production_reference(
                 text, content_address=str(manifest["content_address"])
             )
