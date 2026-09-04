@@ -42,12 +42,20 @@ commit. The browser creates dynamic content with `textContent`; it uses no HTML
 insertion or external assets.
 
 The initial pre-merge feed contained only reviewed PR #106. After the
-implementation merged as PR #113, this follow-up release artifact added the
-actual PR number and actual merge commit; issue #107 and later language-roadmap
-work remain explicitly absent until their own reviewed releases. The follow-up
-artifact still requires its own review, CI, deployment, and live build-identity
-check before issue #112 can close. Until that happens, the PR #113 row is
-explicitly **Pending · live verification** and PR #106 remains the live marker.
+implementation merged as PR #113, staging PR #114 added the actual PR number
+and merge commit as **Pending · live verification**. PR #114 then merged at
+`2d736961d7db0510711a7ac54eb39a458446f5ee`; Actions run `33863653170` passed,
+and that exact artifact passed live service, API, identity, and responsive
+browser verification. The bounded [staging receipt](https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707)
+records the conditions and results.
+
+This final metadata artifact promotes PR #113 to **Live · private Tailnet** and
+retains PR #106 as **Retired · release history**. That statement is backed by
+the deployed staging artifact. The promotion procedure requires independent
+review, CI, merge, deployment with the final artifact's exact merge SHA, and
+live API/browser verification before issue closure. `/api/releases` is the
+authority for whether that procedure has completed. Issue #107 and later
+language-roadmap work remain absent until their own reviewed releases.
 
 The first implementation commit `2c16f69` was rejected because it reused PR
 #106's milestone commit as if that proved the running build. The corrected
@@ -59,22 +67,22 @@ IDs. The checked-in feed contains no self-referential build SHA.
 Local validation on the current tree:
 
 ```text
-157 focused web/config/CLI/verifier/DOM tests passed
-2,760 full-suite tests passed, 2 expected xfails
+164 focused web/config/CLI/verifier/DOM tests passed
+2,767 full-suite tests passed, 2 expected xfails
 29/29 deterministic acceptance turns
 real Chromium DOM wiring passed; hostile text remained text with no overflow
 1440×1000, 360×800, and 300×700: runtime/milestone split visible; focus restored
-GitHub verified PR #106 at 9ae77f0 and PR #113 at 66b85de
+GitHub verified PR #106 at 9ae77f0, PR #113 at 66b85de, and staging PR #114 at 2d73696
 fresh wheel contains the verifier and all four web assets
 workflow YAML, compile, JavaScript syntax, diff, and no-engine checks clean
 ```
 
-Both independent exact-head reviewers accepted
-`e4c25ae330d917132e496e700b1c2839e652a911`; the Python 3.10/3.12 CI matrices
-passed, and GitHub squash-merged PR #113 as
-`66b85de66337789fa83292ecf683c6b23cc0af55`. This release-row follow-up is a
-separate artifact, so its own exact review, CI, deployment, and live probes
-remain required before #112 closes.
+Both independent exact-head reviewers accepted implementation head
+`e4c25ae330d917132e496e700b1c2839e652a911`; GitHub squash-merged PR #113 as
+`66b85de66337789fa83292ecf683c6b23cc0af55`. Staging PR #114 carried the
+reviewed lifecycle correction and was separately merged, deployed, and probed.
+The final promotion is a distinct artifact; the repeatable release gate is exact
+review, CI, merge, exact-SHA deployment, and live API/browser verification.
 
 ---
 

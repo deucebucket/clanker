@@ -804,9 +804,8 @@ CI and independent exact-head review remain before merge or deployment.
 
 ### Negative results and open questions
 
-- The current live service does not yet contain this changelog. That is expected:
-  the requested lane forbids deployment, and the feed itself excludes unshipped
-  #112 work.
+- At that stage, the live service did not contain the changelog: the requested
+  lane forbade deployment, and the feed itself excluded unshipped #112 work.
 - A single initial release cannot visually demonstrate multiple-date ordering;
   synthetic validator coverage proves future out-of-order entries fail closed.
 - The original `2c16f69` design was rejected: it validated PR #106's milestone
@@ -866,10 +865,10 @@ in either release card or the current-runtime summary.
 come from GitHub's completed merge and CI records, not a predicted PR number or
 self-referential commit placeholder.
 
-**Unknown:** this follow-up artifact is not live. Its exact local gates now pass,
-but independent review, remote CI, merge, service restart, and live API/browser
-verification remain. Until then the existing service remains healthy on the PR
-#106 build and issue #112 stays open.
+**Historical state at that stage:** this follow-up artifact was not live. Its
+exact local gates passed, while independent review, remote CI, merge, service
+restart, and live API/browser verification still remained. PR #114 and its
+staging receipt below record how those gates later resolved.
 
 ### Evidence
 
@@ -888,10 +887,96 @@ static:               compile, JavaScript syntax, and diff checks clean
 boundary:             engine/ and clanker_engine.py unchanged
 ```
 
-### Next / blocker
+### Recorded next step at that stage
 
-Commit the corrected two-entry ledger, obtain independent exact-head review,
-then merge the pending metadata follow-up and deploy it with that merge SHA as
-`CLANKER_LM_BUILD_COMMIT`. After the live endpoint, dialog, identity boundary,
-health, and mobile/desktop probes pass, promote PR #113 to `live` in one final
-reviewed metadata artifact and deploy that exact artifact before closing #112.
+The recorded next step was to commit and review the two-entry ledger, merge and
+deploy it with its exact SHA, run live probes, and then create a separate
+reviewed artifact promoting PR #113 to `live` while retaining PR #106 history.
+
+---
+
+## 2026-09-04 — RR devlog: PR #113 final live-promotion candidate
+
+- **Audience:** workbench operator, release reviewer, and Clanker-LM maintainer
+- **Scope:** final issue #112 release metadata and browser presentation; no
+  language-runtime, V8 engine, public-route, or service mutation
+- **Success condition:** checked-in metadata promotes the already staged PR #113
+  capability to the sole live milestone, preserves PR #106 as history, cites
+  bounded deployment evidence, and remains explicit that runtime build identity
+  comes only from the deployed artifact
+
+### Rundown
+
+**Proven:** staging PR #114 merged at
+`2d736961d7db0510711a7ac54eb39a458446f5ee` after Python 3.10 and 3.12 passed in
+Actions run `33863653170`. The exact detached artifact ran with the same SHA as
+its `--build-commit`; loopback and Tailnet health returned `200`; the
+authenticated release API returned `200`, `no-store`, no session cookie, and
+the exact build. Chromium probes at 1440×1000, 360×800, and 300×700 saw one live
+and one pending card, canonical labels, no overflow, restored Escape focus, and
+zero console or page errors. The bounded [staging receipt](https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707)
+records those conditions.
+
+**Proven:** this candidate makes PR #113 the sole live row and keeps PR #106 as
+retired history. Its PR #113 card links the implementation merge, staging PR
+#114, staging merge, staging CI, and exact receipt. The validator and browser
+allow only that exact issue-comment URL; hostile query, fragment, issue,
+comment, and userinfo variants fail closed. Replacing any PR #114 pull, merge,
+or CI URL with another otherwise allowed repository URL also fails. Generic
+pending rows remain covered by server tests and a synthetic real-browser
+rendering.
+
+**Unknown at candidate validation time:** the final promotion artifact had no
+merge SHA and had not been deployed. GitHub still reported issue #112 open.
+This is a point-in-time release receipt, not an enduring status assertion;
+`/api/releases` is authoritative after each deployment.
+
+### Current state
+
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | PR #113's capability ran successfully from the merged staging artifact. | PR #114 at `2d73696`; CI `33863653170`; issue comment `5539229707`. |
+| Proven | The promotion ledger has exactly one live row followed by retained history. | `latest_shipped_release=pr-113`; ordered states `[live, retired]`; validator and endpoint tests. |
+| Proven | The browser shows the promoted semantics without losing pending coverage. | Real Chromium at three responsive sizes plus a synthetic pending-state pass. |
+| Unknown | Final production identity after promotion. | Supplied only by the future merge SHA through `CLANKER_LM_BUILD_COMMIT`, then measured through `/api/releases`. |
+
+### How it works, in plain language
+
+PR #114 proved the changelog capability could run before the ledger called it
+live. This separate artifact advances the pointer only after that proof and
+moves the prior baseline into history. The milestone commit says which reviewed
+feature shipped; the runtime build says which exact repository artifact is
+currently executing. They intentionally answer different questions.
+
+### Evidence and conditions
+
+```text
+base:          origin/main at 2d736961d7db0510711a7ac54eb39a458446f5ee
+staging PR:    #114 merged at 2d736961d7db0510711a7ac54eb39a458446f5ee
+staging CI:    33863653170 (Python 3.10 and 3.12 passed)
+staging proof: https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707
+focused:       164 web/config/CLI/verifier/real-DOM tests passed
+full:          2,767 passed, 2 expected xfails
+benchmark:     29/29 deterministic turns
+browser:       1440×1000, 360×800, 300×700; no overflow/errors; focus restored
+GitHub:        release PRs #113/#106 verified; PR #114 merge and CI verified
+package:       verifier and all four web assets present in a fresh wheel
+static:        Python compile, JavaScript syntax, and diff checks clean
+boundary:      engine/ and clanker_engine.py unchanged
+```
+
+### Negative results and open questions
+
+- The prior global newest-first rule rejected a valid newer pending milestone;
+  lifecycle-group ordering replaced it before PR #114 merged.
+- Free-form deployment labels could contradict structured state; canonical
+  server validation and browser-derived badge copy now prevent that mismatch.
+- Local and staging evidence cannot prove the final artifact is deployed. Only
+  exact-SHA runtime equality and promoted live API/browser probes can do so.
+
+### Next step / blocker
+
+Obtain exact-head review and CI, merge the final promotion, deploy that merge
+SHA as `CLANKER_LM_BUILD_COMMIT`, and verify health, authenticated API identity,
+canonical live/history cards, responsive overflow, focus restoration, and
+console/page errors. Issue closure depends on those measured results.

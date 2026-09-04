@@ -949,7 +949,7 @@ def _release_record(
         milestone_commit=commit,
         date=release_date,
     )
-    release["evidence"][:2] = [
+    release["evidence"] = [
         {
             "label": f"Merged PR #{number}",
             "url": f"https://github.com/deucebucket/clanker/pull/{number}",
@@ -987,7 +987,7 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
     assert feed["releases"]
     assert [release["deployment"]["state"] for release in feed["releases"]] == [
         "live",
-        "pending",
+        "retired",
     ]
     assert len({release["release_id"] for release in feed["releases"]}) == len(
         feed["releases"]
@@ -999,26 +999,35 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
         "package_version": current["package_version"],
         "milestone_commit": current["milestone_commit"],
     }
-    assert current["release_id"] == "pr-106"
+    assert current["release_id"] == "pr-113"
     assert current["package_version"] == feed["running_package_version"]
-    assert current["milestone_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+    assert current["milestone_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
     assert feed["deployed_build_commit"] != current["milestone_commit"]
     assert current["date"] == "2026-09-04"
     assert current["deployment"] == {
         "state": "live",
         "label": "Live · private Tailnet",
-        "detail": "Reviewed PR #106 remains the deployed baseline until the PR #113 artifact passes live verification.",
+        "detail": "PR #113 passed live staging verification on the PR #114 artifact at 2d73696; the running build above identifies the deployed promotion artifact.",
         "url": "https://bazzite.tail85f65f.ts.net:8444/",
     }
     assert current["capabilities"]
     assert current["limitations"]
     assert {link["url"] for link in current["evidence"]} >= {
-        "https://github.com/deucebucket/clanker/pull/106",
-        "https://github.com/deucebucket/clanker/commit/9ae77f072f8afda0b1d2b757ab492757cabff0f8",
+        "https://github.com/deucebucket/clanker/pull/113",
+        "https://github.com/deucebucket/clanker/commit/66b85de66337789fa83292ecf683c6b23cc0af55",
+        "https://github.com/deucebucket/clanker/pull/114",
+        "https://github.com/deucebucket/clanker/commit/2d736961d7db0510711a7ac54eb39a458446f5ee",
+        "https://github.com/deucebucket/clanker/actions/runs/33863653170",
+        "https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707",
     }
     previous = feed["releases"][1]
-    assert previous["release_id"] == "pr-113"
-    assert previous["deployment"]["state"] == "pending"
+    assert previous["release_id"] == "pr-106"
+    assert previous["deployment"] == {
+        "state": "retired",
+        "label": "Retired · release history",
+        "detail": "PR #106 was the previous live baseline and remains as reviewed history after PR #113 passed live staging verification.",
+        "url": "https://bazzite.tail85f65f.ts.net:8444/",
+    }
     assert "pr-107" not in response.text.lower()
     _assert_hardened(response)
 
@@ -1036,27 +1045,47 @@ def test_release_endpoint_reports_the_exact_configured_runtime_build() -> None:
 def test_pending_milestone_cannot_replace_the_verified_live_marker() -> None:
     feed = _release_feed_fixture()
     assert web_module._validate_release_feed(feed)
-    assert feed["latest_shipped_release"]["release_id"] == "pr-106"
+    assert feed["latest_shipped_release"]["release_id"] == "pr-113"
     assert feed["releases"][0]["deployment"]["state"] == "live"
-    assert feed["releases"][1]["release_id"] == "pr-113"
-    assert feed["releases"][1]["deployment"]["state"] == "pending"
+
+    pending = _release_record(
+        feed["releases"][0],
+        number=115,
+        commit="c" * 40,
+        release_date="2026-09-05",
+        state="pending",
+    )
+    feed["releases"].insert(1, pending)
+    assert web_module._validate_release_feed(feed)
 
     premature = copy.deepcopy(feed)
     premature["latest_shipped_release"] = {
-        key: premature["releases"][1][key]
+        key: pending[key]
         for key in ("release_id", "package_version", "milestone_commit")
     }
-    premature["releases"] = [premature["releases"][1], premature["releases"][0]]
+    premature["releases"] = [
+        pending,
+        *premature["releases"][:1],
+        *premature["releases"][2:],
+    ]
     with pytest.raises(ValueError, match="current live release"):
         web_module._validate_release_feed(premature)
 
 
 def test_release_lifecycle_accepts_zero_or_later_dated_pending_rows() -> None:
     feed = _release_feed_fixture()
-    feed["releases"][1]["date"] = "2026-09-05"
     assert web_module._validate_release_feed(feed)
 
-    feed["releases"] = feed["releases"][:1]
+    feed["releases"].insert(
+        1,
+        _release_record(
+            feed["releases"][0],
+            number=115,
+            commit="c" * 40,
+            release_date="2026-09-05",
+            state="pending",
+        ),
+    )
     assert web_module._validate_release_feed(feed)
 
 
@@ -1071,15 +1100,22 @@ def test_release_lifecycle_rejects_duplicate_live_and_bad_group_order() -> None:
         web_module._validate_release_feed(duplicate_live)
 
     pending_out_of_order = copy.deepcopy(feed)
-    pending_out_of_order["releases"].append(
+    pending_out_of_order["releases"][1:1] = [
         _release_record(
-            feed["releases"][1],
-            number=114,
+            feed["releases"][0],
+            number=115,
             commit="a" * 40,
+            release_date="2026-09-04",
+            state="pending",
+        ),
+        _release_record(
+            feed["releases"][0],
+            number=116,
+            commit="b" * 40,
             release_date="2026-09-05",
             state="pending",
-        )
-    )
+        ),
+    ]
     with pytest.raises(ValueError, match="pending releases must be ordered"):
         web_module._validate_release_feed(pending_out_of_order)
 
@@ -1087,15 +1123,6 @@ def test_release_lifecycle_rejects_duplicate_live_and_bad_group_order() -> None:
     history_then_pending["releases"].append(
         _release_record(
             feed["releases"][0],
-            number=114,
-            commit="a" * 40,
-            release_date="2026-09-03",
-            state="retired",
-        )
-    )
-    history_then_pending["releases"].append(
-        _release_record(
-            feed["releases"][1],
             number=115,
             commit="b" * 40,
             release_date="2026-09-02",
@@ -1109,17 +1136,17 @@ def test_release_lifecycle_rejects_duplicate_live_and_bad_group_order() -> None:
     history_out_of_order["releases"].extend(
         [
             _release_record(
-                feed["releases"][0],
-                number=114,
+                feed["releases"][1],
+                number=115,
                 commit="a" * 40,
-                release_date="2026-09-02",
+                release_date="2026-09-03",
                 state="retired",
             ),
             _release_record(
-                feed["releases"][0],
-                number=115,
+                feed["releases"][1],
+                number=116,
                 commit="b" * 40,
-                release_date="2026-09-03",
+                release_date="2026-09-05",
                 state="rolled_back",
             ),
         ]
@@ -1239,7 +1266,7 @@ def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() 
                     ],
                 }
             ),
-            id="out-of-order-pending",
+            id="pending-after-history",
         ),
         pytest.param(
             lambda feed: feed["releases"][0].update(date="2026-02-30"),
@@ -1332,6 +1359,56 @@ def test_release_feed_rejects_hostile_evidence_url_variants(hostile_url: str) ->
     feed = _release_feed_fixture()
     feed["releases"][0]["evidence"][0]["url"] = hostile_url
     with pytest.raises(ValueError):
+        web_module._validate_release_feed(feed)
+
+
+@pytest.mark.parametrize(
+    "hostile_receipt_url",
+    [
+        "https://github.com/deucebucket/clanker/issues/112?view=1#issuecomment-5539229707",
+        "https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229708",
+        "https://github.com/deucebucket/clanker/issues/113#issuecomment-5539229707",
+        "https://user@github.com/deucebucket/clanker/issues/112#issuecomment-5539229707",
+    ],
+)
+def test_staging_receipt_allowlist_is_exact(hostile_receipt_url: str) -> None:
+    feed = _release_feed_fixture()
+    receipt = next(
+        link
+        for link in feed["releases"][0]["evidence"]
+        if "issuecomment-" in link["url"]
+    )
+    receipt["url"] = hostile_receipt_url
+    with pytest.raises(ValueError, match="outside the repository allowlist"):
+        web_module._validate_release_feed(feed)
+
+
+@pytest.mark.parametrize(
+    ("canonical_url", "other_allowed_url"),
+    [
+        (
+            "https://github.com/deucebucket/clanker/pull/114",
+            "https://github.com/deucebucket/clanker/pull/115",
+        ),
+        (
+            "https://github.com/deucebucket/clanker/commit/2d736961d7db0510711a7ac54eb39a458446f5ee",
+            "https://github.com/deucebucket/clanker/commit/" + "d" * 40,
+        ),
+        (
+            "https://github.com/deucebucket/clanker/actions/runs/33863653170",
+            "https://github.com/deucebucket/clanker/actions/runs/33863653171",
+        ),
+    ],
+)
+def test_pr113_promotion_requires_exact_staging_evidence(
+    canonical_url: str,
+    other_allowed_url: str,
+) -> None:
+    feed = _release_feed_fixture()
+    evidence = feed["releases"][0]["evidence"]
+    link = next(link for link in evidence if link["url"] == canonical_url)
+    link["url"] = other_allowed_url
+    with pytest.raises(ValueError, match="requires exact staging evidence"):
         web_module._validate_release_feed(feed)
 
 
@@ -1444,6 +1521,8 @@ def test_changelog_dialog_has_keyboard_focus_mobile_and_loading_error_hooks() ->
     assert ".changelog-trigger {" in css and "min-height: 44px" in css
     assert ".release-card--pending {" in css
     assert ".deployment-badge--pending {" in css
+    assert ".release-card--history {" in css
+    assert ".deployment-badge--history {" in css
 
 
 def test_packaging_declares_the_repository_release_feed() -> None:

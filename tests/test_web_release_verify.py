@@ -38,7 +38,9 @@ def _feed() -> dict[str, Any]:
     return json.loads(assets["releases.json"].decode("utf-8"))
 
 
-def _merged_payload(*, number: int = 106, commit: str = MERGE_COMMIT) -> dict[str, Any]:
+def _merged_payload(
+    *, number: int = 113, commit: str = CURRENT_MERGE_COMMIT
+) -> dict[str, Any]:
     return {
         "number": number,
         "merged_at": "2026-09-04T08:28:56Z",
@@ -57,8 +59,8 @@ def test_release_verifier_accepts_pr_merged_at_the_recorded_commit() -> None:
     verify_merged_releases(_feed(), opener=opener, token="test-token")
     assert len(requests) == 2
     assert [request.full_url.rsplit("/", 1)[-1] for request, _ in requests] == [
-        "106",
         "113",
+        "106",
     ]
     assert all(request.headers["Authorization"] == "Bearer test-token" for request, _ in requests)
     assert all(timeout == 15 for _, timeout in requests)
@@ -120,7 +122,7 @@ def test_nonexistent_pr_fails_closed() -> None:
     "payload",
     [
         {"number": 999, "merged_at": "now", "merge_commit_sha": MERGE_COMMIT},
-        {"number": 106, "merged_at": "now", "merge_commit_sha": "f" * 40},
+        {"number": 113, "merged_at": "now", "merge_commit_sha": "f" * 40},
         [],
         b"{",
         b"x" * (1024 * 1024 + 1),
@@ -147,6 +149,10 @@ def test_ci_runs_the_network_release_verifier() -> None:
     ).read_text(encoding="utf-8")
     assert "PR #112 row" not in web_guide
     assert "pr-112" not in web_guide.lower()
-    assert "PR #113 is the implementation PR" in web_guide
-    assert "first\nfollow-up artifact adds `pr-113` as `pending`" in web_guide
-    assert "prevents checked-in metadata from claiming a\nfuture deployment" in web_guide
+    normalized_guide = " ".join(web_guide.split())
+    assert "PR #113 is the implementation PR" in normalized_guide
+    assert "Staging PR #114 merged at `2d736961" in normalized_guide
+    assert "issues/112#issuecomment-5539229707" in normalized_guide
+    assert "sets `pr-113` to `live` and retains `pr-106` as `retired` history" in normalized_guide
+    assert "deploy its exact merge SHA as `CLANKER_LM_BUILD_COMMIT`" in normalized_guide
+    assert "the API, rather than this rollout narrative" in normalized_guide

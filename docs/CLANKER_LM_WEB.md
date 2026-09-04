@@ -6,10 +6,10 @@ It is a private Tailnet service, not a public website. Access requires membershi
 in the Tailnet and the exact allowlisted Tailscale login
 `jerrymares@gmail.com`.
 
-The current live service is the reviewed PR #106 baseline. Issue #112's
-changelog and build-identity contract are present only on its branch until the
-post-merge release-row update, reviewed deployment, and live probes described
-below. Nothing in this guide claims that branch work is already live.
+The authenticated `/api/releases` response and the in-product changelog are the
+authoritative sources for the live milestone and exact running build. The
+repository ledger records reviewed milestone provenance; deployed configuration
+supplies the independent `deployed_build_commit` shown by both surfaces.
 
 ## Deployment map
 
@@ -177,10 +177,12 @@ allowlisted login. Store a fact, ask for it in the same session, inspect the
 six fields in the evidence rail (**Answer**, **Truth**, **Source**,
 **Certainty**, **Memory**, and **VADUG**), export the snapshot, and reset the
 session. Open **Changelog** by keyboard and pointer; confirm **Runtime build**
-matches `CLANKER_LM_EXPECTED_BUILD`, while the PR #106 card separately reads
-milestone commit `9ae77f072f8afda0b1d2b757ab492757cabff0f8` and **Live · private
-Tailnet**. Close it with the visible button and with Escape, and repeat at a
-narrow mobile viewport without horizontal clipping.
+matches `CLANKER_LM_EXPECTED_BUILD`, and confirm the first card matches all three
+fields in the API's `latest_shipped_release`. For the issue #112 promotion, the
+expected milestone is PR #113 at
+`66b85de66337789fa83292ecf683c6b23cc0af55`, followed by PR #106 as **Retired ·
+release history**. Close the dialog with the visible button and with Escape, and
+repeat at a narrow mobile viewport without horizontal clipping.
 
 ## Maintaining the shipped feed
 
@@ -208,6 +210,11 @@ merged at that commit. Use only evidence links below the `deucebucket/clanker`
 GitHub repository and keep the direct deployment URL pinned exactly as
 `https://bazzite.tail85f65f.ts.net:8444/`.
 
+The only issue-comment evidence exception is the exact staging receipt
+`https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707`.
+The server and browser reject query, fragment, issue-number, comment-number,
+userinfo, or host variants rather than permitting general issue-comment URLs.
+
 Do not copy ACL, browser, session, prompt, response, or raw transcript content
 into the feed. A development branch and an accepted PR are not a shipped entry;
 deployment verification is the final gate. The server deliberately fails at
@@ -216,14 +223,20 @@ running package version or milestone identity. Never add
 `deployed_build_commit` to this file; deployed configuration supplies it.
 
 For #112 specifically, PR #113 is the implementation PR and
-`66b85de66337789fa83292ecf683c6b23cc0af55` is its merge commit. The first
-follow-up artifact adds `pr-113` as `pending` while PR #106 remains the live
-marker. Review and merge that artifact, set `CLANKER_LM_BUILD_COMMIT` to its
-merge SHA, deploy it, and prove the new dialog plus live API build equality.
-Only then may a final reviewed metadata artifact promote PR #113 to `live` and
-retire PR #106. Deploy and verify that final artifact before closing issue
-#112. This two-phase sequence prevents checked-in metadata from claiming a
-future deployment.
+`66b85de66337789fa83292ecf683c6b23cc0af55` is its merge commit. Staging PR #114
+merged at `2d736961d7db0510711a7ac54eb39a458446f5ee` after Actions run
+`33863653170` passed. That exact artifact was deployed and passed the health,
+identity, API, responsive-browser, focus, overflow, and error probes recorded
+in the [staging receipt](https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707).
+The PR #113 row requires that exact PR #114 pull, merge-commit, CI-run, and
+receipt quartet; swapping any member for another otherwise allowed repository
+URL fails startup validation.
+The final promotion artifact sets `pr-113` to `live` and retains `pr-106` as
+`retired` history. Promotion procedure is to review and merge that artifact,
+deploy its exact merge SHA as `CLANKER_LM_BUILD_COMMIT`, and repeat the live
+API/browser checks. Issue closure requires that final promoted state to be
+independently verified; the API, rather than this rollout narrative, reports
+whether the promotion is currently deployed.
 
 ## Live link correction
 
@@ -236,8 +249,8 @@ session. The updated service was restarted and Jerry's live ACL-link retest
 opened the workbench successfully.
 
 This fix landed after the independent pre-rebase reviewer returned ACCEPT. The
-live retest and exact-tree tests prove the correction works in the exercised
-paths; final exact-head independent review has not yet been recorded.
+live retest and exact-tree tests proved the correction in the exercised paths.
+Current release and build identity remain authoritative in `/api/releases`.
 
 ## Restart and rollback
 
@@ -266,9 +279,9 @@ host: it would remove routes outside this workbench. If the dormant 8444 handler
 itself must be removed, change only that handler through the host's approved
 Tailscale configuration workflow.
 
-## Validation receipt
+## Historical PR #106 validation receipt
 
-The current exact deployment tree passed:
+The original PR #106 deployment tree passed:
 
 ```text
 88 web tests passed
@@ -283,6 +296,6 @@ The final exact-head release gate returned **APPROVE** for
 review, before PR #106 was squash-merged as
 `9ae77f072f8afda0b1d2b757ab492757cabff0f8`.
 
-Issue #112's current branch validation receipt is recorded in
-`docs/CLANKER_LM_DEVLOG.md`. It remains branch evidence only and does not claim
-that #112 is merged or live.
+Issue #112's staged and promoted validation receipts are recorded chronologically
+in `docs/CLANKER_LM_DEVLOG.md`. Current deployment truth comes from the
+authenticated `/api/releases` runtime-build and milestone fields.
