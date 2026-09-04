@@ -231,3 +231,34 @@ README gained a "Live demo" section; CLAUDE.md gained a "Live showcase" note so
 future sessions know the pet exists, runs this engine, and feeds findings back to
 docs/v8_audit_log.md (it's how findings #7-#10 were found). Engine work stays here;
 pet work stays in clanker-pet-space.
+
+---
+
+## 2026-09-04 — Clanker-LM runtime and parser program recorded
+
+The deterministic language-runtime work is now tracked separately from the V8
+engine play-by-play in `docs/CLANKER_LM_DEVLOG.md`, with a release-oriented
+history in `docs/CLANKER_LM_CHANGELOG.md`.
+
+Current state:
+
+- `engine/` remains the tuned V8 affect kernel and was not modified by the
+  Clanker-LM parser deliveries;
+- `clanker_lm/` owns semantic parsing, symbolic memory, evidence binding,
+  active lexical learning, live resolvers, trajectory calibration, atomic
+  realization, and V8-backed candidate ranking;
+- no completed response sentence is stored as a template, including unknown,
+  conflict, probe, and safety responses;
+- finite content complements (#86), infinitival control/raising (#88), and
+  embedded interrogative attribution (#89) are merged;
+- the latest verified baseline is 2,321 passed with the same two expected V8
+  failures and 29/29 deterministic acceptance turns;
+- the active branch is `feature/clanker-lm-gerund-participial-complements`,
+  implementing issue #90;
+- issues #84 and #90-#101 define the remaining modifier/complement closure
+  program, including held-out evaluation, predicate licensing, realization
+  reverse validation, migration, fuzzing, observability, compatibility,
+  performance, and adversarial attribution tests.
+
+All future bounded parser deliveries must update the dedicated Clanker-LM logs
+before review and preserve the permanent boundaries documented there.

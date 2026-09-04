@@ -1,5 +1,25 @@
 # Changelog
 
+## Clanker-LM 0.3-alpha development line (2026-09-03 to 2026-09-04)
+
+- Added an isolated deterministic language runtime under `clanker_lm/`; the tuned
+  V8 `engine/` remains unchanged.
+- Replaced whole-sentence response construction with atomic lexemes, abstract
+  grammar operations, runtime morphology, and semantic-plan validation.
+- Added symbolic entity/event memory, typed Q&A, explicit unknown/conflict
+  handling, active lexical learning, live time/date/calculation resolvers,
+  transition-residual learning, and nontextual dialogue trajectory profiles.
+- Expanded the parser through coordination, subordinate relations, relative
+  modifiers, finite attributed content (#86), infinitival control/raising (#88,
+  PR #102), and embedded interrogative attribution (#89, PR #103).
+- Latest merged baseline: `2,321 passed, 2 xfailed`; the xfails remain the
+  pre-existing V8 `CARETAKER_TRANSFER` and `BROADCAST` gaps. Deterministic
+  acceptance remains `29/29` turns.
+- Current branch `feature/clanker-lm-gerund-participial-complements` begins issue
+  #90 from merged commit `ca992c32e22cdaaf5239a689f11fffa176a31698`.
+- Full history, invariants, validation, and roadmap are recorded in
+  `docs/CLANKER_LM_CHANGELOG.md` and `docs/CLANKER_LM_DEVLOG.md`.
+
 ## V8.5 (2026-06-11) -- Slang register overhaul
 
 - Vocabulary: 12 net-new slang entries (dope, rad, gnarly, elite, iconic,
