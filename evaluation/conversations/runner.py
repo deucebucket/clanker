@@ -36,6 +36,7 @@ from clanker_lm.trajectory import TrajectoryController
 
 from .corpus import (
     AXES,
+    ALLOWED_ANSWER_STATUS,
     ALLOWED_DOMAINS,
     ALLOWED_OUTCOMES,
     MANIFEST_PATH,
