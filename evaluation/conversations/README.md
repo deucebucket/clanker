@@ -105,8 +105,9 @@ The three modes are:
 - `transition_corrected`: same lifetime, with production correction math reading
   only the frozen development-derived statistics.
 
-The runner reports mode/domain/outcome/supervision strata, per-axis next-state
-MAE and direction accuracy, dialogue/response acts, semantic/status/truth and
+The runner reports mode/domain/outcome/supervision strata, per-axis signed
+next-state residual, MAE, and direction accuracy, dialogue/response acts,
+semantic/status/truth and
 entity resolution, UNKNOWN/CONFLICT precision and recall, calibration, target
 attainment, drift, latency, candidate growth, memory growth, and SQLite growth.
 Accuracy intervals use 10,000 fixed-seed whole-conversation cluster bootstrap
@@ -123,9 +124,9 @@ turn metrics. Latency, construction latency, memory growth, SQLite allocation,
 row growth, maxima, counts, and slopes likewise carry bounded ID-only
 observations; validation rebuilds their aggregates and binds every domain and
 turn identity to the evaluated corpus. Drift rows are bound to the identical
-next-state/MAE population, per-axis absolute residuals, normalized MAE, and the
-weighted-RMS distance equation. No source utterance or generated response is
-included.
+next-state/residual/MAE population, including each per-axis signed residual,
+its absolute value, normalized MAE, and the weighted-RMS distance equation. No
+source utterance or generated response is included.
 
 `evaluation_commit` is not accepted merely because it is an ancestor. It must
 equal the newest commit on the current ancestry that changes the measured

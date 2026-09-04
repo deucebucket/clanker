@@ -1104,7 +1104,7 @@ visual evidence:     not applicable; this milestone has no UI surface
 
 Nominate the final clean documentation successor for both detached reviewers.
 Only after both return ACCEPT: run all three modes over the immutable 520-turn
-held-out split, transactionally publish the aggregate-only
+held-out split, transactionally publish the text-free, ID-only sufficient-statistic
 report/failure/checksum generation, commit those baseline artifacts separately,
 rerun the full suite, bind stable CI thresholds/fingerprint/root, and create
 the documented immutable release tag after merge. Held-out text and labels
@@ -1218,5 +1218,71 @@ Obtain independent core acceptance at the exact clean candidate. Then integrate
 the executable core under the repository's squash policy. Generate the held-out
 baseline only from that durable integrated producer commit, publish it as a
 separate immutable artifact commit, reproduce it in a second clean checkout,
-and independently review its aggregate-only metrics, failure identities,
-thresholds, and release tag. Until then, issue #41 remains pre-baseline.
+and independently review its text-free, ID-only sufficient-statistic metrics,
+failure identities, thresholds, and release tag. Until then, issue #41 remains
+pre-baseline.
+
+---
+
+## 2026-09-04 — RR correction: independently bound signed drift evidence
+
+- **Audience:** independent metric/storage reviewers and release maintainer
+- **Scope:** evaluator metric authenticity and evidence terminology only; no
+  held-out evaluation or baseline publication
+- **Supersedes:** the metric-integrity acceptance claim above for `f5cd31d`;
+  its storage mechanisms remain accepted, but its drift signs were not
+  independently bound
+
+### Rundown
+
+**Proven:** executable producer `3125e3bee623416a61a230710b6e9a9c874140c0`
+makes every per-axis signed residual a first-class, text-free metric carrying
+conversation ID, turn ID, and domain. Drift validation requires each trajectory
+residual to equal that exact metric observation, in addition to the existing
+absolute-MAE, normalized-MAE, and weighted-RMS checks.
+
+**Proven:** an adversarial regression flips every signed residual, rebuilds the
+entire drift structure from those forged rows, and confirms that the changed
+terminal signed bias is rejected against the unchanged signed metric channel.
+This is the coordinated forgery that `f5cd31d` did not detect.
+
+**Proven:** evaluator-owned runner documentation and devlog guidance now call
+the artifacts “text-free, ID-only sufficient-statistic” reports. The former
+summary-only wording was inaccurate because reports intentionally include
+bounded per-turn observations needed to reconstruct and authenticate metrics.
+
+**Unknown:** held-out score values, failure identities, thresholds, and the
+baseline fingerprint remain intentionally unobserved. The baseline must still
+wait for exact-core acceptance and integration.
+
+### Evidence and conditions
+
+```text
+rejected predecessor: f5cd31d88cd94e3692a9cc175090c726a29c8f97
+executable producer:  3125e3bee623416a61a230710b6e9a9c874140c0
+selected root:        770bb78c9011cf0918c952b0f4a56a1ad321d38f6719ef9c51263b2ae10c5e4c
+evaluator digest:     014ee5292ae35dc5ec0abd68562e04a058ba6362ac792188776afb096390acc5
+split hashes:         development 5018d7d3…; held-out 05a2dfed… (unchanged)
+focused evaluator:    132 passed, 1 intentional pre-baseline skip
+full repository:      2,899 passed, 1 intentional pre-baseline skip,
+                      2 expected xfails
+benchmark:            29/29 deterministic turns
+integrity verify:     56/520 held-out + 10/60 development; zero overlap,
+                      production reference hits, or production text leaks
+history inventory:    16 authenticated first-introduced generations
+additive checks:      origin/main has no baseline; 135bfc6 and 852281d each
+                      retain one authenticated committed generation
+package boundary:     wheel 65 entries; sdist 106 entries; zero evaluator paths
+visual evidence:      not applicable; this is a non-UI evaluator correction
+```
+
+### Negative results and next gate
+
+- A development-only evaluator smoke run published and validated a report from
+  producer `3125e3b`; the open development split has no affect-scored rows, so
+  the focused synthetic regression is the direct signed-drift exercise.
+- No held-out evaluator run, baseline file, failure ledger, checksum generation,
+  or release threshold was created or inspected.
+- The exact clean documentation successor must receive renewed metric review.
+  The prior storage acceptance covers the unchanged publication mechanisms;
+  the release owner decides whether to repeat storage review at the successor.

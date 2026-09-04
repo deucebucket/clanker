@@ -1625,7 +1625,7 @@ def test_drift_reports_terminal_bias_and_axis_slopes():
     assert drift["absolute_residual_slope_by_axis"]["v"] == 2.0
 
 
-def test_drift_population_is_bound_to_next_state_and_mae_observations():
+def test_drift_population_is_bound_to_next_state_residual_and_mae_observations():
     residuals = {axis: float(index + 1) for index, axis in enumerate("vadugwi")}
     distance = (
         sum(
@@ -1649,6 +1649,7 @@ def test_drift_population_is_bound_to_next_state_and_mae_observations():
             "next_state_distance",
             *(f"mae_{axis}" for axis in "vadugwi"),
             *(f"mae_normalized_{axis}" for axis in "vadugwi"),
+            *(f"residual_{axis}" for axis in "vadugwi"),
         )
     }
     drift = _drift([record])
@@ -1661,9 +1662,24 @@ def test_drift_population_is_bound_to_next_state_and_mae_observations():
     )
     forged = copy.deepcopy(drift)
     forged["clusters"][0]["observations"][0]["next_state_distance"] += 1.0
-    with pytest.raises(CorpusIntegrityError, match="next-state/MAE"):
+    with pytest.raises(CorpusIntegrityError, match="next-state/residual/MAE"):
         conversation_runner._validate_drift_metric_bindings(
             forged,
+            metrics,
+            expected_identities={("c", "t1")},
+            turn_domains={("c", "t1"): "open_development"},
+            location="probe",
+        )
+
+    sign_flipped_record = copy.deepcopy(record)
+    for axis in "vadugwi":
+        sign_flipped_record[f"residual_{axis}"] *= -1.0
+    sign_flipped_drift = _drift([sign_flipped_record])
+    assert sign_flipped_drift is not None
+    assert sign_flipped_drift["terminal_signed_bias_by_axis"] != drift["terminal_signed_bias_by_axis"]
+    with pytest.raises(CorpusIntegrityError, match="next-state/residual/MAE"):
+        conversation_runner._validate_drift_metric_bindings(
+            sign_flipped_drift,
             metrics,
             expected_identities={("c", "t1")},
             turn_domains={("c", "t1"): "open_development"},
