@@ -51,7 +51,19 @@
       }
     },
     "failure_count": {"type": "integer", "minimum": 0},
-    "failure_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "failure_counts": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "dialogue_act_correct": {"type": "integer", "minimum": 0},
+        "response_act_correct": {"type": "integer", "minimum": 0},
+        "answer_status_correct": {"type": "integer", "minimum": 0},
+        "truth_correct": {"type": "integer", "minimum": 0},
+        "semantic_parse_exact": {"type": "integer", "minimum": 0},
+        "semantic_answer_exact": {"type": "integer", "minimum": 0},
+        "entity_resolution_exact": {"type": "integer", "minimum": 0},
+        "execution_error": {"type": "integer", "minimum": 0}
+      }
+    },
     "environment": {
       "type": "object", "additionalProperties": false,
       "required": ["python_version", "implementation", "operating_system", "machine"],

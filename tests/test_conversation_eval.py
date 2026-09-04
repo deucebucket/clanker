@@ -1348,6 +1348,12 @@ def test_report_loader_rejects_collapsed_roles_and_duplicate_checksum_rows(tmp_p
     with pytest.raises(CorpusIntegrityError, match="distinct"):
         load_published_artifacts(report_path)
 
+    pointer = copy.deepcopy(original_pointer)
+    pointer["failures"] = "failures.txt"
+    pointer_path.write_text(json.dumps(pointer) + "\n")
+    with pytest.raises(CorpusIntegrityError, match="unexpected filenames"):
+        load_published_artifacts(report_path)
+
     pointer_path.write_text(json.dumps(original_pointer) + "\n")
     generation = report_path.parent / "report.generations" / original_pointer["generation"]
     checksum_path = generation / original_pointer["checksum"]

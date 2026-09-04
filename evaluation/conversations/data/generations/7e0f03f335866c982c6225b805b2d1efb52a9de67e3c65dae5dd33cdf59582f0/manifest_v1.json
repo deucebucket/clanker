@@ -3,9 +3,9 @@
   "compiler": "evaluation.conversations.corpus:compile_corpora",
   "compiler_sha256": "a9e023d257b09e86205f52f8c3f98fc79e2fe477304faabdb3ce2b49a6bd16a6",
   "content_address": "sha256:05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
-  "corpus_root_sha256": "8fd81062dbd06f6bcac8f01e3ae4b99d2b5b8d5d0696a9ee7cbb2789e32b4a8f",
+  "corpus_root_sha256": "7e0f03f335866c982c6225b805b2d1efb52a9de67e3c65dae5dd33cdf59582f0",
   "corpus_version": "conversation-v1",
-  "evaluator_sha256": "1e15fda3e3ce850e77748d3c3f4420791fc578f42aff6c055b4a0ebc897f221b",
+  "evaluator_sha256": "dcbca9e6bc4f64f1fc27cf9d6417746aec6514fc960c9743c218542b11282301",
   "frozen_date": "2026-09-04",
   "immutability_policy": "heldout-v1 bytes and labels are frozen; corrections require a new corpus version",
   "manifest_schema_version": 1,
@@ -255,7 +255,7 @@
   "schema_sha256": {
     "conversation-v1.schema.json": "560f2ee2fe18822589985125ff0138d6d18d685ddc5d56a05c5bee319c83da66",
     "failure-v1.schema.json": "0be1bb6a74a32c8f062d41aa127f8b8913f26a016641c145d62bc2d5549d76a6",
-    "report-v1.schema.json": "3f05b97b8841c30021317a7e4c9167ef48d3f971362cd0d843c35ec452de3d6a",
+    "report-v1.schema.json": "af3f0313fd051c56cfa5b1d3639aecb9be5b5febed6589cc7be8e33968043e37",
     "source-v1.schema.json": "78a766470871e1c7df6d870b134b2e06bdfb6200eb3e552c18d8389517fffc79"
   },
   "sources": [

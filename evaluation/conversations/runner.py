@@ -1653,8 +1653,10 @@ def _validate_no_conversation_payloads(
     conversation_texts: Sequence[str],
 ) -> None:
     string_values: List[str] = []
+    key_values: List[str] = []
+    content_values: List[str] = []
 
-    def walk(value: Any, location: str) -> None:
+    def walk(value: Any, location: str, *, is_key: bool = False) -> None:
         if isinstance(value, Mapping):
             for key, item in value.items():
                 normalized_key = str(key).lower()
@@ -1662,13 +1664,14 @@ def _validate_no_conversation_payloads(
                     raise CorpusIntegrityError(
                         f"aggregate artifact contains forbidden payload key at {location}.{key}"
                     )
-                walk(str(key), f"{location}.<key>")
+                walk(str(key), f"{location}.<key>", is_key=True)
                 walk(item, f"{location}.{key}")
         elif isinstance(value, list):
             for index, item in enumerate(value):
                 walk(item, f"{location}[{index}]")
         elif isinstance(value, str):
             string_values.append(value)
+            (key_values if is_key else content_values).append(value)
             normalized_value = _norm(value)
             for raw_text in conversation_texts:
                 normalized_text = _norm(raw_text)
@@ -1682,19 +1685,23 @@ def _validate_no_conversation_payloads(
     walk(report, "report")
     walk(list(failures), "failures")
     normalized_joined = " ".join(_norm(value) for value in string_values)
-    compact_values = {
-        compact
-        for value in string_values
-        if (compact := _norm(value).replace(" ", ""))
-    }
+    compact_slots = {_norm(value).replace(" ", "") for value in string_values}
+    compact_joined = (
+        "".join(_norm(value).replace(" ", "") for value in key_values),
+        "".join(_norm(value).replace(" ", "") for value in content_values),
+    )
     for raw_text in conversation_texts:
         normalized_text = _norm(raw_text)
         compact_text = normalized_text.replace(" ", "")
-        split_across_slots = any(
-            compact_text[:cut] in compact_values and compact_text[cut:] in compact_values
+        split_across_two_slots = any(
+            compact_text[:cut] in compact_slots and compact_text[cut:] in compact_slots
             for cut in range(1, len(compact_text))
         )
-        if normalized_text and (normalized_text in normalized_joined or split_across_slots):
+        if normalized_text and (
+            normalized_text in normalized_joined
+            or any(compact_text in joined for joined in compact_joined)
+            or split_across_two_slots
+        ):
             raise CorpusIntegrityError("aggregate artifact contains fragmented held-out turn content")
 
 
