@@ -685,7 +685,13 @@ def _classification(
     fn = sum(record.get("expected_status") == label and record.get("actual_status") != label for record in records)
     precision = tp / (tp + fp) if tp + fp else None
     recall = tp / (tp + fn) if tp + fn else None
-    f1 = 2 * precision * recall / (precision + recall) if precision is not None and recall is not None and precision + recall else None
+    f1 = (
+        2 * precision * recall / (precision + recall)
+        if precision is not None and recall is not None and precision + recall
+        else 0.0
+        if precision is not None and recall is not None
+        else None
+    )
     result = {
         "tp": tp,
         "fp": fp,
@@ -717,22 +723,32 @@ def _classification(
         sample_tp = sum(item.get("expected_status") == label and item.get("actual_status") == label for item in sampled)
         sample_fp = sum(item.get("expected_status") != label and item.get("actual_status") == label for item in sampled)
         sample_fn = sum(item.get("expected_status") == label and item.get("actual_status") != label for item in sampled)
-        sample_precision = sample_tp / (sample_tp + sample_fp) if sample_tp + sample_fp else 0.0
-        sample_recall = sample_tp / (sample_tp + sample_fn) if sample_tp + sample_fn else 0.0
+        sample_precision = sample_tp / (sample_tp + sample_fp) if sample_tp + sample_fp else None
+        sample_recall = sample_tp / (sample_tp + sample_fn) if sample_tp + sample_fn else None
         sample_f1 = (
             2 * sample_precision * sample_recall / (sample_precision + sample_recall)
-            if sample_precision + sample_recall
+            if sample_precision is not None and sample_recall is not None
+            and sample_precision + sample_recall
             else 0.0
+            if sample_precision is not None and sample_recall is not None
+            else None
         )
-        estimates["precision"].append(sample_precision)
-        estimates["recall"].append(sample_recall)
-        estimates["f1"].append(sample_f1)
+        if sample_precision is not None:
+            estimates["precision"].append(sample_precision)
+        if sample_recall is not None:
+            estimates["recall"].append(sample_recall)
+        if sample_f1 is not None:
+            estimates["f1"].append(sample_f1)
+    result["bootstrap_valid_draws"] = {
+        name: len(values) for name, values in estimates.items()
+    }
     result["ci95_conversation_cluster_bootstrap"] = {
         name: [
             sorted(values)[round(0.025 * (len(values) - 1))],
             sorted(values)[round(0.975 * (len(values) - 1))],
         ]
         for name, values in estimates.items()
+        if values
     }
     return result
 
@@ -1104,6 +1120,10 @@ def _validate_aggregate_artifacts(
     walk(list(failures), "failures")
 
 
+def _atomic_replace(source: Path, target: Path) -> None:
+    source.replace(target)
+
+
 def _publish_artifacts(
     report: Mapping[str, Any],
     failures: Sequence[Mapping[str, Any]],
@@ -1132,9 +1152,28 @@ def _publish_artifacts(
         }
         for target, payload in staged.items():
             (staging / target.name).write_bytes(payload)
+        backups: Dict[Path, Path | None] = {}
+        for index, target in enumerate(staged):
+            if target.exists():
+                backup = staging / f".backup-{index}"
+                backup.write_bytes(target.read_bytes())
+                backups[target] = backup
+            else:
+                backups[target] = None
         provenance_check()
-        for target in (output_path, failure_target, checksum_path):
-            (staging / target.name).replace(target)
+        published: List[Path] = []
+        try:
+            for target in (output_path, failure_target, checksum_path):
+                _atomic_replace(staging / target.name, target)
+                published.append(target)
+        except Exception:
+            for target in reversed(published):
+                backup = backups[target]
+                if backup is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    backup.replace(target)
+            raise
 
 
 def run_evaluation(

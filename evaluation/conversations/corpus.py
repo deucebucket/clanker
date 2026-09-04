@@ -129,7 +129,16 @@ def _production_files(repo_root: Path = REPO_ROOT) -> List[Path]:
     for relative in PRODUCTION_PATHS:
         path = repo_root / relative
         if path.is_dir():
-            files.extend(item for item in path.rglob("*.py") if item.is_file())
+            files.extend(
+                item
+                for item in path.rglob("*")
+                if item.is_file()
+                and "__pycache__" not in item.parts
+                and (
+                    item.suffix == ".py"
+                    or item.relative_to(repo_root).parts[:2] == ("clanker_lm", "data")
+                )
+            )
         elif path.is_file():
             files.append(path)
     return sorted(files, key=lambda item: item.relative_to(repo_root).as_posix())
@@ -160,7 +169,11 @@ def _baseline_production_tree_payload(
             cwd=repo_root,
             text=True,
         ).splitlines()
-        relevant = sorted(name for name in names if name.endswith(".py"))
+        relevant = sorted(
+            name
+            for name in names
+            if name.endswith(".py") or Path(name).parts[:2] == ("clanker_lm", "data")
+        )
         return [
             {
                 "path": name,

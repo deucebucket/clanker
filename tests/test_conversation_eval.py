@@ -10,6 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import evaluation.conversations.runner as conversation_runner
 
 from clanker_lm.database import LanguageStore
 from clanker_lm.memory import ConversationMemory
@@ -44,6 +45,7 @@ from evaluation.conversations.runner import (
     FrozenLookupTrajectory,
     _aggregate_resources,
     _answer_exact,
+    _classification,
     _correction_store_digest,
     _drift,
     _entity_exact,
@@ -274,6 +276,17 @@ def test_production_tree_digest_rejects_tracked_and_untracked_byte_changes(tmp_p
         assert_production_tree(expected, repo_root=tmp_path)
     model_path.write_bytes((ROOT / "clanker_lm/model.py").read_bytes())
     (tmp_path / "clanker_lm/untracked_runtime.py").write_text("VALUE = 1\n")
+    with pytest.raises(CorpusIntegrityError, match="production module bytes"):
+        assert_production_tree(expected, repo_root=tmp_path)
+
+
+def test_production_tree_digest_binds_runtime_seed_asset(tmp_path):
+    for directory in ("clanker_lm", "engine"):
+        shutil.copytree(ROOT / directory, tmp_path / directory)
+    shutil.copy2(ROOT / "clanker_engine.py", tmp_path / "clanker_engine.py")
+    expected = production_tree_sha256(tmp_path)
+    seed_path = tmp_path / "clanker_lm/data/language_seed.json"
+    seed_path.write_bytes(seed_path.read_bytes() + b"\n")
     with pytest.raises(CorpusIntegrityError, match="production module bytes"):
         assert_production_tree(expected, repo_root=tmp_path)
 
@@ -540,6 +553,36 @@ def test_metric_summary_is_deterministic_for_fixed_seed_and_records():
     )
 
 
+def test_classification_preserves_undefined_draws_and_defined_zero_f1():
+    no_labels = [
+        {
+            "conversation_id": "c",
+            "turn_id": "t",
+            "domain": "d",
+            "expected_status": "answered",
+            "actual_status": "answered",
+        }
+    ]
+    absent = _classification(no_labels, "conflict", seed_material="absent")
+    assert absent["precision"] is None
+    assert absent["recall"] is None
+    assert absent["f1"] is None
+    assert absent["bootstrap_valid_draws"] == {"precision": 0, "recall": 0, "f1": 0}
+    assert absent["ci95_conversation_cluster_bootstrap"] == {}
+
+    zero = _classification(
+        [
+            {"conversation_id": "c1", "turn_id": "t", "domain": "d", "expected_status": "conflict", "actual_status": "answered"},
+            {"conversation_id": "c2", "turn_id": "t", "domain": "d", "expected_status": "answered", "actual_status": "conflict"},
+        ],
+        "conflict",
+        seed_material="zero",
+    )
+    assert zero["precision"] == 0.0
+    assert zero["recall"] == 0.0
+    assert zero["f1"] == 0.0
+
+
 def test_development_semantic_report_is_reproducible():
     first = run_evaluation(split="development")
     second = run_evaluation(split="development")
@@ -636,6 +679,38 @@ def test_artifact_publish_stages_every_file_before_replacing(tmp_path):
             output_path=report_path,
             failures_path=failures_path,
             provenance_check=lambda: (_ for _ in ()).throw(RuntimeError("simulated provenance race")),
+        )
+    for path in (report_path, failures_path, checksum_path):
+        assert path.read_text() == "sentinel\n"
+
+
+@pytest.mark.parametrize("fail_at", [2, 3])
+def test_artifact_publish_rolls_back_every_public_target_on_replace_failure(
+    tmp_path, monkeypatch, fail_at
+):
+    report_path = tmp_path / "report.json"
+    failures_path = tmp_path / "report_failures.jsonl"
+    checksum_path = tmp_path / "report.sha256"
+    for path in (report_path, failures_path, checksum_path):
+        path.write_text("sentinel\n")
+    original = conversation_runner._atomic_replace
+    calls = 0
+
+    def fail_once(source, target):
+        nonlocal calls
+        calls += 1
+        if calls == fail_at:
+            raise OSError("simulated replace failure")
+        original(source, target)
+
+    monkeypatch.setattr(conversation_runner, "_atomic_replace", fail_once)
+    with pytest.raises(OSError, match="simulated replace failure"):
+        _publish_artifacts(
+            {"aggregate": 2},
+            [{"turn_id": "new", "category": "metric"}],
+            output_path=report_path,
+            failures_path=failures_path,
+            provenance_check=lambda: None,
         )
     for path in (report_path, failures_path, checksum_path):
         assert path.read_text() == "sentinel\n"

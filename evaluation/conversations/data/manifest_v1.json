@@ -1,11 +1,11 @@
 {
   "baseline_code_commit": "9ae77f072f8afda0b1d2b757ab492757cabff0f8",
   "compiler": "evaluation.conversations.corpus:compile_corpora",
-  "compiler_sha256": "5ef6885663d1b23f30f4585817419eed3c2b44377cd673afd3558f4ea84719a3",
+  "compiler_sha256": "2e05f672df997558eea63a1f651724ec76fd134ae2b6b69875c4aee485eeb984",
   "content_address": "sha256:05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
-  "corpus_root_sha256": "c53eb972bf3f0c3afcc57cf39f00fc0a73631e1a9c5ef8da9472a6660bf3a878",
+  "corpus_root_sha256": "fc81400aec01a31d83b6f0884f36055436c8895fc0b66280166901dfb67f7811",
   "corpus_version": "conversation-v1",
-  "evaluator_sha256": "4ee53b2eadb5674a687b1f6173f12148c0eec0549e9a3df1a0eab0ca66e3054d",
+  "evaluator_sha256": "117285dcf580498fc3fbbd3f120db0436fe7cb6cf901f64e40b7dcb8f4e3ef3e",
   "frozen_date": "2026-09-04",
   "immutability_policy": "heldout-v1 bytes and labels are frozen; corrections require a new corpus version",
   "manifest_schema_version": 1,
@@ -33,6 +33,10 @@
     {
       "path": "clanker_lm/data/__init__.py",
       "sha256": "46c9664e7f5619b4c33f3951cf67ea358d02ef4a400e00b45f44a386027477ee"
+    },
+    {
+      "path": "clanker_lm/data/language_seed.json",
+      "sha256": "ffb9e42ae34d30ba1435aa07425897375fc905dde1d6b1868b493a0ae5d9807c"
     },
     {
       "path": "clanker_lm/database.py",
@@ -227,7 +231,7 @@
       "sha256": "513ddbe1a02dd1361cf1dd0fa24a7195394cf076087ac5eb9fc68bde330553e3"
     }
   ],
-  "production_code_sha256": "79117f124c276bd6cbb69d4be705f17a4b9040cfcf263f1f1380f859d06491b5",
+  "production_code_sha256": "79cbabca9b40e80628fd2a63c3e581eabaeb963e6058d44913d0495213e07ffa",
   "schema_sha256": {
     "conversation-v1.schema.json": "560f2ee2fe18822589985125ff0138d6d18d685ddc5d56a05c5bee319c83da66",
     "report-v1.schema.json": "99b1f296eb56bc69be940dc36f04e87e7ef349f13609288ce0745c110c3ab6ca",
