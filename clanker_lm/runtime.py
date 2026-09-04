@@ -41,8 +41,8 @@ class ClankerLM:
     A+B=C transition to select the candidate that best reaches the target state.
     """
 
-    SNAPSHOT_VERSION = 3
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3}
+    SNAPSHOT_VERSION = 4
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4}
     MAX_BATCH_MESSAGES = 10_000
 
     def __init__(
@@ -302,11 +302,13 @@ class ClankerLM:
             self.memory.add_entity_modifier_relations(parse.modifiers, stored)
             self.memory.add_appositive_relations(parse.appositives)
             self.memory.add_content_relations(parse.contents, stored)
+            self.memory.add_infinitival_relations(parse.infinitivals, stored)
             acknowledged = next(
                 (
                     event
                     for event in reversed(stored)
-                    if event.discourse_role != "content"
+                    if event.discourse_role
+                    not in self.memory.NONASSERTIVE_DISCOURSE_ROLES
                 ),
                 stored[-1],
             )

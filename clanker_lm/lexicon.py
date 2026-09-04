@@ -333,7 +333,7 @@ KNOWN_VERBS: Set[str] = {
     "break", "fall", "lose", "win", "send", "pay", "meet", "keep", "hold", "build",
     "sell", "stand", "sit", "sleep", "wake", "know", "mean", "hurt", "hit", "put",
     "cut", "let", "love", "hate", "like", "dislike", "want", "need", "choose",
-    "decide", "plan", "try", "help", "fix", "work", "stop", "start", "finish",
+    "decide", "plan", "intend", "hope", "appear", "try", "help", "fix", "work", "stop", "start", "finish",
     "open", "close", "enter", "exit", "arrive", "travel", "move", "live", "stay",
     "visit", "call", "text", "email", "ask", "answer", "explain", "show", "lend",
     "borrow", "wear", "use", "unlock", "calculate", "compute", "process", "sort",
@@ -361,7 +361,7 @@ PHRASAL_PARTICLES = {particle for _, particle in PHRASAL_VERBS}
 
 DITRANSITIVE_VERBS = {"give", "tell", "send", "show", "lend", "teach", "bring", "offer", "hand", "pay"}
 MOVEMENT_VERBS = {"go", "come", "leave", "arrive", "travel", "move", "enter", "exit", "run", "drive", "walk", "fly", "visit", "return"}
-VOLITIONAL_VERBS = {"leave", "go", "choose", "decide", "buy", "give", "send", "call", "text", "apologize", "visit", "quit", "start", "stop", "marry", "move"}
+VOLITIONAL_VERBS = {"leave", "go", "choose", "decide", "plan", "intend", "hope", "want", "buy", "give", "send", "call", "text", "apologize", "visit", "quit", "start", "stop", "marry", "move"}
 PURPOSE_LIKELY_VERBS = {"go", "come", "visit", "call", "text", "buy", "use", "open", "enter", "study", "work", "save"}
 PHYSICAL_EVENT_VERBS = {"break", "fall", "rain", "snow", "happen", "occur", "collapse", "explode", "melt", "freeze", "stop", "fail"}
 PROCESS_VERBS = {"calculate", "compute", "process", "sort", "build", "create", "work", "function", "operate"}
@@ -376,7 +376,7 @@ ADJECTIVE_DIMENSIONS: Dict[str, str] = {
     "old": "age", "young": "age", "fast": "speed", "slow": "speed",
     "heavy": "weight", "light": "weight", "far": "distance", "close": "distance",
     "long": "length", "wide": "width", "deep": "depth", "hot": "temperature",
-    "cold": "temperature", "happy": "state", "sad": "state", "angry": "state",
+    "cold": "temperature", "happy": "state", "sad": "state", "angry": "state", "tired": "state",
     "sick": "health", "healthy": "health", "safe": "safety", "ready": "readiness",
 }
 ATTRIBUTE_NOUNS = {"color", "age", "height", "weight", "size", "name", "job", "price", "cost", "speed", "distance", "length", "width", "depth", "temperature", "owner", "reason"}
@@ -553,6 +553,8 @@ def is_probable_verb(word: str, previous: Optional[str] = None, following: Optio
     if w in AUXILIARIES or base in KNOWN_VERBS:
         return True
     if w in DETERMINERS | PREPOSITIONS | CONJUNCTIONS | NEGATORS | POSSESSIVES:
+        return False
+    if previous in COPULAS and w in ADJECTIVE_DIMENSIONS:
         return False
     if previous in AUX_DO | MODALS:
         return True

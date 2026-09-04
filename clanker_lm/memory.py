@@ -27,6 +27,8 @@ from .model import (
     EventFrame,
     Gender,
     GrammaticalNumber,
+    InfinitivalRelation,
+    InfinitivalRelationType,
     RefKind,
     SemanticRef,
     SourceKind,
@@ -57,8 +59,9 @@ class EventMatch:
 class ConversationMemory:
     """Entity/event store with deterministic salience and provenance."""
 
-    SNAPSHOT_VERSION = 3
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3}
+    SNAPSHOT_VERSION = 4
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4}
+    NONASSERTIVE_DISCOURSE_ROLES = {"content", "infinitive"}
 
     def __init__(self) -> None:
         self.entities: Dict[str, Entity] = {}
@@ -67,6 +70,7 @@ class ConversationMemory:
         self.modifiers: List[EntityModifierRelation] = []
         self.appositives: List[AppositiveRelation] = []
         self.contents: List[ContentRelation] = []
+        self.infinitivals: List[InfinitivalRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
         self._entity_counter: int = 0
@@ -75,6 +79,7 @@ class ConversationMemory:
         self._modifier_counter: int = 0
         self._appositive_counter: int = 0
         self._content_counter: int = 0
+        self._infinitival_counter: int = 0
         self._initialize_participants()
 
     def _initialize_participants(self) -> None:
@@ -804,6 +809,178 @@ class ConversationMemory:
             reverse=True,
         )
 
+    def _next_infinitival_id(self) -> str:
+        self._infinitival_counter += 1
+        return f"infinitival_{self._infinitival_counter}"
+
+    def add_infinitival_relations(
+        self,
+        relations: Sequence[InfinitivalRelation],
+        stored_events: Sequence[EventFrame],
+    ) -> List[InfinitivalRelation]:
+        """Bind parser-local control/raising links to stable event IDs."""
+
+        stored: List[InfinitivalRelation] = []
+        for relation in relations:
+            if not (
+                0 <= relation.matrix_event_index < len(stored_events)
+                and 0 <= relation.complement_event_index < len(stored_events)
+            ):
+                raise ValueError(
+                    "Infinitival relation references an invalid event index"
+                )
+            matrix_event = stored_events[relation.matrix_event_index]
+            complement_event = stored_events[relation.complement_event_index]
+            if complement_event.discourse_role != "infinitive":
+                raise ValueError(
+                    "Infinitival relation must bind to an infinitive-role event"
+                )
+            if complement_event.source != SourceKind.ATTRIBUTED:
+                raise ValueError(
+                    "Infinitival complement must retain attributed provenance"
+                )
+            if complement_event.tense != "infinitive":
+                raise ValueError(
+                    "Infinitival complement must retain infinitive tense"
+                )
+            if matrix_event.predicate != relation.matrix_predicate:
+                raise ValueError(
+                    "Infinitival matrix predicate does not match its event"
+                )
+            for entity_id, label in (
+                (relation.source_entity_id, "source"),
+                (relation.controller_entity_id, "controller"),
+                (relation.embedded_subject_entity_id, "embedded subject"),
+            ):
+                if entity_id not in self.entities:
+                    raise ValueError(
+                        f"Infinitival relation references an unknown {label} entity"
+                    )
+
+            matrix_subjects = {
+                ref.key
+                for role, ref in matrix_event.arguments.items()
+                if role in {"agent", "experiencer", "subject", "possessor", "patient"}
+                and ref.kind == RefKind.ENTITY
+            }
+            if relation.source_entity_id not in matrix_subjects:
+                raise ValueError(
+                    "Infinitival source is not licensed by the matrix event"
+                )
+            if relation.relation_type == InfinitivalRelationType.OBJECT_CONTROL:
+                controller_refs = {
+                    ref.key
+                    for role, ref in matrix_event.arguments.items()
+                    if role in {"patient", "recipient"}
+                    and ref.kind == RefKind.ENTITY
+                }
+            else:
+                controller_refs = {
+                    ref.key
+                    for role, ref in matrix_event.arguments.items()
+                    if role in {"agent", "experiencer", "subject", "possessor", "patient"}
+                    and ref.kind == RefKind.ENTITY
+                }
+            if relation.controller_entity_id not in controller_refs:
+                raise ValueError(
+                    "Infinitival controller is not licensed by the matrix event"
+                )
+            embedded_subjects = {
+                ref.key
+                for role, ref in complement_event.arguments.items()
+                if role in {"agent", "experiencer", "subject", "possessor", "patient"}
+                and ref.kind == RefKind.ENTITY
+            }
+            if relation.embedded_subject_entity_id not in embedded_subjects:
+                raise ValueError(
+                    "Infinitival embedded subject does not match its complement"
+                )
+            if relation.controller_entity_id != relation.embedded_subject_entity_id:
+                raise ValueError(
+                    "Infinitival controller must bind the embedded subject"
+                )
+            if relation.licensed != matrix_event.polarity:
+                raise ValueError(
+                    "Infinitival content license must match matrix polarity"
+                )
+            if relation.entailed:
+                raise ValueError(
+                    "This infinitival slice does not license accomplished-event entailment"
+                )
+
+            bound = relation.copy(
+                relation_id=relation.relation_id or self._next_infinitival_id(),
+                matrix_event_id=matrix_event.event_id,
+                complement_event_id=complement_event.event_id,
+                certainty=min(
+                    relation.certainty,
+                    matrix_event.certainty,
+                    complement_event.certainty,
+                ),
+            )
+            existing = next(
+                (
+                    item
+                    for item in self.infinitivals
+                    if item.signature() == bound.signature()
+                ),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, bound.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + bound.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                self.infinitivals.append(bound)
+                stored.append(bound)
+            self.mention(bound.source_entity_id, "source", 0.4)
+            self.mention(bound.controller_entity_id, "controller", 0.5)
+            self.revision += 1
+        return stored
+
+    def infinitival_relations_for_event(
+        self,
+        event_id: str,
+    ) -> List[InfinitivalRelation]:
+        return [
+            relation
+            for relation in self.infinitivals
+            if event_id
+            in {relation.matrix_event_id, relation.complement_event_id}
+        ]
+
+    def infinitival_relations_for_source(
+        self,
+        source_entity_id: str,
+        *,
+        matrix_predicate: Optional[str] = None,
+        include_negated: bool = False,
+    ) -> List[InfinitivalRelation]:
+        relations = [
+            relation
+            for relation in self.infinitivals
+            if relation.source_entity_id == source_entity_id
+            and (include_negated or relation.licensed)
+        ]
+        if matrix_predicate is not None:
+            relations = [
+                relation
+                for relation in relations
+                if relation.matrix_predicate == matrix_predicate
+            ]
+        return sorted(
+            relations,
+            key=lambda item: (
+                self.get_event(item.matrix_event_id).turn_index
+                if self.get_event(item.matrix_event_id) is not None
+                else -1,
+                item.certainty,
+            ),
+            reverse=True,
+        )
+
     def get_event(self, event_id: str) -> Optional[EventFrame]:
         return next((event for event in self.events if event.event_id == event_id), None)
 
@@ -862,6 +1039,7 @@ class ConversationMemory:
         allow_tense_variation: bool = True,
         include_opposite_polarity: bool = True,
         include_attributed_content: bool = False,
+        include_infinitival_content: bool = False,
     ) -> List[EventMatch]:
         ignored = set(ignore_roles)
         matches: List[EventMatch] = []
@@ -870,6 +1048,11 @@ class ConversationMemory:
             if (
                 event.discourse_role == "content"
                 and not include_attributed_content
+            ):
+                continue
+            if (
+                event.discourse_role == "infinitive"
+                and not include_infinitival_content
             ):
                 continue
             if event.predicate != query.predicate:
@@ -914,7 +1097,9 @@ class ConversationMemory:
 
     def latest_event(self) -> Optional[EventFrame]:
         ordinary = [
-            event for event in self.events if event.discourse_role != "content"
+            event
+            for event in self.events
+            if event.discourse_role not in self.NONASSERTIVE_DISCOURSE_ROLES
         ]
         return max(ordinary, key=lambda event: event.turn_index, default=None)
 
@@ -933,12 +1118,16 @@ class ConversationMemory:
             "modifier_counter": self._modifier_counter,
             "appositive_counter": self._appositive_counter,
             "content_counter": self._content_counter,
+            "infinitival_counter": self._infinitival_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
             "relations": [relation.to_dict() for relation in self.relations],
             "modifiers": [modifier.to_dict() for modifier in self.modifiers],
             "appositives": [relation.to_dict() for relation in self.appositives],
             "contents": [relation.to_dict() for relation in self.contents],
+            "infinitivals": [
+                relation.to_dict() for relation in self.infinitivals
+            ],
         }
 
     @classmethod
@@ -970,6 +1159,10 @@ class ConversationMemory:
             ContentRelation.from_dict(item)
             for item in data.get("contents", [])
         ]
+        memory.infinitivals = [
+            InfinitivalRelation.from_dict(item)
+            for item in data.get("infinitivals", [])
+        ]
         memory.turn_index = int(data.get("turn_index", 0))
         memory.revision = int(data.get("revision", 0))
         memory._entity_counter = int(data.get("entity_counter", len(memory.entities)))
@@ -985,6 +1178,9 @@ class ConversationMemory:
         )
         memory._content_counter = int(
             data.get("content_counter", len(memory.contents))
+        )
+        memory._infinitival_counter = int(
+            data.get("infinitival_counter", len(memory.infinitivals))
         )
         return memory
 

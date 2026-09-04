@@ -280,10 +280,10 @@ def test_abstract_heads_are_deferred_for_every_relative_marker() -> None:
 def test_runtime_snapshot_version_matches_memory_generation() -> None:
     runtime = ClankerLM(affect_backend=HeuristicAffectBackend())
     try:
-        assert runtime.SNAPSHOT_VERSION == 3
+        assert runtime.SNAPSHOT_VERSION == ConversationMemory.SNAPSHOT_VERSION == 4
         snapshot = runtime.to_dict()
-        assert snapshot["snapshot_version"] == 3
-        assert snapshot["memory"]["snapshot_version"] == 3
+        assert snapshot["snapshot_version"] == 4
+        assert snapshot["memory"]["snapshot_version"] == 4
         snapshot["snapshot_version"] = 2
         restored = ClankerLM.from_dict(
             snapshot, affect_backend=HeuristicAffectBackend()

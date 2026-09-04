@@ -99,6 +99,26 @@ contradictory evidence, missing references, ambiguous references, multiple
 valid bindings, unsupported structures, lexical probes, and learned lexical
 senses.
 
+## Selected infinitival complements
+
+The semantic layer represents reviewed subject-control, object-control, and
+raising constructions as a matrix event, a nonassertive embedded event, and a
+typed controller relation. Plans, intentions, hopes, desires, requests,
+directives, and appearances remain distinct from accomplished facts.
+
+```text
+Sarah told John to call Mary.
+  -> TELL(agent=Sarah, patient=John)
+  -> CALL(agent=John, patient=Mary), discourse_role=infinitive
+  -> OBJECT_CONTROL(controller=John, entailed=false)
+```
+
+Matrix and embedded negation are tracked independently, and movement-purpose
+adjuncts such as `went to buy groceries` remain outside the selected-complement
+path. Unsupported nesting or relation stacking fails with a typed ambiguity.
+See [`CLANKER_LM_INFINITIVAL_COMPLEMENTS.md`](CLANKER_LM_INFINITIVAL_COMPLEMENTS.md)
+for the support matrix and truth-boundary contract.
+
 ## Truth boundary
 
 Semantic validity is a hard lock. Affect scoring cannot rescue a false or
