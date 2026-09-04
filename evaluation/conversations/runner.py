@@ -970,7 +970,7 @@ def _paired_mode_differences(
         "dialogue_act_correct", "response_act_correct", "answer_status_correct",
         "truth_correct", "semantic_parse_exact", "semantic_answer_exact",
         "entity_resolution_exact", "brier", "target_attainment",
-        "next_state_distance", "correction_applied",
+        "target_distance_improvement", "next_state_distance", "correction_applied",
     ] + [f"mae_{axis}" for axis in AXES] + [f"mae_normalized_{axis}" for axis in AXES] + [f"direction_{axis}" for axis in AXES]
     output: Dict[str, Any] = {}
     for label, candidate_mode, reference_mode in comparisons:

@@ -534,12 +534,12 @@ def test_entity_exactness_handles_theme_role_and_turn_relative_identity_without_
 
 def test_paired_mode_differences_pair_identical_turns():
     base = [
-        {"conversation_id": "c1", "turn_id": "t1", "domain": "d", "mae_v": 4.0},
-        {"conversation_id": "c2", "turn_id": "t1", "domain": "d", "mae_v": 2.0},
+        {"conversation_id": "c1", "turn_id": "t1", "domain": "d", "mae_v": 4.0, "target_distance_improvement": 1.0},
+        {"conversation_id": "c2", "turn_id": "t1", "domain": "d", "mae_v": 2.0, "target_distance_improvement": 2.0},
     ]
     stateful = [
-        {"conversation_id": "c1", "turn_id": "t1", "domain": "d", "mae_v": 2.0},
-        {"conversation_id": "c2", "turn_id": "t1", "domain": "d", "mae_v": 1.0},
+        {"conversation_id": "c1", "turn_id": "t1", "domain": "d", "mae_v": 2.0, "target_distance_improvement": 3.0},
+        {"conversation_id": "c2", "turn_id": "t1", "domain": "d", "mae_v": 1.0, "target_distance_improvement": 4.0},
     ]
     compared = _paired_mode_differences(
         {"sentence_only": base, "stateful": stateful, "transition_corrected": stateful},
@@ -548,6 +548,9 @@ def test_paired_mode_differences_pair_identical_turns():
     metric = compared["stateful_minus_sentence_only"]["metrics"]["mae_v"]
     assert metric["value"] == -1.5
     assert metric["n_conversations"] == 2
+    assert compared["stateful_minus_sentence_only"]["metrics"][
+        "target_distance_improvement"
+    ]["value"] == 2.0
 
 
 def test_cluster_bootstrap_preserves_turn_weighted_statistic_for_uneven_conversations():
