@@ -2251,12 +2251,16 @@ def test_execution_errors_fail_the_release_runner():
     _enforce_zero_execution_errors([{"category": "semantic_parse_exact"}])
 
 
-def test_baseline_is_aggregate_only_and_exact_post_113():
+def test_baseline_is_text_free_id_only_and_exact_post_113():
     report_path = ROOT / "evaluation/conversations/baselines/post_113_heldout_v1.json"
     if not report_path.with_suffix(".current").exists():
         pytest.skip("baseline is published only after the immutable core is accepted")
     report, failures, generation_dir = load_published_artifacts(report_path)
     assert report["production_code_commit"] == "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e"
+    assert report["evaluation_commit"] == "29e2c5f5900279aced9f58111e64be7c07602802"
+    assert report["semantic_fingerprint"] == "1aca23a6f02f880b6c094410bc7d9716490a08684bb1c253dcad58576065f5f6"
+    assert report["failure_count"] == len(failures) == 4189
+    assert generation_dir.name == "6f01c10a443a5cf1a73cab39399af4a94b94a9f45dfc4041b53df8a74ea4d82f"
     assert set(report["modes"]) == {"sentence_only", "stateful", "transition_corrected"}
     assert report["development_correction_bundle"]["lookup_store_unchanged"] is True
     subprocess.run(
