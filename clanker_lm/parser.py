@@ -15,6 +15,9 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 from . import lexicon
 from .memory import ConversationMemory, Resolution
 from .model import (
+    AppositiveAttachmentAmbiguity,
+    AppositiveRelation,
+    AppositiveRelationType,
     ClauseRelation,
     ClauseRelationDirection,
     ClauseRelationType,
@@ -66,6 +69,14 @@ class RelativeSplit:
     restriction: ModifierRestriction
     possessed_entity_id: str = ""
     certainty: int = 230
+    diagnostics: List[str] = field(default_factory=list)
+
+
+@dataclass
+class AppositiveSplit:
+    main_tokens: List[lexicon.Token]
+    relation: AppositiveRelation
+    entity_ids: List[str] = field(default_factory=list)
     diagnostics: List[str] = field(default_factory=list)
 
 
@@ -150,6 +161,8 @@ class SemanticParser:
         relations: List[ClauseRelation] = []
         modifiers: List[EntityModifierRelation] = []
         modifier_ambiguities: List[ModifierAttachmentAmbiguity] = []
+        appositives: List[AppositiveRelation] = []
+        appositive_ambiguities: List[AppositiveAttachmentAmbiguity] = []
         unresolved: List[UnresolvedReference] = []
         entities: List[str] = []
         diagnostics: List[str] = []
@@ -228,6 +241,56 @@ class SemanticParser:
                 diagnostics.append(
                     f"relative split fallback marker={relative_split.marker}"
                 )
+
+            appositive_split, appositive_ambiguity = self._split_appositive_clause(
+                clause,
+                raw,
+                memory,
+            )
+            if appositive_ambiguity is not None:
+                appositive_ambiguities.append(appositive_ambiguity)
+                unresolved.append(
+                    UnresolvedReference(
+                        surface=appositive_ambiguity.appositive_surface,
+                        reason=appositive_ambiguity.reason,
+                        candidates=list(appositive_ambiguity.candidate_entity_ids),
+                    )
+                )
+                diagnostics.extend(appositive_ambiguity.diagnostics)
+                diagnostics.append("appositive identity remains ambiguous")
+                continue
+
+            if appositive_split is not None:
+                result = self._parse_clause(
+                    appositive_split.main_tokens,
+                    raw,
+                    memory,
+                )
+                if result.event:
+                    result.event.discourse_role = (
+                        "main" if primary_event_count == 0 else "coordinate"
+                    )
+                    if connector is not None:
+                        result.diagnostics.insert(
+                            0,
+                            f"coordinate connector={connector}",
+                        )
+                    primary_event_count += 1
+                    events.append(result.event)
+                    appositives.append(appositive_split.relation)
+                    unresolved.extend(result.unresolved)
+                    entities.extend(appositive_split.entity_ids)
+                    entities.extend(result.entities)
+                    diagnostics.extend(result.diagnostics)
+                    diagnostics.extend(appositive_split.diagnostics)
+                    diagnostics.append(
+                        "appositive relation="
+                        f"{appositive_split.relation.relation_type.value} "
+                        f"restriction={appositive_split.relation.restriction.value}"
+                    )
+                    continue
+                diagnostics.extend(result.diagnostics)
+                diagnostics.append("appositive split fallback")
 
             subordinate_split = self._split_subordinate_clause(clause)
             if subordinate_split is not None:
@@ -337,6 +400,8 @@ class SemanticParser:
             relations=relations,
             modifiers=modifiers,
             modifier_ambiguities=modifier_ambiguities,
+            appositives=appositives,
+            appositive_ambiguities=appositive_ambiguities,
             entities=list(dict.fromkeys(entities)),
             unresolved=unresolved,
             normalized_text=normalized,
@@ -491,6 +556,11 @@ class SemanticParser:
     }
     FEMALE_RELATIVE_HEADS = {"girl", "mother", "nurse", "sister", "woman"}
     MALE_RELATIVE_HEADS = {"boy", "brother", "father", "man"}
+    APPOSITIVE_ROLE_NOUNS = {
+        "advisor", "boss", "coach", "colleague", "coworker", "doctor",
+        "friend", "manager", "mentor", "nurse", "partner", "professor",
+        "supervisor", "teacher", "therapist", "worker",
+    }
 
     def _split_relative_clause(
         self,
@@ -695,7 +765,7 @@ class SemanticParser:
             possessed_tokens = relative_body[:verb_index]
             possessed_surface = self._surface(possessed_tokens)
             possessed_kind = lexicon.classify_unknown_noun(
-                possessed_tokens[-1].norm
+                [token.norm for token in possessed_tokens]
             )
             possessed, possessed_alias = memory.get_or_create_possessed_entity(
                 head_entity.entity_id,
@@ -728,6 +798,256 @@ class SemanticParser:
                 ],
             ),
             None,
+        )
+
+
+    def _split_appositive_clause(
+        self,
+        tokens: Sequence[lexicon.Token],
+        raw: str,
+        memory: ConversationMemory,
+    ) -> Tuple[Optional[AppositiveSplit], Optional[AppositiveAttachmentAmbiguity]]:
+        """Resolve one explicit subject appositive with conservative evidence."""
+
+        items = list(tokens)
+        primary_tokens: List[lexicon.Token]
+        appositive_tokens: List[lexicon.Token]
+        tail: List[lexicon.Token]
+        restriction: ModifierRestriction
+
+        comma_indices = [
+            index for index, token in enumerate(items) if token.norm == ","
+        ]
+        if len(comma_indices) >= 2:
+            first, second = comma_indices[0], comma_indices[1]
+            primary_tokens = [
+                token for token in items[:first] if token.norm not in lexicon.PUNCTUATION
+            ]
+            appositive_tokens = [
+                token for token in items[first + 1 : second]
+                if token.norm not in lexicon.PUNCTUATION
+            ]
+            tail = [
+                token for token in items[second + 1 :]
+                if token.norm not in lexicon.PUNCTUATION
+            ]
+            restriction = ModifierRestriction.NONRESTRICTIVE
+            if (
+                not primary_tokens
+                or not appositive_tokens
+                or not tail
+                or appositive_tokens[0].norm in self.RELATIVE_MARKERS
+                or self._find_main_verb(primary_tokens) >= 0
+                or self._find_main_verb(appositive_tokens) >= 0
+                or self._find_main_verb(tail) < 0
+            ):
+                return None, None
+        elif not comma_indices:
+            verb_index = self._find_main_verb(items)
+            if verb_index <= 2:
+                return None, None
+            subject = [
+                token for token in items[:verb_index]
+                if token.norm not in lexicon.PUNCTUATION
+            ]
+            name_start = next(
+                (
+                    index
+                    for index, token in enumerate(subject[1:], start=1)
+                    if self._looks_proper_name([token])
+                    and any(
+                        item.norm in lexicon.RELATIONS
+                        or item.norm in self.APPOSITIVE_ROLE_NOUNS
+                        for item in subject[:index]
+                    )
+                ),
+                -1,
+            )
+            if name_start < 1:
+                return None, None
+            primary_tokens = subject[:name_start]
+            appositive_tokens = subject[name_start:]
+            tail = list(items[verb_index:])
+            restriction = ModifierRestriction.RESTRICTIVE
+        else:
+            return None, None
+
+        primary_surface = self._surface(primary_tokens)
+        appositive_surface = self._surface(appositive_tokens)
+        primary_is_name = self._looks_proper_name(primary_tokens)
+        appositive_is_name = self._looks_proper_name(appositive_tokens)
+
+        if appositive_is_name and not primary_is_name:
+            canonical_tokens = appositive_tokens
+            descriptor_tokens = primary_tokens
+        else:
+            canonical_tokens = primary_tokens
+            descriptor_tokens = appositive_tokens
+
+        relation_type, expected_kind, owner_id, role_name = self._appositive_profile(
+            descriptor_tokens,
+            descriptor_is_name=self._looks_proper_name(descriptor_tokens),
+        )
+        canonical = self._parse_np(
+            canonical_tokens,
+            memory,
+            expected_kind=expected_kind,
+            role_hint="subject",
+        )
+        if not canonical.ref or canonical.ref.kind != RefKind.ENTITY:
+            candidates = [
+                candidate
+                for unresolved in canonical.unresolved
+                for candidate in unresolved.candidates
+            ]
+            return None, self._appositive_ambiguity(
+                items,
+                primary_surface,
+                appositive_surface,
+                "appositive head could not be resolved",
+                candidates,
+            )
+
+        entity = memory.get_entity(canonical.ref.key)
+        if entity is None:
+            return None, self._appositive_ambiguity(
+                items,
+                primary_surface,
+                appositive_surface,
+                "appositive head entity is unavailable",
+                [],
+            )
+
+        descriptor_surface = self._surface(descriptor_tokens)
+        binding = memory.bind_appositive_alias(
+            entity.entity_id,
+            descriptor_surface,
+            relation_type=relation_type,
+            expected_kind=expected_kind,
+            role_owner_id=owner_id,
+            role_name=role_name,
+        )
+        if not binding.resolved:
+            return None, self._appositive_ambiguity(
+                items,
+                primary_surface,
+                appositive_surface,
+                binding.reason or "appositive identity is ambiguous",
+                [candidate.entity_id for candidate in binding.candidates],
+            )
+
+        # Both explicit surfaces identify the same entity after safe binding.
+        entity.add_alias(primary_surface)
+        entity.add_alias(appositive_surface)
+        internal_alias = memory.ensure_internal_alias(entity.entity_id)
+        head_token = lexicon.Token(
+            entity.canonical_name,
+            internal_alias,
+            -1,
+        )
+        relation = AppositiveRelation(
+            head_entity_id=entity.entity_id,
+            primary_surface=primary_surface,
+            appositive_surface=appositive_surface,
+            relation_type=relation_type,
+            restriction=restriction,
+            appositive_key=memory.normalize_alias(descriptor_surface),
+            role_owner_id=owner_id,
+            role_name=role_name,
+            diagnostics=[
+                f"appositive primary={primary_surface}",
+                f"appositive value={appositive_surface}",
+                f"appositive type={relation_type.value}",
+            ],
+        )
+        return (
+            AppositiveSplit(
+                main_tokens=[head_token] + tail,
+                relation=relation,
+                entity_ids=[entity.entity_id],
+                diagnostics=list(relation.diagnostics),
+            ),
+            None,
+        )
+
+    @staticmethod
+    def _looks_proper_name(tokens: Sequence[lexicon.Token]) -> bool:
+        content = [
+            token
+            for token in tokens
+            if token.norm not in lexicon.DETERMINERS
+            and token.norm not in lexicon.POSSESSIVES
+            and token.norm not in lexicon.PUNCTUATION
+        ]
+        return bool(content) and all(
+            token.text[:1].isupper()
+            and token.norm not in lexicon.RELATIONS
+            for token in content
+        )
+
+    def _appositive_profile(
+        self,
+        tokens: Sequence[lexicon.Token],
+        *,
+        descriptor_is_name: bool,
+    ) -> Tuple[AppositiveRelationType, EntityKind, str, str]:
+        norms = [
+            token.norm
+            for token in tokens
+            if token.norm not in lexicon.PUNCTUATION
+        ]
+        if descriptor_is_name:
+            return AppositiveRelationType.IDENTITY, EntityKind.PERSON, "", ""
+        relation_word = next(
+            (
+                word
+                for word in reversed(norms)
+                if word in lexicon.RELATIONS
+                or word in self.APPOSITIVE_ROLE_NOUNS
+            ),
+            "",
+        )
+        if relation_word:
+            canonical, _gender, _number, kind = lexicon.relation_features(
+                relation_word
+            )
+            owner_id = ""
+            if norms and norms[0] == "my":
+                owner_id = "user"
+            elif norms and norms[0] == "your":
+                owner_id = "assistant"
+            return AppositiveRelationType.ROLE, kind, owner_id, canonical
+        location_heads = {
+            "city", "country", "county", "hospital", "office", "place",
+            "school", "state", "store", "town", "village",
+        }
+        expected = (
+            EntityKind.PLACE
+            if any(word in location_heads for word in norms)
+            else lexicon.classify_unknown_noun(norms)
+        )
+        return AppositiveRelationType.DESCRIPTION, expected, "", ""
+
+    @staticmethod
+    def _appositive_ambiguity(
+        tokens: Sequence[lexicon.Token],
+        primary_surface: str,
+        appositive_surface: str,
+        reason: str,
+        candidate_ids: Sequence[str],
+    ) -> AppositiveAttachmentAmbiguity:
+        normalized = " ".join(token.norm for token in tokens)
+        return AppositiveAttachmentAmbiguity(
+            primary_surface=primary_surface,
+            appositive_surface=appositive_surface,
+            clause_surface=SemanticParser._surface(tokens),
+            reason=reason,
+            candidate_entity_ids=list(dict.fromkeys(candidate_ids)),
+            ambiguity_id=(
+                "appositive-"
+                + hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
+            ),
+            diagnostics=["appositive identity unresolved; durable assertion suppressed"],
         )
 
     @staticmethod
@@ -1263,7 +1583,39 @@ class SemanticParser:
             return None, [], [], ["whose question lacks possessed noun"]
         aux_idx = next((idx for idx, token in enumerate(rest) if token.norm in lexicon.AUXILIARIES), -1)
         possessed_tokens = rest[:aux_idx] if aux_idx > 0 else rest[:1]
-        possessed = self._parse_np(possessed_tokens, memory, expected_kind=EntityKind.THING, role_hint="patient")
+        possessed_kind = lexicon.classify_unknown_noun(
+            [token.norm for token in possessed_tokens]
+        )
+        possessed_surface = self._surface(possessed_tokens)
+        possessed_alias = memory.normalize_alias(possessed_surface)
+        existing = memory.find_by_alias(possessed_alias, possessed_kind)
+        if existing.resolved and existing.entity:
+            entity = existing.entity
+            memory.mention(entity.entity_id, "patient")
+            possessed = NPResult(
+                entity.to_ref(possessed_surface),
+                entity_ids=[entity.entity_id],
+                surface=possessed_surface,
+            )
+        elif existing.status == "ambiguous":
+            possessed = NPResult(
+                None,
+                [
+                    memory.unresolved_from_resolution(
+                        possessed_surface,
+                        existing,
+                        possessed_kind,
+                    )
+                ],
+                surface=possessed_surface,
+            )
+        else:
+            possessed = self._parse_np(
+                possessed_tokens,
+                memory,
+                expected_kind=possessed_kind,
+                role_hint="patient",
+            )
         unresolved = list(possessed.unresolved)
         entities = list(possessed.entity_ids)
         args: Dict[str, SemanticRef] = {
@@ -2100,6 +2452,27 @@ class SemanticParser:
         if len(items) == 1 and norms[0].startswith("__var_") and norms[0].endswith("__"):
             role = norms[0][len("__var_") : -2]
             return NPResult(SemanticRef.variable(role, expected_kind), surface=surface)
+
+        # Private aliases inserted by structural transformations bind an
+        # already-created entity before ordinary possessive/name heuristics.
+        if len(items) == 1 and norms[0].startswith(
+            ("entityref-", "modified-", "possessed-")
+        ):
+            resolution = memory.find_by_alias(norms[0], EntityKind.UNKNOWN)
+            if resolution.resolved and resolution.entity:
+                entity = resolution.entity
+                memory.mention(entity.entity_id, role_hint)
+                return NPResult(
+                    entity.to_ref(surface),
+                    entity_ids=[entity.entity_id],
+                    surface=surface,
+                )
+            unresolved = memory.unresolved_from_resolution(
+                surface,
+                resolution,
+                expected_kind,
+            )
+            return NPResult(None, [unresolved], surface=surface)
 
         # Numeric determiner/quantity: "three cars", "$50".
         quantity: Optional[SemanticRef] = None
