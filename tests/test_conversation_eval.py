@@ -94,9 +94,17 @@ def test_shipped_generation_layout_has_no_divergent_flat_fallback():
         assert not (DATA_DIR / name).exists()
 
 
+def test_documented_static_exclusion_boundary_is_not_overclaimed():
+    contract = (ROOT / "evaluation/conversations/README.md").read_text()
+    assert "cannot govern arbitrary text or paths deliberately supplied" in contract
+    assert "owned by issue #110" in contract
+    assert "raw-source attestation remain a project claim" in contract
+
+
 def test_ci_guards_every_preexisting_corpus_generation_path():
     workflow = (ROOT / ".github/workflows/tests.yml").read_text()
-    assert "python -m evaluation.conversations verify-additive --base origin/main" in workflow
+    assert 'additive_base="${{ github.event.before }}"' in workflow
+    assert 'python -m evaluation.conversations verify-additive --base "$additive_base"' in workflow
 
 
 def test_additive_guard_rejects_new_files_and_symlinks_inside_old_generation(tmp_path):
@@ -125,6 +133,32 @@ def test_additive_guard_rejects_new_files_and_symlinks_inside_old_generation(tmp
     extra.unlink()
     extra.symlink_to("ROOT.sha256")
     with pytest.raises(CorpusIntegrityError, match="inventory"):
+        verify_additive_generations("HEAD", repo_root=repo, data_dir=data)
+    extra.unlink()
+    root_path = generation_dir / "ROOT.sha256"
+    root_path.chmod(0o755)
+    with pytest.raises(CorpusIntegrityError, match="mode"):
+        verify_additive_generations("HEAD", repo_root=repo, data_dir=data)
+    root_path.chmod(0o644)
+    (data / "CURRENT").chmod(0o755)
+    with pytest.raises(CorpusIntegrityError, match="CURRENT pointer was modified"):
+        verify_additive_generations("HEAD", repo_root=repo, data_dir=data)
+
+
+def test_additive_guard_rejects_baseline_generations_without_pointer(tmp_path):
+    repo = tmp_path / "repo"
+    data = repo / "evaluation/conversations/data"
+    generation_dir = data / "generations" / ("a" * 64)
+    generation_dir.mkdir(parents=True)
+    for name in ("heldout_v1.jsonl", "development_v1.jsonl", "manifest_v1.json", "ROOT.sha256"):
+        (generation_dir / name).write_text(f"{name}\n")
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "generation without pointer"], cwd=repo, check=True)
+    (data / "CURRENT").write_text("a" * 64 + "\n")
+    with pytest.raises(CorpusIntegrityError, match="without a CURRENT pointer"):
         verify_additive_generations("HEAD", repo_root=repo, data_dir=data)
 
 
@@ -446,6 +480,18 @@ def test_corpus_generation_parent_symlink_fails_for_load_and_compile(tmp_path):
     assert not any(compile_external.iterdir())
 
 
+def test_corpus_data_directory_symlink_fails_before_selection_or_compile(tmp_path):
+    data = tmp_path / "data"
+    shutil.copytree(DATA_DIR, data)
+    external = tmp_path / "external-data"
+    data.replace(external)
+    data.symlink_to(external, target_is_directory=True)
+    with pytest.raises(CorpusIntegrityError, match="traverse a symlink"):
+        load_manifest(data / "manifest_v1.json")
+    with pytest.raises(CorpusIntegrityError, match="traverse a symlink"):
+        compile_corpora(source_dir=SOURCE_DIR, output_dir=data)
+
+
 def test_split_loader_hashes_and_parses_one_immutable_buffer(tmp_path, monkeypatch):
     data = tmp_path / "data"
     shutil.copytree(DATA_DIR, data)
@@ -545,6 +591,32 @@ def test_production_tree_digest_binds_packaged_web_runtime_assets(tmp_path):
             "engine/pointer_probe.py",
             "from pathlib import Path\nPOINTER = 'CUR' + 'RENT'\n"
             "ROOT = Path('evaluation') / f\"{'conversations'}\" / 'data' / POINTER\n",
+        ),
+        (
+            "clanker_lm/join_probe.py",
+            "import importlib\nPARTS = ('evaluation', 'conversations', 'corpus')\n"
+            "NAME = '.'.join(PARTS)\nimportlib.import_module(NAME)\n",
+        ),
+        (
+            "engine/format_probe.py",
+            "from pathlib import Path\nBASE = '{}/{}'.format('evaluation', 'conversations')\n"
+            "NAME = ('cur' + 'rent').upper()\nROOT = Path(BASE) / 'data' / NAME\n",
+        ),
+        (
+            "clanker_lm/getattr_probe.py",
+            "import importlib\nNAME = ('IMPORT', '_MODULE')\n"
+            "LOADER = getattr(importlib, ''.join(NAME).lower())\nLOADER('unrelated')\n",
+        ),
+        (
+            "clanker_lm/web_assets/reference_probe.js",
+            "const root = ['evaluation','conversations','data'].join('/');\n"
+            "const pointer = ['CUR','RENT'].join('');\n",
+        ),
+        (
+            "clanker_lm/web_assets/fragment_probe.js",
+            "const decoy = 'harmless';\n"
+            "const root = ['eval','uation','/','con','ver','sations','/data'].join('');\n"
+            "const pointer = ['C','U','R','R','E','N','T'].join('');\n",
         ),
     ],
 )
@@ -955,16 +1027,20 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
         for turn in conversation["turns"]
     ]
     failures = []
-    for category, count in report["failure_counts"].items():
-        for _ in range(count):
-            conversation_id, turn_id, domain = identities[len(failures) % len(identities)]
-            failures.append({
-                "conversation_id": conversation_id,
-                "turn_id": turn_id,
-                "domain": domain,
-                "mode": "sentence_only",
-                "category": category,
-            })
+    for mode, mode_report in report["modes"].items():
+        for category in report["failure_counts"]:
+            metric = mode_report["overall"]["metrics"].get(category)
+            count = metric["n_turns"] - round(metric["value"] * metric["n_turns"])
+            for index in range(count):
+                conversation_id, turn_id, domain = identities[index]
+                failures.append({
+                    "conversation_id": conversation_id,
+                    "turn_id": turn_id,
+                    "domain": domain,
+                    "mode": mode,
+                    "category": category,
+                })
+    assert len(failures) == report["failure_count"]
     _validate_aggregate_artifacts(report, failures, conversations)
 
     mutations = []
@@ -1048,10 +1124,49 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
     item = copy.deepcopy(report)
     item["development_correction_bundle"]["sample_count"] += 1
     mutations.append(item)
+    item = copy.deepcopy(report)
+    metric = item["modes"]["sentence_only"]["overall"]["metrics"]["dialogue_act_correct"]
+    metric.update({"value": 99, "n_turns": 1, "n_conversations": 1, "ci95_conversation_cluster_bootstrap": [1, 0]})
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    classification = item["modes"]["sentence_only"]["overall"]["unknown_classification"]
+    classification["precision"] = 1.0 if classification["precision"] != 1.0 else 0.0
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    classification = item["modes"]["sentence_only"]["overall"]["unknown_classification"]
+    classification["tp"] += 1
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    calibration = item["modes"]["sentence_only"]["overall"]["uncertainty_calibration"]
+    calibration.update({"ece_10_bin": 99, "n": 0, "bins": []})
+    mutations.append(item)
+    for field, value in (
+        ("source_conversation_count", report["development_correction_bundle"]["source_conversation_count"] + 1),
+        ("source_corpus_sha256", "0" * 64),
+        ("production_runtime_commit", "0" * 40),
+    ):
+        item = copy.deepcopy(report)
+        item["development_correction_bundle"][field] = value
+        mutations.append(item)
+    item = copy.deepcopy(report)
+    item["semantic_fingerprint"] = "0" * 64
+    mutations.append(item)
 
     for corrupt in mutations:
         with pytest.raises(CorpusIntegrityError):
             _validate_aggregate_artifacts(corrupt, failures, conversations)
+
+    corrupt_failures = copy.deepcopy(failures)
+    corrupt_failures[0]["exception"] = "InventedGeneratedReply"
+    with pytest.raises(CorpusIntegrityError, match="unexpected field"):
+        _validate_aggregate_artifacts(report, corrupt_failures, conversations)
+    duplicate_report = copy.deepcopy(report)
+    duplicate_report["failure_count"] += 1
+    duplicate_report["failure_counts"][failures[0]["category"]] += 1
+    with pytest.raises(CorpusIntegrityError, match="duplicate"):
+        _validate_aggregate_artifacts(
+            duplicate_report, failures + [copy.deepcopy(failures[0])], conversations
+        )
 
 
 def test_drift_reports_terminal_bias_and_axis_slopes():
@@ -1390,6 +1505,51 @@ def test_report_loader_rejects_symlink_generation_parent(tmp_path):
         load_published_artifacts(report_path)
 
 
+def test_report_parent_symlink_fails_before_load_or_publish(tmp_path):
+    publish = tmp_path / "publish"
+    publish.mkdir()
+    report_path = publish / "report.json"
+    _publish_artifacts(
+        {"aggregate": 1}, [], output_path=report_path, failures_path=None,
+        provenance_check=lambda: None,
+    )
+    external = tmp_path / "external-publish"
+    publish.replace(external)
+    publish.symlink_to(external, target_is_directory=True)
+    with pytest.raises(CorpusIntegrityError, match="traverse a symlink"):
+        load_published_artifacts(report_path)
+    with pytest.raises(CorpusIntegrityError, match="traverse a symlink"):
+        _publish_artifacts(
+            {"aggregate": 2}, [], output_path=report_path, failures_path=None,
+            provenance_check=lambda: None,
+        )
+
+
+@pytest.mark.parametrize(
+    "target_name",
+    ["report.json", "report_failures.jsonl", "report.sha256", "report.current", "report.generations"],
+)
+def test_report_publication_rejects_existing_symlink_targets(tmp_path, target_name):
+    target = tmp_path / target_name
+    target.symlink_to(tmp_path / "outside")
+    with pytest.raises(CorpusIntegrityError, match="cannot be a symlink"):
+        _publish_artifacts(
+            {"aggregate": 1}, [], output_path=tmp_path / "report.json",
+            failures_path=tmp_path / "report_failures.jsonl", provenance_check=lambda: None,
+        )
+
+
+def test_report_loader_rejects_existing_public_role_symlink(tmp_path):
+    report_path = tmp_path / "report.json"
+    _publish_artifacts(
+        {"aggregate": 1}, [], output_path=report_path, failures_path=None,
+        provenance_check=lambda: None,
+    )
+    report_path.symlink_to(tmp_path / "outside")
+    with pytest.raises(CorpusIntegrityError, match="cannot be a symlink"):
+        load_published_artifacts(report_path)
+
+
 @pytest.mark.parametrize("failure_name", ["report.json", "report.sha256"])
 def test_artifact_publish_rejects_colliding_targets_before_mutation(tmp_path, failure_name):
     report_path = tmp_path / "report.json"
@@ -1415,6 +1575,16 @@ def test_artifact_publish_rejects_reserved_target_collisions(tmp_path, failure_n
             output_path=report_path,
             failures_path=tmp_path / failure_name,
             provenance_check=lambda: None,
+        )
+    assert not report_path.with_suffix(".current").exists()
+
+
+def test_artifact_publish_requires_jsonl_failure_target_before_mutation(tmp_path):
+    report_path = tmp_path / "report.json"
+    with pytest.raises(CorpusIntegrityError, match=".jsonl"):
+        _publish_artifacts(
+            {"aggregate": 1}, [], output_path=report_path,
+            failures_path=tmp_path / "failures.txt", provenance_check=lambda: None,
         )
     assert not report_path.with_suffix(".current").exists()
 

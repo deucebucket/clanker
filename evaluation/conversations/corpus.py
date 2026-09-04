@@ -11,6 +11,7 @@ import ast
 import hashlib
 import json
 import re
+import stat
 import subprocess
 import tempfile
 from collections import Counter
@@ -120,7 +121,26 @@ def _atomic_replace_path(source: Path, target: Path) -> None:
     source.replace(target)
 
 
+def _reject_symlink_chain(path: Path) -> None:
+    current = path.absolute()
+    while True:
+        if current.is_symlink():
+            raise CorpusIntegrityError(f"controlled corpus path cannot traverse a symlink: {current}")
+        if current.parent == current:
+            return
+        current = current.parent
+
+
 def _selected_data_dir(data_dir: Path) -> Path:
+    _reject_symlink_chain(data_dir)
+    if data_dir.exists() and not data_dir.is_dir():
+        raise CorpusIntegrityError("corpus data path must be a regular directory")
+    if (
+        data_dir.parent.name == GENERATIONS_DIRECTORY
+        and re.fullmatch(r"[0-9a-f]{64}", data_dir.name)
+    ):
+        _validate_generation_members(data_dir, GENERATION_FILES, "selected corpus generation")
+        return data_dir
     pointer = data_dir / CURRENT_POINTER
     generations = data_dir / GENERATIONS_DIRECTORY
     if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
@@ -128,11 +148,7 @@ def _selected_data_dir(data_dir: Path) -> Path:
     if pointer.is_symlink():
         raise CorpusIntegrityError("corpus CURRENT pointer cannot be a symlink")
     if not pointer.is_file():
-        if generations.exists():
-            raise CorpusIntegrityError(
-                "corpus CURRENT pointer is required once immutable generations exist"
-            )
-        return data_dir
+        raise CorpusIntegrityError("corpus CURRENT pointer is required")
     generation = pointer.read_text(encoding="ascii").strip()
     if not re.fullmatch(r"[0-9a-f]{64}", generation):
         raise CorpusIntegrityError("corpus CURRENT pointer is malformed")
@@ -225,6 +241,11 @@ def _static_string_values(node: ast.AST, names: Mapping[str, set[str]]) -> set[s
         return {node.value}
     if isinstance(node, ast.Name):
         return set(names.get(node.id, ()))
+    if isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant):
+        if isinstance(node.value, (ast.List, ast.Tuple)) and type(node.slice.value) is int:
+            index = node.slice.value
+            if -len(node.value.elts) <= index < len(node.value.elts):
+                return _static_string_values(node.value.elts[index], names)
     if isinstance(node, ast.FormattedValue):
         return _static_string_values(node.value, names)
     if isinstance(node, ast.JoinedStr):
@@ -260,6 +281,45 @@ def _static_string_values(node: ast.AST, names: Mapping[str, set[str]]) -> set[s
                     for right in pieces
                 }
             return values
+        if isinstance(node.func, ast.Attribute):
+            receiver = _static_string_values(node.func.value, names)
+            if node.func.attr in {"lower", "upper", "casefold"} and not node.args:
+                transform = str.casefold if node.func.attr == "casefold" else getattr(str, node.func.attr)
+                return {transform(value) for value in receiver}
+            if node.func.attr == "format" and receiver:
+                arguments = [_static_string_values(argument, names) for argument in node.args]
+                if all(arguments):
+                    results: set[str] = set()
+                    combinations = [()]
+                    for values in arguments:
+                        combinations = [prefix + (value,) for prefix in combinations for value in values]
+                        if len(combinations) > 64:
+                            return set()
+                    for template in receiver:
+                        for values in combinations:
+                            try:
+                                results.add(template.format(*values))
+                            except (IndexError, KeyError, ValueError):
+                                continue
+                    return results
+            if node.func.attr == "join" and len(node.args) == 1 and receiver:
+                sequence = node.args[0]
+                if isinstance(sequence, (ast.List, ast.Tuple)):
+                    combinations = [()]
+                    for element in sequence.elts:
+                        values = _static_string_values(element, names)
+                        if not values:
+                            return set()
+                        combinations = [prefix + (value,) for prefix in combinations for value in values]
+                        if len(combinations) > 64:
+                            return set()
+                    return {
+                        separator.join(values)
+                        for separator in receiver
+                        for values in combinations
+                    }
+                if isinstance(sequence, ast.Name):
+                    return set(names.get(sequence.id, ()))
     return set()
 
 
@@ -278,6 +338,19 @@ def _static_name_bindings(tree: ast.AST) -> Dict[str, set[str]]:
         changed = False
         for name, value in assignments:
             resolved = _static_string_values(value, bindings)
+            if isinstance(value, (ast.List, ast.Tuple)):
+                combinations = [()]
+                for element in value.elts:
+                    values = _static_string_values(element, bindings)
+                    if not values:
+                        combinations = []
+                        break
+                    combinations = [prefix + (item,) for prefix in combinations for item in values]
+                resolved |= {
+                    separator.join(items)
+                    for items in combinations
+                    for separator in ("", "/", ".", "\\")
+                }
             if resolved and not resolved <= bindings.get(name, set()):
                 bindings.setdefault(name, set()).update(resolved)
                 changed = True
@@ -315,6 +388,14 @@ def _ast_has_forbidden_production_reference(
         if not isinstance(node, ast.Call):
             continue
         call_name = _ast_dotted_name(node.func).lower()
+        if call_name.endswith("import_module") or call_name == "__import__":
+            return True
+        if call_name == "getattr" and any(
+            value.lower() in {"import_module", "__import__"}
+            for argument in node.args[1:]
+            for value in _static_string_values(argument, names)
+        ):
+            return True
         if call_name.endswith("selected_manifest_path"):
             return True
         if call_name.endswith("load_split"):
@@ -333,6 +414,47 @@ def _ast_has_forbidden_production_reference(
                 for value in _static_string_values(node.args[0], names)
             ):
                 return True
+    return False
+
+
+def _static_asset_has_forbidden_production_reference(
+    text: str,
+    *,
+    content_address: str,
+) -> bool:
+    """Conservatively fold bounded literal sequences in executable package assets."""
+
+    literal_pattern = r"(['\"`])((?:\\.|(?!\1).)*)\1"
+    literals = [
+        match.group(2)
+        for match in re.finditer(literal_pattern, text, re.DOTALL)
+        if "${" not in match.group(2)
+    ]
+    folded: set[str] = set(literals)
+    literal_token = r'''(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)'''
+    array_join_pattern = re.compile(
+        rf"\[((?:\s*{literal_token}\s*,?){{2,64}})\]\s*\.join\(\s*({literal_token})\s*\)",
+        re.DOTALL,
+    )
+    for match in array_join_pattern.finditer(text):
+        elements = [item.group(0)[1:-1] for item in re.finditer(literal_token, match.group(1))]
+        separator = match.group(2)[1:-1]
+        folded.add(separator.join(elements))
+    for start in range(len(literals)):
+        for stop in range(start + 2, min(len(literals), start + 6) + 1):
+            values = literals[start:stop]
+            for separator in ("", "/", ".", "\\"):
+                folded.add(separator.join(values))
+    for value in folded:
+        normalized = value.replace("\\", "/").lower()
+        if (
+            "evaluation/conversations" in normalized
+            or "evaluation.conversations" in normalized
+            or "heldout_v1.jsonl" in normalized
+            or normalized == "heldout"
+            or content_address.lower() in normalized
+        ):
+            return True
     return False
 
 
@@ -364,6 +486,11 @@ def _production_reference_hits(
             and _ast_has_forbidden_production_reference(
                 text, content_address=str(manifest["content_address"])
             )
+        ) or (
+            path.suffix.lower() in {".js", ".html", ".css", ".json"}
+            and _static_asset_has_forbidden_production_reference(
+                text, content_address=str(manifest["content_address"])
+            )
         ):
             hits.append(path.relative_to(repo_root).as_posix())
     return hits
@@ -378,7 +505,10 @@ def verify_additive_generations(
     """Prove every previously committed corpus generation remains byte-exact."""
 
     try:
-        relative_data = data_dir.resolve().relative_to(repo_root.resolve()).as_posix()
+        _reject_symlink_chain(data_dir)
+        lexical_data = data_dir.absolute()
+        lexical_root = repo_root.absolute()
+        relative_data = lexical_data.relative_to(lexical_root).as_posix()
     except ValueError as exc:
         raise CorpusIntegrityError("corpus data directory must be inside the repository") from exc
     generations = data_dir / GENERATIONS_DIRECTORY
@@ -390,19 +520,6 @@ def verify_additive_generations(
         if directory.is_symlink() or not directory.is_dir():
             raise CorpusIntegrityError("corpus generation must be a regular directory")
         _validate_generation_members(directory, GENERATION_FILES, "corpus generation")
-
-    pointer_spec = f"{base_ref}:{relative_data}/{CURRENT_POINTER}"
-    try:
-        baseline_pointer = subprocess.check_output(
-            ["git", "show", pointer_spec], cwd=repo_root, stderr=subprocess.DEVNULL
-        )
-    except subprocess.CalledProcessError:
-        return {"baseline_present": False, "verified_generations": 0}
-    except OSError as exc:
-        raise CorpusIntegrityError("cannot inspect baseline corpus pointer") from exc
-    pointer = data_dir / CURRENT_POINTER
-    if pointer.is_symlink() or not pointer.is_file() or pointer.read_bytes() != baseline_pointer:
-        raise CorpusIntegrityError("committed corpus CURRENT pointer was modified")
 
     prefix = f"{relative_data}/{GENERATIONS_DIRECTORY}"
     try:
@@ -423,6 +540,42 @@ def verify_additive_generations(
         if len(parts) != 2 or not re.fullmatch(r"[0-9a-f]{64}", parts[0]):
             raise CorpusIntegrityError("baseline corpus generation layout is invalid")
         baseline.setdefault(parts[0], {})[parts[1]] = (mode, kind)
+
+    pointer_spec = f"{base_ref}:{relative_data}/{CURRENT_POINTER}"
+    try:
+        baseline_pointer = subprocess.check_output(
+            ["git", "show", pointer_spec], cwd=repo_root, stderr=subprocess.DEVNULL
+        )
+    except subprocess.CalledProcessError:
+        if baseline:
+            raise CorpusIntegrityError(
+                "baseline corpus generations exist without a CURRENT pointer"
+            )
+        return {"baseline_present": False, "verified_generations": 0}
+    except OSError as exc:
+        raise CorpusIntegrityError("cannot inspect baseline corpus pointer") from exc
+    try:
+        pointer_listing = subprocess.check_output(
+            ["git", "ls-tree", "-z", base_ref, "--", f"{relative_data}/{CURRENT_POINTER}"],
+            cwd=repo_root,
+        )
+        pointer_metadata, _pointer_path = pointer_listing.rstrip(b"\0").split(b"\t", 1)
+        pointer_mode, pointer_kind, _pointer_object = pointer_metadata.decode("ascii").split()
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        raise CorpusIntegrityError("cannot inspect baseline corpus pointer mode") from exc
+    if pointer_mode not in {"100644", "100755"} or pointer_kind != "blob":
+        raise CorpusIntegrityError("baseline corpus CURRENT pointer is not a regular file")
+    pointer = data_dir / CURRENT_POINTER
+    observed_pointer_mode = (
+        "100755" if pointer.is_file() and pointer.stat().st_mode & 0o111 else "100644"
+    )
+    if (
+        pointer.is_symlink()
+        or not pointer.is_file()
+        or pointer.read_bytes() != baseline_pointer
+        or observed_pointer_mode != pointer_mode
+    ):
+        raise CorpusIntegrityError("committed corpus CURRENT pointer was modified")
     for generation, entries in baseline.items():
         directory = generations / generation
         if directory.is_symlink() or not directory.is_dir():
@@ -433,6 +586,13 @@ def verify_additive_generations(
         for filename, (mode, kind) in entries.items():
             if mode not in {"100644", "100755"} or kind != "blob":
                 raise CorpusIntegrityError("baseline corpus generation contains a non-file entry")
+            observed_mode = (
+                "100755"
+                if stat.S_IMODE((directory / filename).stat().st_mode) & 0o111
+                else "100644"
+            )
+            if observed_mode != mode:
+                raise CorpusIntegrityError("committed corpus generation file mode was modified")
             spec = f"{base_ref}:{prefix}/{generation}/{filename}"
             expected = subprocess.check_output(["git", "show", spec], cwd=repo_root)
             if (directory / filename).read_bytes() != expected:
@@ -1153,6 +1313,9 @@ def compile_corpora(
 ) -> Dict[str, Any]:
     """Compile all source documents into canonical JSONL splits and a manifest."""
 
+    _reject_symlink_chain(output_dir)
+    if output_dir.exists() and not output_dir.is_dir():
+        raise CorpusIntegrityError("corpus output path must be a regular directory")
     generations = output_dir / GENERATIONS_DIRECTORY
     if generations.is_symlink() or (generations.exists() and not generations.is_dir()):
         raise CorpusIntegrityError("corpus generations parent must be a regular directory")

@@ -1,11 +1,11 @@
 {
   "baseline_code_commit": "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e",
   "compiler": "evaluation.conversations.corpus:compile_corpora",
-  "compiler_sha256": "a9e023d257b09e86205f52f8c3f98fc79e2fe477304faabdb3ce2b49a6bd16a6",
+  "compiler_sha256": "24ec3de1e42029b63289ba767f2ac153f664784bb7349f9f98885e485b111002",
   "content_address": "sha256:05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18",
-  "corpus_root_sha256": "d0ef1c003f26dc19c0b93a6717bcf5462d6e9cebf0978351a2e463542f055a9e",
+  "corpus_root_sha256": "b02afe412cf87ba1637ae1ebc0214f6082eae509ea999701d5cf58e49e65093c",
   "corpus_version": "conversation-v1",
-  "evaluator_sha256": "5d9164c35a91487760e9637d969a65e73cc4fc92322ffa3ab6ebdf5421e284ab",
+  "evaluator_sha256": "6f44eb3a629b9966854694c36bf70b76289535fd0d2a5314712ebb5e894b12bc",
   "frozen_date": "2026-09-04",
   "immutability_policy": "heldout-v1 bytes and labels are frozen; corrections require a new corpus version",
   "manifest_schema_version": 1,
@@ -254,8 +254,8 @@
   "production_code_sha256": "b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f",
   "schema_sha256": {
     "conversation-v1.schema.json": "560f2ee2fe18822589985125ff0138d6d18d685ddc5d56a05c5bee319c83da66",
-    "failure-v1.schema.json": "0be1bb6a74a32c8f062d41aa127f8b8913f26a016641c145d62bc2d5549d76a6",
-    "report-v1.schema.json": "af3f0313fd051c56cfa5b1d3639aecb9be5b5febed6589cc7be8e33968043e37",
+    "failure-v1.schema.json": "b55fb5ab2d3882011805097af660ba7f90d0e0cc37c2f5817196c21fb584a13d",
+    "report-v1.schema.json": "2a650d56b5ef71c5c578a083a1251dd6698c4e2b88b7bd08869cb329ef5630b7",
     "source-v1.schema.json": "78a766470871e1c7df6d870b134b2e06bdfb6200eb3e552c18d8389517fffc79"
   },
   "sources": [

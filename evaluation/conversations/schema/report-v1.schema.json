@@ -60,8 +60,7 @@
         "truth_correct": {"type": "integer", "minimum": 0},
         "semantic_parse_exact": {"type": "integer", "minimum": 0},
         "semantic_answer_exact": {"type": "integer", "minimum": 0},
-        "entity_resolution_exact": {"type": "integer", "minimum": 0},
-        "execution_error": {"type": "integer", "minimum": 0}
+        "entity_resolution_exact": {"type": "integer", "minimum": 0}
       }
     },
     "environment": {
@@ -75,13 +74,14 @@
       }
     },
     "limitations": {
-      "type": "array", "minItems": 5, "maxItems": 5,
+      "type": "array", "minItems": 6, "maxItems": 6,
       "prefixItems": [
         {"const": "Literary and archival next-state/outcome labels are weak supervision, not causal Clanker exposure."},
         {"const": "ClankerLM.process accepts no speaker/addressee; participant-aware scores expose that interface limit."},
         {"const": "Latency and resource measurements are observational and excluded from semantic_fingerprint."},
         {"const": "Process max-RSS is a process-lifetime peak and is mode-order dependent, not a paired mode comparison."},
-        {"const": "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed."}
+        {"const": "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed."},
+        {"const": "Static exclusion cannot govern arbitrary operator-supplied text or paths; official replay/promotion enforcement is tracked by issue 110."}
       ]
     }
   },
@@ -100,10 +100,22 @@
     },
     "classification": {
       "type": "object", "additionalProperties": false,
-      "required": ["tp", "fp", "fn", "precision", "recall", "f1", "bootstrap_valid_draws", "ci95_conversation_cluster_bootstrap"],
+      "required": ["tp", "fp", "fn", "precision", "recall", "f1", "clusters", "bootstrap_valid_draws", "ci95_conversation_cluster_bootstrap"],
       "properties": {
         "tp": {"type": "integer", "minimum": 0}, "fp": {"type": "integer", "minimum": 0}, "fn": {"type": "integer", "minimum": 0},
         "precision": {"type": ["number", "null"]}, "recall": {"type": ["number", "null"]}, "f1": {"type": ["number", "null"]},
+        "clusters": {
+          "type": "array", "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["domain", "conversation_id", "tp", "fp", "fn", "tn"],
+            "properties": {
+              "domain": {"type": "string", "minLength": 1},
+              "conversation_id": {"type": "string", "minLength": 1},
+              "tp": {"type": "integer", "minimum": 0}, "fp": {"type": "integer", "minimum": 0},
+              "fn": {"type": "integer", "minimum": 0}, "tn": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
         "bootstrap_valid_draws": {
           "type": "object", "additionalProperties": false, "required": ["precision", "recall", "f1"],
           "properties": {"precision": {"type": "integer", "minimum": 0}, "recall": {"type": "integer", "minimum": 0}, "f1": {"type": "integer", "minimum": 0}}

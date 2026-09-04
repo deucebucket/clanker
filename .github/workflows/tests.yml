@@ -42,8 +42,14 @@ jobs:
 
       - name: Enforce additive-only held-out versions
         run: |
-          git fetch --no-tags --depth=1 origin main
-          python -m evaluation.conversations verify-additive --base origin/main
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            additive_base="${{ github.event.before }}"
+            git fetch --no-tags --depth=1 origin "$additive_base"
+          else
+            additive_base="origin/main"
+            git fetch --no-tags --depth=1 origin main
+          fi
+          python -m evaluation.conversations verify-additive --base "$additive_base"
 
       - name: Run open development conversation evaluation
         run: python -m evaluation.conversations run --split development --output /tmp/clanker-conversation-dev.json

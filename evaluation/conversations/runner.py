@@ -60,6 +60,7 @@ REPORT_LIMITATIONS = (
     "Latency and resource measurements are observational and excluded from semantic_fingerprint.",
     "Process max-RSS is a process-lifetime peak and is mode-order dependent, not a paired mode comparison.",
     "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed.",
+    "Static exclusion cannot govern arbitrary operator-supplied text or paths; official replay/promotion enforcement is tracked by issue 110.",
 )
 METRIC_NAMES = frozenset({
     "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
@@ -70,7 +71,7 @@ METRIC_NAMES = frozenset({
   | {f"direction_{axis}" for axis in AXES})
 FAILURE_CATEGORIES = frozenset({
     "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
-    "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact", "execution_error",
+    "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact",
 })
 SUPERVISION_LEVELS = frozenset({"weak", "weak_rule_v1", "gold_structural"})
 SUMMARY_REQUIRED_METRICS = frozenset({
@@ -559,16 +560,9 @@ def _score_turn(
         record["entity_resolution_exact"] = float(
             _entity_exact(refs, result, runtime=runtime, conversation=conversation, turn=turn)
         )
-    claimed = result.contract.status.value not in {
-        "acknowledged", "unsupported", "unknown", "missing_reference",
-        "ambiguous_reference", "multiple_matches", "lexical_probe",
-    }
-    if claimed and result.contract.certainty > 0:
+    if bool(expected_answer.get("scored")):
         record["answer_confidence"] = result.contract.certainty / 255.0
-        record["answer_correct"] = record.get(
-            "semantic_answer_exact",
-            float(record["answer_status_correct"] == 1.0 and record["truth_correct"] == 1.0),
-        )
+        record["answer_correct"] = record["semantic_answer_exact"]
         record["brier"] = (record["answer_confidence"] - record["answer_correct"]) ** 2
     if expected_next is not None and bool(annotation["affect_scored"]):
         record.update(
@@ -731,6 +725,31 @@ def _classification(
     recall = tp / (tp + fn) if tp + fn else None
     f1_denominator = 2 * tp + fp + fn
     f1 = 2 * tp / f1_denominator if f1_denominator else None
+    grouped: Dict[Tuple[str, str], List[Mapping[str, Any]]] = defaultdict(list)
+    for record in records:
+        grouped[(str(record["domain"]), str(record["conversation_id"]))].append(record)
+    clusters = []
+    for (domain, conversation_id), items in sorted(grouped.items()):
+        cluster_tp = sum(
+            item.get("expected_status") == label and item.get("actual_status") == label
+            for item in items
+        )
+        cluster_fp = sum(
+            item.get("expected_status") != label and item.get("actual_status") == label
+            for item in items
+        )
+        cluster_fn = sum(
+            item.get("expected_status") == label and item.get("actual_status") != label
+            for item in items
+        )
+        clusters.append({
+            "domain": domain,
+            "conversation_id": conversation_id,
+            "tp": cluster_tp,
+            "fp": cluster_fp,
+            "fn": cluster_fn,
+            "tn": len(items) - cluster_tp - cluster_fp - cluster_fn,
+        })
     result = {
         "tp": tp,
         "fp": fp,
@@ -738,11 +757,9 @@ def _classification(
         "precision": precision,
         "recall": recall,
         "f1": f1,
+        "clusters": clusters,
     }
     clusters_by_domain: Dict[str, List[List[Mapping[str, Any]]]] = defaultdict(list)
-    grouped: Dict[Tuple[str, str], List[Mapping[str, Any]]] = defaultdict(list)
-    for record in records:
-        grouped[(str(record["domain"]), str(record["conversation_id"]))].append(record)
     for (domain, _), items in sorted(grouped.items()):
         clusters_by_domain[domain].append(items)
     if not grouped:
@@ -1130,6 +1147,8 @@ def _validate_metric_summary(
     value: Any,
     location: str,
     *,
+    metric_name: str,
+    paired: bool = False,
     max_turns: int | None = None,
     max_conversations: int | None = None,
 ) -> None:
@@ -1145,49 +1164,140 @@ def _validate_metric_summary(
         or type(metric["n_conversations"]) is not int
         or metric["n_turns"] < 0
         or metric["n_conversations"] < 0
+        or metric["n_turns"] == 0
+        or metric["n_conversations"] == 0
         or metric["n_conversations"] > metric["n_turns"]
         or (max_turns is not None and metric["n_turns"] > max_turns)
         or (max_conversations is not None and metric["n_conversations"] > max_conversations)
     ):
         raise CorpusIntegrityError(f"{location} counts are invalid")
     interval = metric["ci95_conversation_cluster_bootstrap"]
-    if interval is not None and (
+    if (
         not isinstance(interval, list)
         or len(interval) != 2
         or not all(_is_artifact_number(item) for item in interval)
+        or interval[0] > interval[1]
     ):
         raise CorpusIntegrityError(f"{location} confidence interval is invalid")
+    max_distance = math.sqrt(len(AXES)) * 255.0
+    unit_metrics = {
+        "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
+        "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact", "brier",
+        "target_attainment", "correction_applied",
+    } | {f"mae_normalized_{axis}" for axis in AXES} | {f"direction_{axis}" for axis in AXES}
+    if metric_name in unit_metrics:
+        bounds = (-1.0, 1.0) if paired else (0.0, 1.0)
+    elif metric_name.startswith("mae_"):
+        bounds = (-255.0, 255.0) if paired else (0.0, 255.0)
+    elif metric_name == "next_state_distance":
+        bounds = (-max_distance, max_distance) if paired else (0.0, max_distance)
+    elif metric_name == "target_distance_improvement":
+        bounds = (-2.0 * max_distance, 2.0 * max_distance) if paired else (-max_distance, max_distance)
+    elif metric_name == "candidate_count":
+        bounds = (0.0, math.inf)
+    else:
+        raise CorpusIntegrityError(f"{location} metric domain is not declared")
+    if any(not bounds[0] <= point <= bounds[1] for point in [metric["value"], *interval]):
+        raise CorpusIntegrityError(f"{location} value is outside its declared metric domain")
 
 
-def _validate_classification(value: Any, location: str, *, max_turns: int) -> None:
+def _validate_classification(
+    value: Any,
+    location: str,
+    *,
+    max_turns: int,
+    label: str,
+    seed_material: str,
+) -> None:
     item = _require_artifact_keys(
         value,
         {
-            "tp", "fp", "fn", "precision", "recall", "f1", "bootstrap_valid_draws",
+            "tp", "fp", "fn", "precision", "recall", "f1", "clusters", "bootstrap_valid_draws",
             "ci95_conversation_cluster_bootstrap",
         },
         location,
     )
     if any(type(item[field]) is not int or item[field] < 0 for field in ("tp", "fp", "fn")):
         raise CorpusIntegrityError(f"{location} counts must be nonnegative integers")
-    if item["tp"] + item["fp"] > max_turns or item["tp"] + item["fn"] > max_turns:
+    if item["tp"] + item["fp"] + item["fn"] > max_turns:
         raise CorpusIntegrityError(f"{location} counts exceed the summary turn count")
+    if not isinstance(item["clusters"], list):
+        raise CorpusIntegrityError(f"{location} clusters must be an array")
+    cluster_rows: List[Dict[str, Any]] = []
+    cluster_ids: set[tuple[str, str]] = set()
+    for index, raw_cluster in enumerate(item["clusters"]):
+        cluster = _require_artifact_keys(
+            raw_cluster,
+            {"domain", "conversation_id", "tp", "fp", "fn", "tn"},
+            f"{location}.clusters[{index}]",
+        )
+        identity = (cluster["domain"], cluster["conversation_id"])
+        if (
+            not all(isinstance(part, str) and part for part in identity)
+            or identity in cluster_ids
+            or any(
+                type(cluster[field]) is not int or cluster[field] < 0
+                for field in ("tp", "fp", "fn", "tn")
+            )
+        ):
+            raise CorpusIntegrityError(f"{location} cluster is invalid")
+        cluster_ids.add(identity)
+        for (expected_status, actual_status), count in (
+            ((label, label), cluster["tp"]),
+            (("other", label), cluster["fp"]),
+            ((label, "other"), cluster["fn"]),
+            (("other", "other"), cluster["tn"]),
+        ):
+            for offset in range(count):
+                cluster_rows.append({
+                    "domain": cluster["domain"],
+                    "conversation_id": cluster["conversation_id"],
+                    "turn_id": f"{index}:{expected_status}:{actual_status}:{offset}",
+                    "expected_status": expected_status,
+                    "actual_status": actual_status,
+                })
+    if len(cluster_rows) != max_turns:
+        raise CorpusIntegrityError(f"{location} cluster population is inconsistent")
+    rebuilt = _classification(cluster_rows, label, seed_material=seed_material)
+    if dict(item) != rebuilt:
+        raise CorpusIntegrityError(
+            f"{location} disagrees with deterministic cluster statistics"
+        )
     if any(
         item[field] is not None and not _is_artifact_number(item[field])
         for field in ("precision", "recall", "f1")
     ):
         raise CorpusIntegrityError(f"{location} point estimate is invalid")
+    expected_points = {
+        "precision": item["tp"] / (item["tp"] + item["fp"])
+        if item["tp"] + item["fp"] else None,
+        "recall": item["tp"] / (item["tp"] + item["fn"])
+        if item["tp"] + item["fn"] else None,
+        "f1": 2 * item["tp"] / (2 * item["tp"] + item["fp"] + item["fn"])
+        if 2 * item["tp"] + item["fp"] + item["fn"] else None,
+    }
+    if any(
+        (item[field] is None) != (expected is None)
+        or (
+            expected is not None
+            and not math.isclose(float(item[field]), expected, rel_tol=0.0, abs_tol=1e-15)
+        )
+        for field, expected in expected_points.items()
+    ):
+        raise CorpusIntegrityError(f"{location} point estimates disagree with counts")
     valid = _require_artifact_keys(
         item["bootstrap_valid_draws"], {"precision", "recall", "f1"}, f"{location}.valid_draws"
     )
     if any(type(count) is not int or not 0 <= count <= BOOTSTRAP_DRAWS for count in valid.values()):
         raise CorpusIntegrityError(f"{location} valid-draw count is invalid")
     intervals = item["ci95_conversation_cluster_bootstrap"]
-    if not isinstance(intervals, Mapping) or set(intervals) - {"precision", "recall", "f1"}:
+    expected_intervals = {field for field, count in valid.items() if count > 0}
+    if not isinstance(intervals, Mapping) or set(intervals) != expected_intervals:
         raise CorpusIntegrityError(f"{location} interval schema is invalid")
     if any(
         not isinstance(interval, list) or len(interval) != 2
-        or not all(_is_artifact_number(point) for point in interval)
+        or not all(_is_artifact_number(point) and 0.0 <= point <= 1.0 for point in interval)
+        or interval[0] > interval[1]
         for interval in intervals.values()
     ):
         raise CorpusIntegrityError(f"{location} interval is invalid")
@@ -1227,16 +1337,24 @@ def _validate_summary(value: Any, location: str, *, expected_seed: str) -> None:
         _validate_metric_summary(
             metric,
             f"{location}.metrics.{metric_name}",
+            metric_name=metric_name,
             max_turns=summary["turn_count"],
             max_conversations=summary["conversation_count"],
         )
     _validate_classification(
-        summary["unknown_classification"], f"{location}.unknown", max_turns=summary["turn_count"]
+        summary["unknown_classification"], f"{location}.unknown",
+        max_turns=summary["turn_count"], label="unknown",
+        seed_material=f"{expected_seed}|unknown",
     )
     _validate_classification(
-        summary["conflict_classification"], f"{location}.conflict", max_turns=summary["turn_count"]
+        summary["conflict_classification"], f"{location}.conflict",
+        max_turns=summary["turn_count"], label="conflict",
+        seed_material=f"{expected_seed}|conflict",
     )
     calibration = summary["uncertainty_calibration"]
+    brier = summary["metrics"].get("brier")
+    if (calibration is None) != (brier is None):
+        raise CorpusIntegrityError(f"{location}.calibration availability disagrees with Brier")
     if calibration is not None:
         calibration = _require_artifact_keys(
             calibration, {"ece_10_bin", "n", "bins"}, f"{location}.calibration"
@@ -1244,7 +1362,9 @@ def _validate_summary(value: Any, location: str, *, expected_seed: str) -> None:
         if (
             not _is_artifact_number(calibration["ece_10_bin"])
             or type(calibration["n"]) is not int
-            or not 0 <= calibration["n"] <= summary["turn_count"]
+            or not 1 <= calibration["n"] <= summary["turn_count"]
+            or calibration["n"] != brier["n_turns"]
+            or not 0.0 <= calibration["ece_10_bin"] <= 1.0
         ):
             raise CorpusIntegrityError(f"{location}.calibration has invalid values")
         if not isinstance(calibration["bins"], list):
@@ -1254,13 +1374,46 @@ def _validate_summary(value: Any, location: str, *, expected_seed: str) -> None:
                 bin_item, {"lower", "upper", "n", "confidence", "accuracy"},
                 f"{location}.calibration.bins[{index}]",
             )
-            if type(bin_item["n"]) is not int or bin_item["n"] < 0 or not all(
+            if type(bin_item["n"]) is not int or bin_item["n"] <= 0 or not all(
                 _is_artifact_number(bin_item[field])
                 for field in ("lower", "upper", "confidence", "accuracy")
+            ) or not (
+                0.0 <= bin_item["lower"] < bin_item["upper"] <= 1.0
+                and 0.0 <= bin_item["confidence"] <= 1.0
+                and 0.0 <= bin_item["accuracy"] <= 1.0
             ):
                 raise CorpusIntegrityError(f"{location}.calibration bin is invalid")
+            lower_index = round(bin_item["lower"] * 10)
+            if not (
+                0 <= lower_index <= 9
+                and math.isclose(
+                    bin_item["lower"], lower_index / 10.0, rel_tol=0.0, abs_tol=1e-15
+                )
+                and math.isclose(
+                    bin_item["upper"], (lower_index + 1) / 10.0,
+                    rel_tol=0.0, abs_tol=1e-15,
+                )
+            ):
+                raise CorpusIntegrityError(
+                    f"{location}.calibration bin boundary is not canonical"
+                )
+        if [item["lower"] for item in calibration["bins"]] != sorted(
+            {item["lower"] for item in calibration["bins"]}
+        ):
+            raise CorpusIntegrityError(
+                f"{location}.calibration bins are duplicated or unordered"
+            )
         if sum(bin_item["n"] for bin_item in calibration["bins"]) != calibration["n"]:
             raise CorpusIntegrityError(f"{location}.calibration bin counts are inconsistent")
+        recomputed_ece = sum(
+            bin_item["n"] / calibration["n"]
+            * abs(bin_item["confidence"] - bin_item["accuracy"])
+            for bin_item in calibration["bins"]
+        )
+        if not math.isclose(
+            calibration["ece_10_bin"], recomputed_ece, rel_tol=0.0, abs_tol=1e-15
+        ):
+            raise CorpusIntegrityError(f"{location}.calibration ECE is inconsistent")
     drift = summary["drift"]
     if drift is not None:
         drift = _require_artifact_keys(
@@ -1611,6 +1764,8 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             _validate_metric_summary(
                 metric,
                 f"paired.{name}.{metric_name}",
+                metric_name=metric_name,
+                paired=True,
                 max_turns=comparison["paired_turn_count"],
                 max_conversations=min(
                     report["modes"][expected_modes[0]]["overall"]["conversation_count"],
@@ -1623,7 +1778,7 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
     for failure in failures:
         if not isinstance(failure, Mapping) or not failure_keys <= set(failure):
             raise CorpusIntegrityError("failure ledger row is malformed")
-        if set(failure) - failure_keys - {"exception"}:
+        if set(failure) != failure_keys:
             raise CorpusIntegrityError("failure ledger row contains an unexpected field")
         if not all(isinstance(value, str) for value in failure.values()):
             raise CorpusIntegrityError("failure ledger values must be text")
@@ -1631,20 +1786,13 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             "category"
         ] not in FAILURE_CATEGORIES:
             raise CorpusIntegrityError("failure ledger categorical value is invalid")
-        if "exception" in failure and not re.fullmatch(
-            r"[A-Za-z_][A-Za-z0-9_.]{0,127}", failure["exception"]
-        ):
-            raise CorpusIntegrityError("failure ledger exception class is invalid")
 
     actual_failure_counts = dict(sorted(Counter(item["category"] for item in failures).items()))
     if dict(report["failure_counts"]) != actual_failure_counts:
         raise CorpusIntegrityError("failure_counts disagrees with the failure ledger")
     for mode in MODES:
-        actual_execution_errors = sum(
-            item["mode"] == mode and item["category"] == "execution_error" for item in failures
-        )
-        if report["modes"][mode]["execution_errors"] != actual_execution_errors:
-            raise CorpusIntegrityError("per-mode execution_errors disagrees with the failure ledger")
+        if report["modes"][mode]["execution_errors"] != 0:
+            raise CorpusIntegrityError("publishable aggregate reports cannot contain execution errors")
 
 
 def _validate_no_conversation_payloads(
@@ -1709,6 +1857,8 @@ def _validate_aggregate_artifacts(
     report: Mapping[str, Any],
     failures: Sequence[Mapping[str, Any]],
     conversations: Sequence[Mapping[str, Any]],
+    *,
+    manifest: Mapping[str, Any] | None = None,
 ) -> None:
     """Fail if aggregate artifacts contain raw conversational payloads."""
 
@@ -1727,6 +1877,50 @@ def _validate_aggregate_artifacts(
     if not isinstance(report, Mapping) or report.get("report_schema_version") != METRIC_SCHEMA_VERSION:
         raise CorpusIntegrityError("aggregate report discriminator is missing or unsupported")
     _validate_report_schema(report, failures)
+    bound_manifest = manifest if manifest is not None else load_manifest()
+    split = str(report["split"])
+    if split not in bound_manifest["splits"] or any(
+        report[field] != bound_manifest[manifest_field]
+        for field, manifest_field in (
+            ("corpus_root_sha256", "corpus_root_sha256"),
+            ("compiler_sha256", "compiler_sha256"),
+            ("evaluator_sha256", "evaluator_sha256"),
+            ("schema_sha256", "schema_sha256"),
+            ("production_code_commit", "baseline_code_commit"),
+            ("production_code_sha256", "production_code_sha256"),
+        )
+    ) or report["corpus_sha256"] != bound_manifest["splits"][split]["sha256"]:
+        raise CorpusIntegrityError("aggregate report provenance disagrees with the selected manifest")
+    correction = report["development_correction_bundle"]
+    development = bound_manifest["splits"]["development"]
+    if (
+        correction["source_conversation_count"] != development["conversation_count"]
+        or correction["terminal_pending_turns_excluded"] != development["conversation_count"]
+        or correction["expected_finalized_sample_count"]
+        != development["turn_count"] - development["conversation_count"]
+        or correction["source_corpus_sha256"] != development["sha256"]
+        or correction["production_runtime_commit"] != bound_manifest["baseline_code_commit"]
+    ):
+        raise CorpusIntegrityError("development correction bundle disagrees with the selected manifest")
+
+    semantic_payload = {
+        "modes": {
+            mode: {
+                "overall": report["modes"][mode]["overall"],
+                "by_domain": report["modes"][mode]["by_domain"],
+                "by_outcome": report["modes"][mode]["by_outcome"],
+                "by_supervision_level": report["modes"][mode]["by_supervision_level"],
+                "execution_errors": report["modes"][mode]["execution_errors"],
+            }
+            for mode in MODES
+        },
+        "paired_mode_differences": report["paired_mode_differences"],
+    }
+    expected_fingerprint = hashlib.sha256(
+        _canonical_json(semantic_payload).encode("utf-8")
+    ).hexdigest()
+    if report["semantic_fingerprint"] != expected_fingerprint:
+        raise CorpusIntegrityError("semantic fingerprint disagrees with aggregate metrics")
 
     expected_report_keys = {
             "report_schema_version", "corpus_version", "split", "corpus_sha256",
@@ -1768,8 +1962,32 @@ def _validate_aggregate_artifacts(
     for failure in failures:
         if not isinstance(failure, Mapping) or not failure_keys <= set(failure):
             raise CorpusIntegrityError("failure ledger row is malformed")
-        if set(failure) - failure_keys - {"exception"}:
+        if set(failure) != failure_keys:
             raise CorpusIntegrityError("failure ledger row contains an unexpected field")
+
+    failure_identities = [
+        (
+            str(failure["conversation_id"]), str(failure["turn_id"]),
+            str(failure["mode"]), str(failure["category"]),
+        )
+        for failure in failures
+    ]
+    if len(failure_identities) != len(set(failure_identities)):
+        raise CorpusIntegrityError("failure ledger contains duplicate rows")
+    failure_metric_counts = Counter(
+        (str(failure["mode"]), str(failure["category"])) for failure in failures
+    )
+    for mode in MODES:
+        overall_metrics = report["modes"][mode]["overall"]["metrics"]
+        for category in FAILURE_CATEGORIES:
+            metric = overall_metrics.get(category)
+            expected_failures = (
+                metric["n_turns"] - round(metric["value"] * metric["n_turns"])
+                if metric is not None
+                else 0
+            )
+            if failure_metric_counts[(mode, category)] != expected_failures:
+                raise CorpusIntegrityError("failure ledger counts disagree with zero-valued metrics")
 
     expected_populations: Dict[str, Dict[str, tuple[int, int]]] = {
         "by_domain": {}, "by_outcome": {}, "by_supervision_level": {},
@@ -1841,6 +2059,7 @@ def _validate_aggregate_artifacts(
             metric_rows["semantic_parse_exact"] = semantic_rows
         if answer_rows:
             metric_rows["semantic_answer_exact"] = answer_rows
+            metric_rows["brier"] = answer_rows
         if entity_rows:
             metric_rows["entity_resolution_exact"] = entity_rows
         if affect_rows:
@@ -1865,15 +2084,76 @@ def _validate_aggregate_artifacts(
         },
     }
 
-    def validate_metric_population(summary: Mapping[str, Any], expected_key: str, location: str) -> None:
+    def validate_metric_population(
+        summary: Mapping[str, Any],
+        expected_key: str,
+        rows: Sequence[tuple[str, Mapping[str, Any]]],
+        location: str,
+    ) -> None:
         expected = expected_metrics[expected_key]
         observed_names = set(summary["metrics"])
-        if observed_names - {"brier"} != set(expected):
+        if observed_names != set(expected):
             raise CorpusIntegrityError(f"{location} metric population is incomplete")
         for name, counts in expected.items():
             observed = summary["metrics"][name]
             if (observed["n_turns"], observed["n_conversations"]) != counts:
                 raise CorpusIntegrityError(f"{location}.{name} counts are inconsistent")
+        for label, field in (("unknown", "unknown_classification"), ("conflict", "conflict_classification")):
+            gold_support = sum(
+                turn["annotation"]["expected_answer_status"] == label
+                for _conversation_id, turn in rows
+            )
+            classification = summary[field]
+            if classification["tp"] + classification["fn"] != gold_support:
+                raise CorpusIntegrityError(f"{location}.{field} gold support is inconsistent")
+            expected_clusters: Dict[str, Dict[str, Any]] = {}
+            for conversation_id in {conversation_id for conversation_id, _turn in rows}:
+                turn_rows = [
+                    turn for candidate_id, turn in rows if candidate_id == conversation_id
+                ]
+                expected_clusters[conversation_id] = {
+                    "domain": turn_domains[
+                        (conversation_id, str(turn_rows[0]["turn_id"]))
+                    ],
+                    "turn_count": len(turn_rows),
+                    "gold_support": sum(
+                        turn["annotation"]["expected_answer_status"] == label
+                        for turn in turn_rows
+                    ),
+                }
+            observed_clusters = classification["clusters"]
+            if {
+                cluster["conversation_id"] for cluster in observed_clusters
+            } != set(expected_clusters):
+                raise CorpusIntegrityError(
+                    f"{location}.{field} cluster identities are inconsistent"
+                )
+            for cluster in observed_clusters:
+                expected_cluster = expected_clusters[cluster["conversation_id"]]
+                if (
+                    cluster["domain"] != expected_cluster["domain"]
+                    or sum(cluster[key] for key in ("tp", "fp", "fn", "tn"))
+                    != expected_cluster["turn_count"]
+                    or cluster["tp"] + cluster["fn"]
+                    != expected_cluster["gold_support"]
+                ):
+                    raise CorpusIntegrityError(
+                        f"{location}.{field} cluster population is inconsistent"
+                    )
+        affect_conversations = {
+            conversation_id
+            for conversation_id, turn in rows
+            if turn["annotation"]["affect_scored"] is True
+            and turn["annotation"]["observed_next_state"] is not None
+        }
+        if affect_conversations:
+            if (
+                summary["drift"] is None
+                or summary["drift"]["n_conversations"] != len(affect_conversations)
+            ):
+                raise CorpusIntegrityError(f"{location}.drift population is inconsistent")
+        elif summary["drift"] is not None:
+            raise CorpusIntegrityError(f"{location}.drift must be unavailable without affect rows")
 
     for mode in MODES:
         mode_report = report["modes"][mode]
@@ -1883,7 +2163,7 @@ def _validate_aggregate_artifacts(
         ):
             raise CorpusIntegrityError(f"aggregate report {mode} overall population is incomplete")
         validate_metric_population(
-            mode_report["overall"], "overall", f"aggregate report {mode}.overall"
+            mode_report["overall"], "overall", all_rows, f"aggregate report {mode}.overall"
         )
         for stratum, expected in expected_populations.items():
             observed = mode_report[stratum]
@@ -1899,6 +2179,7 @@ def _validate_aggregate_artifacts(
                 validate_metric_population(
                     observed[label],
                     f"{stratum}:{label}",
+                    population_rows[stratum][label],
                     f"aggregate report {mode}.{stratum}.{label}",
                 )
 
@@ -1907,7 +2188,7 @@ def _validate_aggregate_artifacts(
         if name != "candidate_count"
     }
     for comparison_name, comparison in report["paired_mode_differences"].items():
-        if set(comparison["metrics"]) - {"brier"} != set(paired_expected):
+        if set(comparison["metrics"]) != set(paired_expected):
             raise CorpusIntegrityError(
                 f"paired mode differences.{comparison_name} metric population is incomplete"
             )
@@ -1955,6 +2236,16 @@ def _validate_report_generation(directory: Path, expected_names: set[str]) -> No
         raise CorpusIntegrityError("published report generation file inventory is not exact")
 
 
+def _reject_report_symlink_chain(path: Path) -> None:
+    current = path.absolute()
+    while True:
+        if current.is_symlink():
+            raise CorpusIntegrityError(f"controlled report path cannot traverse a symlink: {current}")
+        if current.parent == current:
+            return
+        current = current.parent
+
+
 def _publish_artifacts(
     report: Mapping[str, Any],
     failures: Sequence[Mapping[str, Any]],
@@ -1967,6 +2258,11 @@ def _publish_artifacts(
     checksum_path = output_path.with_suffix(".sha256")
     pointer_path = output_path.with_suffix(".current")
     generations = output_path.parent / f"{output_path.stem}.generations"
+    _reject_report_symlink_chain(output_path.parent)
+    _reject_report_symlink_chain(failure_target.parent)
+    controlled_targets = (output_path, failure_target, checksum_path, pointer_path, generations)
+    if any(path.is_symlink() for path in controlled_targets):
+        raise CorpusIntegrityError("report publication target cannot be a symlink")
     targets = [output_path.resolve(), failure_target.resolve(), checksum_path.resolve()]
     if len(set(targets)) != len(targets):
         raise CorpusIntegrityError("report, failures, and checksum targets must be distinct")
@@ -1975,6 +2271,8 @@ def _publish_artifacts(
     reserved = {pointer_path.resolve(), generations.resolve()}
     if reserved & set(targets) or pointer_path.resolve() == generations.resolve():
         raise CorpusIntegrityError("report artifact targets collide with atomic publication metadata")
+    if failure_target.suffix != ".jsonl":
+        raise CorpusIntegrityError("failure target must use .jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     report_bytes = (json.dumps(report, indent=2, sort_keys=True) + "\n").encode("utf-8")
     failure_bytes = "".join(_canonical_json(item) + "\n" for item in failures).encode("utf-8")
@@ -2042,7 +2340,10 @@ def _publish_artifacts(
 def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Dict[str, Any]], Path]:
     """Resolve one atomically selected report generation and verify its hashes."""
 
+    _reject_report_symlink_chain(output_path.parent)
     pointer_path = output_path.with_suffix(".current")
+    if output_path.is_symlink() or pointer_path.is_symlink():
+        raise CorpusIntegrityError("published report target cannot be a symlink")
     try:
         if pointer_path.is_symlink():
             raise OSError("pointer is a symlink")
@@ -2080,6 +2381,13 @@ def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Di
     report_path = generation_dir / pointer["report"]
     failure_path = generation_dir / pointer["failures"]
     checksum_path = generation_dir / pointer["checksum"]
+    public_targets = (
+        output_path.parent / pointer["report"],
+        output_path.parent / pointer["failures"],
+        output_path.parent / pointer["checksum"],
+    )
+    if any(path.is_symlink() for path in public_targets):
+        raise CorpusIntegrityError("published report role target cannot be a symlink")
     try:
         checksum_bytes = checksum_path.read_bytes()
         checksum_lines = [line.split() for line in checksum_bytes.decode("ascii").splitlines()]
@@ -2261,7 +2569,7 @@ def run_evaluation(
         },
         "limitations": list(REPORT_LIMITATIONS),
     }
-    _validate_aggregate_artifacts(report, all_failures, conversations)
+    _validate_aggregate_artifacts(report, all_failures, conversations, manifest=manifest)
     _assert_provenance_unchanged(run_provenance, manifest)
     if output_path is not None:
         _publish_artifacts(
