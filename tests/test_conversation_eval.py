@@ -612,6 +612,24 @@ def test_classification_preserves_undefined_draws_and_defined_zero_f1():
     assert zero["precision"] == 0.0
     assert zero["recall"] == 0.0
     assert zero["f1"] == 0.0
+    for expected_status, actual_status in (
+        ("conflict", "answered"),
+        ("answered", "conflict"),
+    ):
+        one_sided = _classification(
+            [{
+                "conversation_id": "c",
+                "turn_id": "t",
+                "domain": "d",
+                "expected_status": expected_status,
+                "actual_status": actual_status,
+            }],
+            "conflict",
+            seed_material=f"{expected_status}|{actual_status}",
+        )
+        assert one_sided["f1"] == 0.0
+        assert one_sided["bootstrap_valid_draws"]["f1"] == 10_000
+        assert one_sided["ci95_conversation_cluster_bootstrap"]["f1"] == [0.0, 0.0]
 
 
 def test_development_semantic_report_is_reproducible():

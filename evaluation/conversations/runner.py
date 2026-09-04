@@ -685,13 +685,8 @@ def _classification(
     fn = sum(record.get("expected_status") == label and record.get("actual_status") != label for record in records)
     precision = tp / (tp + fp) if tp + fp else None
     recall = tp / (tp + fn) if tp + fn else None
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if precision is not None and recall is not None and precision + recall
-        else 0.0
-        if precision is not None and recall is not None
-        else None
-    )
+    f1_denominator = 2 * tp + fp + fn
+    f1 = 2 * tp / f1_denominator if f1_denominator else None
     result = {
         "tp": tp,
         "fp": fp,
@@ -725,14 +720,8 @@ def _classification(
         sample_fn = sum(item.get("expected_status") == label and item.get("actual_status") != label for item in sampled)
         sample_precision = sample_tp / (sample_tp + sample_fp) if sample_tp + sample_fp else None
         sample_recall = sample_tp / (sample_tp + sample_fn) if sample_tp + sample_fn else None
-        sample_f1 = (
-            2 * sample_precision * sample_recall / (sample_precision + sample_recall)
-            if sample_precision is not None and sample_recall is not None
-            and sample_precision + sample_recall
-            else 0.0
-            if sample_precision is not None and sample_recall is not None
-            else None
-        )
+        sample_f1_denominator = 2 * sample_tp + sample_fp + sample_fn
+        sample_f1 = 2 * sample_tp / sample_f1_denominator if sample_f1_denominator else None
         if sample_precision is not None:
             estimates["precision"].append(sample_precision)
         if sample_recall is not None:
