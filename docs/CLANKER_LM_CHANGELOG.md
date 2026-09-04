@@ -15,9 +15,11 @@ left `engine/` unchanged.
 
 ---
 
-## Unreleased — Reviewed shipped-changes feed
+## 2026-09-04 — Reviewed release feed
 
 **Issue:** [#112](https://github.com/deucebucket/clanker/issues/112)
+**PR:** [#113](https://github.com/deucebucket/clanker/pull/113)
+**Merge commit:** `66b85de66337789fa83292ecf683c6b23cc0af55`
 
 Added a visible **Changelog** entry point to the existing private semantic
 workbench. The dialog keeps the graphite/warm-paper/amber-teal visual language,
@@ -26,17 +28,26 @@ behavior, restores focus on close, and preserves the six-field answer evidence
 rail.
 
 The feed is repository-backed by a bounded packaged JSON artifact. Application
-startup validates its schema, newest-first dates, unique release IDs, exact
-package-version/milestone agreement, `pr-N`/pull-request and milestone/commit
-evidence links, URL allowlists, pinned private deployment URL, and absence of
-private-content fields. A separate required deployed configuration value reports
-the exact running build through the API and UI. CI asks GitHub to prove every
-milestone PR is merged at its recorded commit. The browser creates dynamic
-content with `textContent`; it uses no HTML insertion or external assets.
+startup validates its schema, unique release IDs, exact package-version and
+milestone agreement, `pr-N`/pull-request and milestone/commit evidence links,
+URL allowlists, pinned private deployment URL, and absence of private-content
+fields. It also requires exactly one current-live row first, followed by
+newest-first pending rows and then newest-first history; a pending milestone may
+be newer than the live baseline. Every state has one canonical badge label;
+startup rejects contradictory state/label pairs, and the browser derives badge
+copy from state rather than rendering ledger label text. A separate required
+deployed configuration value reports the exact running build through the API
+and UI. CI asks GitHub to prove every milestone PR is merged at its recorded
+commit. The browser creates dynamic content with `textContent`; it uses no HTML
+insertion or external assets.
 
-Only the reviewed, merged, and deployed PR #106 baseline appears in the initial
-feed. Issue #107 and later roadmap work are explicitly not represented as
-shipped. This branch has not changed or redeployed the live service.
+The initial pre-merge feed contained only reviewed PR #106. After the
+implementation merged as PR #113, this follow-up release artifact added the
+actual PR number and actual merge commit; issue #107 and later language-roadmap
+work remain explicitly absent until their own reviewed releases. The follow-up
+artifact still requires its own review, CI, deployment, and live build-identity
+check before issue #112 can close. Until that happens, the PR #113 row is
+explicitly **Pending · live verification** and PR #106 remains the live marker.
 
 The first implementation commit `2c16f69` was rejected because it reused PR
 #106's milestone commit as if that proved the running build. The corrected
@@ -48,15 +59,22 @@ IDs. The checked-in feed contains no self-referential build SHA.
 Local validation on the current tree:
 
 ```text
-151 focused web/config/CLI/verifier/DOM tests passed
-2,754 full-suite tests passed, 2 expected xfails
+157 focused web/config/CLI/verifier/DOM tests passed
+2,760 full-suite tests passed, 2 expected xfails
 29/29 deterministic acceptance turns
 real Chromium DOM wiring passed; hostile text remained text with no overflow
 1440×1000, 360×800, and 300×700: runtime/milestone split visible; focus restored
-GitHub verified PR #106 merged at 9ae77f0
+GitHub verified PR #106 at 9ae77f0 and PR #113 at 66b85de
 fresh wheel contains the verifier and all four web assets
 workflow YAML, compile, JavaScript syntax, diff, and no-engine checks clean
 ```
+
+Both independent exact-head reviewers accepted
+`e4c25ae330d917132e496e700b1c2839e652a911`; the Python 3.10/3.12 CI matrices
+passed, and GitHub squash-merged PR #113 as
+`66b85de66337789fa83292ecf683c6b23cc0af55`. This release-row follow-up is a
+separate artifact, so its own exact review, CI, deployment, and live probes
+remain required before #112 closes.
 
 ---
 

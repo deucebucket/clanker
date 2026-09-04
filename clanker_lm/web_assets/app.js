@@ -58,20 +58,54 @@ function repositoryEvidenceLink(record) {
   return link;
 }
 
-function deploymentLink(deployment) {
+function deploymentLink(deployment, linkLabel) {
   if (deployment.url !== "https://bazzite.tail85f65f.ts.net:8444/") {
     throw new Error("Release deployment is outside the pinned workbench.");
   }
-  const link = element("a", "release-link", "Open private workbench");
+  const link = element("a", "release-link", linkLabel);
   link.href = deployment.url;
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   return link;
 }
 
+const lifecyclePresentation = Object.freeze({
+  live: Object.freeze({
+    cardClass: "release-card--live",
+    badgeClass: "deployment-badge--live",
+    badgeLabel: "Live · private Tailnet",
+    capabilityHeading: "What is live",
+    deploymentLinkLabel: "Open live workbench",
+  }),
+  pending: Object.freeze({
+    cardClass: "release-card--pending",
+    badgeClass: "deployment-badge--pending",
+    badgeLabel: "Pending · live verification",
+    capabilityHeading: "What passed review",
+    deploymentLinkLabel: "Open current live baseline",
+  }),
+  retired: Object.freeze({
+    cardClass: "release-card--history",
+    badgeClass: "deployment-badge--history",
+    badgeLabel: "Retired · release history",
+    capabilityHeading: "What shipped",
+    deploymentLinkLabel: "Open current live workbench",
+  }),
+  rolled_back: Object.freeze({
+    cardClass: "release-card--history",
+    badgeClass: "deployment-badge--history",
+    badgeLabel: "Rolled back · release history",
+    capabilityHeading: "What shipped before rollback",
+    deploymentLinkLabel: "Open current live workbench",
+  }),
+});
+
 function renderRelease(release) {
+  const presentation = lifecyclePresentation[release.deployment.state];
+  if (!presentation) throw new Error("Release lifecycle state is unsupported.");
   const item = element("li", "release-item");
-  const article = element("article", "release-card");
+  const article = element("article", `release-card ${presentation.cardClass}`);
+  if (release.deployment.state === "live") article.setAttribute("aria-current", "true");
   const heading = element("header", "release-card__heading");
   const titleBlock = element("div", "");
   const marker = element("p", "release-marker", release.release_id);
@@ -92,7 +126,7 @@ function renderRelease(release) {
   identity.append(versionField, commitField);
 
   const capabilitySection = element("section", "release-section");
-  capabilitySection.append(element("h4", "", "What shipped"));
+  capabilitySection.append(element("h4", "", presentation.capabilityHeading));
   appendTextList(capabilitySection, release.capabilities, "release-points");
 
   const evidenceSection = element("section", "release-section");
@@ -111,9 +145,9 @@ function renderRelease(release) {
 
   const deployment = element("footer", "release-deployment");
   deployment.append(
-    element("span", `deployment-badge deployment-badge--${release.deployment.state}`, release.deployment.label),
+    element("span", `deployment-badge ${presentation.badgeClass}`, presentation.badgeLabel),
     element("p", "", release.deployment.detail),
-    deploymentLink(release.deployment),
+    deploymentLink(release.deployment, presentation.deploymentLinkLabel),
   );
 
   article.append(heading, identity, capabilitySection, evidenceSection, limitationSection, deployment);
@@ -133,11 +167,20 @@ function renderReleaseFeed(feed) {
     throw new Error("The release feed is empty or malformed.");
   }
   const current = feed.releases[0];
+  const currentPresentation = lifecyclePresentation[current.deployment && current.deployment.state];
+  const states = feed.releases.map((release) => release.deployment && release.deployment.state);
+  const liveCount = states.filter((state) => state === "live").length;
+  const pendingCount = states.filter((state) => state === "pending").length;
+  const historyCount = states.filter((state) => state === "retired" || state === "rolled_back").length;
   if (
     current.release_id !== feed.latest_shipped_release.release_id
     || current.package_version !== feed.latest_shipped_release.package_version
     || current.milestone_commit !== feed.latest_shipped_release.milestone_commit
     || current.package_version !== feed.running_package_version
+    || current.deployment.state !== "live"
+    || !currentPresentation
+    || liveCount !== 1
+    || liveCount + pendingCount + historyCount !== feed.releases.length
   ) {
     throw new Error("The displayed release does not match the deployed identity.");
   }
@@ -147,10 +190,10 @@ function renderReleaseFeed(feed) {
   latestReleaseLabel.textContent = `v${current.package_version} · ${shortCommit}`;
   deployedVersion.textContent = `v${feed.running_package_version}`;
   deployedBuildCommit.textContent = feed.deployed_build_commit;
-  deployedState.textContent = current.deployment.label;
+  deployedState.textContent = currentPresentation.badgeLabel;
   releaseList.setAttribute("aria-busy", "false");
   changelogRetry.hidden = true;
-  setChangelogStatus(`${feed.releases.length} reviewed release${feed.releases.length === 1 ? "" : "s"}, newest first.`);
+  setChangelogStatus(`${feed.releases.length} reviewed release${feed.releases.length === 1 ? "" : "s"}: ${liveCount} current live, ${pendingCount} pending, ${historyCount} history.`);
 }
 
 async function loadReleaseFeed() {

@@ -935,6 +935,37 @@ def _release_feed_fixture() -> dict[str, Any]:
     return json.loads(assets["releases.json"].decode("utf-8"))
 
 
+def _release_record(
+    source: dict[str, Any],
+    *,
+    number: int,
+    commit: str,
+    release_date: str,
+    state: str,
+) -> dict[str, Any]:
+    release = copy.deepcopy(source)
+    release.update(
+        release_id=f"pr-{number}",
+        milestone_commit=commit,
+        date=release_date,
+    )
+    release["evidence"][:2] = [
+        {
+            "label": f"Merged PR #{number}",
+            "url": f"https://github.com/deucebucket/clanker/pull/{number}",
+        },
+        {
+            "label": f"Merge commit {commit[:7]}",
+            "url": f"https://github.com/deucebucket/clanker/commit/{commit}",
+        },
+    ]
+    release["deployment"].update(
+        state=state,
+        label=web_module._DEPLOYMENT_LABELS[state],
+    )
+    return release
+
+
 def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> None:
     app = create_app(config=_config())
     with _client(app) as client:
@@ -954,10 +985,10 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
     assert feed["running_package_version"] == __version__ == "0.2.0"
     assert feed["deployed_build_commit"] == BUILD_COMMIT
     assert feed["releases"]
-    assert [release["date"] for release in feed["releases"]] == sorted(
-        (release["date"] for release in feed["releases"]),
-        reverse=True,
-    )
+    assert [release["deployment"]["state"] for release in feed["releases"]] == [
+        "live",
+        "pending",
+    ]
     assert len({release["release_id"] for release in feed["releases"]}) == len(
         feed["releases"]
     )
@@ -976,7 +1007,7 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
     assert current["deployment"] == {
         "state": "live",
         "label": "Live · private Tailnet",
-        "detail": "Reviewed PR #106 is the deployed baseline. No later roadmap milestone is claimed as shipped.",
+        "detail": "Reviewed PR #106 remains the deployed baseline until the PR #113 artifact passes live verification.",
         "url": "https://bazzite.tail85f65f.ts.net:8444/",
     }
     assert current["capabilities"]
@@ -985,6 +1016,9 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
         "https://github.com/deucebucket/clanker/pull/106",
         "https://github.com/deucebucket/clanker/commit/9ae77f072f8afda0b1d2b757ab492757cabff0f8",
     }
+    previous = feed["releases"][1]
+    assert previous["release_id"] == "pr-113"
+    assert previous["deployment"]["state"] == "pending"
     assert "pr-107" not in response.text.lower()
     _assert_hardened(response)
 
@@ -997,6 +1031,123 @@ def test_release_endpoint_reports_the_exact_configured_runtime_build() -> None:
     assert response.status_code == 200
     assert response.json()["deployed_build_commit"] == configured_build
     assert response.json()["latest_shipped_release"]["milestone_commit"] != configured_build
+
+
+def test_pending_milestone_cannot_replace_the_verified_live_marker() -> None:
+    feed = _release_feed_fixture()
+    assert web_module._validate_release_feed(feed)
+    assert feed["latest_shipped_release"]["release_id"] == "pr-106"
+    assert feed["releases"][0]["deployment"]["state"] == "live"
+    assert feed["releases"][1]["release_id"] == "pr-113"
+    assert feed["releases"][1]["deployment"]["state"] == "pending"
+
+    premature = copy.deepcopy(feed)
+    premature["latest_shipped_release"] = {
+        key: premature["releases"][1][key]
+        for key in ("release_id", "package_version", "milestone_commit")
+    }
+    premature["releases"] = [premature["releases"][1], premature["releases"][0]]
+    with pytest.raises(ValueError, match="current live release"):
+        web_module._validate_release_feed(premature)
+
+
+def test_release_lifecycle_accepts_zero_or_later_dated_pending_rows() -> None:
+    feed = _release_feed_fixture()
+    feed["releases"][1]["date"] = "2026-09-05"
+    assert web_module._validate_release_feed(feed)
+
+    feed["releases"] = feed["releases"][:1]
+    assert web_module._validate_release_feed(feed)
+
+
+def test_release_lifecycle_rejects_duplicate_live_and_bad_group_order() -> None:
+    feed = _release_feed_fixture()
+    duplicate_live = copy.deepcopy(feed)
+    duplicate_live["releases"][1]["deployment"].update(
+        state="live",
+        label=web_module._DEPLOYMENT_LABELS["live"],
+    )
+    with pytest.raises(ValueError, match="exactly one live release"):
+        web_module._validate_release_feed(duplicate_live)
+
+    pending_out_of_order = copy.deepcopy(feed)
+    pending_out_of_order["releases"].append(
+        _release_record(
+            feed["releases"][1],
+            number=114,
+            commit="a" * 40,
+            release_date="2026-09-05",
+            state="pending",
+        )
+    )
+    with pytest.raises(ValueError, match="pending releases must be ordered"):
+        web_module._validate_release_feed(pending_out_of_order)
+
+    history_then_pending = copy.deepcopy(feed)
+    history_then_pending["releases"].append(
+        _release_record(
+            feed["releases"][0],
+            number=114,
+            commit="a" * 40,
+            release_date="2026-09-03",
+            state="retired",
+        )
+    )
+    history_then_pending["releases"].append(
+        _release_record(
+            feed["releases"][1],
+            number=115,
+            commit="b" * 40,
+            release_date="2026-09-02",
+            state="pending",
+        )
+    )
+    with pytest.raises(ValueError, match="lifecycle groups are out of order"):
+        web_module._validate_release_feed(history_then_pending)
+
+    history_out_of_order = copy.deepcopy(feed)
+    history_out_of_order["releases"].extend(
+        [
+            _release_record(
+                feed["releases"][0],
+                number=114,
+                commit="a" * 40,
+                release_date="2026-09-02",
+                state="retired",
+            ),
+            _release_record(
+                feed["releases"][0],
+                number=115,
+                commit="b" * 40,
+                release_date="2026-09-03",
+                state="rolled_back",
+            ),
+        ]
+    )
+    with pytest.raises(ValueError, match="release history must be ordered"):
+        web_module._validate_release_feed(history_out_of_order)
+
+
+@pytest.mark.parametrize(
+    ("release_index", "state", "forged_label"),
+    [
+        (1, "pending", "Live · private Tailnet"),
+        (0, "live", "Pending · live verification"),
+        (1, "retired", "Live · private Tailnet"),
+    ],
+)
+def test_release_deployment_state_requires_its_canonical_label(
+    release_index: int,
+    state: str,
+    forged_label: str,
+) -> None:
+    feed = _release_feed_fixture()
+    feed["releases"][release_index]["deployment"].update(
+        state=state,
+        label=forged_label,
+    )
+    with pytest.raises(ValueError, match="label does not match its state"):
+        web_module._validate_release_feed(feed)
 
 
 def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() -> None:
@@ -1074,6 +1225,11 @@ def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() 
                     **copy.deepcopy(feed["releases"][0]),
                     "release_id": "pr-105",
                     "date": "2026-09-05",
+                    "deployment": {
+                        **copy.deepcopy(feed["releases"][0]["deployment"]),
+                        "state": "pending",
+                        "label": web_module._DEPLOYMENT_LABELS["pending"],
+                    },
                     "evidence": [
                         {
                             "label": "Merged PR #105",
@@ -1083,7 +1239,7 @@ def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() 
                     ],
                 }
             ),
-            id="out-of-order",
+            id="out-of-order-pending",
         ),
         pytest.param(
             lambda feed: feed["releases"][0].update(date="2026-02-30"),
@@ -1262,7 +1418,12 @@ def test_changelog_dialog_has_keyboard_focus_mobile_and_loading_error_hooks() ->
     assert 'aria-label="Close changelog"' in html
     assert 'id="changelog-retry"' in html
     assert 'id="release-list"' in html
+    assert 'aria-label="Reviewed releases: current live first, then pending and history"' in html
     assert 'aria-busy="true"' in html
+    assert "Reviewed release record" in html
+    assert "Current live, then what’s next." in html
+    assert "Shipped change record" not in html
+    assert 'aria-label="Shipped releases"' not in html
     assert "changelogDialog.showModal()" in js
     assert "changelogClose.focus()" in js
     assert 'changelogDialog.addEventListener("close"' in js
@@ -1270,11 +1431,19 @@ def test_changelog_dialog_has_keyboard_focus_mobile_and_loading_error_hooks() ->
     assert "event.target === changelogDialog" in js
     assert 'requestJson("/api/releases"' in js
     assert "feed.releases.map(renderRelease)" in js
+    assert 'capabilityHeading: "What passed review"' in js
+    assert "release-card--pending" in js
+    assert "newest first" not in js
+    assert "current live" in js
+    assert "release.deployment.label" not in js
+    assert "current.deployment.label" not in js
     assert "The reviewed release record could not be loaded." in js
     assert ".changelog-body {" in css and "overflow-y: auto" in css
     assert "@media (max-width: 640px)" in css
     assert ".changelog-dialog { width: 100%; height: 100%; max-height: none;" in css
     assert ".changelog-trigger {" in css and "min-height: 44px" in css
+    assert ".release-card--pending {" in css
+    assert ".deployment-badge--pending {" in css
 
 
 def test_packaging_declares_the_repository_release_feed() -> None:

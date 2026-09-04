@@ -59,6 +59,12 @@ _SHIPPED_RELEASE_KEYS = frozenset(
 )
 _EVIDENCE_KEYS = frozenset({"label", "url"})
 _DEPLOYMENT_KEYS = frozenset({"state", "label", "detail", "url"})
+_DEPLOYMENT_LABELS = {
+    "live": "Live · private Tailnet",
+    "pending": "Pending · live verification",
+    "retired": "Retired · release history",
+    "rolled_back": "Rolled back · release history",
+}
 _PRIVATE_FEED_KEYS = frozenset(
     {
         "attachment",
@@ -511,7 +517,7 @@ def _reject_private_feed_keys(value: Any) -> None:
 
 
 def _validate_release_feed(value: Any) -> Mapping[str, Any]:
-    """Validate the packaged, shipped-only release record before serving it."""
+    """Validate the packaged release ledger before serving it."""
 
     if not isinstance(value, dict) or set(value) != _RELEASE_FEED_KEYS:
         raise ValueError("release feed has an unsupported top-level shape")
@@ -541,7 +547,10 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
         raise ValueError("release feed must contain 1 to 100 releases")
 
     release_ids: set[str] = set()
-    release_dates: list[date] = []
+    lifecycle_ranks: list[int] = []
+    pending_dates: list[date] = []
+    history_dates: list[date] = []
+    live_count = 0
     for index, release in enumerate(releases):
         if not isinstance(release, dict) or set(release) != _RELEASE_KEYS:
             raise ValueError(f"release feed item {index} is malformed")
@@ -561,7 +570,7 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
             raise ValueError("release feed commits must be full Git commits")
         rendered_date = _release_text(release["date"], name="date", maximum=10)
         try:
-            release_dates.append(date.fromisoformat(rendered_date))
+            release_date = date.fromisoformat(rendered_date)
         except ValueError as exc:
             raise ValueError("release feed dates must be ISO calendar dates") from exc
         _release_text(release["title"], name="title", maximum=120)
@@ -601,9 +610,13 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
         deployment_state = _release_text(
             deployment["state"], name="deployment state", maximum=20
         )
-        if deployment_state not in {"live", "retired", "rolled_back"}:
+        if deployment_state not in _DEPLOYMENT_LABELS:
             raise ValueError("release deployment state is unsupported")
-        _release_text(deployment["label"], name="deployment label", maximum=100)
+        deployment_label = _release_text(
+            deployment["label"], name="deployment label", maximum=100
+        )
+        if deployment_label != _DEPLOYMENT_LABELS[deployment_state]:
+            raise ValueError("release deployment label does not match its state")
         _release_text(deployment["detail"], name="deployment detail")
         deployment_url = _release_text(
             deployment["url"], name="deployment URL", maximum=200
@@ -611,16 +624,32 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
         if deployment_url != _LIVE_WORKBENCH_URL:
             raise ValueError("release deployment URL is not the pinned workbench")
 
+        if deployment_state == "live":
+            live_count += 1
+            lifecycle_ranks.append(0)
+        elif deployment_state == "pending":
+            lifecycle_ranks.append(1)
+            pending_dates.append(release_date)
+        else:
+            lifecycle_ranks.append(2)
+            history_dates.append(release_date)
+
         if index == 0 and (
             release_id != shipped_id
             or version != shipped_version
             or commit != milestone_commit
             or deployment_state != "live"
         ):
-            raise ValueError("newest release does not match shipped milestone identity")
+            raise ValueError("current live release does not match shipped identity")
 
-    if release_dates != sorted(release_dates, reverse=True):
-        raise ValueError("release feed must be ordered newest first")
+    if live_count != 1:
+        raise ValueError("release feed must contain exactly one live release")
+    if lifecycle_ranks != sorted(lifecycle_ranks):
+        raise ValueError("release feed lifecycle groups are out of order")
+    if pending_dates != sorted(pending_dates, reverse=True):
+        raise ValueError("pending releases must be ordered newest first")
+    if history_dates != sorted(history_dates, reverse=True):
+        raise ValueError("release history must be ordered newest first")
     return value
 
 

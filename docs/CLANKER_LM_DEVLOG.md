@@ -728,9 +728,9 @@ Measure sustained availability only if an uptime claim becomes a requirement.
 - **Scope:** issue #112's repository-backed browser changelog; no deployment,
   identity milestone, language-runtime, or V8 engine change
 - **Goal and success condition:** a keyboard and mobile user can inspect an
-  ordered record of exactly what is shipped, while runtime build identity,
-  milestone provenance, evidence, limitations, and deployment state remain
-  explicit and independently verifiable
+  ordered record of reviewed releases, while current-live status, pending
+  milestones, runtime build identity, provenance, evidence, limitations, and
+  deployment state remain explicit and independently verifiable
 
 ### Rundown
 
@@ -788,8 +788,8 @@ deployed build stops the app instead of producing a plausible-looking receipt.
 
 ```text
 base:      main at 9ae77f072f8afda0b1d2b757ab492757cabff0f8
-focused:   151 web/config/CLI/verifier/real-DOM tests passed
-full:      2,754 passed, 2 expected xfails
+focused:   157 web/config/CLI/verifier/real-DOM tests passed
+full:      2,760 passed, 2 expected xfails
 benchmark: 29/29 deterministic turns
 browser:   1440×1000, 360×800, and 300×700; no overflow; focus restored
 identity:  injected runtime build differed visibly from PR #106 milestone
@@ -824,3 +824,74 @@ issue #112 merges, use that PR's actual number `N` and actual squash/merge SHA
 follow-up reviewed metadata artifact before any production deployment. Close
 #112 only after runtime-build equality, milestone verification, and live UI
 probes pass.
+
+---
+
+## 2026-09-04 — RR devlog: PR #113 release artifact
+
+- **Audience:** workbench operator and Clanker-LM maintainers
+- **Scope:** post-merge release metadata for issue #112; no language-runtime or
+  V8 engine behavior change
+- **Success condition:** the packaged ledger names the real implementation PR
+  and merge commit, a separately identified artifact is deployed, and the live
+  API and dialog agree on both identities
+
+### Rundown
+
+**Proven:** two independent reviewers accepted implementation head
+`e4c25ae330d917132e496e700b1c2839e652a911`; both Python CI matrices passed;
+GitHub merged the implementation as PR #113 at
+`66b85de66337789fa83292ecf683c6b23cc0af55`.
+
+**Proven:** this follow-up replaces the pre-merge PR #106-only ledger head with
+an exact `pr-113` row. Its evidence URLs name PR #113, merge commit `66b85de`,
+and exact-head CI run `33861328696`. It is explicitly `pending`; PR #106 remains
+the current `live` marker rather than being retired before deployment.
+
+**Proven:** the corrected ledger contract requires exactly one current-live row
+at index zero, followed by pending releases newest-first within that group, then
+newest-first retired or rolled-back history. A pending milestone dated after the
+live baseline is valid; duplicate live rows and mixed lifecycle groups fail
+closed. The dialog visibly says **Reviewed release record**, marks the current
+live card, and gives the pending card distinct **What passed review** language
+and amber treatment.
+
+**Proven:** lifecycle badge copy is canonical rather than author-controlled.
+Startup rejects pending/live, live/pending, and retired/live state-label
+mismatches. The browser selects fixed badge text from structured state; a real
+DOM test injects forged opposite-state labels and proves they are not visible
+in either release card or the current-runtime summary.
+
+**Inference:** the metadata is ready for release review because its identifiers
+come from GitHub's completed merge and CI records, not a predicted PR number or
+self-referential commit placeholder.
+
+**Unknown:** this follow-up artifact is not live. Its exact local gates now pass,
+but independent review, remote CI, merge, service restart, and live API/browser
+verification remain. Until then the existing service remains healthy on the PR
+#106 build and issue #112 stays open.
+
+### Evidence
+
+```text
+implementation PR:    113
+implementation merge: 66b85de66337789fa83292ecf683c6b23cc0af55
+accepted head:         e4c25ae330d917132e496e700b1c2839e652a911
+PR CI run:             33861328696 (Python 3.10 and 3.12 passed)
+live URL:              https://bazzite.tail85f65f.ts.net:8444/
+runtime build:         supplied only after this follow-up artifact merges
+focused:              157 web/config/CLI/verifier/real-DOM tests passed
+full:                 2,760 passed, 2 expected xfails
+benchmark:            29/29 deterministic turns
+GitHub:               PR #106 at 9ae77f0; PR #113 at 66b85de
+static:               compile, JavaScript syntax, and diff checks clean
+boundary:             engine/ and clanker_engine.py unchanged
+```
+
+### Next / blocker
+
+Commit the corrected two-entry ledger, obtain independent exact-head review,
+then merge the pending metadata follow-up and deploy it with that merge SHA as
+`CLANKER_LM_BUILD_COMMIT`. After the live endpoint, dialog, identity boundary,
+health, and mobile/desktop probes pass, promote PR #113 to `live` in one final
+reviewed metadata artifact and deploy that exact artifact before closing #112.

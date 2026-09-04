@@ -185,14 +185,27 @@ narrow mobile viewport without horizontal clipping.
 ## Maintaining the shipped feed
 
 The source of truth is
-`clanker_lm/web_assets/releases.json`, ordered newest first. Add an entry only
-after the milestone is merged, independently reviewed, and deployed. The new
-top entry and `latest_shipped_release` must agree exactly on release ID, package
-version, and full 40-character milestone commit. Every `pr-N` row must contain
-the exact `/pull/N` evidence URL and an evidence URL for its exact milestone
-commit. Run `python -m clanker_lm.web_release_verify` to prove through GitHub
-that the PR is merged at that commit. Use only evidence links below the
-`deucebucket/clanker` GitHub repository and keep the direct deployment URL pinned exactly as
+`clanker_lm/web_assets/releases.json`. A merged and independently reviewed but
+not-yet-deployed milestone may appear only as `pending`, after the current live
+row; it must not replace `latest_shipped_release`. There must be exactly one
+`live` row, at index zero, and it must match `latest_shipped_release`. Zero or
+more `pending` rows come next, newest date first within that group. `retired`
+and `rolled_back` history follows, also newest date first within the history
+group. A pending row may therefore have a later date than the current live row.
+Deployment badges have one canonical label per state: `live` is
+**Live · private Tailnet**, `pending` is **Pending · live verification**,
+`retired` is **Retired · release history**, and `rolled_back` is
+**Rolled back · release history**. Startup rejects any state/label mismatch,
+and the browser derives the visible badge from state instead of trusting label
+copy from the ledger.
+After live verification, promote it to the top `live` row and retire the
+previous live marker. The top entry and `latest_shipped_release` must agree
+exactly on release ID, package version, and full 40-character milestone commit.
+Every `pr-N` row must contain the exact `/pull/N` evidence URL and an evidence
+URL for its exact milestone commit. Run
+`python -m clanker_lm.web_release_verify` to prove through GitHub that the PR is
+merged at that commit. Use only evidence links below the `deucebucket/clanker`
+GitHub repository and keep the direct deployment URL pinned exactly as
 `https://bazzite.tail85f65f.ts.net:8444/`.
 
 Do not copy ACL, browser, session, prompt, response, or raw transcript content
@@ -202,15 +215,15 @@ startup instead of presenting a feed whose newest record disagrees with the
 running package version or milestone identity. Never add
 `deployed_build_commit` to this file; deployed configuration supplies it.
 
-For #112 specifically, the current pre-merge feed must remain PR #106-only.
-After the implementation PR for issue #112 merges, take that PR's actual number
-`N` and actual squash/merge SHA `M`. In a follow-up reviewed metadata commit, add
-release ID `pr-N` with evidence URLs `/pull/N` and `/commit/M`; do not assume the
-issue number is also the PR number. Set `CLANKER_LM_BUILD_COMMIT` to the full SHA
-of the follow-up artifact being deployed, run the GitHub verifier and all
-release gates, deploy, then prove the API/UI build equality above. Do not close
-#112 or describe it as shipped before that post-merge row, deployment, and live
-verification are complete.
+For #112 specifically, PR #113 is the implementation PR and
+`66b85de66337789fa83292ecf683c6b23cc0af55` is its merge commit. The first
+follow-up artifact adds `pr-113` as `pending` while PR #106 remains the live
+marker. Review and merge that artifact, set `CLANKER_LM_BUILD_COMMIT` to its
+merge SHA, deploy it, and prove the new dialog plus live API build equality.
+Only then may a final reviewed metadata artifact promote PR #113 to `live` and
+retire PR #106. Deploy and verify that final artifact before closing issue
+#112. This two-phase sequence prevents checked-in metadata from claiming a
+future deployment.
 
 ## Live link correction
 
