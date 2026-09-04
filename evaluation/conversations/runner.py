@@ -832,7 +832,16 @@ def _ece(records: Sequence[Mapping[str, Any]]) -> Dict[str, Any] | None:
         confidence = sum(item[0] for item in members) / len(members)
         accuracy = sum(item[1] for item in members) / len(members)
         weighted += len(members) / len(pairs) * abs(confidence - accuracy)
-        bins.append({"lower": low, "upper": high, "n": len(members), "confidence": confidence, "accuracy": accuracy})
+        bins.append({
+            "lower": low,
+            "upper": high,
+            "n": len(members),
+            "confidence_sum": sum(item[0] for item in members),
+            "correct_sum": sum(item[1] for item in members),
+            "squared_error_sum": sum((item[0] - item[1]) ** 2 for item in members),
+            "confidence": confidence,
+            "accuracy": accuracy,
+        })
     return {"ece_10_bin": weighted, "n": len(pairs), "bins": bins}
 
 
@@ -1371,18 +1380,41 @@ def _validate_summary(value: Any, location: str, *, expected_seed: str) -> None:
             raise CorpusIntegrityError(f"{location}.calibration bins must be an array")
         for index, bin_item in enumerate(calibration["bins"]):
             bin_item = _require_artifact_keys(
-                bin_item, {"lower", "upper", "n", "confidence", "accuracy"},
+                bin_item,
+                {
+                    "lower", "upper", "n", "confidence_sum", "correct_sum",
+                    "squared_error_sum", "confidence", "accuracy",
+                },
                 f"{location}.calibration.bins[{index}]",
             )
             if type(bin_item["n"]) is not int or bin_item["n"] <= 0 or not all(
                 _is_artifact_number(bin_item[field])
-                for field in ("lower", "upper", "confidence", "accuracy")
+                for field in (
+                    "lower", "upper", "confidence_sum", "correct_sum",
+                    "squared_error_sum", "confidence", "accuracy",
+                )
             ) or not (
                 0.0 <= bin_item["lower"] < bin_item["upper"] <= 1.0
+                and 0.0 <= bin_item["confidence_sum"] <= bin_item["n"]
+                and 0.0 <= bin_item["correct_sum"] <= bin_item["n"]
+                and 0.0 <= bin_item["squared_error_sum"] <= bin_item["n"]
                 and 0.0 <= bin_item["confidence"] <= 1.0
                 and 0.0 <= bin_item["accuracy"] <= 1.0
             ):
                 raise CorpusIntegrityError(f"{location}.calibration bin is invalid")
+            if not (
+                math.isclose(
+                    bin_item["confidence"], bin_item["confidence_sum"] / bin_item["n"],
+                    rel_tol=0.0, abs_tol=1e-15,
+                )
+                and math.isclose(
+                    bin_item["accuracy"], bin_item["correct_sum"] / bin_item["n"],
+                    rel_tol=0.0, abs_tol=1e-15,
+                )
+            ):
+                raise CorpusIntegrityError(
+                    f"{location}.calibration bin disagrees with sufficient statistics"
+                )
             lower_index = round(bin_item["lower"] * 10)
             if not (
                 0 <= lower_index <= 9
@@ -1405,6 +1437,14 @@ def _validate_summary(value: Any, location: str, *, expected_seed: str) -> None:
             )
         if sum(bin_item["n"] for bin_item in calibration["bins"]) != calibration["n"]:
             raise CorpusIntegrityError(f"{location}.calibration bin counts are inconsistent")
+        if not math.isclose(
+            sum(bin_item["squared_error_sum"] for bin_item in calibration["bins"])
+            / calibration["n"],
+            brier["value"],
+            rel_tol=0.0,
+            abs_tol=1e-15,
+        ):
+            raise CorpusIntegrityError(f"{location}.calibration disagrees with Brier score")
         recomputed_ece = sum(
             bin_item["n"] / calibration["n"]
             * abs(bin_item["confidence"] - bin_item["accuracy"])

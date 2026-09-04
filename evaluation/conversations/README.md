@@ -63,7 +63,8 @@ re-hash. It must not be described as externally verified. The compiler instead
 reproducibly binds the exact repository source-document bytes and their Git
 history in `source_document_sha256` and the constituent corpus root. The CC0
 grant is explicit, but authorship and the raw-source attestation remain a
-project claim rather than independent human-ground-truth provenance.
+project claim rather than independent human-ground-truth provenance. In short,
+the raw-source attestation remains a project claim.
 
 ## Reproduce
 

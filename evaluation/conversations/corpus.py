@@ -140,6 +140,9 @@ def _selected_data_dir(data_dir: Path) -> Path:
         and re.fullmatch(r"[0-9a-f]{64}", data_dir.name)
     ):
         _validate_generation_members(data_dir, GENERATION_FILES, "selected corpus generation")
+        selected = _selected_data_dir(data_dir.parent.parent)
+        if selected.absolute() != data_dir.absolute():
+            raise CorpusIntegrityError("direct corpus generation path is not selected by CURRENT")
         return data_dir
     pointer = data_dir / CURRENT_POINTER
     generations = data_dir / GENERATIONS_DIRECTORY
@@ -496,6 +499,17 @@ def _production_reference_hits(
     return hits
 
 
+def _promotion_invariants(manifest: Mapping[str, Any]) -> Dict[str, Any]:
+    """Fields a CURRENT promotion may never change for frozen conversation-v1."""
+
+    mutable_tooling_fields = {
+        "compiler_sha256", "evaluator_sha256", "schema_sha256", "corpus_root_sha256",
+    }
+    return {
+        key: value for key, value in manifest.items() if key not in mutable_tooling_fields
+    }
+
+
 def verify_additive_generations(
     base_ref: str,
     *,
@@ -520,6 +534,8 @@ def verify_additive_generations(
         if directory.is_symlink() or not directory.is_dir():
             raise CorpusIntegrityError("corpus generation must be a regular directory")
         _validate_generation_members(directory, GENERATION_FILES, "corpus generation")
+        if any((directory / name).stat().st_mode & 0o111 for name in GENERATION_FILES):
+            raise CorpusIntegrityError("corpus generation file mode must not be executable")
 
     prefix = f"{relative_data}/{GENERATIONS_DIRECTORY}"
     try:
@@ -572,10 +588,45 @@ def verify_additive_generations(
     if (
         pointer.is_symlink()
         or not pointer.is_file()
-        or pointer.read_bytes() != baseline_pointer
         or observed_pointer_mode != pointer_mode
     ):
         raise CorpusIntegrityError("committed corpus CURRENT pointer was modified")
+    current_pointer = pointer.read_bytes()
+    if current_pointer != baseline_pointer:
+        try:
+            baseline_generation = baseline_pointer.decode("ascii").strip()
+            current_generation = current_pointer.decode("ascii").strip()
+        except UnicodeError as exc:
+            raise CorpusIntegrityError("corpus CURRENT promotion is not ASCII") from exc
+        if (
+            not re.fullmatch(r"[0-9a-f]{64}", baseline_generation)
+            or not re.fullmatch(r"[0-9a-f]{64}", current_generation)
+            or baseline_generation not in baseline
+            or current_generation in baseline
+        ):
+            raise CorpusIntegrityError("corpus CURRENT promotion is not additive")
+        try:
+            baseline_manifest = json.loads(subprocess.check_output(
+                [
+                    "git", "show",
+                    f"{base_ref}:{prefix}/{baseline_generation}/manifest_v1.json",
+                ],
+                cwd=repo_root,
+            ))
+            current_manifest = json.loads(
+                (generations / current_generation / "manifest_v1.json").read_bytes()
+            )
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            raise CorpusIntegrityError("cannot validate corpus CURRENT promotion") from exc
+        if (
+            not isinstance(baseline_manifest, Mapping)
+            or not isinstance(current_manifest, Mapping)
+            or _promotion_invariants(current_manifest)
+            != _promotion_invariants(baseline_manifest)
+        ):
+            raise CorpusIntegrityError(
+                "corpus CURRENT promotion changed frozen split, source, policy, or production bytes"
+            )
     for generation, entries in baseline.items():
         directory = generations / generation
         if directory.is_symlink() or not directory.is_dir():

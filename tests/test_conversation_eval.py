@@ -94,11 +94,22 @@ def test_shipped_generation_layout_has_no_divergent_flat_fallback():
         assert not (DATA_DIR / name).exists()
 
 
+def test_direct_historical_generation_path_cannot_bypass_current_selection():
+    selected = selected_manifest_path()
+    historical = next(
+        directory
+        for directory in (DATA_DIR / "generations").iterdir()
+        if directory != selected.parent
+    )
+    with pytest.raises(CorpusIntegrityError, match="not selected by CURRENT"):
+        load_manifest(historical / "manifest_v1.json")
+
+
 def test_documented_static_exclusion_boundary_is_not_overclaimed():
     contract = (ROOT / "evaluation/conversations/README.md").read_text()
     assert "cannot govern arbitrary text or paths deliberately supplied" in contract
     assert "owned by issue #110" in contract
-    assert "raw-source attestation remain a project claim" in contract
+    assert "raw-source attestation remains a project claim" in contract
 
 
 def test_ci_guards_every_preexisting_corpus_generation_path():
@@ -159,6 +170,65 @@ def test_additive_guard_rejects_baseline_generations_without_pointer(tmp_path):
     subprocess.run(["git", "commit", "-qm", "generation without pointer"], cwd=repo, check=True)
     (data / "CURRENT").write_text("a" * 64 + "\n")
     with pytest.raises(CorpusIntegrityError, match="without a CURRENT pointer"):
+        verify_additive_generations("HEAD", repo_root=repo, data_dir=data)
+
+
+def test_additive_guard_allows_tooling_only_pointer_promotion(tmp_path):
+    repo = tmp_path / "repo"
+    data = repo / "evaluation/conversations/data"
+    old_generation = "a" * 64
+    old_dir = data / "generations" / old_generation
+    old_dir.mkdir(parents=True)
+    immutable = {
+        "corpus_version": "conversation-v1",
+        "content_address": "sha256:" + "1" * 64,
+        "baseline_code_commit": "2" * 40,
+        "production_code_sha256": "3" * 64,
+        "production_code_files": [],
+        "splits": {"heldout": {"sha256": "1" * 64}, "development": {"sha256": "4" * 64}},
+        "sources": [],
+        "compiler": "compiler",
+        "immutability_policy": "frozen",
+    }
+    old_manifest = {
+        **immutable,
+        "compiler_sha256": "5" * 64,
+        "evaluator_sha256": "6" * 64,
+        "schema_sha256": {"schema": "7" * 64},
+        "corpus_root_sha256": old_generation,
+    }
+    for name in ("heldout_v1.jsonl", "development_v1.jsonl"):
+        (old_dir / name).write_text("{}\n")
+    (old_dir / "manifest_v1.json").write_text(json.dumps(old_manifest))
+    (old_dir / "ROOT.sha256").write_text(old_generation + "\n")
+    (data / "CURRENT").write_text(old_generation + "\n")
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=repo, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True)
+    subprocess.run(["git", "add", "."], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "first generation"], cwd=repo, check=True)
+
+    new_generation = "b" * 64
+    new_dir = data / "generations" / new_generation
+    shutil.copytree(old_dir, new_dir)
+    promoted = copy.deepcopy(old_manifest)
+    promoted.update({
+        "compiler_sha256": "8" * 64,
+        "evaluator_sha256": "9" * 64,
+        "schema_sha256": {"schema": "0" * 64},
+        "corpus_root_sha256": new_generation,
+    })
+    (new_dir / "manifest_v1.json").write_text(json.dumps(promoted))
+    (new_dir / "ROOT.sha256").write_text(new_generation + "\n")
+    (data / "CURRENT").write_text(new_generation + "\n")
+    assert verify_additive_generations("HEAD", repo_root=repo, data_dir=data) == {
+        "baseline_present": True,
+        "verified_generations": 1,
+    }
+
+    promoted["splits"]["heldout"]["sha256"] = "f" * 64
+    (new_dir / "manifest_v1.json").write_text(json.dumps(promoted))
+    with pytest.raises(CorpusIntegrityError, match="changed frozen"):
         verify_additive_generations("HEAD", repo_root=repo, data_dir=data)
 
 
@@ -1137,8 +1207,28 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
     classification["tp"] += 1
     mutations.append(item)
     item = copy.deepcopy(report)
+    classification = item["modes"]["sentence_only"]["overall"]["unknown_classification"]
+    classification["bootstrap_valid_draws"]["f1"] -= 1
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    classification = item["modes"]["sentence_only"]["overall"]["unknown_classification"]
+    if "f1" in classification["ci95_conversation_cluster_bootstrap"]:
+        classification["ci95_conversation_cluster_bootstrap"]["f1"][0] = 0.123456789
+    mutations.append(item)
+    item = copy.deepcopy(report)
     calibration = item["modes"]["sentence_only"]["overall"]["uncertainty_calibration"]
     calibration.update({"ece_10_bin": 99, "n": 0, "bins": []})
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    calibration = item["modes"]["sentence_only"]["overall"]["uncertainty_calibration"]
+    calibration["bins"][0]["confidence_sum"] += 0.25
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    calibration = item["modes"]["sentence_only"]["overall"]["uncertainty_calibration"]
+    calibration["bins"][0]["lower"] += 0.05
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    del item["modes"]["sentence_only"]["overall"]["metrics"]["brier"]
     mutations.append(item)
     for field, value in (
         ("source_conversation_count", report["development_correction_bundle"]["source_conversation_count"] + 1),

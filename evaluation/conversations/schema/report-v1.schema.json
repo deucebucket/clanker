@@ -132,8 +132,14 @@
         "ece_10_bin": {"type": "number"}, "n": {"type": "integer", "minimum": 0},
         "bins": {"type": "array", "items": {
           "type": "object", "additionalProperties": false,
-          "required": ["lower", "upper", "n", "confidence", "accuracy"],
-          "properties": {"lower": {"type": "number"}, "upper": {"type": "number"}, "n": {"type": "integer", "minimum": 0}, "confidence": {"type": "number"}, "accuracy": {"type": "number"}}
+          "required": ["lower", "upper", "n", "confidence_sum", "correct_sum", "squared_error_sum", "confidence", "accuracy"],
+          "properties": {
+            "lower": {"type": "number"}, "upper": {"type": "number"},
+            "n": {"type": "integer", "minimum": 0},
+            "confidence_sum": {"type": "number"}, "correct_sum": {"type": "number"},
+            "squared_error_sum": {"type": "number"},
+            "confidence": {"type": "number"}, "accuracy": {"type": "number"}
+          }
         }}
       }
     },
