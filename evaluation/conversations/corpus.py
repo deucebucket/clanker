@@ -119,6 +119,10 @@ def _atomic_replace_path(source: Path, target: Path) -> None:
 def _selected_data_dir(data_dir: Path) -> Path:
     pointer = data_dir / CURRENT_POINTER
     if not pointer.is_file():
+        if (data_dir / GENERATIONS_DIRECTORY).exists():
+            raise CorpusIntegrityError(
+                "corpus CURRENT pointer is required once immutable generations exist"
+            )
         return data_dir
     generation = pointer.read_text(encoding="ascii").strip()
     if not re.fullmatch(r"[0-9a-f]{64}", generation):

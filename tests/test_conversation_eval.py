@@ -352,6 +352,21 @@ def test_corpus_pointer_generation_name_must_match_constituent_root(tmp_path):
         load_manifest(data / "manifest_v1.json")
 
 
+@pytest.mark.parametrize("pointer_value", [None, "not-a-sha256\n"])
+def test_corpus_generation_layout_requires_valid_current_pointer(tmp_path, pointer_value):
+    data = tmp_path / "data"
+    shutil.copytree(DATA_DIR, data)
+    pointer = data / "CURRENT"
+    if pointer_value is None:
+        pointer.unlink()
+        match = "required"
+    else:
+        pointer.write_text(pointer_value)
+        match = "malformed"
+    with pytest.raises(CorpusIntegrityError, match=match):
+        load_manifest(data / "manifest_v1.json")
+
+
 @pytest.mark.parametrize("field", ["allowed_uses", "training_eligible", "teacher_replay_eligible"])
 def test_manifest_policy_tampering_fails_even_when_split_bytes_do_not_change(tmp_path, field):
     data = tmp_path / "data"
