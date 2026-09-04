@@ -119,6 +119,17 @@ path. Unsupported nesting or relation stacking fails with a typed ambiguity.
 See [`CLANKER_LM_INFINITIVAL_COMPLEMENTS.md`](CLANKER_LM_INFINITIVAL_COMPLEMENTS.md)
 for the support matrix and truth-boundary contract.
 
+## Embedded interrogative content
+
+Reported and requested questions are stored as a matrix event, a nonassertive
+inner question event, and a typed WH or polar relation. Asking, wondering,
+knowing, or remembering a question does not establish its answer. Outer
+questions and direct answer requests retain their own speech acts, while
+ordinary event matching excludes inner question content unless attribution is
+requested explicitly. See
+[`CLANKER_LM_EMBEDDED_INTERROGATIVES.md`](CLANKER_LM_EMBEDDED_INTERROGATIVES.md)
+for the predicate catalog, truth boundaries, realization rules, and limits.
+
 ## Truth boundary
 
 Semantic validity is a hard lock. Affect scoring cannot rescue a false or
