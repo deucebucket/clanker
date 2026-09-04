@@ -1774,6 +1774,12 @@ def _validate_aggregate_artifacts(
     expected_populations: Dict[str, Dict[str, tuple[int, int]]] = {
         "by_domain": {}, "by_outcome": {}, "by_supervision_level": {},
     }
+    population_rows: Dict[str, Dict[str, List[tuple[str, Mapping[str, Any]]]]] = {
+        "by_domain": defaultdict(list),
+        "by_outcome": defaultdict(list),
+        "by_supervision_level": defaultdict(list),
+    }
+    all_rows: List[tuple[str, Mapping[str, Any]]] = []
     population_members: Dict[str, Dict[str, set[str]]] = {
         "by_domain": defaultdict(set),
         "by_outcome": defaultdict(set),
@@ -1785,6 +1791,7 @@ def _validate_aggregate_artifacts(
     for conversation in conversations:
         conversation_id = str(conversation["conversation_id"])
         for turn in conversation["turns"]:
+            all_rows.append((conversation_id, turn))
             labels = {
                 "by_domain": str(conversation["domain"]),
                 "by_outcome": str(turn["annotation"]["outcome"]),
@@ -1793,6 +1800,7 @@ def _validate_aggregate_artifacts(
             for stratum, label in labels.items():
                 population_turns[stratum][label] += 1
                 population_members[stratum][label].add(conversation_id)
+                population_rows[stratum][label].append((conversation_id, turn))
     for stratum in expected_populations:
         expected_populations[stratum] = {
             label: (count, len(population_members[stratum][label]))
@@ -1800,6 +1808,73 @@ def _validate_aggregate_artifacts(
         }
     total_turns = sum(len(conversation["turns"]) for conversation in conversations)
     total_conversations = len(conversations)
+
+    def expected_metric_counts(
+        rows: Sequence[tuple[str, Mapping[str, Any]]],
+    ) -> Dict[str, tuple[int, int]]:
+        metric_rows: Dict[str, List[str]] = {
+            name: [conversation_id for conversation_id, _turn in rows]
+            for name in SUMMARY_REQUIRED_METRICS
+        }
+        semantic_rows = [
+            conversation_id
+            for conversation_id, turn in rows
+            if turn["annotation"]["semantic"]["scored"] is True
+        ]
+        answer_rows = [
+            conversation_id
+            for conversation_id, turn in rows
+            if turn["annotation"]["expected_answer"]["scored"] is True
+        ]
+        entity_rows = [
+            conversation_id
+            for conversation_id, turn in rows
+            if bool(turn["annotation"]["expected_entity_refs"])
+        ]
+        affect_rows = [
+            conversation_id
+            for conversation_id, turn in rows
+            if turn["annotation"]["affect_scored"] is True
+            and turn["annotation"]["observed_next_state"] is not None
+        ]
+        if semantic_rows:
+            metric_rows["semantic_parse_exact"] = semantic_rows
+        if answer_rows:
+            metric_rows["semantic_answer_exact"] = answer_rows
+        if entity_rows:
+            metric_rows["entity_resolution_exact"] = entity_rows
+        if affect_rows:
+            for name in (
+                "target_attainment", "target_distance_improvement", "next_state_distance",
+                *(f"mae_{axis}" for axis in AXES),
+                *(f"mae_normalized_{axis}" for axis in AXES),
+                *(f"direction_{axis}" for axis in AXES),
+            ):
+                metric_rows[name] = affect_rows
+        return {
+            name: (len(conversation_ids), len(set(conversation_ids)))
+            for name, conversation_ids in metric_rows.items()
+        }
+
+    expected_metrics = {
+        "overall": expected_metric_counts(all_rows),
+        **{
+            f"{stratum}:{label}": expected_metric_counts(rows)
+            for stratum, groups in population_rows.items()
+            for label, rows in groups.items()
+        },
+    }
+
+    def validate_metric_population(summary: Mapping[str, Any], expected_key: str, location: str) -> None:
+        expected = expected_metrics[expected_key]
+        observed_names = set(summary["metrics"])
+        if observed_names - {"brier"} != set(expected):
+            raise CorpusIntegrityError(f"{location} metric population is incomplete")
+        for name, counts in expected.items():
+            observed = summary["metrics"][name]
+            if (observed["n_turns"], observed["n_conversations"]) != counts:
+                raise CorpusIntegrityError(f"{location}.{name} counts are inconsistent")
+
     for mode in MODES:
         mode_report = report["modes"][mode]
         if (
@@ -1807,6 +1882,9 @@ def _validate_aggregate_artifacts(
             or mode_report["overall"]["conversation_count"] != total_conversations
         ):
             raise CorpusIntegrityError(f"aggregate report {mode} overall population is incomplete")
+        validate_metric_population(
+            mode_report["overall"], "overall", f"aggregate report {mode}.overall"
+        )
         for stratum, expected in expected_populations.items():
             observed = mode_report[stratum]
             if set(observed) != set(expected) or any(
@@ -1817,6 +1895,28 @@ def _validate_aggregate_artifacts(
                 for label, counts in expected.items()
             ):
                 raise CorpusIntegrityError(f"aggregate report {mode} {stratum} population is incomplete")
+            for label in expected:
+                validate_metric_population(
+                    observed[label],
+                    f"{stratum}:{label}",
+                    f"aggregate report {mode}.{stratum}.{label}",
+                )
+
+    paired_expected = {
+        name: counts for name, counts in expected_metrics["overall"].items()
+        if name != "candidate_count"
+    }
+    for comparison_name, comparison in report["paired_mode_differences"].items():
+        if set(comparison["metrics"]) - {"brier"} != set(paired_expected):
+            raise CorpusIntegrityError(
+                f"paired mode differences.{comparison_name} metric population is incomplete"
+            )
+        for name, counts in paired_expected.items():
+            metric = comparison["metrics"][name]
+            if (metric["n_turns"], metric["n_conversations"]) != counts:
+                raise CorpusIntegrityError(
+                    f"paired mode differences.{comparison_name}.{name} counts are inconsistent"
+                )
 
     for failure in failures:
         identity = (str(failure.get("conversation_id", "")), str(failure.get("turn_id", "")))

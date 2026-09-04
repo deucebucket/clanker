@@ -1012,6 +1012,14 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
     item["modes"]["sentence_only"]["overall"]["metrics"] = {}
     mutations.append(item)
     item = copy.deepcopy(report)
+    del item["modes"]["sentence_only"]["overall"]["metrics"]["semantic_parse_exact"]
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["modes"]["sentence_only"]["overall"]["metrics"]["dialogue_act_correct"][
+        "n_turns"
+    ] -= 1
+    mutations.append(item)
+    item = copy.deepcopy(report)
     item["modes"]["sentence_only"]["by_domain"] = {}
     mutations.append(item)
     item = copy.deepcopy(report)

@@ -1005,7 +1005,7 @@ stress cases. The held-out and development split digests did not change while
 the evaluator and release provenance were corrected.
 
 **Proven:** corpus root
-`7e0f03f335866c982c6225b805b2d1efb52a9de67e3c65dae5dd33cdf59582f0`
+`d0ef1c003f26dc19c0b93a6717bcf5462d6e9cebf0978351a2e463542f055a9e`
 binds compiler, evaluator, schema, split policy, source provenance, and the
 exact production/package tree at
 `c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e`. Production Python, language seed,
@@ -1021,7 +1021,7 @@ commit and committed separately, issue #41 is not complete.
 
 | Class | Claim | Evidence |
 | --- | --- | --- |
-| Proven | Whole-conversation scale and split separation meet the corpus floor. | Held-out 56/520; development 10/60; compiler manifest under `evaluation/conversations/data/generations/7e0f03f…/`. |
+| Proven | Whole-conversation scale and split separation meet the corpus floor. | Held-out 56/520; development 10/60; compiler manifest under `evaluation/conversations/data/generations/d0ef1c0…/`. |
 | Proven | Real-human material is bounded to raw NASA technical transcript windows with authoritative public-use provenance. | NTRS `20160014392`, NASA raw transcript index/download locators, frozen raw digest, and source manifest. |
 | Proven | Literary affect/outcome annotations remain weak supervision; synthetic structural gold is excluded from affect scoring. | Per-turn supervision fields and evaluator strata. |
 | Proven | Integrity checks reject policy mutation, leakage, near-duplicates, source/schema corruption, split/report TOCTOU swaps, symlink escapes, partial publication, free-form response channels, and production-tree drift. | 94 evaluator tests passed with the baseline test deselected; `verify` reports zero overlap/reference/text-leak hits. |
@@ -1047,8 +1047,8 @@ copyright-ambiguous source is present.
 
 ```text
 production base:     c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e
-core milestone:      ed171f553d655056bc00c2279493bb4556bb00fa
-corpus root:         7e0f03f335866c982c6225b805b2d1efb52a9de67e3c65dae5dd33cdf59582f0
+core milestone:      8d1154c7984bf3342aee736bc73eb01a28ca2af6
+corpus root:         d0ef1c003f26dc19c0b93a6717bcf5462d6e9cebf0978351a2e463542f055a9e
 production digest:   b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f
 held-out split:      05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18
 development split:   5018d7d3f2b60207333b6c50fec594b6b46411a6065962ec322038f0b75f0e43
