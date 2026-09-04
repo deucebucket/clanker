@@ -543,24 +543,28 @@ def _bootstrap_ci(records: Sequence[Mapping[str, Any]], metric: str, *, seed_mat
         if metric in record:
             key = (str(record["domain"]), str(record["conversation_id"]))
             by_conversation[key].append(float(record[metric]))
-    clusters_by_domain: Dict[str, List[float]] = defaultdict(list)
+    clusters_by_domain: Dict[str, List[List[float]]] = defaultdict(list)
     for (domain, _), values in sorted(by_conversation.items()):
-        clusters_by_domain[domain].append(sum(values) / len(values))
-    clusters = [value for values in clusters_by_domain.values() for value in values]
+        clusters_by_domain[domain].append(values)
+    clusters = [values for domain_clusters in clusters_by_domain.values() for values in domain_clusters]
     if not clusters:
         return None
     if len(clusters) == 1:
-        return [clusters[0], clusters[0]]
+        value = sum(clusters[0]) / len(clusters[0])
+        return [value, value]
     digest = hashlib.sha256(f"{seed_material}|{metric}".encode("utf-8")).digest()
     rng = random.Random(int.from_bytes(digest[:8], "big"))
     estimates = []
     for _ in range(BOOTSTRAP_DRAWS):
-        sample = [
-            values[rng.randrange(len(values))]
-            for _, values in sorted(clusters_by_domain.items())
-            for _ in values
+        sampled_clusters = [
+            domain_clusters[rng.randrange(len(domain_clusters))]
+            for _, domain_clusters in sorted(clusters_by_domain.items())
+            for _ in domain_clusters
         ]
-        estimates.append(sum(sample) / len(sample))
+        estimates.append(
+            sum(sum(values) for values in sampled_clusters)
+            / sum(len(values) for values in sampled_clusters)
+        )
     estimates.sort()
     return [estimates[round(0.025 * (len(estimates) - 1))], estimates[round(0.975 * (len(estimates) - 1))]]
 

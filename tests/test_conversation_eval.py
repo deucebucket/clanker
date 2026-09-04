@@ -43,7 +43,9 @@ from evaluation.conversations.runner import (
     _correction_store_digest,
     _drift,
     _entity_exact,
+    _metric_summary,
     _paired_mode_differences,
+    run_evaluation,
 )
 
 
@@ -298,6 +300,45 @@ def test_paired_mode_differences_pair_identical_turns():
     assert metric["n_conversations"] == 2
 
 
+def test_cluster_bootstrap_preserves_turn_weighted_statistic_for_uneven_conversations():
+    records = [
+        {"conversation_id": "short", "turn_id": "s1", "domain": "d", "score": 0.0},
+        {"conversation_id": "long", "turn_id": "l1", "domain": "d", "score": 1.0},
+        {"conversation_id": "long", "turn_id": "l2", "domain": "d", "score": 1.0},
+        {"conversation_id": "long", "turn_id": "l3", "domain": "d", "score": 1.0},
+    ]
+    summary = _metric_summary(records, "score", seed_material="uneven")
+    assert summary["value"] == 0.75
+    low, high = summary["ci95_conversation_cluster_bootstrap"]
+    assert low <= summary["value"] <= high
+
+
+def test_metric_summary_is_deterministic_for_fixed_seed_and_records():
+    records = []
+    for conversation in ("one", "two", "three"):
+        for index in range(3):
+            records.append({
+                "conversation_id": conversation,
+                "turn_id": f"t{index}",
+                "domain": "d",
+                "outcome": "continued",
+                "score": float(index % 2),
+            })
+    assert _metric_summary(records, "score", seed_material="fixed") == _metric_summary(
+        records, "score", seed_material="fixed"
+    )
+
+
+def test_development_semantic_report_is_reproducible():
+    first = run_evaluation(split="development")
+    second = run_evaluation(split="development")
+    assert first["semantic_fingerprint"] == second["semantic_fingerprint"]
+    assert first["paired_mode_differences"] == second["paired_mode_differences"]
+    for mode in ("sentence_only", "stateful", "transition_corrected"):
+        for section in ("overall", "by_domain", "by_outcome", "by_supervision_level"):
+            assert first["modes"][mode][section] == second["modes"][mode][section]
+
+
 def test_drift_reports_terminal_bias_and_axis_slopes():
     records = []
     for index in range(3):
@@ -341,6 +382,18 @@ def test_baseline_is_aggregate_only_and_exact_post_106():
     assert report["production_code_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
     assert set(report["modes"]) == {"sentence_only", "stateful", "transition_corrected"}
     assert report["development_correction_bundle"]["lookup_store_unchanged"] is True
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", report["evaluation_commit"], "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
+    assert report["corpus_root_sha256"] == load_manifest()["corpus_root_sha256"]
+    expected_hashes = {}
+    for line in report_path.with_suffix(".sha256").read_text().splitlines():
+        digest, filename = line.split()
+        expected_hashes[filename] = digest
+    assert hashlib.sha256(report_path.read_bytes()).hexdigest() == expected_hashes[report_path.name]
+    assert hashlib.sha256(failure_path.read_bytes()).hexdigest() == expected_hashes[failure_path.name]
     first_text = load_split("heldout", purpose="evaluation")[0]["turns"][0]["text"]
     assert first_text not in report_path.read_text()
     assert first_text not in failure_path.read_text()
