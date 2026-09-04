@@ -70,4 +70,3 @@ semantic fingerprint.
 
 The first baseline sets no accuracy threshold: it records the honest post-#106
 result. Later thresholds must name both the corpus root and baseline fingerprint.
-
