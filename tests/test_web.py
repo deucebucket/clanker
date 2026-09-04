@@ -8,16 +8,18 @@ suite is meant to catch.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
+import httpx
 import pytest
 from starlette.testclient import TestClient
 
 from clanker_lm import ClankerLM, HeuristicAffectBackend
-from clanker_lm.web import WebConfig, create_app
+from clanker_lm.web import WebConfig, create_app, run_server
 
 
 PUBLIC_ORIGIN = "https://clanker.example.ts.net"
@@ -97,8 +99,10 @@ class ManualClock:
 class TrackedRuntime:
     runtime: ClankerLM
     close_calls: int = 0
+    calls: list[str] = field(default_factory=list)
 
     def process(self, message: str) -> Any:
+        self.calls.append(message)
         return self.runtime.process(message)
 
     def dumps(self, *, indent: int | None = 2) -> str:
@@ -126,6 +130,136 @@ def _cookie_pair(client: TestClient) -> tuple[str, str]:
     cookies = list(client.cookies.items())
     assert len(cookies) == 1, cookies
     return cookies[0]
+
+
+@pytest.mark.parametrize("deployed", [False, True], ids=["local", "deployed"])
+@pytest.mark.parametrize(
+    "host",
+    [
+        "0.0.0.0",
+        "192.168.1.50",
+        "10.0.0.8",
+        "clanker.lan",
+        "workstation",
+        "127.0.0.2",
+        "::",
+    ],
+)
+def test_web_config_rejects_every_nonloopback_bind_host(
+    host: str,
+    deployed: bool,
+) -> None:
+    kwargs: dict[str, Any] = {"host": host, "deployed": deployed}
+    if deployed:
+        kwargs.update(
+            public_origin=PUBLIC_ORIGIN,
+            allowed_users=(ALLOWED_LOGIN,),
+        )
+    with pytest.raises(ValueError):
+        WebConfig(**kwargs)
+
+
+@pytest.mark.parametrize("host", ["127.0.0.1", "::1", "localhost"])
+@pytest.mark.parametrize("deployed", [False, True], ids=["local", "deployed"])
+def test_web_config_accepts_only_the_supported_loopback_spellings(
+    host: str,
+    deployed: bool,
+) -> None:
+    kwargs: dict[str, Any] = {"host": host, "deployed": deployed}
+    if deployed:
+        kwargs.update(
+            public_origin=PUBLIC_ORIGIN,
+            allowed_users=(ALLOWED_LOGIN,),
+        )
+    assert WebConfig(**kwargs).host == host
+
+
+def test_run_server_rechecks_loopback_before_calling_uvicorn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = WebConfig()
+    # Simulate a caller bypassing frozen-dataclass construction.  ``run_server``
+    # is the final process-boundary guard and must not trust prior validation.
+    object.__setattr__(config, "host", "0.0.0.0")
+    uvicorn_calls: list[dict[str, Any]] = []
+
+    def fake_run(*_args: Any, **kwargs: Any) -> None:
+        uvicorn_calls.append(kwargs)
+
+    monkeypatch.setattr("uvicorn.run", fake_run)
+    with pytest.raises(ValueError):
+        run_server(config)
+    assert uvicorn_calls == []
+
+
+def test_index_bootstraps_one_secure_session_and_reuses_it() -> None:
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+    with _client(app) as client:
+        first = client.get("/", headers=_headers())
+        first_cookie = _cookie_pair(client)
+        second = client.get("/", headers=_headers())
+        second_cookie = _cookie_pair(client)
+
+        assert first.status_code == second.status_code == 200
+        assert first_cookie == second_cookie
+        assert len(factory.instances) == 1
+        assert app.state.session_registry.active_count == 1
+
+    set_cookie = first.headers["set-cookie"].lower()
+    assert "secure" in set_cookie
+    assert "httponly" in set_cookie
+    assert "samesite=strict" in set_cookie
+    assert factory.instances[0].close_calls == 1
+
+
+def test_concurrent_first_turns_from_bootstrapped_cookie_share_one_ordered_runtime() -> None:
+    fact = "The launch is on Monday."
+    question = "When is the launch?"
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+
+    async def exercise() -> tuple[httpx.Response, httpx.Response]:
+        transport = httpx.ASGITransport(app=app)
+        async with app.router.lifespan_context(app):
+            async with httpx.AsyncClient(
+                transport=transport,
+                base_url=PUBLIC_ORIGIN,
+                headers={LOGIN_HEADER: ALLOWED_LOGIN},
+            ) as client:
+                shell = await client.get("/")
+                assert shell.status_code == 200
+                assert "set-cookie" in shell.headers
+                assert len(factory.instances) == 1
+
+                first, second = await asyncio.gather(
+                    client.post(
+                        "/api/chat",
+                        json={"message": fact},
+                        headers={"Origin": PUBLIC_ORIGIN},
+                    ),
+                    client.post(
+                        "/api/chat",
+                        json={"message": question},
+                        headers={"Origin": PUBLIC_ORIGIN},
+                    ),
+                )
+                assert app.state.session_registry.active_count == 1
+                return first, second
+
+    first, second = asyncio.run(exercise())
+    assert first.status_code == second.status_code == 200
+    assert len(factory.instances) == 1
+    assert factory.instances[0].calls == [fact, question]
+    # Read-only questions retain the fact turn's revision; the answered result
+    # plus the call trace proves the fact completed before the question ran.
+    assert first.json()["evidence"]["memory_revision"] > 0
+    assert (
+        first.json()["evidence"]["memory_revision"]
+        == second.json()["evidence"]["memory_revision"]
+    )
+    assert "monday" in second.json()["response"].lower()
+    assert factory.instances[0].close_calls == 1
 
 
 def test_fact_then_question_uses_the_same_cookie_session() -> None:
@@ -534,6 +668,24 @@ def test_ui_uses_safe_dom_apis_local_assets_and_accessibility_hooks() -> None:
     assert "aria-live" in lowered_html
     assert "aria-label" in lowered_html or "<label" in lowered_html
     assert "@media" in css
+
+
+def test_ui_has_one_logical_in_flight_guard_for_submit_keyboard_and_reset() -> None:
+    app = create_app(config=_config())
+    with _client(app) as client:
+        response = client.get("/assets/app.js", headers=_headers())
+
+    assert response.status_code == 200
+    js = response.text
+    assert re.search(r"\blet\s+requestInFlight\s*=\s*false\s*;", js)
+    assert js.count("if (requestInFlight)") >= 2
+    assert js.count("requestInFlight = true;") >= 2
+    # Declaration plus independent submit/reset finally paths.
+    assert js.count("requestInFlight = false;") >= 3
+    assert re.search(
+        r'message\.addEventListener\("keydown"[\s\S]+?submitMessage\(\)',
+        js,
+    )
 
 
 def test_submitted_message_is_not_written_to_application_logs(caplog: pytest.LogCaptureFixture) -> None:
