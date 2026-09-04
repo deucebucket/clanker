@@ -203,12 +203,14 @@ running package version or milestone identity. Never add
 `deployed_build_commit` to this file; deployed configuration supplies it.
 
 For #112 specifically, the current pre-merge feed must remain PR #106-only.
-After #112 merges, add a PR #112 row in a follow-up reviewed commit using the
-actual #112 merge commit and matching evidence links. Set
-`CLANKER_LM_BUILD_COMMIT` to the full SHA of the follow-up artifact being
-deployed, run the GitHub verifier and all release gates, deploy, then prove the
-API/UI build equality above. Do not close #112 or describe it as shipped before
-that post-merge row, deployment, and live verification are complete.
+After the implementation PR for issue #112 merges, take that PR's actual number
+`N` and actual squash/merge SHA `M`. In a follow-up reviewed metadata commit, add
+release ID `pr-N` with evidence URLs `/pull/N` and `/commit/M`; do not assume the
+issue number is also the PR number. Set `CLANKER_LM_BUILD_COMMIT` to the full SHA
+of the follow-up artifact being deployed, run the GitHub verifier and all
+release gates, deploy, then prove the API/UI build equality above. Do not close
+#112 or describe it as shipped before that post-merge row, deployment, and live
+verification are complete.
 
 ## Live link correction
 

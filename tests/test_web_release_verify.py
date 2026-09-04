@@ -137,3 +137,10 @@ def test_ci_runs_the_network_release_verifier() -> None:
     ).read_text(encoding="utf-8")
     assert "python -m clanker_lm.web_release_verify" in workflow
     assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
+    web_guide = (
+        Path(__file__).resolve().parents[1] / "docs" / "CLANKER_LM_WEB.md"
+    ).read_text(encoding="utf-8")
+    assert "PR #112 row" not in web_guide
+    assert "pr-112" not in web_guide.lower()
+    assert "implementation PR for issue #112" in web_guide
+    assert "actual number" in web_guide and "actual squash/merge SHA" in web_guide

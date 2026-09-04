@@ -817,7 +817,10 @@ CI and independent exact-head review remain before merge or deployment.
 
 ### Next step / blocker
 
-Finish the corrected local gates, commit the coherent tree, then obtain exact-head
-independent review and remote CI. After #112 merges, add its real merge row in a
-follow-up reviewed commit before any production deployment. Close #112 only
-after runtime-build equality, milestone verification, and live UI probes pass.
+Finish the corrected local gates, commit the coherent tree, then obtain
+exact-head independent review and remote CI. After the implementation PR for
+issue #112 merges, use that PR's actual number `N` and actual squash/merge SHA
+`M` to add `pr-N` with matching `/pull/N` and `/commit/M` evidence in a
+follow-up reviewed metadata artifact before any production deployment. Close
+#112 only after runtime-build equality, milestone verification, and live UI
+probes pass.
