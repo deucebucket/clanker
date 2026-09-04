@@ -86,6 +86,12 @@ def test_manifest_has_frozen_whole_conversation_corpus():
     assert selected_manifest_path().parent.joinpath("ROOT.sha256").read_text().strip() == manifest["corpus_root_sha256"]
 
 
+def test_shipped_generation_layout_has_no_divergent_flat_fallback():
+    assert (DATA_DIR / "CURRENT").is_file()
+    for name in ("ROOT.sha256", "manifest_v1.json", "heldout_v1.jsonl", "development_v1.jsonl"):
+        assert not (DATA_DIR / name).exists()
+
+
 def test_all_conversations_are_content_addressed_and_whole():
     for split in ("heldout", "development"):
         for conversation in load_split(split, purpose="evaluation"):
