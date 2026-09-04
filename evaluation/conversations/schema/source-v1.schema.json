@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deucebucket/clanker/evaluation/conversations/source-v1.schema.json",
+  "title": "Clanker conversation source v1",
+  "type": "object",
+  "required": ["source_schema_version", "split", "learning_allowed", "sources", "conversations"],
+  "properties": {
+    "source_schema_version": {"const": 1},
+    "split": {"enum": ["heldout", "development"]},
+    "learning_allowed": {"type": "boolean"},
+    "sources": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "conversations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source_conversation_id", "source_id", "relationship_context", "participants", "turns"],
+        "properties": {
+          "turns": {
+            "type": "array",
+            "minItems": 4,
+            "items": {
+              "type": "object",
+              "required": ["speaker", "addressee", "text"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

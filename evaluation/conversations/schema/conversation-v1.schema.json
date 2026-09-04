@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deucebucket/clanker/evaluation/conversations/conversation-v1.schema.json",
+  "title": "Compiled Clanker whole conversation v1",
+  "type": "object",
+  "required": ["schema_version", "corpus_version", "split", "conversation_id", "conversation_sha256", "source_conversation_id", "source_id", "lineage_id", "domain", "relationship_context", "participants", "participant_bindings", "source", "turns"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "corpus_version": {"const": "conversation-v1"},
+    "conversation_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "turns": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["turn_id", "speaker", "addressee", "text", "annotation"],
+        "properties": {
+          "annotation": {
+            "type": "object",
+            "required": ["dialogue_act", "semantic", "vadugwi_before", "vadugwi_after", "observed_next_state", "expected_response_act", "expected_answer_status", "expected_answer", "expected_truth", "outcome", "ambiguity", "annotator_confidence", "expected_entity_refs", "supervision_level", "outcome_evidence"]
+          }
+        }
+      }
+    }
+  }
+}

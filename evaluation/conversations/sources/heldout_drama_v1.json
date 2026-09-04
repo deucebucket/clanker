@@ -1,6 +1,7 @@
 {
   "source_schema_version": 1,
   "split": "heldout",
+  "learning_allowed": false,
   "sources": [
     {
       "source_id": "gutenberg_844",
@@ -9,12 +10,20 @@
       "creator": "Oscar Wilde",
       "publication_year": 1895,
       "source_url": "https://www.gutenberg.org/ebooks/844",
+      "source_download_url": "https://www.gutenberg.org/cache/epub/844/pg844.txt",
       "authoritative_source_url": "https://www.gutenberg.org/ebooks/844",
       "license_name": "Public Domain in the USA",
       "license_url": "https://www.gutenberg.org/policy/license.html",
+      "provenance_evidence_url": "https://www.gutenberg.org/ebooks/844",
+      "retrieval_date": "2026-09-04",
+      "raw_source_sha256": "1b8a58099bb1cdef6a845277a4bacf2f4a268702c165bde30124d4b5105d1851",
       "rights_note": "The play was first published in 1895. Project Gutenberg ebook #844 states that it is usable in the United States at no cost and with almost no restrictions; readers outside the United States must check local law.",
       "extraction_method": "Manual selection of bounded, contiguous ten-turn dialogue excerpts from the Project Gutenberg UTF-8 plain-text edition of ebook #844, retrieved 2026-09-04. Source line wrapping was normalized to spaces; dialogue wording, punctuation, emphasis markers, and inline stage directions were otherwise preserved.",
+      "extraction_locator_schema": "act plus Project Gutenberg plain-text line range",
+      "extractor_version": "manual-contiguous-dialogue-v1",
       "annotation_method": "literary_weak_supervision_v1",
+      "supervision_level": "weak",
+      "outcome_evidence": "literary_counterfactual_weak_supervision",
       "is_real_human": false,
       "is_public_domain": true,
       "training_eligible": false,

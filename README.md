@@ -197,10 +197,11 @@ python3 benchmarks/crisis_benchmark.py
 python3 benchmarks/stress_test.py
 ```
 
-Held-out probes (`benchmarks/holdout_probes.json`, `holdout_v2_probes.json`)
-are evaluation-only -- never tune against them; v2 is sealed (its sentences
-are never displayed). Evaluate with `benchmarks/eval_holdout.py` /
-`eval_holdout_v2.py`. See `benchmarks/HOLDOUT_PROTOCOL.md`.
+The historical V8 sentence-holdout protocol is distinct from the versioned,
+whole-conversation evaluation for Clanker-LM. See
+[`evaluation/conversations/README.md`](evaluation/conversations/README.md) for
+the immutable corpus, licensing manifest, integrity gate, three evaluation
+modes, and post-#106 baseline. Neither held-out corpus is training evidence.
 
 ## Links
 

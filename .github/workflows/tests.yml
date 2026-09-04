@@ -35,7 +35,21 @@ jobs:
           python -m pip install -e ".[test,web]"
 
       - name: Compile source
-        run: python -m compileall -q engine clanker_lm tests
+        run: python -m compileall -q engine clanker_lm evaluation tests
+
+      - name: Verify frozen conversation corpus
+        run: python -m evaluation.conversations verify
+
+      - name: Enforce additive-only held-out versions
+        run: |
+          git fetch --no-tags --depth=1 origin main
+          frozen_root="$(git show origin/main:evaluation/conversations/data/ROOT.sha256 2>/dev/null || true)"
+          if [ -n "$frozen_root" ]; then
+            test "$frozen_root" = "$(cat evaluation/conversations/data/ROOT.sha256)"
+          fi
+
+      - name: Run open development conversation evaluation
+        run: python -m evaluation.conversations run --split development --output /tmp/clanker-conversation-dev.json
 
       - name: Install Chromium for web DOM acceptance
         if: matrix.python-version == '3.12'
