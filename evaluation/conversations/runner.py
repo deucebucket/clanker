@@ -70,7 +70,7 @@ METRIC_NAMES = frozenset({
     "brier", "target_attainment", "target_distance_improvement", "next_state_distance",
     "correction_applied",
 } | {f"mae_{axis}" for axis in AXES} | {f"mae_normalized_{axis}" for axis in AXES}
-  | {f"direction_{axis}" for axis in AXES})
+  | {f"residual_{axis}" for axis in AXES} | {f"direction_{axis}" for axis in AXES})
 FAILURE_CATEGORIES = frozenset({
     "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
     "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact",
@@ -998,7 +998,7 @@ def _summarize(records: Sequence[Mapping[str, Any]], *, seed_material: str) -> D
         "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
         "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact", "brier", "target_attainment",
         "target_distance_improvement", "next_state_distance", "correction_applied", "candidate_count",
-    ] + [f"mae_{axis}" for axis in AXES] + [f"mae_normalized_{axis}" for axis in AXES] + [f"direction_{axis}" for axis in AXES]
+    ] + [f"mae_{axis}" for axis in AXES] + [f"mae_normalized_{axis}" for axis in AXES] + [f"residual_{axis}" for axis in AXES] + [f"direction_{axis}" for axis in AXES]
     metrics = {
         name: summary
         for name in metric_names
@@ -1183,7 +1183,7 @@ def _paired_mode_differences(
         "truth_correct", "semantic_parse_exact", "semantic_answer_exact",
         "entity_resolution_exact", "brier", "target_attainment",
         "target_distance_improvement", "next_state_distance", "correction_applied",
-    ] + [f"mae_{axis}" for axis in AXES] + [f"mae_normalized_{axis}" for axis in AXES] + [f"direction_{axis}" for axis in AXES]
+    ] + [f"mae_{axis}" for axis in AXES] + [f"mae_normalized_{axis}" for axis in AXES] + [f"residual_{axis}" for axis in AXES] + [f"direction_{axis}" for axis in AXES]
     output: Dict[str, Any] = {}
     for label, candidate_mode, reference_mode in comparisons:
         candidate = {
@@ -1461,7 +1461,7 @@ def _validate_drift_metric_bindings(
     turn_domains: Mapping[tuple[str, str], str],
     location: str,
 ) -> None:
-    """Bind drift rows to the same population and values as next-state/MAE."""
+    """Bind drift rows to the same population and next-state/residual/MAE values."""
 
     drift_rows = {
         (str(cluster["conversation_id"]), str(observation["turn_id"])): (
@@ -1474,6 +1474,9 @@ def _validate_drift_metric_bindings(
     mae_rows = {
         axis: _metric_observation_map(metrics[f"mae_{axis}"]) for axis in AXES
     }
+    residual_rows = {
+        axis: _metric_observation_map(metrics[f"residual_{axis}"]) for axis in AXES
+    }
     normalized_rows = {
         axis: _metric_observation_map(metrics[f"mae_normalized_{axis}"])
         for axis in AXES
@@ -1482,6 +1485,7 @@ def _validate_drift_metric_bindings(
         set(drift_rows) != expected_identities
         or set(next_state_rows) != expected_identities
         or any(set(items) != expected_identities for items in mae_rows.values())
+        or any(set(items) != expected_identities for items in residual_rows.values())
         or any(set(items) != expected_identities for items in normalized_rows.values())
     ):
         raise CorpusIntegrityError(f"{location}.drift population is inconsistent")
@@ -1512,6 +1516,13 @@ def _validate_drift_metric_bindings(
             )
             or any(
                 domain != mae_rows[axis][identity][0]
+                or domain != residual_rows[axis][identity][0]
+                or not math.isclose(
+                    float(residuals[axis]),
+                    residual_rows[axis][identity][1],
+                    rel_tol=0.0,
+                    abs_tol=1e-12,
+                )
                 or not math.isclose(
                     float(absolutes[axis]),
                     mae_rows[axis][identity][1],
@@ -1528,7 +1539,7 @@ def _validate_drift_metric_bindings(
             )
         ):
             raise CorpusIntegrityError(
-                f"{location}.drift observations disagree with next-state/MAE metrics"
+                f"{location}.drift observations disagree with next-state/residual/MAE metrics"
             )
 
 
@@ -1585,6 +1596,8 @@ def _validate_metric_summary(
         bounds = (-1.0, 1.0) if paired else (0.0, 1.0)
     elif metric_name.startswith("mae_"):
         bounds = (-255.0, 255.0) if paired else (0.0, 255.0)
+    elif metric_name.startswith("residual_"):
+        bounds = (-510.0, 510.0) if paired else (-255.0, 255.0)
     elif metric_name == "next_state_distance":
         bounds = (-max_distance, max_distance) if paired else (0.0, max_distance)
     elif metric_name == "target_distance_improvement":
@@ -2665,7 +2678,7 @@ def _validate_aggregate_artifacts(
             return bool(annotation["expected_entity_refs"])
         if metric_name in {
             "target_attainment", "target_distance_improvement", "next_state_distance",
-        } or metric_name.startswith(("mae_", "direction_")):
+        } or metric_name.startswith(("mae_", "residual_", "direction_")):
             return (
                 annotation["affect_scored"] is True
                 and annotation["observed_next_state"] is not None
@@ -2733,6 +2746,7 @@ def _validate_aggregate_artifacts(
                 "target_attainment", "target_distance_improvement", "next_state_distance",
                 *(f"mae_{axis}" for axis in AXES),
                 *(f"mae_normalized_{axis}" for axis in AXES),
+                *(f"residual_{axis}" for axis in AXES),
                 *(f"direction_{axis}" for axis in AXES),
             ):
                 metric_rows[name] = affect_rows
@@ -3340,7 +3354,7 @@ def run_evaluation(
     failures_path: Path | None = None,
     manifest_path: Path = MANIFEST_PATH,
 ) -> Dict[str, Any]:
-    """Run all three modes and return an aggregate-only, text-free report."""
+    """Run all modes and return a text-free report with ID-only sufficient statistics."""
 
     manifest_path = selected_manifest_path(manifest_path)
     manifest = load_manifest(manifest_path)
