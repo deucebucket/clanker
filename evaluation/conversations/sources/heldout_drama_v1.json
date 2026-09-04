@@ -1,0 +1,881 @@
+{
+  "source_schema_version": 1,
+  "split": "heldout",
+  "sources": [
+    {
+      "source_id": "gutenberg_844",
+      "domain": "public_domain_drama",
+      "title": "The Importance of Being Earnest: A Trivial Comedy for Serious People",
+      "creator": "Oscar Wilde",
+      "publication_year": 1895,
+      "source_url": "https://www.gutenberg.org/ebooks/844",
+      "authoritative_source_url": "https://www.gutenberg.org/ebooks/844",
+      "license_name": "Public Domain in the USA",
+      "license_url": "https://www.gutenberg.org/policy/license.html",
+      "rights_note": "The play was first published in 1895. Project Gutenberg ebook #844 states that it is usable in the United States at no cost and with almost no restrictions; readers outside the United States must check local law.",
+      "extraction_method": "Manual selection of bounded, contiguous ten-turn dialogue excerpts from the Project Gutenberg UTF-8 plain-text edition of ebook #844, retrieved 2026-09-04. Source line wrapping was normalized to spaces; dialogue wording, punctuation, emphasis markers, and inline stage directions were otherwise preserved.",
+      "annotation_method": "literary_weak_supervision_v1",
+      "is_real_human": false,
+      "is_public_domain": true,
+      "training_eligible": false,
+      "teacher_replay_eligible": false
+    }
+  ],
+  "conversations": [
+    {
+      "source_conversation_id": "gutenberg_844_act_1_music_and_champagne",
+      "source_id": "gutenberg_844",
+      "relationship_context": "An aristocratic bachelor and his manservant discuss piano playing, refreshments, and household champagne.",
+      "participants": [
+        "ALGERNON",
+        "LANE"
+      ],
+      "turns": [
+        {
+          "speaker": "ALGERNON",
+          "addressee": "LANE",
+          "text": "Did you hear what I was playing, Lane?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 90-91"
+        },
+        {
+          "speaker": "LANE",
+          "addressee": "ALGERNON",
+          "text": "I didn’t think it polite to listen, sir.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 93-94"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "LANE",
+          "text": "I’m sorry for that, for your sake. I don’t play accurately—any one can play accurately—but I play with wonderful expression. As far as the piano is concerned, sentiment is my forte. I keep science for Life.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 96-99"
+        },
+        {
+          "speaker": "LANE",
+          "addressee": "ALGERNON",
+          "text": "Yes, sir.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 101-102"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "LANE",
+          "text": "And, speaking of the science of Life, have you got the cucumber sandwiches cut for Lady Bracknell?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 104-106"
+        },
+        {
+          "speaker": "LANE",
+          "addressee": "ALGERNON",
+          "text": "Yes, sir. [Hands them on a salver.]",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 108-109"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "LANE",
+          "text": "[Inspects them, takes two, and sits down on the sofa.] Oh! . . . by the way, Lane, I see from your book that on Thursday night, when Lord Shoreman and Mr. Worthing were dining with me, eight bottles of champagne are entered as having been consumed.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 111-115"
+        },
+        {
+          "speaker": "LANE",
+          "addressee": "ALGERNON",
+          "text": "Yes, sir; eight bottles and a pint.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 117-118"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "LANE",
+          "text": "Why is it that at a bachelor’s establishment the servants invariably drink the champagne? I ask merely for information.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 120-122"
+        },
+        {
+          "speaker": "LANE",
+          "addressee": "ALGERNON",
+          "text": "I attribute it to the superior quality of the wine, sir. I have often observed that in married households the champagne is rarely of a first-rate brand.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 124-127"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_1_town_and_country",
+      "source_id": "gutenberg_844",
+      "relationship_context": "Two close friends banter about town, country life, and disagreeable neighbors.",
+      "participants": [
+        "ALGERNON",
+        "JACK"
+      ],
+      "turns": [
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "How are you, my dear Ernest? What brings you up to town?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 166-167"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "Oh, pleasure, pleasure! What else should bring one anywhere? Eating as usual, I see, Algy!",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 169-171"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "[Stiffly_._] I believe it is customary in good society to take some slight refreshment at five o’clock. Where have you been since last Thursday?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 173-176"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "[Sitting down on the sofa.] In the country.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 178-179"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "What on earth do you do there?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 181-182"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "[Pulling off his gloves_._] When one is in town one amuses oneself. When one is in the country one amuses other people. It is excessively boring.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 184-187"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "And who are the people you amuse?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 189-190"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "[Airily_._] Oh, neighbours, neighbours.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 192-193"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "Got nice neighbours in your part of Shropshire?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 195-196"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "Perfectly horrid! Never speak to one of them.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 198-199"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_1_jack_courts_gwendolen",
+      "source_id": "gutenberg_844",
+      "relationship_context": "A suitor tries to declare his love while the woman he courts explains her confidence in his supposed name.",
+      "participants": [
+        "JACK",
+        "GWENDOLEN"
+      ],
+      "turns": [
+        {
+          "speaker": "JACK",
+          "addressee": "GWENDOLEN",
+          "text": "Charming day it has been, Miss Fairfax.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 707-708"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "JACK",
+          "text": "Pray don’t talk to me about the weather, Mr. Worthing. Whenever people talk to me about the weather, I always feel quite certain that they mean something else. And that makes me so nervous.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 710-713"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "GWENDOLEN",
+          "text": "I _do_ mean something else.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 715-716"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "JACK",
+          "text": "I thought so. In fact, I am never wrong.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 718-719"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "GWENDOLEN",
+          "text": "And I would like to be allowed to take advantage of Lady Bracknell’s temporary absence . . .",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 721-723"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "JACK",
+          "text": "I would certainly advise you to do so. Mamma has a way of coming back suddenly into a room that I have often had to speak to her about.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 725-727"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "GWENDOLEN",
+          "text": "[Nervously.] Miss Fairfax, ever since I met you I have admired you more than any girl . . . I have ever met since . . . I met you.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 729-731"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "JACK",
+          "text": "Yes, I am quite well aware of the fact. And I often wish that in public, at any rate, you had been more demonstrative. For me you have always had an irresistible fascination. Even before I met you I was far from indifferent to you. [Jack looks at her in amazement.] We live, as I hope you know, Mr. Worthing, in an age of ideals. The fact is constantly mentioned in the more expensive monthly magazines, and has reached the provincial pulpits, I am told; and my ideal has always been to love some one of the name of Ernest. There is something in that name that inspires absolute confidence. The moment Algernon first mentioned to me that he had a friend called Ernest, I knew I was destined to love you.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 733-744"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "GWENDOLEN",
+          "text": "You really love me, Gwendolen?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 746-747"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "JACK",
+          "text": "Passionately!",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 749-750"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_1_marriage_interview",
+      "source_id": "gutenberg_844",
+      "relationship_context": "A prospective mother-in-law formally interviews her daughter’s suitor about his habits, age, education, and income.",
+      "participants": [
+        "JACK",
+        "LADY BRACKNELL"
+      ],
+      "turns": [
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "Thank you, Lady Bracknell, I prefer standing.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 890-891"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "[Pencil and note-book in hand.] I feel bound to tell you that you are not down on my list of eligible young men, although I have the same list as the dear Duchess of Bolton has. We work together, in fact. However, I am quite ready to enter your name, should your answers be what a really affectionate mother requires. Do you smoke?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 893-898"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "Well, yes, I must admit I smoke.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 900-901"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "I am glad to hear it. A man should always have an occupation of some kind. There are far too many idle men in London as it is. How old are you?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 903-906"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "Twenty-nine.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 908-909"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "A very good age to be married at. I have always been of opinion that a man who desires to get married should know either everything or nothing. Which do you know?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 911-914"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "[After some hesitation.] I know nothing, Lady Bracknell.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 916-917"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "I am pleased to hear it. I do not approve of anything that tampers with natural ignorance. Ignorance is like a delicate exotic fruit; touch it and the bloom is gone. The whole theory of modern education is radically unsound. Fortunately in England, at any rate, education produces no effect whatsoever. If it did, it would prove a serious danger to the upper classes, and probably lead to acts of violence in Grosvenor Square. What is your income?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 919-926"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "Between seven and eight thousand a year.",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 928-929"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "[Makes a note in her book.] In land, or in investments?",
+          "source_locator": "Act I, Project Gutenberg plain-text lines 931-932"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_2_german_lesson",
+      "source_id": "gutenberg_844",
+      "relationship_context": "A governess urges her ward to study German while the ward comments on her guardian and keeps a diary.",
+      "participants": [
+        "MISS PRISM",
+        "CECILY"
+      ],
+      "turns": [
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "CECILY",
+          "text": "[Calling.] Cecily, Cecily! Surely such a utilitarian occupation as the watering of flowers is rather Moulton’s duty than yours? Especially at a moment when intellectual pleasures await you. Your German grammar is on the table. Pray open it at page fifteen. We will repeat yesterday’s lesson.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1426-1431"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "MISS PRISM",
+          "text": "[Coming over very slowly.] But I don’t like German. It isn’t at all a becoming language. I know perfectly well that I look quite plain after my German lesson.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1433-1436"
+        },
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "CECILY",
+          "text": "Child, you know how anxious your guardian is that you should improve yourself in every way. He laid particular stress on your German, as he was leaving for town yesterday. Indeed, he always lays stress on your German when he is leaving for town.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1438-1442"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "MISS PRISM",
+          "text": "Dear Uncle Jack is so very serious! Sometimes he is so serious that I think he cannot be quite well.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1444-1446"
+        },
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "CECILY",
+          "text": "[Drawing herself up.] Your guardian enjoys the best of health, and his gravity of demeanour is especially to be commended in one so comparatively young as he is. I know no one who has a higher sense of duty and responsibility.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1448-1452"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "MISS PRISM",
+          "text": "I suppose that is why he often looks a little bored when we three are together.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1454-1456"
+        },
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "CECILY",
+          "text": "Cecily! I am surprised at you. Mr. Worthing has many troubles in his life. Idle merriment and triviality would be out of place in his conversation. You must remember his constant anxiety about that unfortunate young man his brother.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1458-1462"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "MISS PRISM",
+          "text": "I wish Uncle Jack would allow that unfortunate young man, his brother, to come down here sometimes. We might have a good influence over him, Miss Prism. I am sure you certainly would. You know German, and geology, and things of that kind influence a man very much. [Cecily begins to write in her diary.]",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1464-1469"
+        },
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "CECILY",
+          "text": "[Shaking her head.] I do not think that even I could produce any effect on a character that according to his own brother’s admission is irretrievably weak and vacillating. Indeed I am not sure that I would desire to reclaim him. I am not in favour of this modern mania for turning bad people into good people at a moment’s notice. As a man sows so let him reap. You must put away your diary, Cecily. I really don’t see why you should keep a diary at all.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1471-1478"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "MISS PRISM",
+          "text": "I keep a diary in order to enter the wonderful secrets of my life. If I didn’t write them down, I should probably forget all about them.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1480-1482"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_2_cousins_meet",
+      "source_id": "gutenberg_844",
+      "relationship_context": "Two supposed cousins meet for the first time while one is using a false identity and the other tests his claimed wickedness.",
+      "participants": [
+        "ALGERNON",
+        "CECILY"
+      ],
+      "turns": [
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "[Raising his hat.] You are my little cousin Cecily, I’m sure.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1616-1617"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "You are under some strange mistake. I am not little. In fact, I believe I am more than usually tall for my age. [Algernon is rather taken aback.] But I am your cousin Cecily. You, I see from your card, are Uncle Jack’s brother, my cousin Ernest, my wicked cousin Ernest.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1619-1623"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "Oh! I am not really wicked at all, cousin Cecily. You mustn’t think that I am wicked.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1625-1627"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "If you are not, then you have certainly been deceiving us all in a very inexcusable manner. I hope you have not been leading a double life, pretending to be wicked and being really good all the time. That would be hypocrisy.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1629-1633"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "[Looks at her in amazement.] Oh! Of course I have been rather reckless.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1635-1636"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "I am glad to hear it.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1638-1639"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "In fact, now you mention the subject, I have been very bad in my own small way.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1641-1643"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "I don’t think you should be so proud of that, though I am sure it must have been very pleasant.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1645-1647"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "It is much pleasanter being here with you.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1649-1650"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "I can’t understand how you are here at all. Uncle Jack won’t be back till Monday afternoon.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1652-1654"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_2_false_bereavement",
+      "source_id": "gutenberg_844",
+      "relationship_context": "A guardian in mourning tells a clergyman and governess that his fictitious brother has died.",
+      "participants": [
+        "JACK",
+        "CHASUBLE",
+        "MISS PRISM"
+      ],
+      "turns": [
+        {
+          "speaker": "JACK",
+          "addressee": "CHASUBLE",
+          "text": "[Shakes Miss Prism’s hand in a tragic manner.] I have returned sooner than I expected. Dr. Chasuble, I hope you are well?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1812-1814"
+        },
+        {
+          "speaker": "CHASUBLE",
+          "addressee": "JACK",
+          "text": "Dear Mr. Worthing, I trust this garb of woe does not betoken some terrible calamity?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1816-1818"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "CHASUBLE",
+          "text": "My brother.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1820-1821"
+        },
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "JACK",
+          "text": "More shameful debts and extravagance?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1823-1824"
+        },
+        {
+          "speaker": "CHASUBLE",
+          "addressee": "JACK",
+          "text": "Still leading his life of pleasure?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1826-1827"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "CHASUBLE",
+          "text": "[Shaking his head.] Dead!",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1829-1830"
+        },
+        {
+          "speaker": "CHASUBLE",
+          "addressee": "JACK",
+          "text": "Your brother Ernest dead?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1832-1833"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "CHASUBLE",
+          "text": "Quite dead.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1835-1836"
+        },
+        {
+          "speaker": "MISS PRISM",
+          "addressee": "JACK",
+          "text": "What a lesson for him! I trust he will profit by it.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1838-1839"
+        },
+        {
+          "speaker": "CHASUBLE",
+          "addressee": "JACK",
+          "text": "Mr. Worthing, I offer you my sincere condolence. You have at least the consolation of knowing that you were always the most generous and forgiving of brothers.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 1841-1844"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_2_painful_parting",
+      "source_id": "gutenberg_844",
+      "relationship_context": "Newly acquainted romantic interests discuss an impending departure until a servant announces the waiting carriage.",
+      "participants": [
+        "CECILY",
+        "ALGERNON",
+        "MERRIMAN"
+      ],
+      "turns": [
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "Oh, I merely came back to water the roses. I thought you were with Uncle Jack.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2184-2186"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "He’s gone to order the dog-cart for me.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2188-2189"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "Oh, is he going to take you for a nice drive?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2191-2192"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "He’s going to send me away.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2194-2195"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "Then have we got to part?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2197-2198"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "I am afraid so. It’s a very painful parting.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2200-2201"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "ALGERNON",
+          "text": "It is always painful to part from people whom one has known for a very brief space of time. The absence of old friends one can endure with equanimity. But even a momentary separation from anyone to whom one has just been introduced is almost unbearable.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2203-2207"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "CECILY",
+          "text": "Thank you.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2209-2210"
+        },
+        {
+          "speaker": "MERRIMAN",
+          "addressee": "ALGERNON",
+          "text": "The dog-cart is at the door, sir. [Algernon looks appealingly at Cecily.]",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2214-2216"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "MERRIMAN",
+          "text": "It can wait, Merriman for . . . five minutes.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2218-2219"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_2_guardian_confusion",
+      "source_id": "gutenberg_844",
+      "relationship_context": "Two apparent new friends become uneasy while trying to determine which man named Ernest is connected to each of them.",
+      "participants": [
+        "CECILY",
+        "GWENDOLEN"
+      ],
+      "turns": [
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "Pray do! I think that whenever one has anything unpleasant to say, one should always be quite candid.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2576-2578"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "Well, to speak with perfect candour, Cecily, I wish that you were fully forty-two, and more than usually plain for your age. Ernest has a strong upright nature. He is the very soul of truth and honour. Disloyalty would be as impossible to him as deception. But even men of the noblest possible moral character are extremely susceptible to the influence of the physical charms of others. Modern, no less than Ancient History, supplies us with many most painful examples of what I refer to. If it were not so, indeed, History would be quite unreadable.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2580-2588"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "I beg your pardon, Gwendolen, did you say Ernest?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2590-2591"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "Yes.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2593-2594"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "Oh, but it is not Mr. Ernest Worthing who is my guardian. It is his brother—his elder brother.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2596-2598"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "[Sitting down again.] Ernest never mentioned to me that he had a brother.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2600-2602"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "I am sorry to say they have not been on good terms for a long time.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2604-2605"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "Ah! that accounts for it. And now that I think of it I have never heard any man mention his brother. The subject seems distasteful to most men. Cecily, you have lifted a load from my mind. I was growing almost anxious. It would have been terrible if any cloud had come across a friendship like ours, would it not? Of course you are quite, quite sure that it is not Mr. Ernest Worthing who is your guardian?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2607-2613"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "Quite sure. [A pause.] In fact, I am going to be his.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2615-2616"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "[Inquiringly.] I beg your pardon?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2618-2619"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_2_bunbury_argument",
+      "source_id": "gutenberg_844",
+      "relationship_context": "Two friends and romantic rivals accuse each other of deception after their false identities are exposed.",
+      "participants": [
+        "JACK",
+        "ALGERNON"
+      ],
+      "turns": [
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "This ghastly state of things is what you call Bunburying, I suppose?",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2921-2922"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "Yes, and a perfectly wonderful Bunbury it is. The most wonderful Bunbury I have ever had in my life.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2924-2926"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "Well, you’ve no right whatsoever to Bunbury here.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2928-2929"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "That is absurd. One has a right to Bunbury anywhere one chooses. Every serious Bunburyist knows that.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2931-2933"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "Serious Bunburyist! Good heavens!",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2935-2936"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "Well, one must be serious about something, if one wants to have any amusement in life. I happen to be serious about Bunburying. What on earth you are serious about I haven’t got the remotest idea. About everything, I should fancy. You have such an absolutely trivial nature.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2938-2942"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "Well, the only small satisfaction I have in the whole of this wretched business is that your friend Bunbury is quite exploded. You won’t be able to run down to the country quite so often as you used to do, dear Algy. And a very good thing too.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2944-2948"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "Your brother is a little off colour, isn’t he, dear Jack? You won’t be able to disappear to London quite so frequently as your wicked custom was. And not a bad thing either.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2950-2953"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "ALGERNON",
+          "text": "As for your conduct towards Miss Cardew, I must say that your taking in a sweet, simple, innocent girl like that is quite inexcusable. To say nothing of the fact that she is my ward.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2955-2958"
+        },
+        {
+          "speaker": "ALGERNON",
+          "addressee": "JACK",
+          "text": "I can see no possible defence at all for your deceiving a brilliant, clever, thoroughly experienced young lady like Miss Fairfax. To say nothing of the fact that she is my cousin.",
+          "source_locator": "Act II, Project Gutenberg plain-text lines 2960-2963"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_3_dignified_silence",
+      "source_id": "gutenberg_844",
+      "relationship_context": "Two friends privately observe their apologetic suitors and agree to maintain a dignified silence.",
+      "participants": [
+        "GWENDOLEN",
+        "CECILY"
+      ],
+      "turns": [
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "The fact that they did not follow us at once into the house, as any one else would have done, seems to me to show that they have some sense of shame left.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3108-3111"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "They have been eating muffins. That looks like repentance.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3113-3114"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "[After a pause.] They don’t seem to notice us at all. Couldn’t you cough?",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3116-3118"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "But I haven’t got a cough.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3120-3121"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "They’re looking at us. What effrontery!",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3123-3124"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "They’re approaching. That’s very forward of them.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3126-3127"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "Let us preserve a dignified silence.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3129-3130"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "Certainly. It’s the only thing to do now. [Enter Jack followed by Algernon. They whistle some dreadful popular air from a British Opera.]",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3132-3134"
+        },
+        {
+          "speaker": "GWENDOLEN",
+          "addressee": "CECILY",
+          "text": "This dignified silence seems to produce an unpleasant effect.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3136-3137"
+        },
+        {
+          "speaker": "CECILY",
+          "addressee": "GWENDOLEN",
+          "text": "A most distasteful one.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3139-3140"
+        }
+      ]
+    },
+    {
+      "source_conversation_id": "gutenberg_844_act_3_cecily_fortune",
+      "source_id": "gutenberg_844",
+      "relationship_context": "A guardian answers an aristocratic aunt’s investigation into his ward’s family credentials and fortune.",
+      "participants": [
+        "JACK",
+        "LADY BRACKNELL",
+        "CECILY"
+      ],
+      "turns": [
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "[In a clear, cold voice.] Miss Cardew is the grand-daughter of the late Mr. Thomas Cardew of 149 Belgrave Square, S.W.; Gervase Park, Dorking, Surrey; and the Sporran, Fifeshire, N.B.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3351-3354"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "That sounds not unsatisfactory. Three addresses always inspire confidence, even in tradesmen. But what proof have I of their authenticity?",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3356-3359"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "I have carefully preserved the Court Guides of the period. They are open to your inspection, Lady Bracknell.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3361-3363"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "[Grimly.] I have known strange errors in that publication.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3365-3366"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "Miss Cardew’s family solicitors are Messrs. Markby, Markby, and Markby.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3368-3369"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "Markby, Markby, and Markby? A firm of the very highest position in their profession. Indeed I am told that one of the Mr. Markby’s is occasionally to be seen at dinner parties. So far I am satisfied.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3371-3374"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "[Very irritably.] How extremely kind of you, Lady Bracknell! I have also in my possession, you will be pleased to hear, certificates of Miss Cardew’s birth, baptism, whooping cough, registration, vaccination, confirmation, and the measles; both the German and the English variety.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3376-3381"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "JACK",
+          "text": "Ah! A life crowded with incident, I see; though perhaps somewhat too exciting for a young girl. I am not myself in favour of premature experiences. [Rises, looks at her watch.] Gwendolen! the time approaches for our departure. We have not a moment to lose. As a matter of form, Mr. Worthing, I had better ask you if Miss Cardew has any little fortune?",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3383-3389"
+        },
+        {
+          "speaker": "JACK",
+          "addressee": "LADY BRACKNELL",
+          "text": "Oh! about a hundred and thirty thousand pounds in the Funds. That is all. Goodbye, Lady Bracknell. So pleased to have seen you.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3391-3393"
+        },
+        {
+          "speaker": "LADY BRACKNELL",
+          "addressee": "CECILY",
+          "text": "[Sitting down again.] A moment, Mr. Worthing. A hundred and thirty thousand pounds! And in the Funds! Miss Cardew seems to me a most attractive young lady, now that I look at her. Few girls of the present day have any really solid qualities, any of the qualities that last, and improve with time. We live, I regret to say, in an age of surfaces. [To Cecily.] Come over here, dear. [Cecily goes across.] Pretty child! your dress is sadly simple, and your hair seems almost as Nature might have left it. But we can soon alter all that. A thoroughly experienced French maid produces a really marvellous result in a very brief space of time. I remember recommending one to young Lady Lancing, and after three months her own husband did not know her.",
+          "source_locator": "Act III, Project Gutenberg plain-text lines 3395-3406"
+        }
+      ]
+    }
+  ]
+}
