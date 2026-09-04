@@ -271,3 +271,33 @@ Current state:
 
 All future bounded parser deliveries must update the dedicated Clanker-LM logs
 before review and preserve the permanent boundaries documented there.
+
+---
+
+## 2026-09-04 — Private Clanker-LM web workbench deployed
+
+The deterministic runtime now has a private browser surface at
+`https://bazzite.tail85f65f.ts.net:8444/`. Tailscale Serve exposes only port
+8444 to the Tailnet and proxies to the loopback application on
+`127.0.0.1:8765`; this workbench has no Funnel/public route. The systemd user
+service is `clanker-lm-web.service`, and deployed access is restricted to the
+exact allowlisted login `jerrymares@gmail.com`.
+
+The interface keeps each browser's runtime memory separate, provides export and
+reset controls, and places **Answer**, **Truth**, **Source**, **Certainty**,
+**Memory**, and **VADUG** beside every reply. Secure cookie attributes, origin
+and identity gates, session/rate/turn/byte limits, fail-closed capacity,
+security headers, and message-body log exclusion keep the surface bounded.
+
+Jerry's live ACL-link report found that the original cross-site shell rule also
+blocked a legitimate clicked link. Commit `6f3c1bf` now allows only
+user-activated top-level document navigation from same/cross-site sources;
+iframe, subresource, fetch/CORS, and non-user cross-site attempts remain
+fail-closed. The service was restarted and the live ACL-link retest succeeded.
+
+Validation on the current exact tree is 88 web tests passed, 2,694 full-suite
+tests passed with two expected xfails, and 29/29 deterministic benchmark turns.
+The compile, JavaScript syntax, diff, and no-engine checks are clean. An
+independent web reviewer returned ACCEPT before the rebase and before `6f3c1bf`;
+final exact-head independent review is not yet claimed. Run, verification, and
+rollback commands are documented in `docs/CLANKER_LM_WEB.md`.

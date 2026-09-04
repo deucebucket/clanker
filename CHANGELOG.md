@@ -29,6 +29,20 @@
   correctness and truth-boundary reviewers returned ACCEPT with no blockers,
   and test/code acceptance was clean. Exact-head CI, automated review, and merge
   evidence are recorded on PR #105 after this changelog commit.
+- Added and privately deployed the Clanker-LM Starlette/Uvicorn web workbench at
+  `https://bazzite.tail85f65f.ts.net:8444/`. The exact allowlisted Tailnet login
+  reaches a loopback-only `127.0.0.1:8765` backend through Tailscale Serve;
+  port 8444 is tailnet only and has no Funnel/public exposure. Browser sessions
+  are isolated and bounded, and each reply shows **Answer**, **Truth**,
+  **Source**, **Certainty**, **Memory**, and **VADUG**. Jerry's live ACL-link
+  report exposed an over-strict cross-site bootstrap rule; `6f3c1bf` permits
+  only user-activated top-level document navigation from same/cross-site links
+  and retains fail-closed iframe/subresource/fetch/non-user behavior. The live
+  retest succeeded. Current exact-tree validation: 88 web tests passed; 2,694
+  full-suite tests passed plus the two expected xfails; benchmark 29/29;
+  compile, JavaScript syntax, diff, and no-engine checks clean. The earlier
+  independent review returned ACCEPT, but final exact-head review is not yet
+  claimed.
 - Full history, invariants, validation, and roadmap are recorded in
   `docs/CLANKER_LM_CHANGELOG.md` and `docs/CLANKER_LM_DEVLOG.md`.
 
