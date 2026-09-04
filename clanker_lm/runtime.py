@@ -301,9 +301,18 @@ class ClankerLM:
             self.memory.add_clause_relations(parse.relations, stored)
             self.memory.add_entity_modifier_relations(parse.modifiers, stored)
             self.memory.add_appositive_relations(parse.appositives)
+            self.memory.add_content_relations(parse.contents, stored)
+            acknowledged = next(
+                (
+                    event
+                    for event in reversed(stored)
+                    if event.discourse_role != "content"
+                ),
+                stored[-1],
+            )
             return AnswerContract(
                 status=AnswerStatus.ACKNOWLEDGED,
-                proposition=stored[-1],
+                proposition=acknowledged,
                 evidence=[],
                 certainty=min(event.certainty for event in stored),
                 source=SourceKind.USER,

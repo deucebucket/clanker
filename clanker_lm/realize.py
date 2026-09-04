@@ -176,6 +176,26 @@ class SurfaceRealizer:
             return self._social(contract, gates)
         if contract.proposition is None:
             return self._unsupported(contract, gates)
+        if contract.required_slots.get("attributed") == "true":
+            source_id = contract.required_slots.get("source_entity_id", "")
+            predicate = contract.required_slots.get("matrix_predicate", "say")
+            tense = contract.required_slots.get("matrix_tense", "present")
+            source = self.memory.describe_entity(source_id)
+            content = self.render_event(contract.proposition, capitalize=False)
+            verb = self._finite_content_verb(predicate, tense)
+            return [
+                self._candidate(
+                    [source, verb, content, self._atom("punct.period")],
+                    candidate_id="compose.answer.attributed_content",
+                    semantic_plan=[
+                        *self._rule_plan("reply:answer"),
+                        f"ATTRIBUTION_SOURCE:{source_id}",
+                        f"ATTRIBUTION_PREDICATE:{predicate}",
+                        f"CONTENT_FRAME:{contract.proposition.predicate}",
+                    ],
+                    priority=116,
+                )
+            ]
         if (
             contract.question is not None
             and contract.question.kind == QuestionKind.WHOSE
@@ -276,6 +296,64 @@ class SurfaceRealizer:
 
         if question is not None and question.kind == QuestionKind.YES_NO:
             query_clause = self.render_event(question.event, capitalize=False)
+            if contract.required_slots.get("attributed") == "true":
+                attributed_parts: List[Part] = []
+                seen: set[Tuple[str, str]] = set()
+                for evidence in contract.evidence:
+                    relations = self.memory.content_relations_for_event(
+                        evidence.event.event_id
+                    )
+                    relation = next(
+                        (
+                            item
+                            for item in relations
+                            if item.content_event_id == evidence.event.event_id
+                        ),
+                        None,
+                    )
+                    if relation is None:
+                        continue
+                    key = (relation.source_entity_id, evidence.event.event_id)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    source = self.memory.describe_entity(relation.source_entity_id)
+                    verb = self._finite_content_verb(
+                        relation.matrix_predicate,
+                        self.memory.get_event(relation.matrix_event_id).tense
+                        if self.memory.get_event(relation.matrix_event_id) is not None
+                        else "present",
+                    )
+                    clause = self.render_event(evidence.event, capitalize=False)
+                    if attributed_parts:
+                        attributed_parts.append(self._atom("link.but"))
+                    attributed_parts.extend([source, verb, clause])
+                    if len(seen) >= 3:
+                        break
+                if attributed_parts:
+                    attributed_parts.extend(
+                        [
+                            period,
+                            i_atom,
+                            dont,
+                            know,
+                            self._atom("question.whether"),
+                            query_clause,
+                            period,
+                        ]
+                    )
+                    return [
+                        self._candidate(
+                            attributed_parts,
+                            candidate_id="compose.unknown.attributed_polar",
+                            semantic_plan=[
+                                *plan,
+                                "EVIDENCE:ATTRIBUTED_ONLY",
+                                f"QUERY_FRAME:{question.event.predicate}",
+                            ],
+                            priority=118,
+                        )
+                    ]
             return [
                 self._candidate(
                     [i_atom, dont, know, self._atom("question.whether"), query_clause, period],
@@ -814,6 +892,14 @@ class SurfaceRealizer:
     # ------------------------------------------------------------------
     # Event grammar
     # ------------------------------------------------------------------
+    @staticmethod
+    def _finite_content_verb(predicate: str, tense: str) -> str:
+        if tense == "past":
+            return lexicon.past_form(predicate)
+        if tense == "future":
+            return "will " + predicate
+        return lexicon.present_form(predicate, third_person_singular=True)
+
     def render_event(
         self,
         event: EventFrame,

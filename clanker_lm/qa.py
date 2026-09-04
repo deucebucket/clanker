@@ -92,6 +92,9 @@ class QuestionAnswerer:
 
         if question.kind == QuestionKind.WHAT_HAPPENED:
             return self._answer_event_query(question, memory)
+        attributed = self._answer_attributed_content_request(question, memory)
+        if attributed is not None:
+            return attributed
         if question.kind == QuestionKind.WHOSE:
             ownership = self._answer_possessor(question, memory)
             if ownership is not None:
@@ -107,6 +110,122 @@ class QuestionAnswerer:
             )
         return self._answer_open_slot(question, memory)
 
+
+    CONTENT_QUERY_PREDICATES = {
+        "say", "tell", "report", "claim",
+        "think", "believe", "know",
+        "notice", "hear",
+    }
+
+    def _answer_attributed_content_request(
+        self,
+        question: QuestionFrame,
+        memory: ConversationMemory,
+    ) -> Optional[AnswerContract]:
+        """Answer ``What did X say/think/...`` from typed content links."""
+
+        if (
+            question.kind != QuestionKind.WHAT
+            or question.requested_role not in {"patient", "content"}
+            or question.event.predicate not in self.CONTENT_QUERY_PREDICATES
+        ):
+            return None
+        source_ref = (
+            question.event.arguments.get("agent")
+            or question.event.arguments.get("experiencer")
+            or question.event.arguments.get("subject")
+        )
+        if source_ref is None or source_ref.kind != RefKind.ENTITY:
+            return None
+        relations = memory.content_relations_for_source(
+            source_ref.key,
+            matrix_predicate=question.event.predicate,
+        )
+        if not relations:
+            negated = memory.content_relations_for_source(
+                source_ref.key,
+                matrix_predicate=question.event.predicate,
+                include_negated=True,
+            )
+            if negated:
+                return AnswerContract(
+                    status=AnswerStatus.UNKNOWN,
+                    question=question,
+                    certainty=0,
+                    source=SourceKind.ATTRIBUTED,
+                    reason="only a negated content attribution is stored",
+                    response_goal="answer",
+                    required_slots={
+                        "unknown_object": "content",
+                        "source_entity_id": source_ref.key,
+                        "matrix_predicate": question.event.predicate,
+                    },
+                    forbidden_claims=["invert_negated_attribution"],
+                )
+            return None
+
+        resolved = []
+        for relation in relations:
+            content_event = memory.get_event(relation.content_event_id)
+            matrix_event = memory.get_event(relation.matrix_event_id)
+            if content_event is None or matrix_event is None:
+                continue
+            if question.event.tense and matrix_event.tense != question.event.tense:
+                continue
+            resolved.append((relation, matrix_event, content_event))
+        if not resolved:
+            return None
+
+        latest_turn = max(matrix.turn_index for _relation, matrix, _content in resolved)
+        latest = [item for item in resolved if item[1].turn_index == latest_turn]
+        signatures = {
+            item[2].signature()
+            for item in latest
+        }
+        if len(signatures) > 1:
+            values = [
+                SemanticRef.event(content.event_id, content.raw_text)
+                for _relation, _matrix, content in latest
+            ]
+            return AnswerContract(
+                status=AnswerStatus.MULTIPLE_MATCHES,
+                question=question,
+                proposition=latest[0][2],
+                values=values,
+                evidence=[Evidence(content, score=1.0) for _relation, _matrix, content in latest],
+                certainty=min(relation.certainty for relation, _matrix, _content in latest),
+                source=SourceKind.ATTRIBUTED,
+                reason="multiple attributed contents are stored for the latest turn",
+                response_goal="clarify",
+                required_slots={
+                    "attributed": "true",
+                    "source_entity_id": source_ref.key,
+                    "matrix_predicate": question.event.predicate,
+                },
+            )
+
+        relation, matrix_event, content_event = max(
+            latest,
+            key=lambda item: (item[0].certainty, item[2].certainty),
+        )
+        return AnswerContract(
+            status=AnswerStatus.ANSWERED,
+            question=question,
+            proposition=content_event,
+            values=[SemanticRef.event(content_event.event_id, content_event.raw_text)],
+            evidence=[Evidence(content_event, matched_roles=["content"], score=1.0)],
+            certainty=min(relation.certainty, content_event.certainty),
+            source=SourceKind.ATTRIBUTED,
+            reason="bound finite content through an explicit attribution relation",
+            response_goal="answer",
+            required_slots={
+                "attributed": "true",
+                "source_entity_id": relation.source_entity_id,
+                "matrix_predicate": relation.matrix_predicate,
+                "matrix_tense": matrix_event.tense,
+                "relation_type": relation.relation_type.value,
+            },
+        )
 
     def _answer_possessor(
         self,
@@ -145,7 +264,11 @@ class QuestionAnswerer:
         )
 
     def _answer_event_query(self, question: QuestionFrame, memory: ConversationMemory) -> AnswerContract:
-        candidates = list(memory.events)
+        candidates = [
+            event
+            for event in memory.events
+            if event.discourse_role != "content"
+        ]
         fixed = question.event.fixed_arguments()
         if fixed:
             filtered: List[EventFrame] = []
@@ -233,6 +356,61 @@ class QuestionAnswerer:
                 source=self._combine_sources([item.event for item in opposite]),
                 reason="explicit negated proposition match",
                 response_goal="answer",
+            )
+
+        attributed = memory.match_events(
+            query,
+            include_opposite_polarity=True,
+            include_attributed_content=True,
+        )
+        attributed = [
+            match
+            for match in attributed
+            if match.event.discourse_role == "content"
+            and any(
+                relation.attributed
+                and relation.content_event_id == match.event.event_id
+                for relation in memory.content_relations_for_event(match.event.event_id)
+            )
+        ]
+        if attributed:
+            sources: List[str] = []
+            matrix_predicates: List[str] = []
+            for match in attributed:
+                for relation in memory.content_relations_for_event(match.event.event_id):
+                    if relation.content_event_id != match.event.event_id:
+                        continue
+                    if relation.source_entity_id not in sources:
+                        sources.append(relation.source_entity_id)
+                    if relation.matrix_predicate not in matrix_predicates:
+                        matrix_predicates.append(relation.matrix_predicate)
+            polarities = {match.event.polarity for match in attributed}
+            reason = (
+                "attributed sources disagree about the proposition"
+                if len(polarities) > 1
+                else "only attributed content supports the proposition"
+            )
+            return AnswerContract(
+                status=AnswerStatus.UNKNOWN,
+                question=question,
+                proposition=query,
+                truth=TruthValue.UNKNOWN,
+                evidence=[self._to_evidence(item) for item in attributed],
+                certainty=0,
+                source=SourceKind.ATTRIBUTED,
+                reason=reason,
+                response_goal="answer",
+                required_slots={
+                    "attributed": "true",
+                    "source_entity_ids": ",".join(sources),
+                    "matrix_predicates": ",".join(matrix_predicates),
+                    "attributed_polarity_count": str(len(polarities)),
+                },
+                forbidden_claims=[
+                    "promote_attributed_content_to_unqualified_fact",
+                    "convert_attributed_content_to_truth",
+                ],
+                diagnostics=[reason],
             )
 
         # A related fact is useful context but is not logically equivalent to a
@@ -361,6 +539,8 @@ class QuestionAnswerer:
         attribute = query.arguments.get("attribute")
         matches: List[EventMatch] = []
         for event in memory.events:
+            if event.discourse_role == "content":
+                continue
             if event.predicate not in {"attribute", "be"}:
                 continue
             if subject:
@@ -454,6 +634,8 @@ class QuestionAnswerer:
         results: List[EventMatch] = []
         fixed = query.fixed_arguments()
         for event in memory.events:
+            if event.discourse_role == "content":
+                continue
             if event.predicate != query.predicate:
                 continue
             matched = [

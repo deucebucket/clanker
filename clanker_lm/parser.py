@@ -21,6 +21,9 @@ from .model import (
     ClauseRelation,
     ClauseRelationDirection,
     ClauseRelationType,
+    ContentAttachmentAmbiguity,
+    ContentRelation,
+    ContentRelationType,
     EntityKind,
     EntityModifierRelation,
     EventFrame,
@@ -56,6 +59,17 @@ class ClauseResult:
     event: Optional[EventFrame]
     unresolved: List[UnresolvedReference] = field(default_factory=list)
     entities: List[str] = field(default_factory=list)
+    diagnostics: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ContentSplit:
+    matrix_tokens: List[lexicon.Token]
+    content_tokens: List[lexicon.Token]
+    marker: str
+    relation_type: ContentRelationType
+    predicate_family: str
+    certainty: int
     diagnostics: List[str] = field(default_factory=list)
 
 
@@ -163,11 +177,125 @@ class SemanticParser:
         modifier_ambiguities: List[ModifierAttachmentAmbiguity] = []
         appositives: List[AppositiveRelation] = []
         appositive_ambiguities: List[AppositiveAttachmentAmbiguity] = []
+        contents: List[ContentRelation] = []
+        content_ambiguities: List[ContentAttachmentAmbiguity] = []
         unresolved: List[UnresolvedReference] = []
         entities: List[str] = []
         diagnostics: List[str] = []
         primary_event_count = 0
         for clause, connector in segments:
+            content_split, content_ambiguity = self._split_content_clause(clause)
+            if content_ambiguity is not None:
+                content_ambiguities.append(content_ambiguity)
+                unresolved.append(
+                    UnresolvedReference(
+                        surface=content_ambiguity.content_surface,
+                        reason=content_ambiguity.reason,
+                    )
+                )
+                diagnostics.extend(content_ambiguity.diagnostics)
+                diagnostics.append("content-clause boundary remains ambiguous")
+                continue
+
+            if content_split is not None:
+                matrix_result = self._parse_clause(
+                    content_split.matrix_tokens,
+                    raw,
+                    memory,
+                )
+                content_result = self._parse_clause(
+                    content_split.content_tokens,
+                    raw,
+                    memory,
+                )
+                if matrix_result.event and content_result.event:
+                    source_entity_id = self._content_source_entity(
+                        matrix_result.event
+                    )
+                    if not source_entity_id:
+                        ambiguity = ContentAttachmentAmbiguity(
+                            matrix_surface=self._surface(content_split.matrix_tokens),
+                            content_surface=self._surface(content_split.content_tokens),
+                            clause_surface=self._surface(clause),
+                            reason="matrix content predicate lacks a resolved source entity",
+                            ambiguity_id=(
+                                "content-"
+                                + hashlib.sha256(
+                                    " ".join(token.norm for token in clause).encode("utf-8")
+                                ).hexdigest()[:16]
+                            ),
+                            diagnostics=[
+                                "content source unresolved; durable assertion suppressed"
+                            ],
+                        )
+                        content_ambiguities.append(ambiguity)
+                        unresolved.extend(matrix_result.unresolved)
+                        unresolved.extend(content_result.unresolved)
+                        diagnostics.extend(ambiguity.diagnostics)
+                        continue
+
+                    matrix_result.event.discourse_role = (
+                        "main" if primary_event_count == 0 else "coordinate"
+                    )
+                    content_result.event.discourse_role = "content"
+                    content_result.event.source = SourceKind.ATTRIBUTED
+                    content_result.event.certainty = min(
+                        content_result.event.certainty,
+                        content_split.certainty,
+                    )
+                    if connector is not None:
+                        matrix_result.diagnostics.insert(
+                            0,
+                            f"coordinate connector={connector}",
+                        )
+                    primary_event_count += 1
+
+                    matrix_index = len(events)
+                    events.append(matrix_result.event)
+                    content_index = len(events)
+                    events.append(content_result.event)
+                    contents.append(
+                        ContentRelation(
+                            relation_type=content_split.relation_type,
+                            matrix_event_index=matrix_index,
+                            content_event_index=content_index,
+                            marker=content_split.marker,
+                            matrix_predicate=matrix_result.event.predicate,
+                            source_entity_id=source_entity_id,
+                            predicate_family=content_split.predicate_family,
+                            certainty=content_split.certainty,
+                            attributed=matrix_result.event.polarity,
+                            diagnostics=[
+                                *content_split.diagnostics,
+                                (
+                                    "matrix predicate licenses attributed evidence"
+                                    if matrix_result.event.polarity
+                                    else "negated matrix predicate does not license attributed evidence"
+                                ),
+                            ],
+                        )
+                    )
+                    unresolved.extend(matrix_result.unresolved)
+                    unresolved.extend(content_result.unresolved)
+                    entities.extend(matrix_result.entities)
+                    entities.extend(content_result.entities)
+                    diagnostics.extend(matrix_result.diagnostics)
+                    diagnostics.extend(content_result.diagnostics)
+                    diagnostics.extend(content_split.diagnostics)
+                    diagnostics.append(
+                        "content relation="
+                        f"{content_split.relation_type.value} "
+                        f"marker={content_split.marker} "
+                        f"source={source_entity_id}"
+                    )
+                    continue
+
+                diagnostics.extend(matrix_result.diagnostics)
+                diagnostics.extend(content_result.diagnostics)
+                diagnostics.append(
+                    f"content split fallback marker={content_split.marker}"
+                )
+
             relative_split, modifier_ambiguity = self._split_relative_clause(
                 clause,
                 raw,
@@ -402,6 +530,8 @@ class SemanticParser:
             modifier_ambiguities=modifier_ambiguities,
             appositives=appositives,
             appositive_ambiguities=appositive_ambiguities,
+            contents=contents,
+            content_ambiguities=content_ambiguities,
             entities=list(dict.fromkeys(entities)),
             unresolved=unresolved,
             normalized_text=normalized,
@@ -543,6 +673,329 @@ class SemanticParser:
             and item.norm not in {",", ";"}
         ]
         return bool(subject_tokens)
+
+    CONTENT_PREDICATES: Dict[str, Tuple[ContentRelationType, str, int]] = {
+        "say": (ContentRelationType.REPORTED, "speech", 205),
+        "tell": (ContentRelationType.REPORTED, "speech", 205),
+        "report": (ContentRelationType.REPORTED, "speech", 215),
+        "claim": (ContentRelationType.REPORTED, "speech", 190),
+        "think": (ContentRelationType.BELIEVED, "belief", 185),
+        "believe": (ContentRelationType.BELIEVED, "belief", 185),
+        "know": (ContentRelationType.KNOWN, "knowledge", 210),
+        "notice": (ContentRelationType.PERCEIVED, "perception", 200),
+        "hear": (ContentRelationType.PERCEIVED, "perception", 195),
+    }
+    CONTENT_RECIPIENT_PREDICATES = {"tell"}
+
+    def _split_content_clause(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> Tuple[Optional[ContentSplit], Optional[ContentAttachmentAmbiguity]]:
+        """Split one licensed finite content complement conservatively.
+
+        This bounded slice intentionally refuses to flatten a content clause
+        together with another relation layer.  Relative modifiers, appositives,
+        and finite subordination are each represented by their own typed
+        structures elsewhere in the parser; until staged composition is
+        implemented, combining them here would create false source identities
+        or swallow an outer matrix predicate.
+        """
+
+        items = [item for item in tokens if item.norm not in {";"}]
+        layered_ambiguity = self._content_layering_ambiguity(items)
+        if layered_ambiguity is not None:
+            return None, layered_ambiguity
+
+        verb_index = self._find_main_verb(items)
+        if verb_index < 0:
+            return None, None
+        predicate = lexicon.lemma(items[verb_index].norm)
+        profile = self.CONTENT_PREDICATES.get(predicate)
+        if profile is None:
+            return None, None
+        relation_type, family, certainty = profile
+
+        explicit = [
+            index
+            for index in range(verb_index + 1, len(items))
+            if items[index].norm == "that"
+        ]
+        if explicit:
+            marker_index = explicit[0]
+            if len(explicit) > 1:
+                return None, self._content_ambiguity(
+                    items,
+                    [index + 1 for index in explicit],
+                    reason="multiple complementizer candidates require nested parsing",
+                )
+            matrix_tail = [
+                item
+                for item in items[verb_index + 1 : marker_index]
+                if item.norm not in lexicon.PUNCTUATION
+            ]
+            if matrix_tail and predicate not in self.CONTENT_RECIPIENT_PREDICATES:
+                # A substantive noun phrase before ``that`` is more likely the
+                # head of a relative clause (``reported the idea that ...``).
+                return None, None
+            content = [
+                item
+                for item in items[marker_index + 1 :]
+                if item.norm not in lexicon.PUNCTUATION
+            ]
+            matrix = [
+                item
+                for item in items[:marker_index]
+                if item.norm not in lexicon.PUNCTUATION
+            ]
+            if not self._is_independently_finite(content):
+                return None, None
+            if self._contains_nested_content_clause(content):
+                return None, self._content_ambiguity(
+                    items,
+                    [marker_index + 1],
+                    reason="nested finite content exceeds the configured depth",
+                )
+            return (
+                ContentSplit(
+                    matrix_tokens=matrix,
+                    content_tokens=content,
+                    marker="that",
+                    relation_type=relation_type,
+                    predicate_family=family,
+                    certainty=certainty,
+                    diagnostics=[
+                        f"finite content predicate={predicate}",
+                        "content marker=that",
+                    ],
+                ),
+                None,
+            )
+
+        candidates: List[int] = []
+        for boundary in range(verb_index + 1, len(items)):
+            content = [
+                item
+                for item in items[boundary:]
+                if item.norm not in lexicon.PUNCTUATION
+            ]
+            if not self._is_independently_finite(content):
+                continue
+            if not self._plausible_content_subject(content):
+                continue
+            matrix_tail = [
+                item
+                for item in items[verb_index + 1 : boundary]
+                if item.norm not in lexicon.PUNCTUATION
+            ]
+            if matrix_tail and predicate not in self.CONTENT_RECIPIENT_PREDICATES:
+                continue
+            candidates.append(boundary)
+
+        if not candidates:
+            return None, None
+        if predicate in self.CONTENT_RECIPIENT_PREDICATES:
+            # ``tell`` licenses a recipient before zero-marked content. Prefer
+            # the boundary that keeps one recipient NP with the matrix clause.
+            recipient_candidates = [
+                boundary
+                for boundary in candidates
+                if boundary > verb_index + 1
+            ]
+            if recipient_candidates:
+                candidates = recipient_candidates
+        if len(candidates) != 1:
+            return None, self._content_ambiguity(
+                items,
+                candidates,
+                reason="multiple finite zero-complementizer boundaries remain plausible",
+            )
+
+        boundary = candidates[0]
+        matrix = [
+            item for item in items[:boundary] if item.norm not in lexicon.PUNCTUATION
+        ]
+        content = [
+            item for item in items[boundary:] if item.norm not in lexicon.PUNCTUATION
+        ]
+        if self._contains_nested_content_clause(content):
+            return None, self._content_ambiguity(
+                items,
+                [boundary],
+                reason="nested finite content exceeds the configured depth",
+            )
+        return (
+            ContentSplit(
+                matrix_tokens=matrix,
+                content_tokens=content,
+                marker="zero",
+                relation_type=relation_type,
+                predicate_family=family,
+                certainty=max(0, certainty - 10),
+                diagnostics=[
+                    f"finite content predicate={predicate}",
+                    "content marker=zero",
+                    f"content boundary={boundary}",
+                ],
+            ),
+            None,
+        )
+
+    def _content_layering_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> Optional[ContentAttachmentAmbiguity]:
+        """Reject unsupported combinations of content and relation layers.
+
+        The check scans for any licensed finite content predicate rather than
+        only the first predicate.  That matters for forms such as ``The man
+        who left said that John arrived`` and fronted subordinate clauses,
+        where the first finite verb belongs to a different relation layer.
+        """
+
+        items = list(tokens)
+        content_predicates: List[int] = []
+        for index, token in enumerate(items):
+            predicate = lexicon.lemma(token.norm)
+            if predicate not in self.CONTENT_PREDICATES:
+                continue
+            previous = items[index - 1].norm if index > 0 else None
+            if lexicon.is_probable_verb(token.norm, previous=previous):
+                content_predicates.append(index)
+        if not content_predicates:
+            return None
+
+        first_predicate = content_predicates[0]
+        norms = [item.norm for item in items]
+        relative_markers = [
+            index
+            for index, norm in enumerate(norms)
+            if norm in {"who", "whom", "whose", "which"}
+            or (norm == "that" and index < first_predicate)
+        ]
+        if relative_markers:
+            return self._content_ambiguity(
+                items,
+                [first_predicate + 1],
+                reason=(
+                    "finite content combined with a relative clause exceeds "
+                    "this parser slice"
+                ),
+            )
+
+        # A paired comma before the content predicate is the structural shape
+        # of the supported appositive layer (for example ``Sarah, my
+        # supervisor, said ...``).  Parsing it as a flat matrix subject would
+        # invent a composite identity, so fail closed until staged composition.
+        commas_before = [
+            index
+            for index in range(first_predicate)
+            if norms[index] == ","
+        ]
+        if len(commas_before) >= 2:
+            return self._content_ambiguity(
+                items,
+                [first_predicate + 1],
+                reason=(
+                    "finite content combined with an appositive requires "
+                    "staged parsing"
+                ),
+            )
+
+        # Any reviewed subordinate marker in the same segment creates a second
+        # finite relation layer.  Preserve it as an explicit ambiguity rather
+        # than treating the embedded proposition as a direct object string.
+        for index in range(len(items)):
+            for marker in self.SUBORDINATE_MARKERS:
+                if tuple(norms[index : index + len(marker)]) == marker:
+                    return self._content_ambiguity(
+                        items,
+                        [first_predicate + 1],
+                        reason=(
+                            "finite content combined with a subordinate clause "
+                            "requires staged parsing"
+                        ),
+                    )
+        return None
+
+    def _contains_nested_content_clause(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> bool:
+        verb_index = self._find_main_verb(tokens)
+        if verb_index < 0:
+            return False
+        predicate = lexicon.lemma(tokens[verb_index].norm)
+        if predicate not in self.CONTENT_PREDICATES:
+            return False
+        for index in range(verb_index + 1, len(tokens)):
+            if tokens[index].norm == "that":
+                suffix = [
+                    item
+                    for item in tokens[index + 1 :]
+                    if item.norm not in lexicon.PUNCTUATION
+                ]
+                if self._is_independently_finite(suffix):
+                    return True
+            suffix = [
+                item
+                for item in tokens[index:]
+                if item.norm not in lexicon.PUNCTUATION
+            ]
+            if self._is_independently_finite(suffix):
+                return True
+        return False
+
+    def _content_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+        boundaries: Sequence[int],
+        *,
+        reason: str,
+    ) -> ContentAttachmentAmbiguity:
+        first = boundaries[0] if boundaries else len(tokens)
+        return ContentAttachmentAmbiguity(
+            matrix_surface=self._surface(tokens[:first]),
+            content_surface=self._surface(tokens[first:]),
+            clause_surface=self._surface(tokens),
+            reason=reason,
+            candidate_boundaries=list(boundaries),
+            ambiguity_id=(
+                "content-"
+                + hashlib.sha256(
+                    " ".join(token.norm for token in tokens).encode("utf-8")
+                ).hexdigest()[:16]
+            ),
+            diagnostics=[reason, "unsafe attributed content suppressed"],
+        )
+
+    def _plausible_content_subject(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> bool:
+        verb_index = self._find_main_verb(tokens)
+        if verb_index <= 0:
+            return False
+        subject = [
+            item
+            for item in tokens[:verb_index]
+            if item.norm not in lexicon.AUXILIARIES
+            and item.norm not in lexicon.NEGATORS
+            and item.norm not in lexicon.INTENSIFIERS
+        ]
+        if not subject:
+            return False
+        first = subject[0].norm
+        if first in lexicon.PRONOUN_FEATURES and len(subject) > 1:
+            return False
+        return True
+
+    @staticmethod
+    def _content_source_entity(event: EventFrame) -> str:
+        for role in ("agent", "experiencer", "subject", "source"):
+            ref = event.arguments.get(role)
+            if ref is not None and ref.kind == RefKind.ENTITY:
+                return ref.key
+        return ""
 
     RELATIVE_MARKERS = {"who", "whom", "whose", "which", "that"}
     ABSTRACT_COMPLEMENT_HEADS = {

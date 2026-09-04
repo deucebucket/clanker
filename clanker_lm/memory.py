@@ -20,6 +20,7 @@ from .model import (
     AppositiveRelation,
     AppositiveRelationType,
     ClauseRelation,
+    ContentRelation,
     Entity,
     EntityModifierRelation,
     EntityKind,
@@ -65,6 +66,7 @@ class ConversationMemory:
         self.relations: List[ClauseRelation] = []
         self.modifiers: List[EntityModifierRelation] = []
         self.appositives: List[AppositiveRelation] = []
+        self.contents: List[ContentRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
         self._entity_counter: int = 0
@@ -72,6 +74,7 @@ class ConversationMemory:
         self._relation_counter: int = 0
         self._modifier_counter: int = 0
         self._appositive_counter: int = 0
+        self._content_counter: int = 0
         self._initialize_participants()
 
     def _initialize_participants(self) -> None:
@@ -534,7 +537,11 @@ class ConversationMemory:
         # Exact repeated assertions update certainty/provenance rather than
         # multiplying identical facts indefinitely.
         for existing in self.events:
-            if existing.proposition_signature() == stored.proposition_signature():
+            if (
+                existing.proposition_signature() == stored.proposition_signature()
+                and existing.discourse_role == stored.discourse_role
+                and existing.source == stored.source
+            ):
                 existing.certainty = max(existing.certainty, stored.certainty)
                 existing.turn_index = max(existing.turn_index, stored.turn_index)
                 existing.raw_text = stored.raw_text or existing.raw_text
@@ -695,6 +702,111 @@ class ConversationMemory:
             self.revision += 1
         return stored
 
+    def _next_content_id(self) -> str:
+        self._content_counter += 1
+        return f"content_{self._content_counter}"
+
+    def add_content_relations(
+        self,
+        contents: Sequence[ContentRelation],
+        stored_events: Sequence[EventFrame],
+    ) -> List[ContentRelation]:
+        """Bind parser-local attributed-content links to stable event IDs."""
+
+        stored: List[ContentRelation] = []
+        for relation in contents:
+            if not (
+                0 <= relation.matrix_event_index < len(stored_events)
+                and 0 <= relation.content_event_index < len(stored_events)
+            ):
+                raise ValueError("Content relation references an invalid event index")
+            matrix_event = stored_events[relation.matrix_event_index]
+            content_event = stored_events[relation.content_event_index]
+            if content_event.discourse_role != "content":
+                raise ValueError("Content relation must bind to a content-role event")
+            if content_event.source != SourceKind.ATTRIBUTED:
+                raise ValueError("Content event must retain attributed provenance")
+            if matrix_event.predicate != relation.matrix_predicate:
+                raise ValueError("Content relation matrix predicate does not match its event")
+            if relation.source_entity_id not in self.entities:
+                raise ValueError("Content relation references an unknown source entity")
+            source_refs = {
+                ref.key
+                for role, ref in matrix_event.arguments.items()
+                if role in {"agent", "experiencer", "subject", "source"}
+                and ref.kind == RefKind.ENTITY
+            }
+            if relation.source_entity_id not in source_refs:
+                raise ValueError("Content relation source is not licensed by the matrix event")
+            if relation.attributed != matrix_event.polarity:
+                raise ValueError("Content evidence license must match matrix polarity")
+            bound = relation.copy(
+                relation_id=relation.relation_id or self._next_content_id(),
+                matrix_event_id=matrix_event.event_id,
+                content_event_id=content_event.event_id,
+                certainty=min(
+                    relation.certainty,
+                    matrix_event.certainty,
+                    content_event.certainty,
+                ),
+            )
+            existing = next(
+                (item for item in self.contents if item.signature() == bound.signature()),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, bound.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + bound.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                self.contents.append(bound)
+                stored.append(bound)
+            self.mention(bound.source_entity_id, "source", 0.6)
+            self.revision += 1
+        return stored
+
+    def content_relations_for_event(self, event_id: str) -> List[ContentRelation]:
+        return [
+            relation
+            for relation in self.contents
+            if event_id in {relation.matrix_event_id, relation.content_event_id}
+        ]
+
+    def content_relations_for_source(
+        self,
+        source_entity_id: str,
+        *,
+        matrix_predicate: Optional[str] = None,
+        include_negated: bool = False,
+    ) -> List[ContentRelation]:
+        relations = [
+            relation
+            for relation in self.contents
+            if relation.source_entity_id == source_entity_id
+            and (include_negated or relation.attributed)
+        ]
+        if matrix_predicate is not None:
+            relations = [
+                relation
+                for relation in relations
+                if relation.matrix_predicate == matrix_predicate
+            ]
+        return sorted(
+            relations,
+            key=lambda item: (
+                self.get_event(item.matrix_event_id).turn_index
+                if self.get_event(item.matrix_event_id) is not None
+                else -1,
+                item.certainty,
+            ),
+            reverse=True,
+        )
+
+    def get_event(self, event_id: str) -> Optional[EventFrame]:
+        return next((event for event in self.events if event.event_id == event_id), None)
+
     def appositives_for_entity(self, entity_id: str) -> List[AppositiveRelation]:
         return [
             relation
@@ -749,11 +861,17 @@ class ConversationMemory:
         ignore_roles: Iterable[str] = (),
         allow_tense_variation: bool = True,
         include_opposite_polarity: bool = True,
+        include_attributed_content: bool = False,
     ) -> List[EventMatch]:
         ignored = set(ignore_roles)
         matches: List[EventMatch] = []
         fixed = {role: ref for role, ref in query.arguments.items() if role not in ignored and not ref.is_variable}
         for event in self.events:
+            if (
+                event.discourse_role == "content"
+                and not include_attributed_content
+            ):
+                continue
             if event.predicate != query.predicate:
                 continue
             if not allow_tense_variation and event.tense != query.tense:
@@ -787,10 +905,18 @@ class ConversationMemory:
         ignored: Set[str] = set()
         if requested_role:
             ignored.add(requested_role)
-        return self.match_events(query, ignore_roles=ignored, include_opposite_polarity=True)
+        return self.match_events(
+            query,
+            ignore_roles=ignored,
+            include_opposite_polarity=True,
+            include_attributed_content=False,
+        )
 
     def latest_event(self) -> Optional[EventFrame]:
-        return max(self.events, key=lambda event: event.turn_index, default=None)
+        ordinary = [
+            event for event in self.events if event.discourse_role != "content"
+        ]
+        return max(ordinary, key=lambda event: event.turn_index, default=None)
 
     # ------------------------------------------------------------------
     # Snapshot persistence
@@ -806,11 +932,13 @@ class ConversationMemory:
             "relation_counter": self._relation_counter,
             "modifier_counter": self._modifier_counter,
             "appositive_counter": self._appositive_counter,
+            "content_counter": self._content_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
             "relations": [relation.to_dict() for relation in self.relations],
             "modifiers": [modifier.to_dict() for modifier in self.modifiers],
             "appositives": [relation.to_dict() for relation in self.appositives],
+            "contents": [relation.to_dict() for relation in self.contents],
         }
 
     @classmethod
@@ -838,6 +966,10 @@ class ConversationMemory:
             AppositiveRelation.from_dict(item)
             for item in data.get("appositives", [])
         ]
+        memory.contents = [
+            ContentRelation.from_dict(item)
+            for item in data.get("contents", [])
+        ]
         memory.turn_index = int(data.get("turn_index", 0))
         memory.revision = int(data.get("revision", 0))
         memory._entity_counter = int(data.get("entity_counter", len(memory.entities)))
@@ -850,6 +982,9 @@ class ConversationMemory:
         )
         memory._appositive_counter = int(
             data.get("appositive_counter", len(memory.appositives))
+        )
+        memory._content_counter = int(
+            data.get("content_counter", len(memory.contents))
         )
         return memory
 
