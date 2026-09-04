@@ -338,7 +338,7 @@ KNOWN_VERBS: Set[str] = {
     "visit", "call", "text", "email", "ask", "answer", "explain", "show", "lend",
     "borrow", "wear", "use", "unlock", "calculate", "compute", "process", "sort",
     "create", "delete", "change", "turn", "look", "watch", "play", "study", "learn",
-    "record", "schedule", "drop", "tie", "vie", "wait",
+    "record", "report", "schedule", "drop", "tie", "vie", "wait",
     "remember", "forget", "happen", "occur", "rain", "snow", "cost", "weigh",
     "measure", "seem", "become", "own", "apologize", "argue", "fight", "cheat",
     "lie", "laugh", "cry", "smile", "recover", "heal", "die", "kill", "save",
@@ -367,7 +367,7 @@ PHYSICAL_EVENT_VERBS = {"break", "fall", "rain", "snow", "happen", "occur", "col
 PROCESS_VERBS = {"calculate", "compute", "process", "sort", "build", "create", "work", "function", "operate"}
 UNACCUSATIVE_VERBS = {"break", "fall", "die", "happen", "occur", "arrive", "collapse", "melt", "freeze"}
 POSSESSION_VERBS = {"have", "own", "keep", "hold", "possess"}
-COMMUNICATION_VERBS = {"say", "tell", "ask", "answer", "explain", "call", "text", "email", "write", "speak"}
+COMMUNICATION_VERBS = {"say", "tell", "report", "claim", "ask", "answer", "explain", "call", "text", "email", "write", "speak"}
 PERCEPTION_VERBS = {"see", "hear", "watch", "notice", "feel"}
 EXCLUSIVE_STATE_PREDICATES = {"be"}
 
