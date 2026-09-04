@@ -492,11 +492,18 @@ def create_app(
 
     def authorize_bootstrap(request: Request) -> None:
         authorize(request)
-        if resolved.deployed and request.headers.get("sec-fetch-site") not in {
-            None,
-            "none",
-            "same-origin",
-        }:
+        if not resolved.deployed:
+            return
+        fetch_site = request.headers.get("sec-fetch-site")
+        if fetch_site in {None, "none", "same-origin"}:
+            return
+        user_navigation = (
+            fetch_site in {"same-site", "cross-site"}
+            and request.headers.get("sec-fetch-mode") == "navigate"
+            and request.headers.get("sec-fetch-dest") == "document"
+            and request.headers.get("sec-fetch-user") == "?1"
+        )
+        if not user_navigation:
             raise _WebError(
                 403,
                 "forbidden_site",

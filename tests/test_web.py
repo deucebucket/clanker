@@ -336,6 +336,63 @@ def test_deployed_cross_site_shell_bootstrap_is_rejected_without_allocation(
         assert app.state.session_registry.active_count == 0
 
 
+@pytest.mark.parametrize("fetch_site", ["same-site", "cross-site"])
+def test_user_activated_top_level_navigation_may_bootstrap_from_a_link(
+    fetch_site: str,
+) -> None:
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+    headers = {
+        LOGIN_HEADER: ALLOWED_LOGIN,
+        "Sec-Fetch-Site": fetch_site,
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-User": "?1",
+    }
+    with _client(app) as client:
+        response = client.get("/", headers=headers)
+
+        assert response.status_code == 200
+        assert "set-cookie" in response.headers
+        assert len(factory.instances) == 1
+        assert app.state.session_registry.active_count == 1
+
+
+@pytest.mark.parametrize(
+    ("mode", "destination", "user"),
+    [
+        ("cors", "empty", "?1"),
+        ("no-cors", "image", "?1"),
+        ("navigate", "iframe", "?1"),
+        ("navigate", "document", None),
+        ("navigate", "document", "?0"),
+    ],
+)
+def test_cross_site_non_user_or_non_top_level_requests_cannot_bootstrap(
+    mode: str,
+    destination: str,
+    user: str | None,
+) -> None:
+    factory = TrackingFactory()
+    app = create_app(config=_config(), runtime_factory=factory)
+    headers = {
+        LOGIN_HEADER: ALLOWED_LOGIN,
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-Fetch-Mode": mode,
+        "Sec-Fetch-Dest": destination,
+    }
+    if user is not None:
+        headers["Sec-Fetch-User"] = user
+    with _client(app) as client:
+        response = client.get("/", headers=headers)
+
+        assert response.status_code == 403
+        assert response.json()["error"]["code"] == "forbidden_site"
+        assert "set-cookie" not in response.headers
+        assert factory.instances == []
+        assert app.state.session_registry.active_count == 0
+
+
 @pytest.mark.parametrize("fetch_site", [None, "none", "same-origin"])
 def test_direct_and_same_origin_shell_navigation_bootstrap_one_session(
     fetch_site: str | None,
