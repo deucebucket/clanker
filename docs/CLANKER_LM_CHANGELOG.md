@@ -17,13 +17,15 @@ left `engine/` unchanged.
 
 ## Unreleased — Gerund, participial, and aspectual complements
 
-**Branch:** `feature/clanker-lm-gerund-participial-complements`  
-**Issue:** [#90](https://github.com/deucebucket/clanker/issues/90)  
+**Branch:** `feature/clanker-lm-gerund-participial-complements`
+**Issue:** [#90](https://github.com/deucebucket/clanker/issues/90)
 **Base:** `ca992c32e22cdaaf5239a689f11fffa176a31698`
 
 **Status:** **Proven:** local independent correctness, truth-boundary, and
-test/code review accepted with no blockers. **Unknown:** exact-head remote CI and
-automated PR review until push.
+test/code review accepted with no blockers. **Remote gate:** immutable-head CI,
+automated review, and merge evidence are recorded on
+[PR #105](https://github.com/deucebucket/clanker/pull/105), because those checks
+necessarily run after this changelog is committed.
 
 Implemented the five issue-scoped relation families:
 
@@ -63,15 +65,15 @@ engine/ and clanker_engine.py unchanged
 Independent review caught and drove fixes for modality/future leakage,
 specificity, provenance, conflict, snapshot, and atomicity defects. Final local
 correctness and truth-boundary reviewers returned **ACCEPT / no blockers**, and
-test/code acceptance was clean. Exact-head remote CI and automated PR review
-remain unknown until the branch is pushed; merge approval is not claimed here.
+test/code acceptance was clean. This pre-merge changelog does not predict the
+post-commit CI, automated-review, or merge outcome; PR #105 is authoritative.
 
 ---
 
 ## 2026-09-04 — Embedded interrogative content and attribution
 
-**Issue:** [#89](https://github.com/deucebucket/clanker/issues/89)  
-**PR:** [#103](https://github.com/deucebucket/clanker/pull/103)  
+**Issue:** [#89](https://github.com/deucebucket/clanker/issues/89)
+**PR:** [#103](https://github.com/deucebucket/clanker/pull/103)
 **Merge commit:** `ca992c32e22cdaaf5239a689f11fffa176a31698`
 
 Added deterministic one-level embedded WH and polar-question content while
@@ -118,8 +120,8 @@ The two expected failures remain the pre-existing V8 `CARETAKER_TRANSFER` and
 
 ## 2026-09-04 — Infinitival control, raising, and desired/planned content
 
-**Issue:** [#88](https://github.com/deucebucket/clanker/issues/88)  
-**PR:** [#102](https://github.com/deucebucket/clanker/pull/102)  
+**Issue:** [#88](https://github.com/deucebucket/clanker/issues/88)
+**PR:** [#102](https://github.com/deucebucket/clanker/pull/102)
 **Merge commit:** `72efa09438b23d34df0d4a072403090063599fb5`
 
 Added selected one-level infinitival complements with typed matrix/embedded
@@ -163,7 +165,7 @@ Validation at merge:
 
 ## 2026-09-04 — Finite attributed content complements
 
-**Issue:** [#86](https://github.com/deucebucket/clanker/issues/86)  
+**Issue:** [#86](https://github.com/deucebucket/clanker/issues/86)
 **Merge commit:** `776c9053a5d3804fe1e64982b1b7ac392fe7e505`
 
 First bounded delivery under complement roadmap [#54](https://github.com/deucebucket/clanker/issues/54).

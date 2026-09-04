@@ -27,8 +27,8 @@
 - Independent review findings for modality/future boundaries, specificity,
   provenance, conflict, snapshots, and atomic realization were fixed. Local
   correctness and truth-boundary reviewers returned ACCEPT with no blockers,
-  and test/code acceptance was clean. Exact-head remote CI and automated PR
-  review remain pending until push and are not claimed here.
+  and test/code acceptance was clean. Exact-head CI, automated review, and merge
+  evidence are recorded on PR #105 after this changelog commit.
 - Full history, invariants, validation, and roadmap are recorded in
   `docs/CLANKER_LM_CHANGELOG.md` and `docs/CLANKER_LM_DEVLOG.md`.
 

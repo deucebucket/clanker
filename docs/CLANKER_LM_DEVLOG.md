@@ -477,8 +477,9 @@ when the grammar does not license that attachment.
 
 The local acceptance evidence is green. **Proven:** independent correctness,
 truth-boundary, and test/code reviewers accepted the corrected implementation
-with no blockers. **Unknown:** exact-head remote CI and automated PR review are
-still pending, so this entry does not claim merge approval.
+with no blockers. **Remote gate:** immutable-head CI, automated review, and
+merge evidence are recorded on PR #105 after this devlog is committed; this
+entry does not predict those later results.
 
 ### Current state
 
@@ -490,7 +491,7 @@ still pending, so this entry does not claim merge approval.
 | Proven | Version-6 snapshots load versions 1–6 and reject corrupt gerund bindings. | Snapshot round-trip, legacy-load, and corruption tests. |
 | Proven | The implementation passes its stated local test and repository-boundary gates. | 285 dedicated passes; 2,606 full-suite passes and two expected xfails; 29/29 acceptance turns; clean compile/diff checks. |
 | Proven | The corrected local implementation passed independent correctness, truth-boundary, and test/code review with no blockers. | Final local reviewer verdicts: ACCEPT / no blockers; full local evidence set rerun. |
-| Unknown | Whether the pushed exact branch head will pass remote CI and automated PR review and merge unchanged. | The exact-head remote gates cannot run until the branch is pushed. |
+| Unknown | Whether the committed branch head will pass every remote gate and merge unchanged. | CI, automated review, and merge evidence are authoritative on PR #105 because they run after this devlog commit. |
 
 ### Changes since the last entry
 
@@ -543,21 +544,21 @@ proves completion.
   modality, future-time, specificity, provenance, conflict, snapshot, and
   atomicity defects. Final local correctness and truth-boundary reviewers
   returned **ACCEPT / no blockers**, and test/code acceptance was clean.
-- **Limitations:** local green evidence does not substitute for an exact-head
-  remote CI result or automated PR review.
+- **Limitations:** local green evidence does not substitute for the exact-head
+  CI and automated-review results recorded on PR #105.
 
 ### Negative results and open questions
 
 - The full suite retains two expected V8 xfails. They predate issue #90 and do
   not exercise Clanker-LM complement behavior.
-- Exact-head remote CI and automated PR review remain open; no remote approval
-  or merge result should be inferred from the local acceptance in this entry.
+- No remote approval or merge result should be inferred from the local
+  acceptance in this entry; PR #105 carries those post-commit results.
 
 ### Next step / blocker
 
-Push the reviewed branch, run exact-head remote CI and automated PR review, and
-merge only if both gates accept that same head. There is no local implementation,
-test, or independent-review blocker.
+Use PR #105 to run exact-head remote CI and automated review, and merge only if
+both gates accept that same head. There is no local implementation, test, or
+independent-review blocker.
 
 ---
 
@@ -622,5 +623,5 @@ response mode:    atomic/compositional; no whole-sentence templates
 The current branch passed local independent correctness, truth-boundary, and
 test/code review with no blockers: **2,606 passed, 2 expected xfails**, **285
 dedicated passes** with **160 generated conformance cases**, and the deterministic
-acceptance harness remains **29/29**. Exact-head remote CI and automated PR
-review remain pending until push.
+acceptance harness remains **29/29**. Exact-head CI, automated review, and merge
+evidence are recorded on PR #105 after this devlog commit.

@@ -262,8 +262,8 @@ Current state:
 - **Proven:** local independent correctness and truth-boundary reviewers returned
   ACCEPT with no blockers after modality/future, specificity, provenance,
   conflict, snapshot, and atomicity fixes; test/code acceptance was clean;
-- **Unknown:** exact-head remote CI and automated PR review remain pending until
-  push, so this status does not claim remote approval or merge;
+- **Unknown:** exact-head CI, automated review, and merge outcome are recorded
+  on PR #105 after this devlog commit and are not predicted here;
 - issues #84 and #90-#101 define the remaining modifier/complement closure
   program, including held-out evaluation, predicate licensing, realization
   reverse validation, migration, fuzzing, observability, compatibility,
