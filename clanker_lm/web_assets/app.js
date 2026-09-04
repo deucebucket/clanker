@@ -46,9 +46,15 @@ function appendTextList(parent, items, className) {
 }
 
 function repositoryEvidenceLink(record) {
+  const stagingReceiptUrl = "https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707";
   const url = new URL(record.url);
   const allowedPath = /^\/deucebucket\/clanker\/(pull\/\d+|commit\/[0-9a-f]{40}|actions\/runs\/\d+)$/;
-  if (url.protocol !== "https:" || url.host !== "github.com" || !allowedPath.test(url.pathname) || url.search || url.hash) {
+  const isStandardEvidence = url.protocol === "https:"
+    && url.host === "github.com"
+    && allowedPath.test(url.pathname)
+    && !url.search
+    && !url.hash;
+  if (record.url !== stagingReceiptUrl && !isStandardEvidence) {
     throw new Error("Release evidence is outside the repository boundary.");
   }
   const link = element("a", "release-link", record.label);

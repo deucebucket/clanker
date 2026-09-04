@@ -87,6 +87,17 @@ _PRIVATE_FEED_MARKERS = (
     "receipt_token",
 )
 _LIVE_WORKBENCH_URL = "https://bazzite.tail85f65f.ts.net:8444/"
+_STAGING_RECEIPT_URL = (
+    "https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707"
+)
+_PR113_STAGING_EVIDENCE_URLS = frozenset(
+    {
+        "https://github.com/deucebucket/clanker/pull/114",
+        "https://github.com/deucebucket/clanker/commit/2d736961d7db0510711a7ac54eb39a458446f5ee",
+        "https://github.com/deucebucket/clanker/actions/runs/33863653170",
+        _STAGING_RECEIPT_URL,
+    }
+)
 _LOCAL_BUILD_COMMIT = "0" * 40
 _CONTENT_SECURITY_POLICY = (
     "default-src 'none'; base-uri 'none'; form-action 'self'; "
@@ -486,6 +497,8 @@ def _release_text_list(value: Any, *, name: str) -> list[str]:
 
 def _release_evidence_url(value: Any) -> str:
     url = _release_text(value, name="evidence URL", maximum=300)
+    if url == _STAGING_RECEIPT_URL:
+        return url
     parsed = urlsplit(url)
     if (
         parsed.scheme != "https"
@@ -623,6 +636,11 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
         )
         if deployment_url != _LIVE_WORKBENCH_URL:
             raise ValueError("release deployment URL is not the pinned workbench")
+        if (
+            release_id == "pr-113"
+            and not _PR113_STAGING_EVIDENCE_URLS <= evidence_urls
+        ):
+            raise ValueError("pr-113 release requires exact staging evidence")
 
         if deployment_state == "live":
             live_count += 1

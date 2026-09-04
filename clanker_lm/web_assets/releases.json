@@ -1,11 +1,64 @@
 {
   "schema_version": 1,
   "latest_shipped_release": {
-    "release_id": "pr-106",
+    "release_id": "pr-113",
     "package_version": "0.2.0",
-    "milestone_commit": "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+    "milestone_commit": "66b85de66337789fa83292ecf683c6b23cc0af55"
   },
   "releases": [
+    {
+      "release_id": "pr-113",
+      "package_version": "0.2.0",
+      "milestone_commit": "66b85de66337789fa83292ecf683c6b23cc0af55",
+      "date": "2026-09-04",
+      "title": "Reviewed shipped-changes ledger",
+      "capabilities": [
+        "The private workbench exposes an accessible, keyboard-operable changelog that also works as a bounded mobile reading surface.",
+        "The interface shows the running artifact commit separately from each reviewed milestone commit.",
+        "Release rows bind pull-request and commit evidence, while CI independently verifies the recorded GitHub merge."
+      ],
+      "evidence": [
+        {
+          "label": "Merged PR #113",
+          "url": "https://github.com/deucebucket/clanker/pull/113"
+        },
+        {
+          "label": "Merge commit 66b85de",
+          "url": "https://github.com/deucebucket/clanker/commit/66b85de66337789fa83292ecf683c6b23cc0af55"
+        },
+        {
+          "label": "Exact-head CI run",
+          "url": "https://github.com/deucebucket/clanker/actions/runs/33861328696"
+        },
+        {
+          "label": "Staging PR #114",
+          "url": "https://github.com/deucebucket/clanker/pull/114"
+        },
+        {
+          "label": "Staging merge 2d73696",
+          "url": "https://github.com/deucebucket/clanker/commit/2d736961d7db0510711a7ac54eb39a458446f5ee"
+        },
+        {
+          "label": "Staging CI run",
+          "url": "https://github.com/deucebucket/clanker/actions/runs/33863653170"
+        },
+        {
+          "label": "Live staging receipt",
+          "url": "https://github.com/deucebucket/clanker/issues/112#issuecomment-5539229707"
+        }
+      ],
+      "limitations": [
+        "This is a bounded research-alpha workbench, not a claim of unrestricted conversation.",
+        "Session memory is ephemeral; a service restart clears state that was not exported.",
+        "The service is private and Tailnet-only. It has no Funnel or public route."
+      ],
+      "deployment": {
+        "state": "live",
+        "label": "Live · private Tailnet",
+        "detail": "PR #113 passed live staging verification on the PR #114 artifact at 2d73696; the running build above identifies the deployed promotion artifact.",
+        "url": "https://bazzite.tail85f65f.ts.net:8444/"
+      }
+    },
     {
       "release_id": "pr-106",
       "package_version": "0.2.0",
@@ -37,46 +90,9 @@
         "The service is private and Tailnet-only. It has no Funnel or public route."
       ],
       "deployment": {
-        "state": "live",
-        "label": "Live · private Tailnet",
-        "detail": "Reviewed PR #106 remains the deployed baseline until the PR #113 artifact passes live verification.",
-        "url": "https://bazzite.tail85f65f.ts.net:8444/"
-      }
-    },
-    {
-      "release_id": "pr-113",
-      "package_version": "0.2.0",
-      "milestone_commit": "66b85de66337789fa83292ecf683c6b23cc0af55",
-      "date": "2026-09-04",
-      "title": "Reviewed shipped-changes ledger",
-      "capabilities": [
-        "The private workbench exposes an accessible, keyboard-operable changelog that also works as a bounded mobile reading surface.",
-        "The interface shows the running artifact commit separately from each reviewed milestone commit.",
-        "Release rows bind pull-request and commit evidence, while CI independently verifies the recorded GitHub merge."
-      ],
-      "evidence": [
-        {
-          "label": "Merged PR #113",
-          "url": "https://github.com/deucebucket/clanker/pull/113"
-        },
-        {
-          "label": "Merge commit 66b85de",
-          "url": "https://github.com/deucebucket/clanker/commit/66b85de66337789fa83292ecf683c6b23cc0af55"
-        },
-        {
-          "label": "Exact-head CI run",
-          "url": "https://github.com/deucebucket/clanker/actions/runs/33861328696"
-        }
-      ],
-      "limitations": [
-        "This row is staged and does not claim that the PR #113 artifact is deployed before live verification.",
-        "The running build identity is supplied independently by deployment and must match the live API before promotion.",
-        "The service remains private and Tailnet-only, with ephemeral per-session memory."
-      ],
-      "deployment": {
-        "state": "pending",
-        "label": "Pending · live verification",
-        "detail": "PR #113 is merged and reviewed, but PR #106 remains the live marker until the follow-up artifact is deployed and verified.",
+        "state": "retired",
+        "label": "Retired · release history",
+        "detail": "PR #106 was the previous live baseline and remains as reviewed history after PR #113 passed live staging verification.",
         "url": "https://bazzite.tail85f65f.ts.net:8444/"
       }
     }
