@@ -33,6 +33,10 @@ from .model import (
     ModifierGapRole,
     ModifierRestriction,
     HowKind,
+    InfinitivalAttachmentAmbiguity,
+    InfinitivalContentStatus,
+    InfinitivalRelation,
+    InfinitivalRelationType,
     ParseResult,
     QuestionFrame,
     QuestionKind,
@@ -69,6 +73,27 @@ class ContentSplit:
     marker: str
     relation_type: ContentRelationType
     predicate_family: str
+    certainty: int
+    diagnostics: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class InfinitivalPredicateProfile:
+    relation_type: InfinitivalRelationType
+    content_status: InfinitivalContentStatus
+    predicate_family: str
+    certainty: int
+    allows_object_controller: bool = False
+    allows_subject_controller: bool = True
+
+
+@dataclass
+class InfinitivalSplit:
+    matrix_tokens: List[lexicon.Token]
+    complement_tokens: List[lexicon.Token]
+    marker: str
+    profile: InfinitivalPredicateProfile
+    controller_role: str
     certainty: int
     diagnostics: List[str] = field(default_factory=list)
 
@@ -170,6 +195,33 @@ class SemanticParser:
                 diagnostics=diagnostics,
             )
 
+        # Coordination combined with a selected infinitive is intentionally
+        # deferred until the relation layers can be composed without losing a
+        # controller or attaching the infinitive to the wrong conjunct.  Run a
+        # full-clause preflight before coordination splits the token stream.
+        _preflight_split, preflight_ambiguity = (
+            self._split_infinitival_clause(clean)
+        )
+        if (
+            preflight_ambiguity is not None
+            and "coordination" in preflight_ambiguity.reason
+        ):
+            unresolved = UnresolvedReference(
+                surface=preflight_ambiguity.complement_surface,
+                reason=preflight_ambiguity.reason,
+            )
+            return ParseResult(
+                speech_act=SpeechAct.ASSERT,
+                raw_text=raw,
+                infinitival_ambiguities=[preflight_ambiguity],
+                unresolved=[unresolved],
+                normalized_text=normalized,
+                diagnostics=[
+                    *preflight_ambiguity.diagnostics,
+                    "infinitival coordination requires staged parsing",
+                ],
+            )
+
         segments = self._split_assertion_segments(clean)
         events: List[EventFrame] = []
         relations: List[ClauseRelation] = []
@@ -179,11 +231,185 @@ class SemanticParser:
         appositive_ambiguities: List[AppositiveAttachmentAmbiguity] = []
         contents: List[ContentRelation] = []
         content_ambiguities: List[ContentAttachmentAmbiguity] = []
+        infinitivals: List[InfinitivalRelation] = []
+        infinitival_ambiguities: List[InfinitivalAttachmentAmbiguity] = []
         unresolved: List[UnresolvedReference] = []
         entities: List[str] = []
         diagnostics: List[str] = []
         primary_event_count = 0
         for clause, connector in segments:
+            infinitival_split, infinitival_ambiguity = (
+                self._split_infinitival_clause(clause)
+            )
+            if infinitival_ambiguity is not None:
+                infinitival_ambiguities.append(infinitival_ambiguity)
+                unresolved.append(
+                    UnresolvedReference(
+                        surface=infinitival_ambiguity.complement_surface,
+                        reason=infinitival_ambiguity.reason,
+                    )
+                )
+                diagnostics.extend(infinitival_ambiguity.diagnostics)
+                diagnostics.append(
+                    "infinitival complement boundary/controller remains ambiguous"
+                )
+                continue
+
+            if infinitival_split is not None:
+                matrix_result = self._parse_clause(
+                    infinitival_split.matrix_tokens,
+                    raw,
+                    memory,
+                )
+                if matrix_result.event is not None:
+                    source_entity_id = self._content_source_entity(
+                        matrix_result.event
+                    )
+                    controller_entity_id = self._infinitival_controller_entity(
+                        matrix_result.event,
+                        infinitival_split.controller_role,
+                    )
+                    if source_entity_id and controller_entity_id:
+                        internal_alias = memory.ensure_internal_alias(
+                            controller_entity_id
+                        )
+                        embedded_tokens = [
+                            lexicon.Token(
+                                internal_alias,
+                                internal_alias,
+                                -1,
+                            ),
+                            *infinitival_split.complement_tokens,
+                        ]
+                        complement_result = self._parse_clause(
+                            embedded_tokens,
+                            raw,
+                            memory,
+                        )
+                        if (
+                            complement_result.event is not None
+                            and not complement_result.unresolved
+                        ):
+                            matrix_result.event.discourse_role = (
+                                "main"
+                                if primary_event_count == 0
+                                else "coordinate"
+                            )
+                            complement_result.event.discourse_role = "infinitive"
+                            complement_result.event.source = SourceKind.ATTRIBUTED
+                            complement_result.event.tense = "infinitive"
+                            complement_result.event.certainty = min(
+                                complement_result.event.certainty,
+                                infinitival_split.certainty,
+                            )
+                            if connector is not None:
+                                matrix_result.diagnostics.insert(
+                                    0,
+                                    f"coordinate connector={connector}",
+                                )
+                            primary_event_count += 1
+
+                            matrix_index = len(events)
+                            events.append(matrix_result.event)
+                            complement_index = len(events)
+                            events.append(complement_result.event)
+                            infinitivals.append(
+                                InfinitivalRelation(
+                                    relation_type=(
+                                        infinitival_split.profile.relation_type
+                                    ),
+                                    content_status=(
+                                        infinitival_split.profile.content_status
+                                    ),
+                                    matrix_event_index=matrix_index,
+                                    complement_event_index=complement_index,
+                                    marker=infinitival_split.marker,
+                                    matrix_predicate=(
+                                        matrix_result.event.predicate
+                                    ),
+                                    source_entity_id=source_entity_id,
+                                    controller_entity_id=controller_entity_id,
+                                    embedded_subject_entity_id=(
+                                        controller_entity_id
+                                    ),
+                                    predicate_family=(
+                                        infinitival_split.profile.predicate_family
+                                    ),
+                                    certainty=infinitival_split.certainty,
+                                    licensed=matrix_result.event.polarity,
+                                    entailed=False,
+                                    diagnostics=[
+                                        *infinitival_split.diagnostics,
+                                        (
+                                            "positive matrix licenses the "
+                                            "non-entailed complement relation"
+                                            if matrix_result.event.polarity
+                                            else "negated matrix does not "
+                                            "license positive complement content"
+                                        ),
+                                    ],
+                                )
+                            )
+                            unresolved.extend(matrix_result.unresolved)
+                            entities.extend(matrix_result.entities)
+                            entities.extend(complement_result.entities)
+                            diagnostics.extend(matrix_result.diagnostics)
+                            diagnostics.extend(complement_result.diagnostics)
+                            diagnostics.extend(infinitival_split.diagnostics)
+                            diagnostics.append(
+                                "infinitival relation="
+                                f"{infinitival_split.profile.relation_type.value} "
+                                f"status={infinitival_split.profile.content_status.value} "
+                                f"controller={controller_entity_id}"
+                            )
+                            continue
+
+                        reason = (
+                            "embedded infinitive could not be parsed with its "
+                            "licensed controller"
+                        )
+                        ambiguity = self._infinitival_ambiguity(
+                            clause,
+                            [
+                                len(infinitival_split.matrix_tokens)
+                            ],
+                            reason=reason,
+                            candidate_types=[
+                                infinitival_split.profile.relation_type
+                            ],
+                        )
+                        infinitival_ambiguities.append(ambiguity)
+                        unresolved.extend(complement_result.unresolved)
+                        diagnostics.extend(complement_result.diagnostics)
+                        diagnostics.extend(ambiguity.diagnostics)
+                        continue
+
+                    missing = (
+                        "source"
+                        if not source_entity_id
+                        else "controller"
+                    )
+                    ambiguity = self._infinitival_ambiguity(
+                        clause,
+                        [len(infinitival_split.matrix_tokens)],
+                        reason=(
+                            f"matrix infinitival predicate lacks a resolved {missing} entity"
+                        ),
+                        candidate_types=[
+                            infinitival_split.profile.relation_type
+                        ],
+                    )
+                    infinitival_ambiguities.append(ambiguity)
+                    unresolved.extend(matrix_result.unresolved)
+                    diagnostics.extend(matrix_result.diagnostics)
+                    diagnostics.extend(ambiguity.diagnostics)
+                    continue
+
+                diagnostics.extend(matrix_result.diagnostics)
+                diagnostics.append(
+                    f"infinitival split fallback marker={infinitival_split.marker}"
+                )
+
             content_split, content_ambiguity = self._split_content_clause(clause)
             if content_ambiguity is not None:
                 content_ambiguities.append(content_ambiguity)
@@ -532,6 +758,8 @@ class SemanticParser:
             appositive_ambiguities=appositive_ambiguities,
             contents=contents,
             content_ambiguities=content_ambiguities,
+            infinitivals=infinitivals,
+            infinitival_ambiguities=infinitival_ambiguities,
             entities=list(dict.fromkeys(entities)),
             unresolved=unresolved,
             normalized_text=normalized,
@@ -674,6 +902,357 @@ class SemanticParser:
         ]
         return bool(subject_tokens)
 
+    INFINITIVAL_PREDICATES: Dict[str, InfinitivalPredicateProfile] = {
+        "plan": InfinitivalPredicateProfile(
+            InfinitivalRelationType.SUBJECT_CONTROL,
+            InfinitivalContentStatus.PLANNED,
+            "planning",
+            215,
+        ),
+        "intend": InfinitivalPredicateProfile(
+            InfinitivalRelationType.SUBJECT_CONTROL,
+            InfinitivalContentStatus.INTENDED,
+            "intention",
+            220,
+        ),
+        "hope": InfinitivalPredicateProfile(
+            InfinitivalRelationType.SUBJECT_CONTROL,
+            InfinitivalContentStatus.HOPED,
+            "hope",
+            190,
+        ),
+        "want": InfinitivalPredicateProfile(
+            InfinitivalRelationType.SUBJECT_CONTROL,
+            InfinitivalContentStatus.DESIRED,
+            "desire",
+            195,
+            allows_object_controller=True,
+        ),
+        "tell": InfinitivalPredicateProfile(
+            InfinitivalRelationType.OBJECT_CONTROL,
+            InfinitivalContentStatus.DIRECTED,
+            "directive",
+            210,
+            allows_object_controller=True,
+            allows_subject_controller=False,
+        ),
+        "ask": InfinitivalPredicateProfile(
+            InfinitivalRelationType.OBJECT_CONTROL,
+            InfinitivalContentStatus.REQUESTED,
+            "request",
+            205,
+            allows_object_controller=True,
+            allows_subject_controller=False,
+        ),
+        "seem": InfinitivalPredicateProfile(
+            InfinitivalRelationType.RAISING,
+            InfinitivalContentStatus.EVIDENTIAL,
+            "appearance",
+            170,
+        ),
+        "appear": InfinitivalPredicateProfile(
+            InfinitivalRelationType.RAISING,
+            InfinitivalContentStatus.EVIDENTIAL,
+            "appearance",
+            175,
+        ),
+    }
+
+    def _split_infinitival_clause(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> Tuple[
+        Optional[InfinitivalSplit],
+        Optional[InfinitivalAttachmentAmbiguity],
+    ]:
+        """Split one catalog-licensed selected ``to`` complement.
+
+        Movement/purpose clauses deliberately remain in the pre-existing
+        purpose-adjunct path.  This splitter activates only when a reviewed
+        matrix predicate licenses control or raising.
+        """
+
+        items = [item for item in tokens if item.norm != ";"]
+
+        # Relation layers can place another finite verb before the selected
+        # infinitival matrix predicate (for example, a relative clause in
+        # ``the woman who called plans to leave``).  Inspect every licensed
+        # predicate that has a later infinitival boundary before relying on
+        # the ordinary main-verb heuristic.  Until staged composition exists,
+        # such inputs must fail closed instead of letting the earlier modifier
+        # verb steal the entire frame.
+        licensed_candidates: List[int] = []
+        for candidate_index, token in enumerate(items):
+            if lexicon.lemma(token.norm) not in self.INFINITIVAL_PREDICATES:
+                continue
+            if any(
+                items[index].norm == "to"
+                and index + 1 < len(items)
+                and lexicon.is_probable_verb(items[index + 1].norm, "to")
+                for index in range(candidate_index + 1, len(items) - 1)
+            ):
+                licensed_candidates.append(candidate_index)
+        for candidate_index in licensed_candidates:
+            layered = self._infinitival_layering_ambiguity(
+                items,
+                candidate_index,
+            )
+            if layered is not None:
+                return None, layered
+
+        verb_index = self._find_main_verb(items)
+        if verb_index < 0:
+            return None, None
+        predicate = lexicon.lemma(items[verb_index].norm)
+        profile = self.INFINITIVAL_PREDICATES.get(predicate)
+        if profile is None:
+            return None, None
+
+        boundaries: List[int] = []
+        for index in range(verb_index + 1, len(items) - 1):
+            if items[index].norm != "to":
+                continue
+            next_index = index + 1
+            while (
+                next_index < len(items)
+                and items[next_index].norm
+                in lexicon.NEGATORS | lexicon.INTENSIFIERS
+            ):
+                next_index += 1
+            if next_index >= len(items):
+                continue
+            next_word = items[next_index].norm
+            if lexicon.is_probable_verb(next_word, "to"):
+                boundaries.append(index)
+
+        if not boundaries:
+            return None, None
+        if len(boundaries) > 1:
+            return None, self._infinitival_ambiguity(
+                items,
+                boundaries,
+                reason="nested infinitival content exceeds the configured depth",
+                candidate_types=[profile.relation_type],
+            )
+
+        boundary = boundaries[0]
+        matrix_tail = [
+            item
+            for item in items[verb_index + 1 : boundary]
+            if item.norm not in lexicon.PUNCTUATION
+        ]
+        embedded_prefix: List[lexicon.Token] = []
+        if matrix_tail and matrix_tail[-1].norm == "not":
+            # ``plans not to leave`` and ``told John not to leave`` place
+            # negation inside the infinitive rather than on the matrix event.
+            embedded_prefix.append(matrix_tail.pop())
+
+        has_object_controller = bool(matrix_tail)
+        if has_object_controller:
+            if not profile.allows_object_controller:
+                return None, self._infinitival_ambiguity(
+                    items,
+                    [boundary],
+                    reason=(
+                        f"{predicate} does not license an explicit object "
+                        "controller in this parser slice"
+                    ),
+                    candidate_types=[profile.relation_type],
+                )
+            if not self._plausible_controller_np(matrix_tail):
+                return None, self._infinitival_ambiguity(
+                    items,
+                    [boundary],
+                    reason="object-controller phrase is structurally unsupported",
+                    candidate_types=[InfinitivalRelationType.OBJECT_CONTROL],
+                )
+            relation_type = InfinitivalRelationType.OBJECT_CONTROL
+            controller_role = "object"
+        else:
+            if not profile.allows_subject_controller:
+                return None, self._infinitival_ambiguity(
+                    items,
+                    [boundary],
+                    reason=f"{predicate} requires an explicit object controller",
+                    candidate_types=[InfinitivalRelationType.OBJECT_CONTROL],
+                )
+            relation_type = profile.relation_type
+            controller_role = "subject"
+
+        selected_profile = InfinitivalPredicateProfile(
+            relation_type=relation_type,
+            content_status=profile.content_status,
+            predicate_family=profile.predicate_family,
+            certainty=profile.certainty,
+            allows_object_controller=profile.allows_object_controller,
+            allows_subject_controller=profile.allows_subject_controller,
+        )
+        matrix = [
+            item
+            for item in items[:boundary]
+            if item not in embedded_prefix and item.norm not in lexicon.PUNCTUATION
+        ]
+        complement = [
+            *embedded_prefix,
+            *[
+                item
+                for item in items[boundary + 1 :]
+                if item.norm not in lexicon.PUNCTUATION
+            ],
+        ]
+        if self._contains_nested_content_clause(complement):
+            return None, self._infinitival_ambiguity(
+                items,
+                [boundary],
+                reason=(
+                    "infinitival content containing a finite content clause "
+                    "exceeds the configured depth"
+                ),
+                candidate_types=[relation_type],
+            )
+        return (
+            InfinitivalSplit(
+                matrix_tokens=matrix,
+                complement_tokens=complement,
+                marker="to",
+                profile=selected_profile,
+                controller_role=controller_role,
+                certainty=selected_profile.certainty,
+                diagnostics=[
+                    f"infinitival matrix predicate={predicate}",
+                    f"infinitival relation={relation_type.value}",
+                    f"infinitival status={profile.content_status.value}",
+                    f"infinitival boundary={boundary}",
+                ],
+            ),
+            None,
+        )
+
+    def _infinitival_layering_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+        matrix_verb_index: int,
+    ) -> Optional[InfinitivalAttachmentAmbiguity]:
+        norms = [item.norm for item in tokens]
+        coordination_markers = [
+            index
+            for index, norm in enumerate(norms)
+            if norm in {"and", "but", "yet", "or", "so"}
+        ]
+        if coordination_markers:
+            return self._infinitival_ambiguity(
+                tokens,
+                coordination_markers,
+                reason=(
+                    "infinitival content combined with coordination requires "
+                    "staged parsing"
+                ),
+            )
+        relative_markers = [
+            index
+            for index, norm in enumerate(norms)
+            if norm in {"who", "whom", "whose", "which"}
+            or (norm == "that" and index < matrix_verb_index)
+        ]
+        if relative_markers:
+            return self._infinitival_ambiguity(
+                tokens,
+                [matrix_verb_index + 1],
+                reason=(
+                    "infinitival content combined with a relative clause "
+                    "requires staged parsing"
+                ),
+            )
+        commas_before = [
+            index for index in range(matrix_verb_index) if norms[index] == ","
+        ]
+        if len(commas_before) >= 2:
+            return self._infinitival_ambiguity(
+                tokens,
+                [matrix_verb_index + 1],
+                reason=(
+                    "infinitival content combined with an appositive requires "
+                    "staged parsing"
+                ),
+            )
+        for index in range(len(tokens)):
+            for marker in self.SUBORDINATE_MARKERS:
+                if tuple(norms[index : index + len(marker)]) == marker:
+                    return self._infinitival_ambiguity(
+                        tokens,
+                        [matrix_verb_index + 1],
+                        reason=(
+                            "infinitival content combined with a subordinate "
+                            "clause requires staged parsing"
+                        ),
+                    )
+        return None
+
+    @staticmethod
+    def _plausible_controller_np(
+        tokens: Sequence[lexicon.Token],
+    ) -> bool:
+        if not tokens:
+            return False
+        norms = [item.norm for item in tokens]
+        if any(item in lexicon.PREPOSITIONS for item in norms):
+            return False
+        if any(
+            lexicon.is_probable_verb(
+                item.norm,
+                previous=(tokens[index - 1].norm if index else None),
+                following=(
+                    tokens[index + 1].norm
+                    if index + 1 < len(tokens)
+                    else None
+                ),
+            )
+            for index, item in enumerate(tokens)
+        ):
+            return False
+        return True
+
+    @staticmethod
+    def _infinitival_controller_entity(
+        event: EventFrame,
+        controller_role: str,
+    ) -> str:
+        roles = (
+            ("patient", "recipient")
+            if controller_role == "object"
+            else ("agent", "experiencer", "subject", "possessor", "patient")
+        )
+        for role in roles:
+            ref = event.arguments.get(role)
+            if ref is not None and ref.kind == RefKind.ENTITY:
+                return ref.key
+        return ""
+
+    def _infinitival_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+        boundaries: Sequence[int],
+        *,
+        reason: str,
+        candidate_types: Sequence[InfinitivalRelationType] = (),
+    ) -> InfinitivalAttachmentAmbiguity:
+        first = boundaries[0] if boundaries else len(tokens)
+        return InfinitivalAttachmentAmbiguity(
+            matrix_surface=self._surface(tokens[:first]),
+            complement_surface=self._surface(tokens[first:]),
+            clause_surface=self._surface(tokens),
+            reason=reason,
+            candidate_boundaries=list(boundaries),
+            candidate_relation_types=list(candidate_types),
+            ambiguity_id=(
+                "infinitive-"
+                + hashlib.sha256(
+                    " ".join(item.norm for item in tokens).encode("utf-8")
+                ).hexdigest()[:16]
+            ),
+            diagnostics=[reason, "unsafe infinitival content suppressed"],
+        )
+
     CONTENT_PREDICATES: Dict[str, Tuple[ContentRelationType, str, int]] = {
         "say": (ContentRelationType.REPORTED, "speech", 205),
         "tell": (ContentRelationType.REPORTED, "speech", 205),
@@ -755,6 +1334,15 @@ class SemanticParser:
                     [marker_index + 1],
                     reason="nested finite content exceeds the configured depth",
                 )
+            if self._contains_selected_infinitive(content):
+                return None, self._content_ambiguity(
+                    items,
+                    [marker_index + 1],
+                    reason=(
+                        "finite content containing an infinitival complement "
+                        "exceeds the configured depth"
+                    ),
+                )
             return (
                 ContentSplit(
                     matrix_tokens=matrix,
@@ -822,6 +1410,15 @@ class SemanticParser:
                 items,
                 [boundary],
                 reason="nested finite content exceeds the configured depth",
+            )
+        if self._contains_selected_infinitive(content):
+            return None, self._content_ambiguity(
+                items,
+                [boundary],
+                reason=(
+                    "finite content containing an infinitival complement "
+                    "exceeds the configured depth"
+                ),
             )
         return (
             ContentSplit(
@@ -942,6 +1539,34 @@ class SemanticParser:
                 if item.norm not in lexicon.PUNCTUATION
             ]
             if self._is_independently_finite(suffix):
+                return True
+        return False
+
+    def _contains_selected_infinitive(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> bool:
+        items = [item for item in tokens if item.norm not in lexicon.PUNCTUATION]
+        verb_index = self._find_main_verb(items)
+        if verb_index < 0:
+            return False
+        predicate = lexicon.lemma(items[verb_index].norm)
+        if predicate not in self.INFINITIVAL_PREDICATES:
+            return False
+        for index in range(verb_index + 1, len(items) - 1):
+            if items[index].norm != "to":
+                continue
+            next_index = index + 1
+            while (
+                next_index < len(items)
+                and items[next_index].norm
+                in lexicon.NEGATORS | lexicon.INTENSIFIERS
+            ):
+                next_index += 1
+            if (
+                next_index < len(items)
+                and lexicon.is_probable_verb(items[next_index].norm, "to")
+            ):
                 return True
         return False
 
@@ -1905,19 +2530,27 @@ class SemanticParser:
                 raw_text=raw,
             ), [], [], ["open event query"]
 
+        def finalize_question(result):
+            frame = result[0]
+            if frame is not None:
+                self._annotate_infinitival_question_scope(frame, items)
+            return result
+
         first = words[0]
         if first in lexicon.YES_NO_STARTERS:
-            return self._parse_yes_no(items, raw, memory)
+            return finalize_question(self._parse_yes_no(items, raw, memory))
         if first == "who" or first == "whom":
-            return self._parse_who(items, raw, memory)
+            return finalize_question(self._parse_who(items, raw, memory))
         if first == "whose":
-            return self._parse_whose(items, raw, memory)
+            return finalize_question(self._parse_whose(items, raw, memory))
         if first == "what":
-            return self._parse_what(items, raw, memory)
+            return finalize_question(self._parse_what(items, raw, memory))
         if first == "which":
-            return self._parse_which(items, raw, memory)
+            return finalize_question(self._parse_which(items, raw, memory))
         if first in {"when", "where", "why", "how"}:
-            return self._parse_adverbial_question(items, raw, memory)
+            return finalize_question(
+                self._parse_adverbial_question(items, raw, memory)
+            )
         return None, [], [], ["unrecognized interrogative form"]
 
     def _parse_yes_no(
@@ -1939,16 +2572,121 @@ class SemanticParser:
             declarative = rest[:main_idx] + [aux] + rest[main_idx:]
         else:
             declarative = rest + [aux]
+        matrix_polarity, embedded_polarity = (
+            self._question_infinitival_polarities(rest, main_idx)
+        )
         clause = self._parse_clause(declarative, raw, memory)
         if not clause.event:
             return None, clause.unresolved, clause.entities, clause.diagnostics + ["failed yes/no proposition parse"]
+        if matrix_polarity is not None:
+            clause.event.polarity = matrix_polarity
         frame = QuestionFrame(
             kind=QuestionKind.YES_NO,
             event=clause.event,
             raw_text=raw,
             unresolved=clause.unresolved,
+            matrix_polarity=matrix_polarity,
+            embedded_polarity=embedded_polarity,
         )
         return frame, clause.unresolved, clause.entities, clause.diagnostics + [f"yes/no auxiliary={aux.norm}"]
+
+    def _annotate_infinitival_question_scope(
+        self,
+        frame: QuestionFrame,
+        items: Sequence[lexicon.Token],
+    ) -> None:
+        """Attach two-level polarity to any licensed infinitival question."""
+
+        predicate = frame.event.predicate
+        if predicate not in self.INFINITIVAL_PREDICATES:
+            return
+        predicate_index = next(
+            (
+                index
+                for index, token in enumerate(items)
+                if lexicon.lemma(token.norm) == predicate
+            ),
+            -1,
+        )
+        if predicate_index < 0:
+            return
+        boundary = next(
+            (
+                index
+                for index in range(predicate_index + 1, len(items) - 1)
+                if items[index].norm == "to"
+                and any(
+                    lexicon.is_probable_verb(items[next_index].norm, "to")
+                    for next_index in range(
+                        index + 1,
+                        min(len(items), index + 4),
+                    )
+                    if items[next_index].norm not in (
+                        lexicon.NEGATORS | lexicon.INTENSIFIERS
+                    )
+                )
+            ),
+            -1,
+        )
+        if boundary < 0:
+            return
+        matrix_negative = any(
+            token.norm in lexicon.NEGATORS
+            for token in items[:predicate_index]
+        )
+        embedded_negative = any(
+            token.norm in lexicon.NEGATORS
+            for token in items[predicate_index + 1 :]
+        )
+        frame.matrix_polarity = not matrix_negative
+        frame.embedded_polarity = not embedded_negative
+        frame.event.polarity = frame.matrix_polarity
+
+    def _question_infinitival_polarities(
+        self,
+        rest: Sequence[lexicon.Token],
+        main_idx: int,
+    ) -> Tuple[Optional[bool], Optional[bool]]:
+        """Return matrix and embedded polarity for a selected infinitive.
+
+        General clause parsing has one polarity bit, but a question such as
+        ``Did Sarah plan not to leave?`` contains two independently scoped
+        propositions.  Preserve that distinction for the infinitival answer
+        contract instead of treating embedded negation as matrix negation.
+        """
+
+        if main_idx < 0 or main_idx >= len(rest):
+            return None, None
+        predicate = lexicon.lemma(rest[main_idx].norm)
+        if predicate not in self.INFINITIVAL_PREDICATES:
+            return None, None
+
+        boundary = next(
+            (
+                index
+                for index in range(main_idx + 1, len(rest) - 1)
+                if rest[index].norm == "to"
+                and any(
+                    lexicon.is_probable_verb(rest[next_index].norm, "to")
+                    for next_index in range(index + 1, min(len(rest), index + 4))
+                    if rest[next_index].norm not in lexicon.NEGATORS
+                    | lexicon.INTENSIFIERS
+                )
+            ),
+            -1,
+        )
+        if boundary < 0:
+            return None, None
+
+        matrix_negative = any(
+            token.norm in lexicon.NEGATORS
+            for token in rest[:main_idx]
+        )
+        embedded_negative = any(
+            token.norm in lexicon.NEGATORS
+            for token in rest[main_idx + 1 :]
+        )
+        return not matrix_negative, not embedded_negative
 
     def _parse_who(
         self,

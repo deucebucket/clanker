@@ -176,6 +176,28 @@ class SurfaceRealizer:
             return self._social(contract, gates)
         if contract.proposition is None:
             return self._unsupported(contract, gates)
+        if contract.required_slots.get("infinitival") == "true":
+            relation = self._infinitival_relation_from_contract(contract)
+            if relation is None:
+                return self._unsupported(contract, gates)
+            clause = self.render_infinitival_relation(
+                relation,
+                capitalize=True,
+            )
+            return [
+                self._candidate(
+                    [clause, self._atom("punct.period")],
+                    candidate_id="compose.answer.infinitival_relation",
+                    semantic_plan=[
+                        *self._rule_plan("reply:answer"),
+                        f"INFINITIVAL_RELATION:{relation.relation_type.value}",
+                        f"CONTENT_STATUS:{relation.content_status.value}",
+                        f"MATRIX_PREDICATE:{relation.matrix_predicate}",
+                        f"CONTROLLER:{relation.controller_entity_id}",
+                    ],
+                    priority=118,
+                )
+            ]
         if contract.required_slots.get("attributed") == "true":
             source_id = contract.required_slots.get("source_entity_id", "")
             predicate = contract.required_slots.get("matrix_predicate", "say")
@@ -243,7 +265,16 @@ class SurfaceRealizer:
             else ("polarity.no", "polarity.nope")
         )
         particles = self._atoms(category, register=gates.register, preferred=preferred)
-        clause = self.render_event(contract.proposition, capitalize=True)
+        relation = (
+            self._infinitival_relation_from_contract(contract)
+            if contract.required_slots.get("infinitival") == "true"
+            else None
+        )
+        clause = (
+            self.render_infinitival_relation(relation, capitalize=True)
+            if relation is not None
+            else self.render_event(contract.proposition, capitalize=True)
+        )
         candidates: List[CandidateResponse] = []
         for index, particle in enumerate(particles[:2]):
             candidates.append(
@@ -266,6 +297,72 @@ class SurfaceRealizer:
         dont = self._atom("neg.dont")
         know = self._atom("cognition.know")
         plan = self._rule_plan("reply:unknown")
+
+        if (
+            contract.required_slots.get("infinitival_evidence") == "true"
+            and question is not None
+        ):
+            relation_ids = [
+                item
+                for item in contract.required_slots.get(
+                    "relation_ids",
+                    "",
+                ).split(",")
+                if item
+            ]
+            relations = [
+                relation
+                for relation_id in relation_ids[:3]
+                for relation in [
+                    next(
+                        (
+                            item
+                            for item in self.memory.infinitivals
+                            if item.relation_id == relation_id
+                        ),
+                        None,
+                    )
+                ]
+                if relation is not None
+            ]
+            if relations:
+                context_parts: List[Part] = []
+                for index, relation in enumerate(relations):
+                    if index:
+                        context_parts.append(self._atom("link.but"))
+                    context_parts.append(
+                        self.render_infinitival_relation(
+                            relation,
+                            capitalize=(index == 0),
+                        )
+                    )
+                query_clause = self.render_event(
+                    question.event,
+                    capitalize=False,
+                )
+                context_parts.extend(
+                    [
+                        period,
+                        i_atom,
+                        dont,
+                        know,
+                        self._atom("question.whether"),
+                        query_clause,
+                        period,
+                    ]
+                )
+                return [
+                    self._candidate(
+                        context_parts,
+                        candidate_id="compose.unknown.infinitival_boundary",
+                        semantic_plan=[
+                            *plan,
+                            "EVIDENCE:NONENTAILED_INFINITIVE",
+                            f"QUERY_FRAME:{question.event.predicate}",
+                        ],
+                        priority=120,
+                    )
+                ]
 
         if contract.proposition is not None and question is not None and question.requested_role:
             omitted = self._reason_roles(question)
@@ -899,6 +996,127 @@ class SurfaceRealizer:
         if tense == "future":
             return "will " + predicate
         return lexicon.present_form(predicate, third_person_singular=True)
+
+    def _infinitival_relation_from_contract(
+        self,
+        contract: AnswerContract,
+    ) -> Optional[Any]:
+        relation_id = contract.required_slots.get("relation_id", "")
+        if relation_id:
+            return next(
+                (
+                    item
+                    for item in self.memory.infinitivals
+                    if item.relation_id == relation_id
+                ),
+                None,
+            )
+        matrix_event_id = contract.required_slots.get("matrix_event_id", "")
+        complement_event_id = contract.required_slots.get(
+            "complement_event_id",
+            "",
+        )
+        return next(
+            (
+                item
+                for item in self.memory.infinitivals
+                if (
+                    not matrix_event_id
+                    or item.matrix_event_id == matrix_event_id
+                )
+                and (
+                    not complement_event_id
+                    or item.complement_event_id == complement_event_id
+                )
+            ),
+            None,
+        )
+
+    def render_infinitival_relation(
+        self,
+        relation: Any,
+        *,
+        capitalize: bool = False,
+    ) -> str:
+        matrix = self.memory.get_event(relation.matrix_event_id)
+        complement = self.memory.get_event(relation.complement_event_id)
+        if matrix is None or complement is None:
+            return ""
+        matrix_clause = self.render_event(matrix, capitalize=False)
+        complement_clause = self._render_infinitive_event(
+            complement,
+            relation.controller_entity_id,
+        )
+        text = f"{matrix_clause} to {complement_clause}".strip()
+        return self._finish_clause(text, capitalize)
+
+    def _render_infinitive_event(
+        self,
+        event: EventFrame,
+        controller_entity_id: str,
+    ) -> str:
+        args = dict(event.arguments)
+        for role in ("agent", "subject", "experiencer", "possessor", "patient"):
+            value = args.get(role)
+            if (
+                value is not None
+                and value.kind == RefKind.ENTITY
+                and value.key == controller_entity_id
+            ):
+                args.pop(role, None)
+                break
+
+        negative = not event.polarity
+        prefix = "not " if negative else ""
+        if event.predicate == "be":
+            complement = self._render_copular_complement(args)
+            return f"{prefix}be {complement}".strip()
+
+        pieces = [f"{prefix}{event.predicate}".strip()]
+        patient = args.get("patient") or args.get("state")
+        if patient:
+            pieces.append(
+                self.render_ref(
+                    patient,
+                    case="object",
+                    definite=self._should_be_definite(patient),
+                )
+            )
+        recipient = args.get("recipient")
+        if recipient:
+            pieces.extend(
+                [
+                    "to",
+                    self.render_ref(
+                        recipient,
+                        case="object",
+                        definite=True,
+                    ),
+                ]
+            )
+        for role, preposition in (
+            ("destination", "to"),
+            ("source", "from"),
+            ("location", "at"),
+            ("time", ""),
+            ("method", "by"),
+            ("manner", ""),
+        ):
+            value = args.get(role)
+            if value is None:
+                continue
+            phrase = self.render_ref(
+                value,
+                case="object",
+                definite=role in {"destination", "source", "location"},
+            )
+            if role == "time":
+                phrase = self._render_time_phrase(phrase)
+            if preposition:
+                pieces.extend([preposition, phrase])
+            else:
+                pieces.append(phrase)
+        return " ".join(item for item in pieces if item).strip()
 
     def render_event(
         self,

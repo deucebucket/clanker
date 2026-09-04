@@ -43,5 +43,5 @@ modifier event's semantic signature and either binds the unique matching
 modifier event or fails explicitly. This prevents an index from silently
 attaching the relation to the wrong event.
 
-Conversation-memory snapshot version 3 stores modifier relations. Version-1 and
+Conversation-memory snapshot version 3 introduced modifier relations. The current version 4 also stores infinitival relations. Version-1 and
 version-2 snapshots remain readable with an empty modifier list.
