@@ -20,6 +20,8 @@ from .model import (
     AnswerStatus,
     CandidateResponse,
     Entity,
+    EmbeddedInterrogativeRelation,
+    EmbeddedInterrogativeType,
     EntityKind,
     EventFrame,
     GateDecision,
@@ -176,6 +178,40 @@ class SurfaceRealizer:
             return self._social(contract, gates)
         if contract.proposition is None:
             return self._unsupported(contract, gates)
+        if contract.required_slots.get("embedded_interrogative") == "true":
+            relations = self._embedded_interrogative_relations_from_contract(contract)
+            if not relations:
+                return self._unsupported(contract, gates)
+            clauses = [
+                self.render_embedded_interrogative_relation(
+                    relation,
+                    capitalize=(index == 0),
+                )
+                for index, relation in enumerate(relations[:4])
+            ]
+            clause = self.join_phrases(
+                clauses,
+                conjunction=self._atom("link.and").surface,
+            )
+            return [
+                self._candidate(
+                    [clause, self._atom("punct.period")],
+                    candidate_id="compose.answer.embedded_interrogative",
+                    semantic_plan=[
+                        *self._rule_plan("reply:answer"),
+                        *[
+                            f"EMBEDDED_INTERROGATIVE:{item.relation_type.value}"
+                            for item in relations[:4]
+                        ],
+                        *[
+                            f"MATRIX_PREDICATE:{item.matrix_predicate}"
+                            for item in relations[:4]
+                        ],
+                        "TRUTH:QUESTION_ATTRIBUTION_ONLY",
+                    ],
+                    priority=120,
+                )
+            ]
         if contract.required_slots.get("infinitival") == "true":
             relation = self._infinitival_relation_from_contract(contract)
             if relation is None:
@@ -265,16 +301,70 @@ class SurfaceRealizer:
             else ("polarity.no", "polarity.nope")
         )
         particles = self._atoms(category, register=gates.register, preferred=preferred)
-        relation = (
-            self._infinitival_relation_from_contract(contract)
-            if contract.required_slots.get("infinitival") == "true"
-            else None
-        )
-        clause = (
-            self.render_infinitival_relation(relation, capitalize=True)
-            if relation is not None
-            else self.render_event(contract.proposition, capitalize=True)
-        )
+        semantic_plan_details: List[str] = []
+        if contract.required_slots.get("embedded_memory_probe") == "true":
+            known = contract.required_slots.get("embedded_memory_known") == "true"
+            if known:
+                clause = self.render_event(contract.proposition, capitalize=True)
+                semantic_plan_details.extend([
+                    "OUTER_EPISTEMIC_QUERY:true",
+                    "INNER_QUESTION_ANSWERABLE:true",
+                ])
+            else:
+                inner = contract.question.embedded_question if contract.question else None
+                inner_phrase = (
+                    self.render_embedded_question_frame(inner, capitalize=False)
+                    if inner is not None
+                    else self.render_event(contract.proposition, capitalize=False)
+                )
+                clause, _ = self._compose([
+                    self._atom("pronoun.i"),
+                    self._atom("aux.do"),
+                    self._atom("neg.not"),
+                    self._atom("cognition.know"),
+                    inner_phrase,
+                ])
+                semantic_plan_details.extend([
+                    "OUTER_EPISTEMIC_QUERY:true",
+                    "INNER_QUESTION_ANSWERABLE:false",
+                ])
+        elif contract.required_slots.get("embedded_interrogative") == "true":
+            relations = self._embedded_interrogative_relations_from_contract(contract)
+            if not relations:
+                return self._unknown(contract, gates)
+            clauses = [
+                self.render_embedded_interrogative_relation(
+                    relation,
+                    capitalize=(index == 0),
+                )
+                for index, relation in enumerate(relations[:4])
+            ]
+            clause = self.join_phrases(
+                clauses,
+                conjunction=self._atom("link.but").surface,
+            )
+            semantic_plan_details.extend([
+                *[
+                    f"EMBEDDED_INTERROGATIVE:{item.relation_type.value}"
+                    for item in relations[:4]
+                ],
+                "TRUTH:QUESTION_ATTRIBUTION_ONLY",
+            ])
+        else:
+            relation = (
+                self._infinitival_relation_from_contract(contract)
+                if contract.required_slots.get("infinitival") == "true"
+                else None
+            )
+            clause = (
+                self.render_infinitival_relation(relation, capitalize=True)
+                if relation is not None
+                else self.render_event(contract.proposition, capitalize=True)
+            )
+            if relation is not None:
+                semantic_plan_details.append(
+                    f"INFINITIVAL_RELATION:{relation.relation_type.value}"
+                )
         candidates: List[CandidateResponse] = []
         for index, particle in enumerate(particles[:2]):
             candidates.append(
@@ -284,6 +374,7 @@ class SurfaceRealizer:
                     semantic_plan=[
                         *self._rule_plan(f"reply:{'true' if positive else 'false'}", {"polarity": positive}),
                         f"FRAME:{contract.proposition.predicate}",
+                        *semantic_plan_details,
                     ],
                     priority=105 - index,
                 )
@@ -297,6 +388,55 @@ class SurfaceRealizer:
         dont = self._atom("neg.dont")
         know = self._atom("cognition.know")
         plan = self._rule_plan("reply:unknown")
+
+        if (
+            contract.required_slots.get("direct_embedded_answer_request") == "true"
+            and question is not None
+        ):
+            question_phrase = self.render_embedded_question_frame(
+                question,
+                capitalize=False,
+            )
+            return [
+                self._candidate(
+                    [i_atom, dont, know, question_phrase, period],
+                    candidate_id="compose.unknown.direct_embedded_request",
+                    semantic_plan=[
+                        *plan,
+                        f"INNER_QUESTION:{question.kind.value}",
+                        "TRUTH:UNKNOWN",
+                    ],
+                    priority=122,
+                )
+            ]
+
+        if (
+            contract.required_slots.get("embedded_interrogative_query") == "true"
+            and question is not None
+        ):
+            query_phrase = self.render_embedded_interrogative_query(
+                question,
+                capitalize=False,
+            )
+            return [
+                self._candidate(
+                    [
+                        i_atom,
+                        dont,
+                        know,
+                        self._atom("question.whether"),
+                        query_phrase,
+                        period,
+                    ],
+                    candidate_id="compose.unknown.embedded_interrogative",
+                    semantic_plan=[
+                        *plan,
+                        f"MATRIX_PREDICATE:{question.event.predicate}",
+                        "TRUTH:QUESTION_ATTRIBUTION_UNKNOWN",
+                    ],
+                    priority=120,
+                )
+            ]
 
         if (
             contract.required_slots.get("infinitival_evidence") == "true"
@@ -475,6 +615,39 @@ class SurfaceRealizer:
         ]
 
     def _conflict(self, contract: AnswerContract, gates: GateDecision) -> List[CandidateResponse]:
+        if contract.required_slots.get("embedded_interrogative") == "true":
+            relations = self._embedded_interrogative_relations_from_contract(contract)
+            clauses = [
+                self.render_embedded_interrogative_relation(
+                    relation,
+                    capitalize=False,
+                )
+                for relation in relations[:4]
+            ]
+            summary = self.join_phrases(
+                clauses,
+                conjunction=self._atom("link.but").surface,
+            )
+            return [
+                self._candidate(
+                    [
+                        self._atom("pronoun.i"),
+                        self._atom("aux.have"),
+                        self._atom("meta.conflicting"),
+                        self._atom("meta.information"),
+                        self._atom("punct.colon"),
+                        summary,
+                        self._atom("punct.period"),
+                    ],
+                    candidate_id="compose.conflict.embedded_interrogative",
+                    semantic_plan=[
+                        *self._rule_plan("reply:unknown"),
+                        "EVIDENCE:CONTRADICTORY_QUESTION_ATTRIBUTION",
+                    ],
+                    priority=122,
+                )
+            ]
+
         clauses: List[str] = []
         seen: set[str] = set()
         for evidence in contract.evidence:
@@ -996,6 +1169,162 @@ class SurfaceRealizer:
         if tense == "future":
             return "will " + predicate
         return lexicon.present_form(predicate, third_person_singular=True)
+
+    def _embedded_interrogative_relations_from_contract(
+        self,
+        contract: AnswerContract,
+    ) -> List[EmbeddedInterrogativeRelation]:
+        relation_ids = [
+            item
+            for item in contract.required_slots.get("relation_ids", "").split(",")
+            if item
+        ]
+        if relation_ids:
+            by_id = {
+                item.relation_id: item
+                for item in self.memory.embedded_interrogatives
+            }
+            return [
+                by_id[relation_id]
+                for relation_id in relation_ids
+                if relation_id in by_id
+            ]
+
+        matrix_ids = {
+            item
+            for item in contract.required_slots.get("matrix_event_ids", "").split(",")
+            if item
+        }
+        question_ids = {
+            item
+            for item in contract.required_slots.get("question_event_ids", "").split(",")
+            if item
+        }
+        return [
+            item
+            for item in self.memory.embedded_interrogatives
+            if (not matrix_ids or item.matrix_event_id in matrix_ids)
+            and (not question_ids or item.question_event_id in question_ids)
+        ]
+
+    def render_embedded_interrogative_relation(
+        self,
+        relation: EmbeddedInterrogativeRelation,
+        *,
+        capitalize: bool = False,
+    ) -> str:
+        matrix = self.memory.get_event(relation.matrix_event_id)
+        question_event = self.memory.get_event(relation.question_event_id)
+        if matrix is None or question_event is None:
+            return ""
+        matrix_clause = self.render_event(matrix, capitalize=False)
+        question_clause = self.render_embedded_question(
+            relation,
+            question_event,
+            capitalize=False,
+        )
+        return self._finish_clause(
+            " ".join(item for item in (matrix_clause, question_clause) if item),
+            capitalize,
+        )
+
+    def render_embedded_question(
+        self,
+        relation: EmbeddedInterrogativeRelation,
+        event: EventFrame,
+        *,
+        capitalize: bool = False,
+    ) -> str:
+        frame = relation.to_question_frame(event)
+        return self.render_embedded_question_frame(
+            frame,
+            marker=relation.marker,
+            capitalize=capitalize,
+        )
+
+    def render_embedded_question_frame(
+        self,
+        question: Any,
+        *,
+        marker: str = "",
+        capitalize: bool = False,
+    ) -> str:
+        event = question.event
+        operator = marker or getattr(question, "embedded_marker", "")
+        if not operator:
+            operator = {
+                QuestionKind.WHO: "who",
+                QuestionKind.WHAT: "what",
+                QuestionKind.WHEN: "when",
+                QuestionKind.WHERE: "where",
+                QuestionKind.WHY: "why",
+                QuestionKind.HOW: "how",
+                QuestionKind.WHICH: "which",
+                QuestionKind.WHOSE: "whose",
+                QuestionKind.YES_NO: "whether",
+            }.get(question.kind, "whether")
+
+        requested_role = question.requested_role
+        if question.kind == QuestionKind.YES_NO:
+            clause = self.render_event(event, capitalize=False)
+            return self._finish_clause(f"{operator} {clause}", capitalize)
+
+        if requested_role == "possessor":
+            focus = getattr(question, "focus_surface", "")
+            clause = self.render_event(event, capitalize=False)
+            tail = clause
+            normalized_focus = focus.lower().strip()
+            for prefix in (
+                f"the {normalized_focus} ",
+                f"a {normalized_focus} ",
+                f"an {normalized_focus} ",
+                f"{normalized_focus} ",
+            ):
+                if normalized_focus and clause.lower().startswith(prefix):
+                    tail = clause[len(prefix):]
+                    break
+            terms = [operator]
+            if focus:
+                terms.append(focus)
+            terms.append(tail)
+            return self._finish_clause(" ".join(terms), capitalize)
+
+        if requested_role in {"agent", "subject", "experiencer"}:
+            tail = self._predicate_tail_for_question(event)
+            focus = getattr(question, "focus_surface", "")
+            terms = [operator]
+            if focus and focus.lower() != operator.lower():
+                terms.append(focus)
+            terms.append(tail)
+            return self._finish_clause(" ".join(terms), capitalize)
+
+        clause = self.render_event(event, capitalize=False)
+        focus = getattr(question, "focus_surface", "")
+        terms = [operator]
+        if focus and question.kind in {QuestionKind.WHICH, QuestionKind.WHOSE}:
+            terms.append(focus)
+        terms.append(clause)
+        return self._finish_clause(" ".join(terms), capitalize)
+
+    def render_embedded_interrogative_query(
+        self,
+        question: Any,
+        *,
+        capitalize: bool = False,
+    ) -> str:
+        matrix_clause = self.render_event(question.event, capitalize=False)
+        inner = question.embedded_question
+        if inner is None:
+            return self._finish_clause(matrix_clause, capitalize)
+        inner_clause = self.render_embedded_question_frame(
+            inner,
+            marker=question.embedded_marker,
+            capitalize=False,
+        )
+        return self._finish_clause(
+            f"{matrix_clause} {inner_clause}",
+            capitalize,
+        )
 
     def _infinitival_relation_from_contract(
         self,

@@ -41,8 +41,8 @@ class ClankerLM:
     A+B=C transition to select the candidate that best reaches the target state.
     """
 
-    SNAPSHOT_VERSION = 4
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4}
+    SNAPSHOT_VERSION = 5
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4, 5}
     MAX_BATCH_MESSAGES = 10_000
 
     def __init__(
@@ -270,6 +270,29 @@ class ClankerLM:
         return AffectVector(**values)
 
     def _resolve_contract(self, parse: ParseResult) -> AnswerContract:
+        if (
+            parse.speech_act == SpeechAct.COMMAND
+            and parse.question is not None
+            and parse.embedded_interrogatives
+            and parse.events
+        ):
+            stored = [self.memory.add_event(event) for event in parse.events]
+            self.memory.add_clause_relations(parse.relations, stored)
+            self.memory.add_entity_modifier_relations(parse.modifiers, stored)
+            self.memory.add_appositive_relations(parse.appositives)
+            self.memory.add_content_relations(parse.contents, stored)
+            self.memory.add_embedded_interrogative_relations(
+                parse.embedded_interrogatives,
+                stored,
+            )
+            self.memory.add_infinitival_relations(parse.infinitivals, stored)
+            contract = self.answerer.answer(parse.question, self.memory)
+            contract.required_slots.setdefault(
+                "direct_embedded_answer_request",
+                "true",
+            )
+            return contract
+
         if parse.question:
             return self.answerer.answer(parse.question, self.memory)
 
@@ -302,6 +325,10 @@ class ClankerLM:
             self.memory.add_entity_modifier_relations(parse.modifiers, stored)
             self.memory.add_appositive_relations(parse.appositives)
             self.memory.add_content_relations(parse.contents, stored)
+            self.memory.add_embedded_interrogative_relations(
+                parse.embedded_interrogatives,
+                stored,
+            )
             self.memory.add_infinitival_relations(parse.infinitivals, stored)
             acknowledged = next(
                 (
@@ -406,11 +433,26 @@ class ClankerLM:
                 raise ValueError("Cannot learn text that does not produce a supported proposition")
             stored: List[EventFrame] = []
             for event in parsed.events:
-                event.source = source
+                # Matrix propositions inherit the adapter provenance. Embedded
+                # content keeps its attributed source so it cannot be promoted
+                # into an unqualified fact merely because the surrounding text
+                # came from a trusted retriever.
+                if event.discourse_role in self.memory.NONASSERTIVE_DISCOURSE_ROLES:
+                    event.source = SourceKind.ATTRIBUTED
+                else:
+                    event.source = source
                 event.certainty = max(0, min(255, int(certainty)))
                 event.inferred = bool(inferred)
                 stored.append(self.memory.add_event(event))
             self.memory.add_clause_relations(parsed.relations, stored)
+            self.memory.add_entity_modifier_relations(parsed.modifiers, stored)
+            self.memory.add_appositive_relations(parsed.appositives)
+            self.memory.add_content_relations(parsed.contents, stored)
+            self.memory.add_embedded_interrogative_relations(
+                parsed.embedded_interrogatives,
+                stored,
+            )
+            self.memory.add_infinitival_relations(parsed.infinitivals, stored)
             return stored
 
     def learn_many(

@@ -24,6 +24,10 @@ from .model import (
     ContentAttachmentAmbiguity,
     ContentRelation,
     ContentRelationType,
+    EmbeddedInterrogativeAttachmentAmbiguity,
+    EmbeddedInterrogativeRelation,
+    EmbeddedInterrogativeStatus,
+    EmbeddedInterrogativeType,
     EntityKind,
     EntityModifierRelation,
     EventFrame,
@@ -74,6 +78,26 @@ class ContentSplit:
     relation_type: ContentRelationType
     predicate_family: str
     certainty: int
+    diagnostics: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class EmbeddedInterrogativePredicateProfile:
+    content_status: EmbeddedInterrogativeStatus
+    predicate_family: str
+    certainty: int
+    allows_recipient: bool = False
+    allows_direct_answer_request: bool = False
+
+
+@dataclass
+class EmbeddedInterrogativeSplit:
+    matrix_tokens: List[lexicon.Token]
+    question_tokens: List[lexicon.Token]
+    marker: str
+    relation_type: EmbeddedInterrogativeType
+    profile: EmbeddedInterrogativePredicateProfile
+    direct_answer_request: bool = False
     diagnostics: List[str] = field(default_factory=list)
 
 
@@ -231,13 +255,167 @@ class SemanticParser:
         appositive_ambiguities: List[AppositiveAttachmentAmbiguity] = []
         contents: List[ContentRelation] = []
         content_ambiguities: List[ContentAttachmentAmbiguity] = []
+        embedded_interrogatives: List[EmbeddedInterrogativeRelation] = []
+        embedded_interrogative_ambiguities: List[
+            EmbeddedInterrogativeAttachmentAmbiguity
+        ] = []
         infinitivals: List[InfinitivalRelation] = []
         infinitival_ambiguities: List[InfinitivalAttachmentAmbiguity] = []
         unresolved: List[UnresolvedReference] = []
         entities: List[str] = []
         diagnostics: List[str] = []
         primary_event_count = 0
+        direct_embedded_question: Optional[QuestionFrame] = None
         for clause, connector in segments:
+            embedded_split, embedded_ambiguity = (
+                self._split_embedded_interrogative_clause(clause)
+            )
+            if embedded_ambiguity is not None:
+                embedded_interrogative_ambiguities.append(embedded_ambiguity)
+                unresolved.append(
+                    UnresolvedReference(
+                        surface=embedded_ambiguity.question_surface,
+                        reason=embedded_ambiguity.reason,
+                    )
+                )
+                diagnostics.extend(embedded_ambiguity.diagnostics)
+                diagnostics.append(
+                    "embedded interrogative boundary/scope remains ambiguous"
+                )
+                continue
+
+            if embedded_split is not None:
+                matrix_result = self._parse_clause(
+                    embedded_split.matrix_tokens,
+                    raw,
+                    memory,
+                )
+                if (
+                    matrix_result.event is not None
+                    and embedded_split.direct_answer_request
+                    and not self._content_source_entity(matrix_result.event)
+                ):
+                    matrix_result.event.arguments["agent"] = SemanticRef.entity(
+                        "assistant",
+                        "you",
+                        EntityKind.PERSON,
+                    )
+                    if "assistant" not in matrix_result.entities:
+                        matrix_result.entities.append("assistant")
+                    matrix_result.diagnostics.append(
+                        "imperative answer request supplies assistant agent"
+                    )
+                question, question_unresolved, question_entities, question_diagnostics = (
+                    self._parse_embedded_question(
+                        embedded_split.question_tokens,
+                        raw,
+                        memory,
+                    )
+                )
+                source_entity_id = (
+                    self._content_source_entity(matrix_result.event)
+                    if matrix_result.event is not None
+                    else None
+                )
+                if (
+                    matrix_result.event is not None
+                    and question is not None
+                    and source_entity_id
+                    and not question_unresolved
+                ):
+                    matrix_result.event.discourse_role = (
+                        "main" if primary_event_count == 0 else "coordinate"
+                    )
+                    question.event.discourse_role = "interrogative"
+                    question.event.source = SourceKind.ATTRIBUTED
+                    question.event.certainty = min(
+                        question.event.certainty,
+                        embedded_split.profile.certainty,
+                    )
+                    question.embedded_matrix_predicate = (
+                        matrix_result.event.predicate
+                    )
+                    if connector is not None:
+                        matrix_result.diagnostics.insert(
+                            0,
+                            f"coordinate connector={connector}",
+                        )
+                    primary_event_count += 1
+                    matrix_index = len(events)
+                    events.append(matrix_result.event)
+                    question_index = len(events)
+                    events.append(question.event)
+                    embedded_interrogatives.append(
+                        EmbeddedInterrogativeRelation(
+                            relation_type=embedded_split.relation_type,
+                            content_status=(
+                                embedded_split.profile.content_status
+                            ),
+                            matrix_event_index=matrix_index,
+                            question_event_index=question_index,
+                            marker=embedded_split.marker,
+                            matrix_predicate=matrix_result.event.predicate,
+                            source_entity_id=source_entity_id,
+                            predicate_family=(
+                                embedded_split.profile.predicate_family
+                            ),
+                            question_kind=question.kind,
+                            requested_role=question.requested_role,
+                            answer_type=question.answer_type,
+                            certainty=embedded_split.profile.certainty,
+                            licensed=matrix_result.event.polarity,
+                            direct_answer_request=(
+                                embedded_split.direct_answer_request
+                            ),
+                            focus_surface=question.focus_surface,
+                            why_kind=question.why_kind,
+                            how_kind=question.how_kind,
+                            diagnostics=[
+                                *embedded_split.diagnostics,
+                                *question_diagnostics,
+                                (
+                                    "positive matrix licenses attributed "
+                                    "question content"
+                                    if matrix_result.event.polarity
+                                    else "negated matrix does not license "
+                                    "positive question attribution"
+                                ),
+                            ],
+                        )
+                    )
+                    if embedded_split.direct_answer_request:
+                        direct_embedded_question = question
+                    unresolved.extend(matrix_result.unresolved)
+                    entities.extend(matrix_result.entities)
+                    entities.extend(question_entities)
+                    diagnostics.extend(matrix_result.diagnostics)
+                    diagnostics.extend(question_diagnostics)
+                    diagnostics.extend(embedded_split.diagnostics)
+                    diagnostics.append(
+                        "embedded interrogative relation="
+                        f"{embedded_split.relation_type.value} "
+                        f"kind={question.kind.value} "
+                        f"source={source_entity_id}"
+                    )
+                    continue
+
+                reason = (
+                    "embedded interrogative could not be parsed with its "
+                    "licensed matrix source"
+                )
+                ambiguity = self._embedded_interrogative_ambiguity(
+                    clause,
+                    [len(embedded_split.matrix_tokens)],
+                    reason=reason,
+                )
+                embedded_interrogative_ambiguities.append(ambiguity)
+                unresolved.extend(matrix_result.unresolved)
+                unresolved.extend(question_unresolved)
+                diagnostics.extend(matrix_result.diagnostics)
+                diagnostics.extend(question_diagnostics)
+                diagnostics.extend(ambiguity.diagnostics)
+                continue
+
             infinitival_split, infinitival_ambiguity = (
                 self._split_infinitival_clause(clause)
             )
@@ -748,7 +926,13 @@ class SemanticParser:
             entities.extend(result.entities)
             diagnostics.extend(result.diagnostics)
         return ParseResult(
-            speech_act=SpeechAct.ASSERT if events else SpeechAct.UNKNOWN,
+            speech_act=(
+                SpeechAct.COMMAND
+                if direct_embedded_question is not None
+                else SpeechAct.ASSERT
+                if events
+                else SpeechAct.UNKNOWN
+            ),
             raw_text=raw,
             events=events,
             relations=relations,
@@ -758,8 +942,13 @@ class SemanticParser:
             appositive_ambiguities=appositive_ambiguities,
             contents=contents,
             content_ambiguities=content_ambiguities,
+            embedded_interrogatives=embedded_interrogatives,
+            embedded_interrogative_ambiguities=(
+                embedded_interrogative_ambiguities
+            ),
             infinitivals=infinitivals,
             infinitival_ambiguities=infinitival_ambiguities,
+            question=direct_embedded_question,
             entities=list(dict.fromkeys(entities)),
             unresolved=unresolved,
             normalized_text=normalized,
@@ -901,6 +1090,422 @@ class SemanticParser:
             and item.norm not in {",", ";"}
         ]
         return bool(subject_tokens)
+
+    EMBEDDED_WH_MARKERS = {
+        "who", "whom", "what", "which", "whose",
+        "when", "where", "why", "how",
+    }
+    EMBEDDED_POLAR_MARKERS = {"whether", "if"}
+    EMBEDDED_INTERROGATIVE_PREDICATES: Dict[
+        str,
+        EmbeddedInterrogativePredicateProfile,
+    ] = {
+        "ask": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.ASKED,
+            "questioning",
+            210,
+            allows_recipient=True,
+        ),
+        "wonder": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.WONDERED,
+            "uncertain_cognition",
+            190,
+        ),
+        "know": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.KNOWN,
+            "knowledge",
+            210,
+        ),
+        "remember": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.REMEMBERED,
+            "memory",
+            200,
+        ),
+        "discover": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.DISCOVERED,
+            "discovery",
+            210,
+        ),
+        "determine": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.DISCOVERED,
+            "determination",
+            205,
+        ),
+        "tell": EmbeddedInterrogativePredicateProfile(
+            EmbeddedInterrogativeStatus.REQUESTED,
+            "answer_request",
+            215,
+            allows_recipient=True,
+            allows_direct_answer_request=True,
+        ),
+    }
+
+    def _split_embedded_interrogative_clause(
+        self,
+        tokens: Sequence[lexicon.Token],
+    ) -> Tuple[
+        Optional[EmbeddedInterrogativeSplit],
+        Optional[EmbeddedInterrogativeAttachmentAmbiguity],
+    ]:
+        """Split one catalog-licensed matrix predicate and embedded question.
+
+        A WH-shaped relative modifier after an ordinary object NP is not enough
+        evidence for interrogative content.  Only reviewed matrix predicates
+        enter this path, and non-recipient predicates require the marker to
+        follow the matrix verb directly.
+        """
+
+        items = [
+            item
+            for item in tokens
+            if item.norm not in {";"}
+        ]
+        if not items:
+            return None, None
+        marker_set = self.EMBEDDED_WH_MARKERS | self.EMBEDDED_POLAR_MARKERS
+        predicate_candidates: List[Tuple[int, str]] = []
+        for index, token in enumerate(items):
+            predicate = lexicon.lemma(token.norm)
+            if predicate not in self.EMBEDDED_INTERROGATIVE_PREDICATES:
+                continue
+            previous = items[index - 1].norm if index else None
+            if not lexicon.is_probable_verb(token.norm, previous=previous):
+                continue
+            if any(item.norm in marker_set for item in items[index + 1 :]):
+                predicate_candidates.append((index, predicate))
+        if not predicate_candidates:
+            return None, None
+        if len(predicate_candidates) > 1:
+            return None, self._embedded_interrogative_ambiguity(
+                items,
+                [index for index, _predicate in predicate_candidates],
+                reason=(
+                    "multiple embedded-interrogative matrix predicates exceed "
+                    "the configured depth"
+                ),
+            )
+
+        verb_index, predicate = predicate_candidates[0]
+        profile = self.EMBEDDED_INTERROGATIVE_PREDICATES[predicate]
+        marker_candidates = [
+            index
+            for index in range(verb_index + 1, len(items))
+            if items[index].norm in marker_set
+        ]
+        if not marker_candidates:
+            return None, None
+        if len(marker_candidates) > 1:
+            return None, self._embedded_interrogative_ambiguity(
+                items,
+                marker_candidates,
+                reason=(
+                    "nested or competing embedded interrogative markers "
+                    "exceed the configured depth"
+                ),
+            )
+
+        marker_index = marker_candidates[0]
+        marker = items[marker_index].norm
+        matrix_tail = [
+            item
+            for item in items[verb_index + 1 : marker_index]
+            if item.norm not in lexicon.PUNCTUATION
+        ]
+        if matrix_tail and not profile.allows_recipient:
+            # ``I know the man who called`` is a relative/object structure, not
+            # an embedded question.  Leave it for the ordinary relation layers.
+            return None, None
+        if matrix_tail:
+            if any(
+                lexicon.is_probable_verb(
+                    item.norm,
+                    previous=(matrix_tail[index - 1].norm if index else None),
+                )
+                for index, item in enumerate(matrix_tail)
+            ):
+                return None, self._embedded_interrogative_ambiguity(
+                    items,
+                    [marker_index],
+                    reason="matrix recipient contains a competing predicate",
+                )
+            if len(matrix_tail) > 4:
+                return None, self._embedded_interrogative_ambiguity(
+                    items,
+                    [marker_index],
+                    reason=(
+                        "embedded-question recipient boundary is not "
+                        "structurally bounded"
+                    ),
+                )
+
+        question_tokens = [
+            item
+            for item in items[marker_index:]
+            if item.norm not in lexicon.PUNCTUATION
+        ]
+        if len(question_tokens) < 2:
+            return None, self._embedded_interrogative_ambiguity(
+                items,
+                [marker_index],
+                reason="embedded interrogative lacks a proposition",
+            )
+        relation_type = (
+            EmbeddedInterrogativeType.POLAR
+            if marker in self.EMBEDDED_POLAR_MARKERS
+            else EmbeddedInterrogativeType.WH
+        )
+        imperative = verb_index == 0
+        direct_answer_request = bool(
+            imperative and profile.allows_direct_answer_request
+        )
+        return (
+            EmbeddedInterrogativeSplit(
+                matrix_tokens=[
+                    item
+                    for item in items[:marker_index]
+                    if item.norm not in lexicon.PUNCTUATION
+                ],
+                question_tokens=question_tokens,
+                marker=marker,
+                relation_type=relation_type,
+                profile=profile,
+                direct_answer_request=direct_answer_request,
+                diagnostics=[
+                    f"embedded interrogative predicate={predicate}",
+                    f"embedded marker={marker}",
+                    f"embedded type={relation_type.value}",
+                ],
+            ),
+            None,
+        )
+
+    def _embedded_interrogative_ambiguity(
+        self,
+        tokens: Sequence[lexicon.Token],
+        boundaries: Sequence[int],
+        *,
+        reason: str,
+    ) -> EmbeddedInterrogativeAttachmentAmbiguity:
+        first = boundaries[0] if boundaries else len(tokens)
+        markers = [
+            tokens[index].norm
+            for index in boundaries
+            if 0 <= index < len(tokens)
+        ]
+        return EmbeddedInterrogativeAttachmentAmbiguity(
+            matrix_surface=self._surface(tokens[:first]),
+            question_surface=self._surface(tokens[first:]),
+            clause_surface=self._surface(tokens),
+            reason=reason,
+            candidate_boundaries=list(boundaries),
+            candidate_markers=markers,
+            ambiguity_id=(
+                "embedded-question-"
+                + hashlib.sha256(
+                    " ".join(item.norm for item in tokens).encode("utf-8")
+                ).hexdigest()[:16]
+            ),
+            diagnostics=[reason, "unsafe embedded question suppressed"],
+        )
+
+    def _parse_embedded_question(
+        self,
+        tokens: Sequence[lexicon.Token],
+        raw: str,
+        memory: ConversationMemory,
+    ) -> Tuple[
+        Optional[QuestionFrame],
+        List[UnresolvedReference],
+        List[str],
+        List[str],
+    ]:
+        """Parse one indirect WH or polar question without matrix inversion."""
+
+        items = [
+            item
+            for item in tokens
+            if item.norm not in lexicon.PUNCTUATION
+        ]
+        if len(items) < 2:
+            return None, [], [], ["embedded question lacks content"]
+        marker = items[0].norm
+        body = list(items[1:])
+        if marker in self.EMBEDDED_POLAR_MARKERS:
+            if body[:2] and [item.norm for item in body[:2]] == ["or", "not"]:
+                body = body[2:]
+            clause = self._parse_clause(body, raw, memory)
+            if clause.event is None:
+                return None, clause.unresolved, clause.entities, [
+                    *clause.diagnostics,
+                    "failed embedded polar proposition parse",
+                ]
+            frame = QuestionFrame(
+                kind=QuestionKind.YES_NO,
+                event=clause.event,
+                raw_text=raw,
+                unresolved=clause.unresolved,
+                embedded_interrogative_type=EmbeddedInterrogativeType.POLAR,
+                embedded_marker=marker,
+            )
+            return (
+                frame,
+                clause.unresolved,
+                clause.entities,
+                [*clause.diagnostics, f"embedded polar marker={marker}"],
+            )
+
+        if marker in {"when", "where", "why", "how"}:
+            result = self._parse_adverbial_question(items, raw, memory)
+            frame = result[0]
+            if frame is not None:
+                frame.embedded_interrogative_type = EmbeddedInterrogativeType.WH
+                frame.embedded_marker = marker
+            return result
+
+        if marker == "whose":
+            # Indirect subject form: ``whose car broke`` keeps the matrix
+            # predicate (BREAK) and adds a typed possessor gap to the subject
+            # entity.  The ordinary top-level WHOSE parser maps ownership
+            # questions to OWN, which would otherwise discard ``broke`` here.
+            if (
+                len(body) >= 2
+                and body[0].norm not in lexicon.AUXILIARIES
+                and lexicon.is_probable_verb(
+                    body[1].norm,
+                    previous=body[0].norm,
+                )
+            ):
+                clause = self._parse_clause(body, raw, memory)
+                if clause.event is None:
+                    return None, clause.unresolved, clause.entities, [
+                        *clause.diagnostics,
+                        "failed embedded whose proposition parse",
+                    ]
+                clause.event.arguments["possessor"] = SemanticRef.variable(
+                    "possessor",
+                    EntityKind.PERSON,
+                )
+                frame = QuestionFrame(
+                    kind=QuestionKind.WHOSE,
+                    event=clause.event,
+                    requested_role="possessor",
+                    answer_type=EntityKind.PERSON,
+                    raw_text=raw,
+                    unresolved=clause.unresolved,
+                    focus_surface=body[0].text,
+                    embedded_interrogative_type=EmbeddedInterrogativeType.WH,
+                    embedded_marker=marker,
+                )
+                return (
+                    frame,
+                    clause.unresolved,
+                    clause.entities,
+                    [
+                        *clause.diagnostics,
+                        "embedded whose preserves possessed-subject predicate",
+                    ],
+                )
+            result = self._parse_whose(items, raw, memory)
+            frame = result[0]
+            if frame is not None:
+                frame.embedded_interrogative_type = EmbeddedInterrogativeType.WH
+                frame.embedded_marker = marker
+            return result
+
+        if marker in {"who", "whom", "what"}:
+            subject_gap = bool(
+                body
+                and lexicon.is_probable_verb(body[0].norm, previous=None)
+            )
+            if marker == "what" and body and body[0].norm in {"happened", "happen"}:
+                result = self._parse_question(items, raw, memory)
+                frame = result[0]
+                if frame is not None:
+                    frame.embedded_interrogative_type = EmbeddedInterrogativeType.WH
+                    frame.embedded_marker = marker
+                return result
+            if subject_gap and marker != "whom":
+                helper = self._parse_who if marker == "who" else self._parse_what
+                result = helper(items, raw, memory)
+                frame = result[0]
+                if frame is not None:
+                    frame.embedded_interrogative_type = EmbeddedInterrogativeType.WH
+                    frame.embedded_marker = marker
+                return result
+
+            clause = self._parse_clause(body, raw, memory)
+            if clause.event is None:
+                return None, clause.unresolved, clause.entities, [
+                    *clause.diagnostics,
+                    "failed embedded WH proposition parse",
+                ]
+            requested_role = "patient"
+            answer_type = (
+                EntityKind.PERSON
+                if marker in {"who", "whom"}
+                else EntityKind.THING
+            )
+            clause.event.arguments[requested_role] = SemanticRef.variable(
+                requested_role,
+                answer_type,
+            )
+            frame = QuestionFrame(
+                kind=(
+                    QuestionKind.WHO
+                    if marker in {"who", "whom"}
+                    else QuestionKind.WHAT
+                ),
+                event=clause.event,
+                requested_role=requested_role,
+                answer_type=answer_type,
+                raw_text=raw,
+                unresolved=clause.unresolved,
+                embedded_interrogative_type=EmbeddedInterrogativeType.WH,
+                embedded_marker=marker,
+            )
+            return (
+                frame,
+                clause.unresolved,
+                clause.entities,
+                [
+                    *clause.diagnostics,
+                    f"embedded {marker} requests {requested_role}",
+                ],
+            )
+
+        if marker == "which":
+            if len(body) < 2:
+                return None, [], [], ["embedded which lacks selection class"]
+            focus = body[0].text
+            clause = self._parse_clause(body[1:], raw, memory)
+            if clause.event is None:
+                return None, clause.unresolved, clause.entities, [
+                    *clause.diagnostics,
+                    "failed embedded which proposition parse",
+                ]
+            clause.event.arguments["patient"] = SemanticRef.variable(
+                "patient",
+                EntityKind.THING,
+            )
+            frame = QuestionFrame(
+                kind=QuestionKind.WHICH,
+                event=clause.event,
+                requested_role="patient",
+                answer_type=EntityKind.THING,
+                raw_text=raw,
+                unresolved=clause.unresolved,
+                focus_surface=focus,
+                embedded_interrogative_type=EmbeddedInterrogativeType.WH,
+                embedded_marker=marker,
+            )
+            return (
+                frame,
+                clause.unresolved,
+                clause.entities,
+                [*clause.diagnostics, f"embedded selection class={focus}"],
+            )
+
+        return None, [], [], [f"unsupported embedded marker={marker}"]
 
     INFINITIVAL_PREDICATES: Dict[str, InfinitivalPredicateProfile] = {
         "plan": InfinitivalPredicateProfile(
@@ -2520,6 +3125,14 @@ class SemanticParser:
             )
             return frame, [], [], [f"social convention: {social}"]
 
+        outer_embedded = self._parse_outer_embedded_interrogative(
+            items,
+            raw,
+            memory,
+        )
+        if outer_embedded is not None:
+            return outer_embedded
+
         if words[:2] == ["what", "happened"] or words[:3] == ["what", "has", "happened"]:
             event = EventFrame("*", {"event": SemanticRef.variable("event", EntityKind.EVENT)}, raw_text=raw)
             return QuestionFrame(
@@ -2552,6 +3165,129 @@ class SemanticParser:
                 self._parse_adverbial_question(items, raw, memory)
             )
         return None, [], [], ["unrecognized interrogative form"]
+
+    def _parse_outer_embedded_interrogative(
+        self,
+        items: Sequence[lexicon.Token],
+        raw: str,
+        memory: ConversationMemory,
+    ) -> Optional[
+        Tuple[
+            Optional[QuestionFrame],
+            List[UnresolvedReference],
+            List[str],
+            List[str],
+        ]
+    ]:
+        """Preserve an outer question and one mentioned inner question.
+
+        For example, ``Do you remember when the meeting starts?`` is a polar
+        question about the assistant's memory.  It is not silently rewritten
+        into the direct inner ``when`` query.  The inner frame remains attached
+        for evidence lookup and transparent traces.
+        """
+
+        if len(items) < 4:
+            return None
+        marker_set = self.EMBEDDED_WH_MARKERS | self.EMBEDDED_POLAR_MARKERS
+        start = 1 if items[0].norm in self.EMBEDDED_WH_MARKERS else 0
+        candidates = [
+            index
+            for index in range(max(1, start), len(items))
+            if items[index].norm in marker_set
+        ]
+        if not candidates:
+            return None
+        marker_index = candidates[0]
+        prefix = list(items[:marker_index])
+        if not prefix:
+            return None
+
+        first = prefix[0].norm
+        if first in lexicon.YES_NO_STARTERS:
+            outer = self._parse_yes_no(prefix, raw, memory)
+        elif first in {"who", "whom"}:
+            outer = self._parse_who(prefix, raw, memory)
+        elif first == "whose":
+            outer = self._parse_whose(prefix, raw, memory)
+        elif first == "what":
+            outer = self._parse_what(prefix, raw, memory)
+        elif first == "which":
+            outer = self._parse_which(prefix, raw, memory)
+        elif first in {"when", "where", "why", "how"}:
+            outer = self._parse_adverbial_question(prefix, raw, memory)
+        else:
+            return None
+        frame, outer_unresolved, outer_entities, outer_diagnostics = outer
+        if frame is None:
+            return None
+        matrix_predicate = lexicon.lemma(frame.event.predicate)
+        if matrix_predicate not in self.EMBEDDED_INTERROGATIVE_PREDICATES:
+            return None
+
+        inner, inner_unresolved, inner_entities, inner_diagnostics = (
+            self._parse_embedded_question(
+                items[marker_index:],
+                raw,
+                memory,
+            )
+        )
+        if inner is None:
+            unresolved = [
+                *outer_unresolved,
+                UnresolvedReference(
+                    surface=self._surface(items[marker_index:]),
+                    reason="embedded question could not be parsed",
+                ),
+                *inner_unresolved,
+            ]
+            frame.unresolved = unresolved
+            return (
+                frame,
+                unresolved,
+                list(dict.fromkeys(outer_entities + inner_entities)),
+                [
+                    *outer_diagnostics,
+                    *inner_diagnostics,
+                    "outer question retained; embedded scope unresolved",
+                ],
+            )
+
+        frame.embedded_question = inner
+        frame.embedded_interrogative_type = (
+            EmbeddedInterrogativeType.POLAR
+            if items[marker_index].norm in self.EMBEDDED_POLAR_MARKERS
+            else EmbeddedInterrogativeType.WH
+        )
+        frame.embedded_marker = items[marker_index].norm
+        frame.embedded_matrix_predicate = matrix_predicate
+        if len(candidates) > 1:
+            ambiguity = UnresolvedReference(
+                surface=self._surface(items[marker_index:]),
+                reason=(
+                    "multiple embedded question markers exceed the "
+                    "configured depth"
+                ),
+            )
+            frame.unresolved = [
+                *outer_unresolved,
+                ambiguity,
+                *inner_unresolved,
+            ]
+        else:
+            frame.unresolved = [*outer_unresolved, *inner_unresolved]
+        return (
+            frame,
+            frame.unresolved,
+            list(dict.fromkeys(outer_entities + inner_entities)),
+            [
+                *outer_diagnostics,
+                *inner_diagnostics,
+                f"outer question matrix={matrix_predicate}",
+                f"embedded question marker={frame.embedded_marker}",
+                "outer and inner speech acts preserved separately",
+            ],
+        )
 
     def _parse_yes_no(
         self,

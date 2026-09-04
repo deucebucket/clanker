@@ -21,6 +21,7 @@ from .model import (
     AppositiveRelationType,
     ClauseRelation,
     ContentRelation,
+    EmbeddedInterrogativeRelation,
     Entity,
     EntityModifierRelation,
     EntityKind,
@@ -59,9 +60,9 @@ class EventMatch:
 class ConversationMemory:
     """Entity/event store with deterministic salience and provenance."""
 
-    SNAPSHOT_VERSION = 4
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4}
-    NONASSERTIVE_DISCOURSE_ROLES = {"content", "infinitive"}
+    SNAPSHOT_VERSION = 5
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4, 5}
+    NONASSERTIVE_DISCOURSE_ROLES = {"content", "infinitive", "interrogative"}
 
     def __init__(self) -> None:
         self.entities: Dict[str, Entity] = {}
@@ -70,6 +71,7 @@ class ConversationMemory:
         self.modifiers: List[EntityModifierRelation] = []
         self.appositives: List[AppositiveRelation] = []
         self.contents: List[ContentRelation] = []
+        self.embedded_interrogatives: List[EmbeddedInterrogativeRelation] = []
         self.infinitivals: List[InfinitivalRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
@@ -79,6 +81,7 @@ class ConversationMemory:
         self._modifier_counter: int = 0
         self._appositive_counter: int = 0
         self._content_counter: int = 0
+        self._embedded_interrogative_counter: int = 0
         self._infinitival_counter: int = 0
         self._initialize_participants()
 
@@ -809,6 +812,147 @@ class ConversationMemory:
             reverse=True,
         )
 
+    def _next_embedded_interrogative_id(self) -> str:
+        self._embedded_interrogative_counter += 1
+        return f"embedded_question_{self._embedded_interrogative_counter}"
+
+    def add_embedded_interrogative_relations(
+        self,
+        relations: Sequence[EmbeddedInterrogativeRelation],
+        stored_events: Sequence[EventFrame],
+    ) -> List[EmbeddedInterrogativeRelation]:
+        """Bind parser-local matrix/question links to stable event IDs."""
+
+        stored: List[EmbeddedInterrogativeRelation] = []
+        for relation in relations:
+            if not (
+                0 <= relation.matrix_event_index < len(stored_events)
+                and 0 <= relation.question_event_index < len(stored_events)
+            ):
+                raise ValueError(
+                    "Embedded interrogative relation references an invalid event index"
+                )
+            matrix_event = stored_events[relation.matrix_event_index]
+            question_event = stored_events[relation.question_event_index]
+            if question_event.discourse_role != "interrogative":
+                raise ValueError(
+                    "Embedded interrogative must bind to an interrogative-role event"
+                )
+            if question_event.source != SourceKind.ATTRIBUTED:
+                raise ValueError(
+                    "Embedded interrogative event must retain attributed provenance"
+                )
+            if matrix_event.predicate != relation.matrix_predicate:
+                raise ValueError(
+                    "Embedded interrogative matrix predicate does not match its event"
+                )
+            if relation.source_entity_id not in self.entities:
+                raise ValueError(
+                    "Embedded interrogative references an unknown source entity"
+                )
+            source_refs = {
+                ref.key
+                for role, ref in matrix_event.arguments.items()
+                if role in {"agent", "experiencer", "subject", "source"}
+                and ref.kind == RefKind.ENTITY
+            }
+            if relation.source_entity_id not in source_refs:
+                raise ValueError(
+                    "Embedded interrogative source is not licensed by the matrix event"
+                )
+            if relation.licensed != matrix_event.polarity:
+                raise ValueError(
+                    "Embedded interrogative license must match matrix polarity"
+                )
+            if relation.requested_role:
+                variable = question_event.arguments.get(relation.requested_role)
+                if variable is None or not variable.is_variable:
+                    raise ValueError(
+                        "Embedded WH relation must preserve its typed open slot"
+                    )
+            elif any(ref.is_variable for ref in question_event.arguments.values()):
+                raise ValueError(
+                    "Embedded polar relation cannot contain an untyped WH slot"
+                )
+
+            bound = relation.copy(
+                relation_id=(
+                    relation.relation_id
+                    or self._next_embedded_interrogative_id()
+                ),
+                matrix_event_id=matrix_event.event_id,
+                question_event_id=question_event.event_id,
+                certainty=min(
+                    relation.certainty,
+                    matrix_event.certainty,
+                    question_event.certainty,
+                ),
+            )
+            existing = next(
+                (
+                    item
+                    for item in self.embedded_interrogatives
+                    if item.signature() == bound.signature()
+                ),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, bound.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + bound.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                self.embedded_interrogatives.append(bound)
+                stored.append(bound)
+            self.mention(bound.source_entity_id, "source", 0.6)
+            self.revision += 1
+        return stored
+
+    def embedded_interrogatives_for_source(
+        self,
+        source_entity_id: str,
+        *,
+        matrix_predicate: Optional[str] = None,
+        include_negated: bool = False,
+    ) -> List[EmbeddedInterrogativeRelation]:
+        relations = [
+            relation
+            for relation in self.embedded_interrogatives
+            if relation.source_entity_id == source_entity_id
+            and (include_negated or relation.licensed)
+        ]
+        if matrix_predicate is not None:
+            normalized = lexicon.lemma(matrix_predicate)
+            relations = [
+                relation
+                for relation in relations
+                if lexicon.lemma(relation.matrix_predicate) == normalized
+            ]
+        return sorted(
+            relations,
+            key=lambda item: (
+                self.get_event(item.matrix_event_id).turn_index
+                if self.get_event(item.matrix_event_id) is not None
+                else -1,
+                item.certainty,
+            ),
+            reverse=True,
+        )
+
+    def embedded_interrogatives_for_event(
+        self,
+        event_id: str,
+    ) -> List[EmbeddedInterrogativeRelation]:
+        return [
+            relation
+            for relation in self.embedded_interrogatives
+            if event_id in {
+                relation.matrix_event_id,
+                relation.question_event_id,
+            }
+        ]
+
     def _next_infinitival_id(self) -> str:
         self._infinitival_counter += 1
         return f"infinitival_{self._infinitival_counter}"
@@ -1040,6 +1184,7 @@ class ConversationMemory:
         include_opposite_polarity: bool = True,
         include_attributed_content: bool = False,
         include_infinitival_content: bool = False,
+        include_interrogative_content: bool = False,
     ) -> List[EventMatch]:
         ignored = set(ignore_roles)
         matches: List[EventMatch] = []
@@ -1053,6 +1198,11 @@ class ConversationMemory:
             if (
                 event.discourse_role == "infinitive"
                 and not include_infinitival_content
+            ):
+                continue
+            if (
+                event.discourse_role == "interrogative"
+                and not include_interrogative_content
             ):
                 continue
             if event.predicate != query.predicate:
@@ -1118,6 +1268,7 @@ class ConversationMemory:
             "modifier_counter": self._modifier_counter,
             "appositive_counter": self._appositive_counter,
             "content_counter": self._content_counter,
+            "embedded_interrogative_counter": self._embedded_interrogative_counter,
             "infinitival_counter": self._infinitival_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
@@ -1125,6 +1276,10 @@ class ConversationMemory:
             "modifiers": [modifier.to_dict() for modifier in self.modifiers],
             "appositives": [relation.to_dict() for relation in self.appositives],
             "contents": [relation.to_dict() for relation in self.contents],
+            "embedded_interrogatives": [
+                relation.to_dict()
+                for relation in self.embedded_interrogatives
+            ],
             "infinitivals": [
                 relation.to_dict() for relation in self.infinitivals
             ],
@@ -1159,6 +1314,10 @@ class ConversationMemory:
             ContentRelation.from_dict(item)
             for item in data.get("contents", [])
         ]
+        memory.embedded_interrogatives = [
+            EmbeddedInterrogativeRelation.from_dict(item)
+            for item in data.get("embedded_interrogatives", [])
+        ]
         memory.infinitivals = [
             InfinitivalRelation.from_dict(item)
             for item in data.get("infinitivals", [])
@@ -1178,6 +1337,12 @@ class ConversationMemory:
         )
         memory._content_counter = int(
             data.get("content_counter", len(memory.contents))
+        )
+        memory._embedded_interrogative_counter = int(
+            data.get(
+                "embedded_interrogative_counter",
+                len(memory.embedded_interrogatives),
+            )
         )
         memory._infinitival_counter = int(
             data.get("infinitival_counter", len(memory.infinitivals))

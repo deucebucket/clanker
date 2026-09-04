@@ -144,6 +144,24 @@ class ContentRelationType(StringEnum):
     PERCEIVED = "perceived"
 
 
+class EmbeddedInterrogativeType(StringEnum):
+    """Structural type of a question embedded under a matrix predicate."""
+
+    WH = "wh"
+    POLAR = "polar"
+
+
+class EmbeddedInterrogativeStatus(StringEnum):
+    """Epistemic/discourse status contributed by the matrix predicate."""
+
+    ASKED = "asked"
+    WONDERED = "wondered"
+    KNOWN = "known"
+    REMEMBERED = "remembered"
+    DISCOVERED = "discovered"
+    REQUESTED = "requested"
+
+
 class InfinitivalRelationType(StringEnum):
     """Syntactic controller relationship for a selected ``to`` complement."""
 
@@ -618,6 +636,191 @@ class ContentAttachmentAmbiguity:
 
 
 @dataclass
+class EmbeddedInterrogativeRelation:
+    """Typed matrix-to-question link for one embedded interrogative.
+
+    The question proposition is stored as a nonassertive event containing its
+    typed variable, while this relation retains the interrogative operator,
+    attribution source, and matrix discourse status.  Neither a WH variable nor
+    a polar proposition is promoted into an unqualified fact by this relation.
+    """
+
+    relation_type: EmbeddedInterrogativeType
+    content_status: EmbeddedInterrogativeStatus
+    matrix_event_index: int
+    question_event_index: int
+    marker: str
+    matrix_predicate: str
+    source_entity_id: str
+    predicate_family: str
+    question_kind: QuestionKind
+    requested_role: Optional[str] = None
+    answer_type: EntityKind = EntityKind.UNKNOWN
+    certainty: int = 200
+    relation_id: str = ""
+    matrix_event_id: str = ""
+    question_event_id: str = ""
+    licensed: bool = True
+    direct_answer_request: bool = False
+    focus_surface: str = ""
+    why_kind: WhyKind = WhyKind.UNKNOWN
+    how_kind: HowKind = HowKind.UNKNOWN
+    diagnostics: List[str] = field(default_factory=list)
+
+    def copy(self, **changes: Any) -> "EmbeddedInterrogativeRelation":
+        values: Dict[str, Any] = {
+            "relation_type": self.relation_type,
+            "content_status": self.content_status,
+            "matrix_event_index": self.matrix_event_index,
+            "question_event_index": self.question_event_index,
+            "marker": self.marker,
+            "matrix_predicate": self.matrix_predicate,
+            "source_entity_id": self.source_entity_id,
+            "predicate_family": self.predicate_family,
+            "question_kind": self.question_kind,
+            "requested_role": self.requested_role,
+            "answer_type": self.answer_type,
+            "certainty": self.certainty,
+            "relation_id": self.relation_id,
+            "matrix_event_id": self.matrix_event_id,
+            "question_event_id": self.question_event_id,
+            "licensed": self.licensed,
+            "direct_answer_request": self.direct_answer_request,
+            "focus_surface": self.focus_surface,
+            "why_kind": self.why_kind,
+            "how_kind": self.how_kind,
+            "diagnostics": list(self.diagnostics),
+        }
+        values.update(changes)
+        return EmbeddedInterrogativeRelation(**values)
+
+    def signature(self) -> Tuple[Any, ...]:
+        return (
+            self.relation_type.value,
+            self.content_status.value,
+            self.matrix_event_id,
+            self.question_event_id,
+            self.marker,
+            self.matrix_predicate,
+            self.source_entity_id,
+            self.predicate_family,
+            self.question_kind.value,
+            self.requested_role,
+            self.answer_type.value,
+            self.licensed,
+            self.direct_answer_request,
+            self.focus_surface,
+            self.why_kind.value,
+            self.how_kind.value,
+        )
+
+    def to_question_frame(self, event: EventFrame) -> "QuestionFrame":
+        return QuestionFrame(
+            kind=self.question_kind,
+            event=event,
+            requested_role=self.requested_role,
+            answer_type=self.answer_type,
+            why_kind=self.why_kind,
+            how_kind=self.how_kind,
+            raw_text=event.raw_text,
+            focus_surface=self.focus_surface,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "relation_type": self.relation_type.value,
+            "content_status": self.content_status.value,
+            "matrix_event_index": self.matrix_event_index,
+            "question_event_index": self.question_event_index,
+            "marker": self.marker,
+            "matrix_predicate": self.matrix_predicate,
+            "source_entity_id": self.source_entity_id,
+            "predicate_family": self.predicate_family,
+            "question_kind": self.question_kind.value,
+            "requested_role": self.requested_role,
+            "answer_type": self.answer_type.value,
+            "certainty": self.certainty,
+            "relation_id": self.relation_id,
+            "matrix_event_id": self.matrix_event_id,
+            "question_event_id": self.question_event_id,
+            "licensed": self.licensed,
+            "direct_answer_request": self.direct_answer_request,
+            "focus_surface": self.focus_surface,
+            "why_kind": self.why_kind.value,
+            "how_kind": self.how_kind.value,
+            "diagnostics": list(self.diagnostics),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "EmbeddedInterrogativeRelation":
+        return cls(
+            relation_type=EmbeddedInterrogativeType(data["relation_type"]),
+            content_status=EmbeddedInterrogativeStatus(data["content_status"]),
+            matrix_event_index=int(data.get("matrix_event_index", -1)),
+            question_event_index=int(data.get("question_event_index", -1)),
+            marker=str(data.get("marker", "")),
+            matrix_predicate=str(data.get("matrix_predicate", "")),
+            source_entity_id=str(data.get("source_entity_id", "")),
+            predicate_family=str(data.get("predicate_family", "")),
+            question_kind=QuestionKind(data.get("question_kind", QuestionKind.UNKNOWN.value)),
+            requested_role=data.get("requested_role"),
+            answer_type=EntityKind(data.get("answer_type", EntityKind.UNKNOWN.value)),
+            certainty=max(0, min(255, int(data.get("certainty", 200)))),
+            relation_id=str(data.get("relation_id", "")),
+            matrix_event_id=str(data.get("matrix_event_id", "")),
+            question_event_id=str(data.get("question_event_id", "")),
+            licensed=bool(data.get("licensed", True)),
+            direct_answer_request=bool(data.get("direct_answer_request", False)),
+            focus_surface=str(data.get("focus_surface", "")),
+            why_kind=WhyKind(data.get("why_kind", WhyKind.UNKNOWN.value)),
+            how_kind=HowKind(data.get("how_kind", HowKind.UNKNOWN.value)),
+            diagnostics=list(data.get("diagnostics", [])),
+        )
+
+
+@dataclass
+class EmbeddedInterrogativeAttachmentAmbiguity:
+    """Explicit unresolved matrix/question boundary or interrogative scope."""
+
+    matrix_surface: str
+    question_surface: str
+    clause_surface: str
+    reason: str
+    candidate_boundaries: List[int] = field(default_factory=list)
+    candidate_markers: List[str] = field(default_factory=list)
+    ambiguity_id: str = ""
+    diagnostics: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "matrix_surface": self.matrix_surface,
+            "question_surface": self.question_surface,
+            "clause_surface": self.clause_surface,
+            "reason": self.reason,
+            "candidate_boundaries": list(self.candidate_boundaries),
+            "candidate_markers": list(self.candidate_markers),
+            "ambiguity_id": self.ambiguity_id,
+            "diagnostics": list(self.diagnostics),
+        }
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: Mapping[str, Any],
+    ) -> "EmbeddedInterrogativeAttachmentAmbiguity":
+        return cls(
+            matrix_surface=str(data.get("matrix_surface", "")),
+            question_surface=str(data.get("question_surface", "")),
+            clause_surface=str(data.get("clause_surface", "")),
+            reason=str(data.get("reason", "")),
+            candidate_boundaries=[int(item) for item in data.get("candidate_boundaries", [])],
+            candidate_markers=[str(item) for item in data.get("candidate_markers", [])],
+            ambiguity_id=str(data.get("ambiguity_id", "")),
+            diagnostics=list(data.get("diagnostics", [])),
+        )
+
+
+@dataclass
 class InfinitivalRelation:
     """Typed link between a matrix event and one selected infinitive.
 
@@ -1049,6 +1252,10 @@ class QuestionFrame:
     social_convention: Optional[str] = None
     matrix_polarity: Optional[bool] = None
     embedded_polarity: Optional[bool] = None
+    embedded_question: Optional["QuestionFrame"] = None
+    embedded_interrogative_type: Optional[EmbeddedInterrogativeType] = None
+    embedded_marker: str = ""
+    embedded_matrix_predicate: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -1064,6 +1271,18 @@ class QuestionFrame:
             "social_convention": self.social_convention,
             "matrix_polarity": self.matrix_polarity,
             "embedded_polarity": self.embedded_polarity,
+            "embedded_question": (
+                self.embedded_question.to_dict()
+                if self.embedded_question is not None
+                else None
+            ),
+            "embedded_interrogative_type": (
+                self.embedded_interrogative_type.value
+                if self.embedded_interrogative_type is not None
+                else None
+            ),
+            "embedded_marker": self.embedded_marker,
+            "embedded_matrix_predicate": self.embedded_matrix_predicate,
         }
 
 
@@ -1079,6 +1298,10 @@ class ParseResult:
     appositive_ambiguities: List[AppositiveAttachmentAmbiguity] = field(default_factory=list)
     contents: List[ContentRelation] = field(default_factory=list)
     content_ambiguities: List[ContentAttachmentAmbiguity] = field(default_factory=list)
+    embedded_interrogatives: List[EmbeddedInterrogativeRelation] = field(default_factory=list)
+    embedded_interrogative_ambiguities: List[
+        EmbeddedInterrogativeAttachmentAmbiguity
+    ] = field(default_factory=list)
     infinitivals: List[InfinitivalRelation] = field(default_factory=list)
     infinitival_ambiguities: List[InfinitivalAttachmentAmbiguity] = field(
         default_factory=list
@@ -1110,6 +1333,13 @@ class ParseResult:
             "contents": [item.to_dict() for item in self.contents],
             "content_ambiguities": [
                 ambiguity.to_dict() for ambiguity in self.content_ambiguities
+            ],
+            "embedded_interrogatives": [
+                item.to_dict() for item in self.embedded_interrogatives
+            ],
+            "embedded_interrogative_ambiguities": [
+                ambiguity.to_dict()
+                for ambiguity in self.embedded_interrogative_ambiguities
             ],
             "infinitivals": [item.to_dict() for item in self.infinitivals],
             "infinitival_ambiguities": [
