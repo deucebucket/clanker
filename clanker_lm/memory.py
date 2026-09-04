@@ -16,6 +16,9 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 
 from . import lexicon
 from .model import (
+    AppositiveAttachmentAmbiguity,
+    AppositiveRelation,
+    AppositiveRelationType,
     ClauseRelation,
     Entity,
     EntityModifierRelation,
@@ -61,12 +64,14 @@ class ConversationMemory:
         self.events: List[EventFrame] = []
         self.relations: List[ClauseRelation] = []
         self.modifiers: List[EntityModifierRelation] = []
+        self.appositives: List[AppositiveRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
         self._entity_counter: int = 0
         self._event_counter: int = 0
         self._relation_counter: int = 0
         self._modifier_counter: int = 0
+        self._appositive_counter: int = 0
         self._initialize_participants()
 
     def _initialize_participants(self) -> None:
@@ -303,6 +308,85 @@ class ConversationMemory:
         self.entities[entity_id] = entity
         self.revision += 1
         return entity, identity_alias
+
+
+    def bind_appositive_alias(
+        self,
+        head_entity_id: str,
+        appositive_surface: str,
+        *,
+        relation_type: AppositiveRelationType,
+        expected_kind: EntityKind = EntityKind.UNKNOWN,
+        role_owner_id: str = "",
+        role_name: str = "",
+    ) -> Resolution:
+        """Bind explicit apposition without collapsing an incompatible entity."""
+
+        head = self.entities.get(head_entity_id)
+        if head is None:
+            return Resolution("missing", reason="appositive head entity is unknown")
+        if (
+            expected_kind != EntityKind.UNKNOWN
+            and head.kind not in {expected_kind, EntityKind.UNKNOWN}
+        ):
+            return Resolution(
+                "ambiguous",
+                candidates=[head],
+                reason="appositive type conflicts with the head entity",
+            )
+
+        normalized = self.normalize_alias(appositive_surface)
+        existing = self.find_by_alias(normalized, expected_kind)
+        if existing.resolved and existing.entity and existing.entity.entity_id != head_entity_id:
+            return Resolution(
+                "ambiguous",
+                candidates=[head, existing.entity],
+                reason="appositive surface already identifies a different entity",
+            )
+        if existing.status == "ambiguous":
+            candidates = [head] + [
+                entity
+                for entity in existing.candidates
+                if entity.entity_id != head_entity_id
+            ]
+            return Resolution(
+                "ambiguous",
+                candidates=candidates,
+                reason="appositive surface has multiple existing identities",
+            )
+
+        if role_name and role_owner_id:
+            role_conflicts = [
+                entity
+                for entity in self.entities.values()
+                if entity.owner_id == role_owner_id
+                and entity.relation == role_name
+                and entity.entity_id != head_entity_id
+            ]
+            if role_conflicts:
+                return Resolution(
+                    "ambiguous",
+                    candidates=[head] + role_conflicts,
+                    reason="appositive role already belongs to another entity",
+                )
+            if head.owner_id not in {None, role_owner_id} or head.relation not in {None, role_name}:
+                return Resolution(
+                    "ambiguous",
+                    candidates=[head],
+                    reason="appositive role conflicts with existing relationship metadata",
+                )
+            head.owner_id = role_owner_id
+            head.relation = role_name
+            head.add_alias(role_name)
+            head.add_alias(f"{role_owner_id}:{role_name}")
+
+        head.add_alias(appositive_surface)
+        head.add_alias(normalized)
+        head.attributes.setdefault("appositive_type", relation_type.value)
+        head.last_mentioned_turn = self.turn_index
+        head.salience += 0.6
+        self.revision += 1
+        return Resolution("resolved", entity=head)
 
     def find_by_alias(self, phrase: str, expected_kind: EntityKind = EntityKind.UNKNOWN) -> Resolution:
         normalized = self.normalize_alias(phrase)
@@ -576,6 +660,48 @@ class ConversationMemory:
             self.revision += 1
         return stored
 
+
+    def _next_appositive_id(self) -> str:
+        self._appositive_counter += 1
+        return f"appositive_{self._appositive_counter}"
+
+    def add_appositive_relations(
+        self,
+        appositives: Sequence[AppositiveRelation],
+    ) -> List[AppositiveRelation]:
+        """Store validated appositive links with stable relation identities."""
+
+        stored: List[AppositiveRelation] = []
+        for relation in appositives:
+            if relation.head_entity_id not in self.entities:
+                raise ValueError("Appositive relation references an unknown entity")
+            bound = relation.copy(
+                relation_id=relation.relation_id or self._next_appositive_id()
+            )
+            existing = next(
+                (item for item in self.appositives if item.signature() == bound.signature()),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, bound.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + bound.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                self.appositives.append(bound)
+                stored.append(bound)
+            self.mention(bound.head_entity_id, "modifier", 0.5)
+            self.revision += 1
+        return stored
+
+    def appositives_for_entity(self, entity_id: str) -> List[AppositiveRelation]:
+        return [
+            relation
+            for relation in self.appositives
+            if relation.head_entity_id == entity_id
+        ]
+
     def modifiers_for_entity(self, entity_id: str) -> List[EntityModifierRelation]:
         return [
             modifier
@@ -679,10 +805,12 @@ class ConversationMemory:
             "event_counter": self._event_counter,
             "relation_counter": self._relation_counter,
             "modifier_counter": self._modifier_counter,
+            "appositive_counter": self._appositive_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
             "relations": [relation.to_dict() for relation in self.relations],
             "modifiers": [modifier.to_dict() for modifier in self.modifiers],
+            "appositives": [relation.to_dict() for relation in self.appositives],
         }
 
     @classmethod
@@ -706,6 +834,10 @@ class ConversationMemory:
             EntityModifierRelation.from_dict(item)
             for item in data.get("modifiers", [])
         ]
+        memory.appositives = [
+            AppositiveRelation.from_dict(item)
+            for item in data.get("appositives", [])
+        ]
         memory.turn_index = int(data.get("turn_index", 0))
         memory.revision = int(data.get("revision", 0))
         memory._entity_counter = int(data.get("entity_counter", len(memory.entities)))
@@ -715,6 +847,9 @@ class ConversationMemory:
         )
         memory._modifier_counter = int(
             data.get("modifier_counter", len(memory.modifiers))
+        )
+        memory._appositive_counter = int(
+            data.get("appositive_counter", len(memory.appositives))
         )
         return memory
 

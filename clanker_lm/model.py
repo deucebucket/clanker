@@ -131,6 +131,12 @@ class ModifierGapRole(StringEnum):
     POSSESSOR = "possessor"
 
 
+class AppositiveRelationType(StringEnum):
+    IDENTITY = "identity"
+    ROLE = "role"
+    DESCRIPTION = "description"
+
+
 class AnswerStatus(StringEnum):
     ANSWERED = "answered"
     TRUE = "true"
@@ -553,6 +559,125 @@ class EntityModifierRelation:
 
 
 @dataclass
+class AppositiveRelation:
+    """Typed identity/description link licensed by explicit apposition."""
+
+    head_entity_id: str
+    primary_surface: str
+    appositive_surface: str
+    relation_type: AppositiveRelationType
+    restriction: ModifierRestriction
+    appositive_key: str = ""
+    role_owner_id: str = ""
+    role_name: str = ""
+    certainty: int = 230
+    relation_id: str = ""
+    source: SourceKind = SourceKind.USER
+    diagnostics: List[str] = field(default_factory=list)
+
+    def copy(self, **changes: Any) -> "AppositiveRelation":
+        values: Dict[str, Any] = {
+            "head_entity_id": self.head_entity_id,
+            "primary_surface": self.primary_surface,
+            "appositive_surface": self.appositive_surface,
+            "relation_type": self.relation_type,
+            "restriction": self.restriction,
+            "appositive_key": self.appositive_key,
+            "role_owner_id": self.role_owner_id,
+            "role_name": self.role_name,
+            "certainty": self.certainty,
+            "relation_id": self.relation_id,
+            "source": self.source,
+            "diagnostics": list(self.diagnostics),
+        }
+        values.update(changes)
+        return AppositiveRelation(**values)
+
+    def signature(self) -> Tuple[Any, ...]:
+        return (
+            self.head_entity_id,
+            self.appositive_key,
+            self.relation_type.value,
+            self.restriction.value,
+            self.role_owner_id,
+            self.role_name,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "head_entity_id": self.head_entity_id,
+            "primary_surface": self.primary_surface,
+            "appositive_surface": self.appositive_surface,
+            "relation_type": self.relation_type.value,
+            "restriction": self.restriction.value,
+            "appositive_key": self.appositive_key,
+            "role_owner_id": self.role_owner_id,
+            "role_name": self.role_name,
+            "certainty": self.certainty,
+            "relation_id": self.relation_id,
+            "source": self.source.value,
+            "diagnostics": list(self.diagnostics),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "AppositiveRelation":
+        return cls(
+            head_entity_id=str(data["head_entity_id"]),
+            primary_surface=str(data.get("primary_surface", "")),
+            appositive_surface=str(data.get("appositive_surface", "")),
+            relation_type=AppositiveRelationType(
+                data.get("relation_type", AppositiveRelationType.IDENTITY.value)
+            ),
+            restriction=ModifierRestriction(
+                data.get("restriction", ModifierRestriction.NONRESTRICTIVE.value)
+            ),
+            appositive_key=str(data.get("appositive_key", "")),
+            role_owner_id=str(data.get("role_owner_id", "")),
+            role_name=str(data.get("role_name", "")),
+            certainty=max(0, min(255, int(data.get("certainty", 230)))),
+            relation_id=str(data.get("relation_id", "")),
+            source=SourceKind(data.get("source", SourceKind.USER.value)),
+            diagnostics=list(data.get("diagnostics", [])),
+        )
+
+
+@dataclass
+class AppositiveAttachmentAmbiguity:
+    """Explicit unresolved appositive identity or attachment choice."""
+
+    primary_surface: str
+    appositive_surface: str
+    clause_surface: str
+    reason: str
+    candidate_entity_ids: List[str] = field(default_factory=list)
+    ambiguity_id: str = ""
+    diagnostics: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "primary_surface": self.primary_surface,
+            "appositive_surface": self.appositive_surface,
+            "clause_surface": self.clause_surface,
+            "reason": self.reason,
+            "candidate_entity_ids": list(self.candidate_entity_ids),
+            "ambiguity_id": self.ambiguity_id,
+            "diagnostics": list(self.diagnostics),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "AppositiveAttachmentAmbiguity":
+        return cls(
+            primary_surface=str(data.get("primary_surface", "")),
+            appositive_surface=str(data.get("appositive_surface", "")),
+            clause_surface=str(data.get("clause_surface", "")),
+            reason=str(data.get("reason", "")),
+            candidate_entity_ids=list(data.get("candidate_entity_ids", [])),
+            ambiguity_id=str(data.get("ambiguity_id", "")),
+            diagnostics=list(data.get("diagnostics", [])),
+        )
+
+
+@dataclass
 class ModifierAttachmentAmbiguity:
     """Explicit unresolved choice between multiple relative attachments."""
 
@@ -621,6 +746,8 @@ class ParseResult:
     relations: List[ClauseRelation] = field(default_factory=list)
     modifiers: List[EntityModifierRelation] = field(default_factory=list)
     modifier_ambiguities: List[ModifierAttachmentAmbiguity] = field(default_factory=list)
+    appositives: List[AppositiveRelation] = field(default_factory=list)
+    appositive_ambiguities: List[AppositiveAttachmentAmbiguity] = field(default_factory=list)
     question: Optional[QuestionFrame] = None
     entities: List[str] = field(default_factory=list)
     unresolved: List[UnresolvedReference] = field(default_factory=list)
@@ -640,6 +767,10 @@ class ParseResult:
             "modifiers": [modifier.to_dict() for modifier in self.modifiers],
             "modifier_ambiguities": [
                 ambiguity.to_dict() for ambiguity in self.modifier_ambiguities
+            ],
+            "appositives": [item.to_dict() for item in self.appositives],
+            "appositive_ambiguities": [
+                ambiguity.to_dict() for ambiguity in self.appositive_ambiguities
             ],
             "question": self.question.to_dict() if self.question else None,
             "entities": list(self.entities),

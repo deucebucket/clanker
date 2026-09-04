@@ -300,6 +300,7 @@ class ClankerLM:
             stored = [self.memory.add_event(event) for event in parse.events]
             self.memory.add_clause_relations(parse.relations, stored)
             self.memory.add_entity_modifier_relations(parse.modifiers, stored)
+            self.memory.add_appositive_relations(parse.appositives)
             return AnswerContract(
                 status=AnswerStatus.ACKNOWLEDGED,
                 proposition=stored[-1],

@@ -176,6 +176,29 @@ class SurfaceRealizer:
             return self._social(contract, gates)
         if contract.proposition is None:
             return self._unsupported(contract, gates)
+        if (
+            contract.question is not None
+            and contract.question.kind == QuestionKind.WHOSE
+            and contract.values
+        ):
+            owner = self.render_ref(
+                contract.values[0],
+                case="subject",
+                definite=True,
+                capitalize=True,
+            )
+            return [
+                self._candidate(
+                    [owner, self._atom("punct.period")],
+                    candidate_id="compose.answer.possessor",
+                    semantic_plan=[
+                        *self._rule_plan("reply:answer"),
+                        "ROLE:possessor",
+                        f"VALUE:{contract.values[0].key}",
+                    ],
+                    priority=108,
+                )
+            ]
         clause = self.render_event(contract.proposition, capitalize=True)
         return [
             self._candidate(

@@ -92,6 +92,10 @@ class QuestionAnswerer:
 
         if question.kind == QuestionKind.WHAT_HAPPENED:
             return self._answer_event_query(question, memory)
+        if question.kind == QuestionKind.WHOSE:
+            ownership = self._answer_possessor(question, memory)
+            if ownership is not None:
+                return ownership
         if question.kind == QuestionKind.YES_NO:
             return self._answer_yes_no(question, memory)
         if not question.requested_role:
@@ -102,6 +106,43 @@ class QuestionAnswerer:
                 response_goal="clarify",
             )
         return self._answer_open_slot(question, memory)
+
+
+    def _answer_possessor(
+        self,
+        question: QuestionFrame,
+        memory: ConversationMemory,
+    ) -> Optional[AnswerContract]:
+        patient = question.event.arguments.get("patient")
+        if patient is None or patient.kind != RefKind.ENTITY:
+            return None
+        entity = memory.get_entity(patient.key)
+        if entity is None or not entity.owner_id:
+            return None
+        owner = memory.get_entity(entity.owner_id)
+        if owner is None:
+            return None
+        proposition = EventFrame(
+            predicate="own",
+            arguments={
+                "possessor": owner.to_ref(),
+                "patient": entity.to_ref(),
+            },
+            source=SourceKind.USER,
+            certainty=230,
+            turn_index=max(entity.last_mentioned_turn, owner.last_mentioned_turn),
+        )
+        return AnswerContract(
+            status=AnswerStatus.ANSWERED,
+            question=question,
+            proposition=proposition,
+            values=[owner.to_ref()],
+            evidence=[Evidence(proposition, matched_roles=["patient"], score=1.0)],
+            certainty=230,
+            source=SourceKind.USER,
+            reason="possessed entity stores an explicit owner relation",
+            response_goal="answer",
+        )
 
     def _answer_event_query(self, question: QuestionFrame, memory: ConversationMemory) -> AnswerContract:
         candidates = list(memory.events)
