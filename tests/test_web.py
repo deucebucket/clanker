@@ -968,26 +968,26 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
         "package_version": current["package_version"],
         "milestone_commit": current["milestone_commit"],
     }
-    assert current["release_id"] == "pr-113"
+    assert current["release_id"] == "pr-106"
     assert current["package_version"] == feed["running_package_version"]
-    assert current["milestone_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
+    assert current["milestone_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
     assert feed["deployed_build_commit"] != current["milestone_commit"]
     assert current["date"] == "2026-09-04"
     assert current["deployment"] == {
         "state": "live",
         "label": "Live · private Tailnet",
-        "detail": "Reviewed PR #113 adds the shipped-changes reader; the deployed runtime build is reported separately.",
+        "detail": "Reviewed PR #106 remains the deployed baseline until the PR #113 artifact passes live verification.",
         "url": "https://bazzite.tail85f65f.ts.net:8444/",
     }
     assert current["capabilities"]
     assert current["limitations"]
     assert {link["url"] for link in current["evidence"]} >= {
-        "https://github.com/deucebucket/clanker/pull/113",
-        "https://github.com/deucebucket/clanker/commit/66b85de66337789fa83292ecf683c6b23cc0af55",
+        "https://github.com/deucebucket/clanker/pull/106",
+        "https://github.com/deucebucket/clanker/commit/9ae77f072f8afda0b1d2b757ab492757cabff0f8",
     }
     previous = feed["releases"][1]
-    assert previous["release_id"] == "pr-106"
-    assert previous["deployment"]["state"] == "retired"
+    assert previous["release_id"] == "pr-113"
+    assert previous["deployment"]["state"] == "pending"
     assert "pr-107" not in response.text.lower()
     _assert_hardened(response)
 
@@ -1000,6 +1000,24 @@ def test_release_endpoint_reports_the_exact_configured_runtime_build() -> None:
     assert response.status_code == 200
     assert response.json()["deployed_build_commit"] == configured_build
     assert response.json()["latest_shipped_release"]["milestone_commit"] != configured_build
+
+
+def test_pending_milestone_cannot_replace_the_verified_live_marker() -> None:
+    feed = _release_feed_fixture()
+    assert web_module._validate_release_feed(feed)
+    assert feed["latest_shipped_release"]["release_id"] == "pr-106"
+    assert feed["releases"][0]["deployment"]["state"] == "live"
+    assert feed["releases"][1]["release_id"] == "pr-113"
+    assert feed["releases"][1]["deployment"]["state"] == "pending"
+
+    premature = copy.deepcopy(feed)
+    premature["latest_shipped_release"] = {
+        key: premature["releases"][1][key]
+        for key in ("release_id", "package_version", "milestone_commit")
+    }
+    premature["releases"] = [premature["releases"][1], premature["releases"][0]]
+    with pytest.raises(ValueError, match="newest release does not match shipped"):
+        web_module._validate_release_feed(premature)
 
 
 def test_release_feed_requires_identity_and_never_allocates_a_runtime_session() -> None:

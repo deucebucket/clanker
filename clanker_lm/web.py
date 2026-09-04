@@ -601,7 +601,7 @@ def _validate_release_feed(value: Any) -> Mapping[str, Any]:
         deployment_state = _release_text(
             deployment["state"], name="deployment state", maximum=20
         )
-        if deployment_state not in {"live", "retired", "rolled_back"}:
+        if deployment_state not in {"live", "pending", "retired", "rolled_back"}:
             raise ValueError("release deployment state is unsupported")
         _release_text(deployment["label"], name="deployment label", maximum=100)
         _release_text(deployment["detail"], name="deployment detail")

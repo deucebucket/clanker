@@ -57,8 +57,8 @@ def test_release_verifier_accepts_pr_merged_at_the_recorded_commit() -> None:
     verify_merged_releases(_feed(), opener=opener, token="test-token")
     assert len(requests) == 2
     assert [request.full_url.rsplit("/", 1)[-1] for request, _ in requests] == [
-        "113",
         "106",
+        "113",
     ]
     assert all(request.headers["Authorization"] == "Bearer test-token" for request, _ in requests)
     assert all(timeout == 15 for _, timeout in requests)
@@ -96,9 +96,7 @@ def test_coherent_arbitrary_commit_fails_github_merge_commit_agreement() -> None
     with pytest.raises(ValueError, match="milestone commit disagrees"):
         verify_merged_releases(
             feed,
-            opener=lambda *_args, **_kwargs: FakeResponse(
-                _merged_payload(number=113, commit=CURRENT_MERGE_COMMIT)
-            ),
+            opener=lambda *_args, **_kwargs: FakeResponse(_merged_payload()),
         )
 
 
@@ -149,5 +147,6 @@ def test_ci_runs_the_network_release_verifier() -> None:
     ).read_text(encoding="utf-8")
     assert "PR #112 row" not in web_guide
     assert "pr-112" not in web_guide.lower()
-    assert "implementation PR for issue #112" in web_guide
-    assert "actual number" in web_guide and "actual squash/merge SHA" in web_guide
+    assert "PR #113 is the implementation PR" in web_guide
+    assert "first\nfollow-up artifact adds `pr-113` as `pending`" in web_guide
+    assert "prevents checked-in metadata from claiming a\nfuture deployment" in web_guide

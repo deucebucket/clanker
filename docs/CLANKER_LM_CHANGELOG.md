@@ -41,7 +41,8 @@ implementation merged as PR #113, this follow-up release artifact added the
 actual PR number and actual merge commit; issue #107 and later language-roadmap
 work remain explicitly absent until their own reviewed releases. The follow-up
 artifact still requires its own review, CI, deployment, and live build-identity
-check before issue #112 can close.
+check before issue #112 can close. Until that happens, the PR #113 row is
+explicitly **Pending · live verification** and PR #106 remains the live marker.
 
 The first implementation commit `2c16f69` was rejected because it reused PR
 #106's milestone commit as if that proved the running build. The corrected

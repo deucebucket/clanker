@@ -845,8 +845,8 @@ GitHub merged the implementation as PR #113 at
 
 **Proven:** this follow-up replaces the pre-merge PR #106-only ledger head with
 an exact `pr-113` row. Its evidence URLs name PR #113, merge commit `66b85de`,
-and exact-head CI run `33861328696`. PR #106 remains as the superseded baseline
-record rather than disappearing from history.
+and exact-head CI run `33861328696`. It is explicitly `pending`; PR #106 remains
+the current `live` marker rather than being retired before deployment.
 
 **Inference:** the metadata is ready for release review because its identifiers
 come from GitHub's completed merge and CI records, not a predicted PR number or
@@ -871,6 +871,7 @@ runtime build:         supplied only after this follow-up artifact merges
 ### Next / blocker
 
 Validate the two-entry ledger and documentation, obtain independent exact-head
-review, merge the metadata-only follow-up, deploy with that follow-up merge SHA
-as `CLANKER_LM_BUILD_COMMIT`, and close #112 only after the live endpoint,
-dialog, identity boundary, health checks, and mobile/desktop probes all pass.
+review, merge the pending metadata follow-up, and deploy it with that merge SHA
+as `CLANKER_LM_BUILD_COMMIT`. After the live endpoint, dialog, identity boundary,
+health, and mobile/desktop probes pass, promote PR #113 to `live` in one final
+reviewed metadata artifact and deploy that exact artifact before closing #112.
