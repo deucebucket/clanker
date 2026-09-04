@@ -3,6 +3,7 @@
 from .corpus import (
     CORPUS_VERSION,
     CorpusIntegrityError,
+    load_lineage_inventory,
     load_manifest,
     load_split,
     verify_corpus,
@@ -11,6 +12,7 @@ from .corpus import (
 __all__ = [
     "CORPUS_VERSION",
     "CorpusIntegrityError",
+    "load_lineage_inventory",
     "load_manifest",
     "load_split",
     "verify_corpus",

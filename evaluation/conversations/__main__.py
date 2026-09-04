@@ -10,6 +10,7 @@ from .corpus import (
     DATA_DIR,
     SOURCE_DIR,
     compile_corpora,
+    load_lineage_inventory,
     verify_additive_generations,
     verify_corpus,
     verify_generation_history,
@@ -23,6 +24,7 @@ def main() -> int:
     compile_parser.add_argument("--source-dir", type=Path, default=SOURCE_DIR)
     compile_parser.add_argument("--output-dir", type=Path, default=DATA_DIR)
     subparsers.add_parser("verify")
+    subparsers.add_parser("lineage-inventory")
     history_parser = subparsers.add_parser("verify-history")
     history_parser.add_argument("--ref", default="HEAD")
     additive_parser = subparsers.add_parser("verify-additive")
@@ -38,6 +40,9 @@ def main() -> int:
         return 0
     if args.command == "verify":
         print(json.dumps(verify_corpus(), indent=2, sort_keys=True))
+        return 0
+    if args.command == "lineage-inventory":
+        print(json.dumps(load_lineage_inventory(), indent=2, sort_keys=True))
         return 0
     if args.command == "verify-history":
         print(json.dumps(verify_generation_history(args.ref), indent=2, sort_keys=True))

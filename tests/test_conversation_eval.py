@@ -38,6 +38,7 @@ from evaluation.conversations.corpus import (
     _validate_source_document,
     assert_production_tree,
     compile_corpora,
+    load_lineage_inventory,
     load_manifest,
     load_split,
     production_tree_sha256,
@@ -88,6 +89,36 @@ def test_manifest_has_frozen_whole_conversation_corpus():
     assert heldout["training_eligible"] is False
     assert heldout["teacher_replay_eligible"] is False
     assert selected_manifest_path().parent.joinpath("ROOT.sha256").read_text().strip() == manifest["corpus_root_sha256"]
+
+
+def test_authenticated_lineage_inventory_exposes_policy_without_payloads():
+    inventory = load_lineage_inventory()
+    manifest = load_manifest()
+    assert inventory["selected_generation"] == manifest["corpus_root_sha256"]
+    assert inventory["manifest_sha256"] == hashlib.sha256(
+        selected_manifest_path().read_bytes()
+    ).hexdigest()
+    assert set(inventory["splits"]) == {"development", "heldout"}
+    assert inventory["splits"]["development"]["allowed_uses"] == [
+        "development", "evaluation", "teacher_replay",
+    ]
+    assert "promotion" not in inventory["splits"]["development"]["allowed_uses"]
+    assert inventory["splits"]["heldout"]["allowed_uses"] == ["evaluation"]
+    assert len(inventory["splits"]["heldout"]["conversations"]) == 56
+    assert len(inventory["splits"]["development"]["conversations"]) == 10
+    serialized = _canonical_json(inventory)
+    assert all(
+        forbidden not in serialized
+        for forbidden in ('"text":', '"turns":', '"annotations":', '"participants":')
+    )
+    assert all(
+        set(record) == {
+            "conversation_id", "source_conversation_id", "lineage_id",
+            "conversation_sha256", "source_id",
+        }
+        for split in inventory["splits"].values()
+        for record in split["conversations"]
+    )
 
 
 def test_shipped_generation_layout_has_no_divergent_flat_fallback():

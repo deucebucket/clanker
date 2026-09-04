@@ -39,6 +39,11 @@ whole-conversation digest, raw-source digests, compiler/evaluator digests, and
 a digest of the exact production code and runtime-data bytes at the named
 release commit. `ROOT.sha256` anchors all of those constituents. The compiler
 and runner fail if local production bytes differ.
+A metadata-only `lineage-inventory` command authenticates the selected
+manifest through that history ledger, verifies every whole-conversation
+content address, and returns only source/conversation/lineage IDs, hashes,
+counts, and split-policy flags. It exposes no turns, annotations, participants,
+or text. This is the complete lineage/policy handoff for #110.
 A correction requires `conversation-v2`; changing v1 in
 place is forbidden. The release tag for the merge commit is the external,
 immutable anchor; a digest stored beside its payload is not sufficient alone.
@@ -48,6 +53,10 @@ fails closed for `training`, `teacher_replay`, or `promotion`. Evaluation uses a
 fresh store per whole conversation. Transition correction reads an immutable
 development-only store while held-out observations go to a separate ephemeral
 store, so an earlier held-out turn cannot tune a later one.
+Development is intentionally eligible for supervised teacher replay and
+proposal construction, but neither split permits the `promotion` purpose.
+Under #110, promotion consumes an approved, provenance-bound correction or
+preference artifact; it never promotes a raw conversation split directly.
 
 The `evaluation` package is excluded from built distributions. A repository
 gate also parses every declared production source and bounded executable asset
@@ -75,6 +84,7 @@ the raw-source attestation remains a project claim.
 python -m evaluation.conversations compile
 python -m evaluation.conversations verify
 python -m evaluation.conversations verify-history --ref HEAD
+python -m evaluation.conversations lineage-inventory
 python -m evaluation.conversations run --split development
 python -m evaluation.conversations run --split heldout \
   --output evaluation/conversations/baselines/post_113_heldout_v1.json \

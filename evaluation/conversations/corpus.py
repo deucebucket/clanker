@@ -1897,6 +1897,76 @@ def load_split(
     return conversations
 
 
+def load_lineage_inventory(
+    *,
+    manifest_path: Path = MANIFEST_PATH,
+) -> Dict[str, Any]:
+    """Return authenticated split/lineage metadata without conversation payloads.
+
+    This is the metadata-only handoff for supervised replay and promotion gates.
+    It deliberately exposes no turns, annotations, participant data, or text.
+    Each returned record is derived from a split whose bytes and individual
+    whole-conversation content address have already been verified by
+    :func:`load_split`.
+    """
+
+    selected = selected_manifest_path(manifest_path)
+    manifest = load_manifest(selected)
+    generation_dir = selected.parent
+    if generation_dir.parent.name != GENERATIONS_DIRECTORY:
+        raise CorpusIntegrityError("selected manifest is not inside a sealed generation")
+    data_dir = generation_dir.parent.parent
+    history = _load_history_ledger(data_dir, require_exact_inventory=True)
+    generation = str(manifest["corpus_root_sha256"])
+    history_entry = history["generations"].get(generation)
+    if history_entry is None:
+        raise CorpusIntegrityError("selected generation is absent from corpus history")
+    manifest_digest = _sha256_file(selected)
+    if history_entry["files"][selected.name]["sha256"] != manifest_digest:
+        raise CorpusIntegrityError("selected manifest is not authenticated by corpus history")
+
+    split_inventory: Dict[str, Any] = {}
+    purposes = {"heldout": "evaluation", "development": "development"}
+    for split in sorted(manifest["splits"]):
+        split_manifest = manifest["splits"][split]
+        conversations = load_split(
+            split,
+            purpose=purposes[split],
+            manifest_path=selected,
+        )
+        records = [
+            {
+                "conversation_id": str(conversation["conversation_id"]),
+                "source_conversation_id": str(conversation["source_conversation_id"]),
+                "lineage_id": str(conversation["lineage_id"]),
+                "conversation_sha256": str(conversation["conversation_sha256"]),
+                "source_id": str(conversation["source_id"]),
+            }
+            for conversation in conversations
+        ]
+        if any(not record["lineage_id"] for record in records):
+            raise CorpusIntegrityError("conversation lineage inventory contains an empty lineage")
+        split_inventory[split] = {
+            "content_sha256": str(split_manifest["sha256"]),
+            "conversation_count": int(split_manifest["conversation_count"]),
+            "turn_count": int(split_manifest["turn_count"]),
+            "allowed_uses": list(split_manifest["allowed_uses"]),
+            "training_eligible": bool(split_manifest["training_eligible"]),
+            "teacher_replay_eligible": bool(
+                split_manifest["teacher_replay_eligible"]
+            ),
+            "conversations": records,
+        }
+
+    return {
+        "inventory_schema_version": 1,
+        "corpus_version": str(manifest["corpus_version"]),
+        "selected_generation": generation,
+        "manifest_sha256": manifest_digest,
+        "splits": split_inventory,
+    }
+
+
 def _shingles(text: str, size: int = 3) -> set[tuple[str, ...]]:
     words = _normalized_text(text).split()
     if len(words) < size:
