@@ -1001,41 +1001,59 @@ console/page errors. Issue closure depends on those measured results.
 conversations / 520 turns and 10 open-development conversations / 60 turns.
 The held-out split spans public-domain drama, public-domain novels, raw NASA
 technical air-to-ground exchanges, and original CC0 synthetic structural
-stress cases. The held-out and development split digests did not change while
-the evaluator and release provenance were corrected.
+stress cases. The held-out and development split bytes and labels remained
+unchanged throughout the evaluator and storage-integrity repairs.
 
 **Proven:** corpus root
-`d0ef1c003f26dc19c0b93a6717bcf5462d6e9cebf0978351a2e463542f055a9e`
+`a2bbc72fdab1fa33088f3b4a7b41c1ac8d4aa99e0b2e70c05ae3ef07b106618f`
 binds compiler, evaluator, schema, split policy, source provenance, and the
 exact production/package tree at
 `c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e`. Production Python, language seed,
-and packaged web assets are all included in that tree digest. Evaluation code
-is excluded from built packages and production has no corpus injection API.
+and packaged web assets are all included in production digest
+`b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f`.
+Built wheel and sdist artifacts exclude `evaluation/conversations`.
 
-**Unknown:** the baseline metrics are intentionally absent. Two detached
-reviewers must accept this exact clean core before the 520-turn, three-mode
-held-out run is allowed. Until that report is generated from the accepted core
-commit and committed separately, issue #41 is not complete.
+**Proven:** the ancestry/history gate authenticates all 13 generations ever
+selected on this candidate lineage, including the eight roots recovered after
+the rejected `27fd4c0` candidate. A metadata-only lineage inventory verifies
+the selected manifest and every whole-conversation content address, then
+exposes only IDs, hashes, counts, and allowed-use policy for downstream #110.
+
+**Unknown:** held-out baseline metrics are intentionally absent. Two detached
+reviewers must accept the final clean core before the 520-turn, three-mode run
+is allowed. Until that report is generated from the accepted core commit and
+committed separately, issue #41 is not complete.
 
 ### Current state
 
 | Class | Claim | Evidence |
 | --- | --- | --- |
-| Proven | Whole-conversation scale and split separation meet the corpus floor. | Held-out 56/520; development 10/60; compiler manifest under `evaluation/conversations/data/generations/d0ef1c0…/`. |
+| Proven | Whole-conversation scale and split separation meet the corpus floor. | Held-out 56/520; development 10/60; selected root `a2bbc72f…`. |
 | Proven | Real-human material is bounded to raw NASA technical transcript windows with authoritative public-use provenance. | NTRS `20160014392`, NASA raw transcript index/download locators, frozen raw digest, and source manifest. |
 | Proven | Literary affect/outcome annotations remain weak supervision; synthetic structural gold is excluded from affect scoring. | Per-turn supervision fields and evaluator strata. |
-| Proven | Integrity checks reject policy mutation, leakage, near-duplicates, source/schema corruption, split/report TOCTOU swaps, symlink escapes, partial publication, free-form response channels, and production-tree drift. | 94 evaluator tests passed with the baseline test deselected; `verify` reports zero overlap/reference/text-leak hits. |
+| Proven | Corpus history is append-only on the candidate ancestry, not merely relative to main. | `verify-history --ref HEAD`: 13 generations; additive checks pass against `135bfc6` and `852281d`. |
+| Proven | #110 receives authenticated lineage/policy metadata without conversation payloads. | `lineage-inventory`: 56 held-out + 10 development records; held-out allows evaluation only; development allows development/evaluation/teacher replay, never direct promotion. |
+| Proven | Integrity checks reject policy mutation, leakage, near-duplicates, source/schema corruption, TOCTOU swaps, symlink escapes, partial/crash publication, metric forgery, failure-ledger swaps, and production-tree drift. | 126 evaluator tests passed with one intentional pre-baseline skip; `verify` reports zero overlap/reference/text-leak hits. |
 | Unknown | Final semantic/entity/transition scores and confidence intervals. | Baseline run is held pending independent ACCEPT verdicts. |
 
 ### How it works, in plain language
 
 `CURRENT` is one atomic pointer to one content-addressed corpus directory. A
 reader hashes and parses the same bytes, validates the exact directory
-inventory, and refuses training or replay access to held-out rows. Reports use
-the same one-generation-pointer pattern, so a crash cannot select a report,
-failure ledger, and checksum from different runs. Cluster bootstrap samples
-whole conversations, preserving turn-weighted point estimates and paired mode
-draws.
+inventory, and refuses training or replay access to held-out rows. `HISTORY`
+binds every selected generation's exact file modes and bytes, while the Git
+ancestry gate proves none of the branch-local selections disappeared. Reports
+use the same immutable-generation pointer pattern with durable file and
+directory synchronization, so an exception or abrupt process death cannot
+select a mixed report, failure ledger, and checksum generation.
+
+Aggregate reports carry authenticated per-conversation/per-turn sufficient
+statistics but no conversation or response text. The validator reconstructs
+binary/scalar points, 10,000-draw clustered intervals, classification,
+calibration, drift, paired mode differences, failure membership, and the
+semantic fingerprint. This makes internally self-consistent counterfeits fail,
+not only malformed JSON. Cluster bootstrap samples whole conversations,
+preserving turn-weighted point estimates and identical paired draws.
 
 The truth boundary is intentionally conservative: literary and archival next
 turns show what followed in their source, not what a Clanker response caused.
@@ -1047,16 +1065,19 @@ copyright-ambiguous source is present.
 
 ```text
 production base:     c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e
-core milestone:      8d1154c7984bf3342aee736bc73eb01a28ca2af6
-corpus root:         d0ef1c003f26dc19c0b93a6717bcf5462d6e9cebf0978351a2e463542f055a9e
+executable core:     1174748d2d6196ee766dcf3ae61da34d7b534ae4
+corpus root:         a2bbc72fdab1fa33088f3b4a7b41c1ac8d4aa99e0b2e70c05ae3ef07b106618f
 production digest:   b6ea934649405392f655687eb0fca721f14afc1134ad0eac9db0577196a52b7f
 held-out split:      05a2dfed6776ccdb53e191d7666c2a83b6fffa2f63c31492a24bea39cbe64f18
 development split:   5018d7d3f2b60207333b6c50fec594b6b46411a6065962ec322038f0b75f0e43
-focused evaluator:   94 passed, 1 baseline test deliberately deselected
-full repository:     2,861 passed, 2 expected xfails, 1 expected missing-baseline failure
+manifest digest:     264b5b0c457015ee9704f42066c15bc45330742165e92d2832335bc12fa0e0a1
+history inventory:   13 authenticated selected generations
+focused evaluator:   126 passed, 1 intentional pre-baseline skip
+full repository:     2,893 passed, 1 intentional pre-baseline skip, 2 expected xfails
 benchmark:           29/29 deterministic turns
 integrity verify:    520 held-out + 60 development; 0 exact overlap; 0 near overlap;
                      0 production references; 0 production/test text leakage
+package boundary:    wheel 65 entries; sdist 106 entries; 0 evaluation/conversations paths
 visual evidence:     not applicable; this milestone has no UI surface
 ```
 
@@ -1065,19 +1086,26 @@ visual evidence:     not applicable; this milestone has no UI surface
 - Several earlier baseline attempts were invalidated before publication by
   scorer, annotation, provenance, and transactional-integrity findings. They
   are not evidence and are not present in the repository.
-- The full suite's sole failure is the deliberately absent
-  `post_113_heldout_v1.current`; this proves the release gate has not been
-  bypassed, not that baseline acceptance passed.
+- The full suite skips one test because `post_113_heldout_v1.current` is
+  deliberately absent. A missing baseline is not reported as a core failure,
+  but it remains an explicit release blocker.
 - Static production-reference analysis covers resolvable literals,
   concatenation, constant f-strings, named constants, imports, loader calls,
-  and path joins. It does not claim to analyze arbitrary dynamic code; the
-  production API exposes no dynamic corpus path/module injection surface.
+  path joins, and bounded executable-asset constructions. It cannot prove the
+  absence of arbitrary Python/JavaScript obfuscation or govern an
+  operator-supplied path. Distribution exclusion plus the direct-reference
+  gate is the enforceable deployed boundary.
+- Development conversations may be replayed to construct supervised proposals;
+  they are not themselves promotable. #110 must promote only approved,
+  provenance-bound artifacts and must use the lineage inventory to reject
+  held-out and correlated duplicate evidence.
 
 ### Next step / blocker
 
-Nominate the final clean core commit for both detached reviewers. Only after
-both return ACCEPT: run all three modes over the immutable 520-turn held-out
-split, transactionally publish the aggregate-only report/failure/checksum
-generation, commit those baseline artifacts separately, rerun the full suite,
-and create the documented immutable release tag after merge. Held-out text and
-labels remain forbidden inputs to #107 training or teacher replay.
+Nominate the final clean documentation successor for both detached reviewers.
+Only after both return ACCEPT: run all three modes over the immutable 520-turn
+held-out split, transactionally publish the aggregate-only
+report/failure/checksum generation, commit those baseline artifacts separately,
+rerun the full suite, bind stable CI thresholds/fingerprint/root, and create
+the documented immutable release tag after merge. Held-out text and labels
+remain forbidden inputs to #107/#110 training, teacher replay, or promotion.
