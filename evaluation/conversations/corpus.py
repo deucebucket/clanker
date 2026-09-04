@@ -28,6 +28,9 @@ DATA_DIR = ROOT / "data"
 MANIFEST_PATH = DATA_DIR / "manifest_v1.json"
 CURRENT_POINTER = "CURRENT"
 GENERATIONS_DIRECTORY = "generations"
+GENERATION_FILES = frozenset({
+    "heldout_v1.jsonl", "development_v1.jsonl", "manifest_v1.json", "ROOT.sha256",
+})
 REPO_ROOT = ROOT.parent.parent
 BASELINE_CODE_COMMIT = "66b85de66337789fa83292ecf683c6b23cc0af55"
 PRODUCTION_PATHS = ("clanker_lm", "engine", "clanker_engine.py")
@@ -118,6 +121,8 @@ def _atomic_replace_path(source: Path, target: Path) -> None:
 
 def _selected_data_dir(data_dir: Path) -> Path:
     pointer = data_dir / CURRENT_POINTER
+    if pointer.is_symlink():
+        raise CorpusIntegrityError("corpus CURRENT pointer cannot be a symlink")
     if not pointer.is_file():
         if (data_dir / GENERATIONS_DIRECTORY).exists():
             raise CorpusIntegrityError(
@@ -128,14 +133,26 @@ def _selected_data_dir(data_dir: Path) -> Path:
     if not re.fullmatch(r"[0-9a-f]{64}", generation):
         raise CorpusIntegrityError("corpus CURRENT pointer is malformed")
     selected = data_dir / GENERATIONS_DIRECTORY / generation
-    if not selected.is_dir():
+    if not selected.is_dir() or selected.is_symlink():
         raise CorpusIntegrityError("corpus CURRENT pointer selects a missing generation")
+    _validate_generation_members(selected, GENERATION_FILES, "selected corpus generation")
     return selected
 
 
 def selected_manifest_path(path: Path = MANIFEST_PATH) -> Path:
     selected = _selected_data_dir(path.parent)
     return selected / path.name
+
+
+def _validate_generation_members(directory: Path, expected: frozenset[str], location: str) -> None:
+    try:
+        members = list(directory.iterdir())
+    except OSError as exc:
+        raise CorpusIntegrityError(f"{location} is unreadable") from exc
+    if {member.name for member in members} != expected or any(
+        member.is_symlink() or not member.is_file() for member in members
+    ):
+        raise CorpusIntegrityError(f"{location} file inventory is not exact")
 
 
 def _require_exact_keys(
@@ -167,10 +184,7 @@ def _production_files(repo_root: Path = REPO_ROOT) -> List[Path]:
                 for item in path.rglob("*")
                 if item.is_file()
                 and "__pycache__" not in item.parts
-                and (
-                    item.suffix == ".py"
-                    or item.relative_to(repo_root).parts[:2] == ("clanker_lm", "data")
-                )
+                and (item.suffix == ".py" or item.relative_to(repo_root).parts[0] == "clanker_lm")
             )
         elif path.is_file():
             files.append(path)
@@ -191,6 +205,34 @@ def production_tree_sha256(repo_root: Path = REPO_ROOT) -> str:
     return _sha256_bytes(_canonical_json(_production_tree_payload(repo_root)).encode("utf-8"))
 
 
+def _production_reference_hits(
+    manifest: Mapping[str, Any], *, repo_root: Path = REPO_ROOT
+) -> List[str]:
+    literal_needles = {
+        "heldout_v1.jsonl",
+        str(manifest["content_address"]),
+        "evaluation.conversations",
+        "evaluation/conversations",
+        "evaluation\\conversations",
+    }
+    access_patterns = (
+        re.compile(r"\bload_split\s*\(\s*['\"]heldout['\"]", re.IGNORECASE),
+        re.compile(r"\bselected_manifest_path\s*\(", re.IGNORECASE),
+        re.compile(r"['\"]CURRENT['\"]\s*(?:\)|,|/)", re.IGNORECASE),
+    )
+    hits: List[str] = []
+    for path in _production_files(repo_root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        if any(needle in text for needle in literal_needles) or (
+            path.suffix == ".py" and any(pattern.search(text) for pattern in access_patterns)
+        ):
+            hits.append(path.relative_to(repo_root).as_posix())
+    return hits
+
+
 def _baseline_production_tree_payload(
     commit: str,
     *,
@@ -205,7 +247,7 @@ def _baseline_production_tree_payload(
         relevant = sorted(
             name
             for name in names
-            if name.endswith(".py") or Path(name).parts[:2] == ("clanker_lm", "data")
+            if name.endswith(".py") or Path(name).parts[0] == "clanker_lm"
         )
         return [
             {
@@ -1038,6 +1080,11 @@ def compile_corpora(
         for filename, payload in publish_payloads.items():
             (staging / filename).write_bytes(payload)
         if generation_dir.exists():
+            if not generation_dir.is_dir() or generation_dir.is_symlink():
+                raise CorpusIntegrityError("existing corpus generation is not a regular directory")
+            _validate_generation_members(
+                generation_dir, GENERATION_FILES, "existing corpus generation"
+            )
             for filename, payload in publish_payloads.items():
                 if not (generation_dir / filename).is_file() or (generation_dir / filename).read_bytes() != payload:
                     raise CorpusIntegrityError("existing immutable corpus generation differs from compiled bytes")
@@ -1117,8 +1164,8 @@ def load_split(
     immutable held-out labels from entering teacher replay or promotion paths.
     """
 
-    manifest = load_manifest(manifest_path)
     manifest_path = selected_manifest_path(manifest_path)
+    manifest = load_manifest(manifest_path)
     if split not in manifest["splits"]:
         raise CorpusIntegrityError(f"unknown split: {split}")
     entry = manifest["splits"][split]
@@ -1127,9 +1174,18 @@ def load_split(
     if purpose not in entry["allowed_uses"]:
         raise CorpusIntegrityError(f"split {split} is forbidden for purpose {purpose}")
     path = manifest_path.parent / str(entry["path"])
-    if _sha256_file(path) != entry["sha256"]:
+    try:
+        payload = path.read_bytes()
+    except OSError as exc:
+        raise CorpusIntegrityError(f"cannot read compiled split {split}") from exc
+    if _sha256_bytes(payload) != entry["sha256"]:
         raise CorpusIntegrityError(f"content hash mismatch for {split}")
-    conversations = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    try:
+        conversations = [
+            json.loads(line) for line in payload.decode("utf-8").splitlines() if line.strip()
+        ]
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise CorpusIntegrityError(f"compiled split {split} is malformed") from exc
     if len(conversations) != int(entry["conversation_count"]):
         raise CorpusIntegrityError(f"conversation count mismatch for {split}")
     for conversation in conversations:
@@ -1170,6 +1226,7 @@ def verify_corpus(
 ) -> Dict[str, Any]:
     """Recompile and enforce licensing, immutability, and leakage gates."""
 
+    manifest_path = selected_manifest_path(manifest_path)
     manifest = load_manifest(manifest_path)
     assert_production_tree(str(manifest["production_code_sha256"]))
     with tempfile.TemporaryDirectory(prefix="clanker-conversation-eval-") as tmp:
@@ -1218,16 +1275,7 @@ def verify_corpus(
         raise CorpusIntegrityError(f"near-duplicate split leakage: {near_duplicates[0]}")
 
     repo_root = ROOT.parent.parent
-    forbidden_needles = {
-        "heldout_v1.jsonl",
-        str(manifest["content_address"]),
-        "evaluation.conversations.data.heldout",
-    }
-    production_hits: List[str] = []
-    for path in sorted((repo_root / "clanker_lm").rglob("*.py")):
-        text = path.read_text(encoding="utf-8")
-        if any(needle in text for needle in forbidden_needles):
-            production_hits.append(str(path.relative_to(repo_root)))
+    production_hits = _production_reference_hits(manifest, repo_root=repo_root)
     if production_hits:
         raise CorpusIntegrityError(f"production imports/references held-out labels: {production_hits}")
 

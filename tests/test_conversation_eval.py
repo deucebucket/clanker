@@ -34,6 +34,7 @@ from evaluation.conversations.corpus import (
     CorpusIntegrityError,
     _canonical_json,
     _manifest_constituents,
+    _production_reference_hits,
     _validate_source_document,
     assert_production_tree,
     compile_corpora,
@@ -90,6 +91,13 @@ def test_shipped_generation_layout_has_no_divergent_flat_fallback():
     assert (DATA_DIR / "CURRENT").is_file()
     for name in ("ROOT.sha256", "manifest_v1.json", "heldout_v1.jsonl", "development_v1.jsonl"):
         assert not (DATA_DIR / name).exists()
+
+
+def test_ci_guards_every_preexisting_corpus_generation_path():
+    workflow = (ROOT / ".github/workflows/tests.yml").read_text()
+    assert "git ls-tree -r --name-only origin/main -- evaluation/conversations/data/generations" in workflow
+    assert 'git diff --exit-code origin/main -- "$frozen_path"' in workflow
+    assert "git diff --exit-code origin/main -- evaluation/conversations/data/CURRENT" in workflow
 
 
 def test_all_conversations_are_content_addressed_and_whole():
@@ -373,6 +381,47 @@ def test_corpus_generation_layout_requires_valid_current_pointer(tmp_path, point
         load_manifest(data / "manifest_v1.json")
 
 
+def test_corpus_generation_rejects_extra_and_symlink_members(tmp_path):
+    data = tmp_path / "extra-data"
+    shutil.copytree(DATA_DIR, data)
+    selected = selected_manifest_path(data / "manifest_v1.json").parent
+    (selected / "EXTRA.raw").write_text("not sealed\n")
+    with pytest.raises(CorpusIntegrityError, match="inventory"):
+        load_manifest(data / "manifest_v1.json")
+
+    symlink_data = tmp_path / "symlink-data"
+    shutil.copytree(DATA_DIR, symlink_data)
+    selected = selected_manifest_path(symlink_data / "manifest_v1.json").parent
+    root_path = selected / "ROOT.sha256"
+    root_path.unlink()
+    root_path.symlink_to("manifest_v1.json")
+    with pytest.raises(CorpusIntegrityError, match="inventory"):
+        load_manifest(symlink_data / "manifest_v1.json")
+
+
+def test_split_loader_hashes_and_parses_one_immutable_buffer(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    shutil.copytree(DATA_DIR, data)
+    manifest_path = data / "manifest_v1.json"
+    split_path = selected_manifest_path(manifest_path).parent / "development_v1.jsonl"
+    original_read_bytes = Path.read_bytes
+    swapped = False
+
+    def swap_after_read(path):
+        nonlocal swapped
+        payload = original_read_bytes(path)
+        if path == split_path and not swapped:
+            swapped = True
+            with path.open("wb") as stream:
+                stream.write(b"{}\n")
+        return payload
+
+    monkeypatch.setattr(Path, "read_bytes", swap_after_read)
+    conversations = load_split("development", purpose="development", manifest_path=manifest_path)
+    assert swapped is True
+    assert len(conversations) == 10
+
+
 @pytest.mark.parametrize("field", ["allowed_uses", "training_eligible", "teacher_replay_eligible"])
 def test_manifest_policy_tampering_fails_even_when_split_bytes_do_not_change(tmp_path, field):
     data = tmp_path / "data"
@@ -420,6 +469,33 @@ def test_production_tree_digest_binds_runtime_seed_asset(tmp_path):
     seed_path.write_bytes(seed_path.read_bytes() + b"\n")
     with pytest.raises(CorpusIntegrityError, match="production module bytes"):
         assert_production_tree(expected, repo_root=tmp_path)
+
+
+def test_production_tree_digest_binds_packaged_web_runtime_assets(tmp_path):
+    for directory in ("clanker_lm", "engine"):
+        shutil.copytree(ROOT / directory, tmp_path / directory)
+    shutil.copy2(ROOT / "clanker_engine.py", tmp_path / "clanker_engine.py")
+    expected = production_tree_sha256(tmp_path)
+    asset_path = tmp_path / "clanker_lm/web_assets/app.js"
+    asset_path.write_bytes(asset_path.read_bytes() + b"\n")
+    with pytest.raises(CorpusIntegrityError, match="production module bytes"):
+        assert_production_tree(expected, repo_root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "payload"),
+    [
+        ("clanker_engine.py", "load_split('heldout', purpose='evaluation')\n"),
+        ("engine/probe.py", "from evaluation.conversations.corpus import load_split\n"),
+        ("clanker_lm/probe.py", "Path('evaluation/conversations/data') / 'CURRENT'\n"),
+    ],
+)
+def test_production_reference_scan_covers_every_declared_path(tmp_path, relative_path, payload):
+    path = tmp_path / relative_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(payload)
+    manifest = {"content_address": "sha256:" + "a" * 64}
+    assert _production_reference_hits(manifest, repo_root=tmp_path) == [relative_path]
 
 
 def test_compiler_and_full_constituent_root_are_reproducible():
@@ -814,18 +890,23 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
     development_reports,
 ):
     report = development_reports[0]
-    failures = [
-        {
-            "conversation_id": f"schema-probe-{index}",
-            "turn_id": "id-only",
-            "domain": "open_development",
-            "mode": "sentence_only",
-            "category": category,
-        }
-        for category, count in report["failure_counts"].items()
-        for index in range(count)
-    ]
     conversations = load_split("development", purpose="development")
+    identities = [
+        (conversation["conversation_id"], turn["turn_id"], conversation["domain"])
+        for conversation in conversations
+        for turn in conversation["turns"]
+    ]
+    failures = []
+    for category, count in report["failure_counts"].items():
+        for _ in range(count):
+            conversation_id, turn_id, domain = identities[len(failures) % len(identities)]
+            failures.append({
+                "conversation_id": conversation_id,
+                "turn_id": turn_id,
+                "domain": domain,
+                "mode": "sentence_only",
+                "category": category,
+            })
     _validate_aggregate_artifacts(report, failures, conversations)
 
     mutations = []
@@ -843,6 +924,26 @@ def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types
     mutations.append(item)
     item = copy.deepcopy(report)
     item["failure_count"] = str(item["failure_count"])
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["limitations"][0] = "type-correct but undeclared generated response"
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["paired_mode_differences"]["stateful_minus_sentence_only"]["pairing"] = (
+        "type-correct but undeclared generated response"
+    )
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["environment"]["processor"] = "type-correct generated response"
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["environment"]["machine"] = "type-correct generated response"
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["failure_counts"] = {"bogus": item["failure_count"]}
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["modes"]["sentence_only"]["execution_errors"] = 7
     mutations.append(item)
 
     for corrupt in mutations:
@@ -911,6 +1012,26 @@ def test_aggregate_artifact_guard_checks_every_turn_and_recursive_payload_keys()
     with pytest.raises(CorpusIntegrityError, match="turn content"):
         _validate_aggregate_artifacts({last_text: 1}, [], conversations)
     _validate_aggregate_artifacts({"candidate_count": 3, "turn_id": "heldout-id"}, [], conversations)
+
+
+def test_aggregate_artifact_guard_rejects_short_embedded_and_fragmented_turns():
+    conversations = load_split("heldout", purpose="evaluation")
+    raw_turns = [turn["text"] for conversation in conversations for turn in conversation["turns"]]
+    shortest = min(raw_turns, key=len)
+    with pytest.raises(CorpusIntegrityError, match="turn content"):
+        _validate_aggregate_artifacts(
+            {"candidate_count": 1, "identifier": f"prefix {shortest} suffix"},
+            [],
+            conversations,
+        )
+    target = next(text for text in raw_turns if len(text) >= 24)
+    midpoint = len(target) // 2
+    with pytest.raises(CorpusIntegrityError, match="fragmented held-out"):
+        _validate_aggregate_artifacts(
+            {"left_fragment": target[:midpoint], "right_fragment": target[midpoint:]},
+            [],
+            conversations,
+        )
 
 
 def test_provenance_race_guard_rejects_changed_commit_or_hash():
@@ -1031,6 +1152,77 @@ def test_artifact_generation_has_no_backup_basename_collision(tmp_path):
     report, failures, _ = load_published_artifacts(report_path)
     assert report == expected_report
     assert failures == expected_failures
+
+
+def test_report_generation_rejects_extra_and_symlink_members(tmp_path):
+    report_path = tmp_path / "report.json"
+    failure_path = tmp_path / "report_failures.jsonl"
+    report = {"aggregate": 1}
+    failures = [{"turn_id": "id", "category": "metric"}]
+    _publish_artifacts(
+        report,
+        failures,
+        output_path=report_path,
+        failures_path=failure_path,
+        provenance_check=lambda: None,
+    )
+    _, _, generation = load_published_artifacts(report_path)
+    (generation / "EXTRA.raw").write_text("not sealed\n")
+    with pytest.raises(CorpusIntegrityError, match="inventory"):
+        load_published_artifacts(report_path)
+    with pytest.raises(CorpusIntegrityError, match="inventory"):
+        _publish_artifacts(
+            report,
+            failures,
+            output_path=report_path,
+            failures_path=failure_path,
+            provenance_check=lambda: None,
+        )
+
+    symlink_report = tmp_path / "symlink.json"
+    symlink_failures = tmp_path / "symlink_failures.jsonl"
+    _publish_artifacts(
+        report,
+        failures,
+        output_path=symlink_report,
+        failures_path=symlink_failures,
+        provenance_check=lambda: None,
+    )
+    _, _, generation = load_published_artifacts(symlink_report)
+    selected_failure = generation / symlink_failures.name
+    selected_failure.unlink()
+    selected_failure.symlink_to(symlink_report.name)
+    with pytest.raises(CorpusIntegrityError, match="inventory"):
+        load_published_artifacts(symlink_report)
+
+
+def test_report_loader_hashes_and_parses_one_immutable_buffer(tmp_path, monkeypatch):
+    report_path = tmp_path / "report.json"
+    _publish_artifacts(
+        {"aggregate": 1},
+        [{"turn_id": "id", "category": "metric"}],
+        output_path=report_path,
+        failures_path=None,
+        provenance_check=lambda: None,
+    )
+    _, _, generation = load_published_artifacts(report_path)
+    selected_report = generation / report_path.name
+    original_read_bytes = Path.read_bytes
+    swapped = False
+
+    def swap_after_read(path):
+        nonlocal swapped
+        payload = original_read_bytes(path)
+        if path == selected_report and not swapped:
+            swapped = True
+            with path.open("wb") as stream:
+                stream.write(b'{"aggregate": 999}\n')
+        return payload
+
+    monkeypatch.setattr(Path, "read_bytes", swap_after_read)
+    report, _, _ = load_published_artifacts(report_path)
+    assert swapped is True
+    assert report == {"aggregate": 1}
 
 
 @pytest.mark.parametrize("failure_name", ["report.json", "report.sha256"])

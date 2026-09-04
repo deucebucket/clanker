@@ -54,10 +54,24 @@
     "failure_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
     "environment": {
       "type": "object", "additionalProperties": false,
-      "required": ["python", "platform", "processor"],
-      "properties": {"python": {"type": "string"}, "platform": {"type": "string"}, "processor": {"type": "string"}}
+      "required": ["python_version", "implementation", "operating_system", "machine"],
+      "properties": {
+        "python_version": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "integer", "minimum": 0}},
+        "implementation": {"type": "string", "pattern": "^[a-z0-9_.+-]{1,32}$"},
+        "operating_system": {"type": "string", "pattern": "^[a-z0-9_.+-]{1,32}$"},
+        "machine": {"type": "string", "pattern": "^[a-z0-9_.+-]{1,32}$"}
+      }
     },
-    "limitations": {"type": "array", "items": {"type": "string"}}
+    "limitations": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "prefixItems": [
+        {"const": "Literary and archival next-state/outcome labels are weak supervision, not causal Clanker exposure."},
+        {"const": "ClankerLM.process accepts no speaker/addressee; participant-aware scores expose that interface limit."},
+        {"const": "Latency and resource measurements are observational and excluded from semantic_fingerprint."},
+        {"const": "Process max-RSS is a process-lifetime peak and is mode-order dependent, not a paired mode comparison."},
+        {"const": "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed."}
+      ]
+    }
   },
   "$defs": {
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
@@ -183,7 +197,7 @@
       "required": ["candidate_mode", "reference_mode", "paired_turn_count", "pairing", "metrics"],
       "properties": {
         "candidate_mode": {"enum": ["stateful", "transition_corrected"]}, "reference_mode": {"enum": ["sentence_only", "stateful"]},
-        "paired_turn_count": {"type": "integer", "minimum": 0}, "pairing": {"type": "string"},
+        "paired_turn_count": {"type": "integer", "minimum": 0}, "pairing": {"const": "identical conversation/turn IDs; cluster samples shared within each delta"},
         "metrics": {"type": "object", "additionalProperties": {"$ref": "#/$defs/metric"}}
       }
     }

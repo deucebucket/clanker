@@ -35,6 +35,8 @@ from clanker_lm.trajectory import TrajectoryController
 
 from .corpus import (
     AXES,
+    ALLOWED_DOMAINS,
+    ALLOWED_OUTCOMES,
     MANIFEST_PATH,
     REPO_ROOT,
     CorpusIntegrityError,
@@ -43,6 +45,7 @@ from .corpus import (
     assert_production_tree,
     load_manifest,
     load_split,
+    selected_manifest_path,
 )
 
 
@@ -50,6 +53,26 @@ METRIC_SCHEMA_VERSION = 1
 MODES = ("sentence_only", "stateful", "transition_corrected")
 BOOTSTRAP_DRAWS = 10_000
 FIXED_INSTANT = datetime(2026, 9, 4, 12, 0, 0, tzinfo=timezone.utc)
+PAIRING_DESCRIPTION = "identical conversation/turn IDs; cluster samples shared within each delta"
+REPORT_LIMITATIONS = (
+    "Literary and archival next-state/outcome labels are weak supervision, not causal Clanker exposure.",
+    "ClankerLM.process accepts no speaker/addressee; participant-aware scores expose that interface limit.",
+    "Latency and resource measurements are observational and excluded from semantic_fingerprint.",
+    "Process max-RSS is a process-lifetime peak and is mode-order dependent, not a paired mode comparison.",
+    "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed.",
+)
+METRIC_NAMES = frozenset({
+    "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
+    "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact", "candidate_count",
+    "brier", "target_attainment", "target_distance_improvement", "next_state_distance",
+    "correction_applied",
+} | {f"mae_{axis}" for axis in AXES} | {f"mae_normalized_{axis}" for axis in AXES}
+  | {f"direction_{axis}" for axis in AXES})
+FAILURE_CATEGORIES = frozenset({
+    "dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct",
+    "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact", "execution_error",
+})
+SUPERVISION_LEVELS = frozenset({"weak_rule_v1", "gold_structural"})
 
 
 class NoCorrectionTrajectory(TrajectoryController):
@@ -999,7 +1022,7 @@ def _paired_mode_differences(
             "candidate_mode": candidate_mode,
             "reference_mode": reference_mode,
             "paired_turn_count": len(paired_keys),
-            "pairing": "identical conversation/turn IDs; cluster samples shared within each delta",
+            "pairing": PAIRING_DESCRIPTION,
             "metrics": metric_output,
         }
     return output
@@ -1135,7 +1158,7 @@ def _validate_classification(value: Any, location: str) -> None:
         raise CorpusIntegrityError(f"{location} interval is invalid")
 
 
-def _validate_summary(value: Any, location: str) -> None:
+def _validate_summary(value: Any, location: str, *, expected_seed: str) -> None:
     summary = _require_artifact_keys(
         value,
         {
@@ -1147,13 +1170,17 @@ def _validate_summary(value: Any, location: str) -> None:
     )
     if type(summary["turn_count"]) is not int or type(summary["conversation_count"]) is not int:
         raise CorpusIntegrityError(f"{location} counts must be integers")
-    if not isinstance(summary["ci_stability"], str):
-        raise CorpusIntegrityError(f"{location}.ci_stability must be text")
+    expected_stability = (
+        "stable" if summary["conversation_count"] >= 20
+        else "unstable_fewer_than_20_conversations"
+    )
+    if summary["ci_stability"] != expected_stability:
+        raise CorpusIntegrityError(f"{location}.ci_stability is invalid")
     if not isinstance(summary["metrics"], Mapping):
         raise CorpusIntegrityError(f"{location}.metrics must be an object")
     for metric_name, metric in summary["metrics"].items():
-        if not isinstance(metric_name, str):
-            raise CorpusIntegrityError(f"{location} metric name must be text")
+        if metric_name not in METRIC_NAMES:
+            raise CorpusIntegrityError(f"{location} metric name is invalid")
         _validate_metric_summary(metric, f"{location}.metrics.{metric_name}")
     _validate_classification(summary["unknown_classification"], f"{location}.unknown")
     _validate_classification(summary["conflict_classification"], f"{location}.conflict")
@@ -1199,7 +1226,7 @@ def _validate_summary(value: Any, location: str) -> None:
             if any(value is not None and not _is_artifact_number(value) for value in axes.values()):
                 raise CorpusIntegrityError(f"{location}.drift axis value is invalid")
     if not isinstance(summary["outcome_counts"], Mapping) or not all(
-        isinstance(key, str) and type(count) is int
+        key in ALLOWED_OUTCOMES and type(count) is int
         for key, count in summary["outcome_counts"].items()
     ):
         raise CorpusIntegrityError(f"{location}.outcome_counts is invalid")
@@ -1208,9 +1235,12 @@ def _validate_summary(value: Any, location: str) -> None:
         {"method", "cluster", "overall_stratification", "draws", "fixed_seed_material"},
         f"{location}.confidence_interval_method",
     )
-    if type(method["draws"]) is not int or not all(
-        isinstance(method[field], str)
-        for field in ("method", "cluster", "overall_stratification", "fixed_seed_material")
+    if (
+        method["method"] != "percentile bootstrap"
+        or method["cluster"] != "whole conversation"
+        or method["overall_stratification"] != "domain"
+        or method["draws"] != BOOTSTRAP_DRAWS
+        or method["fixed_seed_material"] != expected_seed
     ):
         raise CorpusIntegrityError(f"{location}.confidence_interval_method is invalid")
 
@@ -1245,15 +1275,19 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
         for field in ("production_code_commit", "evaluation_commit")
     ):
         raise CorpusIntegrityError("aggregate report commit field is invalid")
-    if not isinstance(report["clock"], str) or not report["clock"]:
-        raise CorpusIntegrityError("aggregate report clock must be text")
+    if report["clock"] != FIXED_INSTANT.isoformat():
+        raise CorpusIntegrityError("aggregate report clock is invalid")
     if type(report["failure_count"]) is not int or report["failure_count"] != len(failures):
         raise CorpusIntegrityError("aggregate report failure_count is invalid")
     if not isinstance(report["failure_counts"], Mapping) or not all(
         isinstance(key, str) and type(count) is int for key, count in report["failure_counts"].items()
     ) or sum(report["failure_counts"].values()) != report["failure_count"]:
         raise CorpusIntegrityError("aggregate report failure_counts is invalid")
-    if not isinstance(report["schema_sha256"], Mapping) or not report["schema_sha256"] or not all(
+    expected_schema_names = {
+        "conversation-v1.schema.json", "failure-v1.schema.json",
+        "report-v1.schema.json", "source-v1.schema.json",
+    }
+    if not isinstance(report["schema_sha256"], Mapping) or set(report["schema_sha256"]) != expected_schema_names or not all(
         isinstance(name, str) and isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)
         for name, digest in report["schema_sha256"].items()
     ):
@@ -1263,17 +1297,28 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
         {"semantic_and_entity", "affect_and_trajectory", "outcome"},
         "metric supervision",
     )
-    if not all(isinstance(value, str) for value in supervision.values()):
-        raise CorpusIntegrityError("metric supervision values must be text")
+    if dict(supervision) != {
+        "semantic_and_entity": "turn semantic_supervision_level",
+        "affect_and_trajectory": "weak_rule_v1 only; structural_only sources excluded",
+        "outcome": "weak or counterfactual stratum only; no outcome accuracy is claimed",
+    }:
+        raise CorpusIntegrityError("metric supervision values are invalid")
     environment = _require_artifact_keys(
-        report["environment"], {"python", "platform", "processor"}, "environment"
+        report["environment"],
+        {"python_version", "implementation", "operating_system", "machine"},
+        "environment",
     )
-    if not all(isinstance(value, str) for value in environment.values()):
-        raise CorpusIntegrityError("environment values must be text")
-    if not isinstance(report["limitations"], list) or not all(
-        isinstance(item, str) for item in report["limitations"]
+    version = environment["python_version"]
+    if not isinstance(version, list) or len(version) != 3 or any(type(item) is not int for item in version):
+        raise CorpusIntegrityError("environment Python version is invalid")
+    if any(
+        not isinstance(environment[field], str)
+        or not re.fullmatch(r"[a-z0-9_.+-]{1,32}", environment[field])
+        for field in ("implementation", "operating_system", "machine")
     ):
-        raise CorpusIntegrityError("limitations must be text array")
+        raise CorpusIntegrityError("environment platform identifiers are invalid")
+    if report["limitations"] != list(REPORT_LIMITATIONS):
+        raise CorpusIntegrityError("limitations are not the declared finite set")
     modes = _require_artifact_keys(report["modes"], set(MODES), "modes")
     mode_keys = {
         "overall", "by_domain", "by_outcome", "by_supervision_level",
@@ -1283,12 +1328,30 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
         mode_report = _require_artifact_keys(modes[mode], mode_keys, f"modes.{mode}")
         if type(mode_report["execution_errors"]) is not int:
             raise CorpusIntegrityError(f"modes.{mode}.execution_errors must be integer")
-        _validate_summary(mode_report["overall"], f"modes.{mode}.overall")
+        seed_prefix = f"{report['corpus_sha256']}|metric-v{METRIC_SCHEMA_VERSION}|{mode}"
+        _validate_summary(
+            mode_report["overall"], f"modes.{mode}.overall",
+            expected_seed=f"{seed_prefix}|overall",
+        )
         for stratum in ("by_domain", "by_outcome", "by_supervision_level"):
             if not isinstance(mode_report[stratum], Mapping):
                 raise CorpusIntegrityError(f"modes.{mode}.{stratum} must be object")
+            allowed_keys = (
+                ALLOWED_DOMAINS if stratum == "by_domain"
+                else ALLOWED_OUTCOMES if stratum == "by_outcome"
+                else SUPERVISION_LEVELS
+            )
+            if set(mode_report[stratum]) - set(allowed_keys):
+                raise CorpusIntegrityError(f"modes.{mode}.{stratum} has invalid keys")
+            seed_label = {
+                "by_domain": "domain", "by_outcome": "outcome",
+                "by_supervision_level": "supervision",
+            }[stratum]
             for key, summary in mode_report[stratum].items():
-                _validate_summary(summary, f"modes.{mode}.{stratum}.{key}")
+                _validate_summary(
+                    summary, f"modes.{mode}.{stratum}.{key}",
+                    expected_seed=f"{seed_prefix}|{seed_label}|{key}",
+                )
         if not isinstance(mode_report["latency"], Mapping) or not isinstance(
             mode_report["resource_growth"], Mapping
         ):
@@ -1301,7 +1364,7 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             },
             f"modes.{mode}.latency",
         )
-        if type(latency["n"]) is not int or type(latency["observational_nondeterministic"]) is not bool:
+        if type(latency["n"]) is not int or latency["observational_nondeterministic"] is not True:
             raise CorpusIntegrityError(f"modes.{mode}.latency types are invalid")
         if not all(
             _is_artifact_number(latency[field])
@@ -1333,6 +1396,10 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             resources["process_maxrss_comparability"], str
         ):
             raise CorpusIntegrityError(f"modes.{mode}.resource labels are invalid")
+        if resources["process_maxrss_units"] != "KiB on Linux; bytes on macOS" or resources[
+            "process_maxrss_comparability"
+        ] != "observational_process_lifetime_peak_mode_order_dependent":
+            raise CorpusIntegrityError(f"modes.{mode}.resource labels are invalid")
         if not isinstance(resources["sqlite_row_growth_maxima"], Mapping) or not all(
             isinstance(key, str) and type(count) is int
             for key, count in resources["sqlite_row_growth_maxima"].items()
@@ -1350,7 +1417,7 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             {"n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic"},
             f"modes.{mode}.construction latency",
         )
-        if type(construction["n"]) is not int or type(construction["observational_nondeterministic"]) is not bool:
+        if type(construction["n"]) is not int or construction["observational_nondeterministic"] is not True:
             raise CorpusIntegrityError(f"modes.{mode}.construction latency types are invalid")
         if not all(
             _is_artifact_number(construction[field])
@@ -1404,9 +1471,19 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
         )
         if type(comparison["paired_turn_count"]) is not int or not isinstance(comparison["metrics"], Mapping):
             raise CorpusIntegrityError(f"paired mode differences.{name} types are invalid")
-        if not all(isinstance(comparison[field], str) for field in ("candidate_mode", "reference_mode", "pairing")):
+        expected_modes = (
+            ("stateful", "sentence_only")
+            if name == "stateful_minus_sentence_only"
+            else ("transition_corrected", "stateful")
+        )
+        if (
+            (comparison["candidate_mode"], comparison["reference_mode"]) != expected_modes
+            or comparison["pairing"] != PAIRING_DESCRIPTION
+        ):
             raise CorpusIntegrityError(f"paired mode differences.{name} labels are invalid")
         for metric_name, metric in comparison["metrics"].items():
+            if metric_name not in METRIC_NAMES:
+                raise CorpusIntegrityError(f"paired.{name} metric name is invalid")
             _validate_metric_summary(metric, f"paired.{name}.{metric_name}")
     failure_keys = {"conversation_id", "turn_id", "domain", "mode", "category"}
     for failure in failures:
@@ -1416,6 +1493,24 @@ def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mappin
             raise CorpusIntegrityError("failure ledger row contains an unexpected field")
         if not all(isinstance(value, str) for value in failure.values()):
             raise CorpusIntegrityError("failure ledger values must be text")
+        if failure["mode"] not in MODES or failure["domain"] not in ALLOWED_DOMAINS or failure[
+            "category"
+        ] not in FAILURE_CATEGORIES:
+            raise CorpusIntegrityError("failure ledger categorical value is invalid")
+        if "exception" in failure and not re.fullmatch(
+            r"[A-Za-z_][A-Za-z0-9_.]{0,127}", failure["exception"]
+        ):
+            raise CorpusIntegrityError("failure ledger exception class is invalid")
+
+    actual_failure_counts = dict(sorted(Counter(item["category"] for item in failures).items()))
+    if dict(report["failure_counts"]) != actual_failure_counts:
+        raise CorpusIntegrityError("failure_counts disagrees with the failure ledger")
+    for mode in MODES:
+        actual_execution_errors = sum(
+            item["mode"] == mode and item["category"] == "execution_error" for item in failures
+        )
+        if report["modes"][mode]["execution_errors"] != actual_execution_errors:
+            raise CorpusIntegrityError("per-mode execution_errors disagrees with the failure ledger")
 
 
 def _validate_aggregate_artifacts(
@@ -1430,6 +1525,11 @@ def _validate_aggregate_artifacts(
         for conversation in conversations
         for turn in conversation["turns"]
     ]
+    turn_domains = {
+        (str(conversation["conversation_id"]), str(turn["turn_id"])): str(conversation["domain"])
+        for conversation in conversations
+        for turn in conversation["turns"]
+    }
 
     if "report_schema_version" in report:
         _validate_report_schema(report, failures)
@@ -1478,23 +1578,27 @@ def _validate_aggregate_artifacts(
             if set(failure) - failure_keys - {"exception"}:
                 raise CorpusIntegrityError("failure ledger row contains an unexpected field")
 
-    def walk(value: Any, location: str) -> None:
+    string_values: List[str] = []
+
+    def walk(value: Any, location: str, *, is_key: bool = False) -> None:
         if isinstance(value, Mapping):
             for key, item in value.items():
                 normalized_key = str(key).lower()
                 if normalized_key in _FORBIDDEN_ARTIFACT_KEYS or normalized_key.endswith("_text"):
                     raise CorpusIntegrityError(f"aggregate artifact contains forbidden payload key at {location}.{key}")
-                walk(str(key), f"{location}.<key>")
+                walk(str(key), f"{location}.<key>", is_key=True)
                 walk(item, f"{location}.{key}")
         elif isinstance(value, list):
             for index, item in enumerate(value):
                 walk(item, f"{location}[{index}]")
         elif isinstance(value, str):
+            if not is_key:
+                string_values.append(value)
             normalized_value = _norm(value)
             for raw_text in heldout_texts:
                 normalized_text = _norm(raw_text)
                 if normalized_value == normalized_text or (
-                    len(normalized_text) >= 16 and normalized_text in normalized_value
+                    normalized_text and normalized_text in normalized_value
                 ):
                     raise CorpusIntegrityError(
                         f"aggregate artifact contains held-out turn content at {location}"
@@ -1502,6 +1606,22 @@ def _validate_aggregate_artifacts(
 
     walk(report, "report")
     walk(list(failures), "failures")
+    normalized_joined = " ".join(_norm(value) for value in string_values)
+    compact_joined = "".join(_norm(value).replace(" ", "") for value in string_values)
+    for raw_text in heldout_texts:
+        normalized_text = _norm(raw_text)
+        if normalized_text and (
+            normalized_text in normalized_joined
+            or (
+                len(normalized_text.replace(" ", "")) >= 16
+                and normalized_text.replace(" ", "") in compact_joined
+            )
+        ):
+            raise CorpusIntegrityError("aggregate artifact contains fragmented held-out turn content")
+    for failure in failures:
+        identity = (str(failure.get("conversation_id", "")), str(failure.get("turn_id", "")))
+        if identity not in turn_domains or failure.get("domain") != turn_domains[identity]:
+            raise CorpusIntegrityError("failure ledger identity does not match the evaluated corpus")
 
 
 def _atomic_replace(source: Path, target: Path) -> None:
@@ -1522,6 +1642,17 @@ def _report_generation_id(
         "failures": {"name": failure_name, "sha256": failure_sha256},
         "checksum": {"name": checksum_name, "sha256": checksum_sha256},
     }).encode("utf-8")).hexdigest()
+
+
+def _validate_report_generation(directory: Path, expected_names: set[str]) -> None:
+    try:
+        members = list(directory.iterdir())
+    except OSError as exc:
+        raise CorpusIntegrityError("published report generation is unreadable") from exc
+    if {member.name for member in members} != expected_names or any(
+        member.is_symlink() or not member.is_file() for member in members
+    ):
+        raise CorpusIntegrityError("published report generation file inventory is not exact")
 
 
 def _publish_artifacts(
@@ -1569,6 +1700,8 @@ def _publish_artifacts(
         "failures": failure_target.name,
         "checksum": checksum_path.name,
     }, sort_keys=True) + "\n").encode("ascii")
+    if generations.is_symlink():
+        raise CorpusIntegrityError("report generation store cannot be a symlink")
     generations.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".conversation-report-", dir=output_path.parent) as staging_name:
         staging_root = Path(staging_name)
@@ -1582,6 +1715,11 @@ def _publish_artifacts(
             (staging / name).write_bytes(payload)
         provenance_check()
         if generation_dir.exists():
+            if not generation_dir.is_dir() or generation_dir.is_symlink():
+                raise CorpusIntegrityError("existing report generation is not a regular directory")
+            _validate_report_generation(
+                generation_dir, {output_path.name, failure_target.name, checksum_path.name}
+            )
             expected = {
                 output_path.name: report_bytes,
                 failure_target.name: failure_bytes,
@@ -1606,6 +1744,8 @@ def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Di
 
     pointer_path = output_path.with_suffix(".current")
     try:
+        if pointer_path.is_symlink():
+            raise OSError("pointer is a symlink")
         pointer = json.loads(pointer_path.read_text(encoding="ascii"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise CorpusIntegrityError("published report pointer is missing or malformed") from exc
@@ -1622,6 +1762,11 @@ def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Di
     if pointer["report"] != output_path.name or pointer["checksum"] != output_path.with_suffix(".sha256").name:
         raise CorpusIntegrityError("published report pointer selects unexpected filenames")
     generation_dir = output_path.parent / f"{output_path.stem}.generations" / generation
+    if not generation_dir.is_dir() or generation_dir.is_symlink():
+        raise CorpusIntegrityError("published report generation is missing or not a regular directory")
+    _validate_report_generation(
+        generation_dir, {pointer["report"], pointer["failures"], pointer["checksum"]}
+    )
     report_path = generation_dir / pointer["report"]
     failure_path = generation_dir / pointer["failures"]
     checksum_path = generation_dir / pointer["checksum"]
@@ -1635,8 +1780,13 @@ def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Di
         raise CorpusIntegrityError("published report checksum is malformed") from exc
     if set(expected_hashes) != {report_path.name, failure_path.name}:
         raise CorpusIntegrityError("published report checksum names are invalid")
+    payloads: Dict[Path, bytes] = {}
     for path in (report_path, failure_path):
-        if expected_hashes.get(path.name) != hashlib.sha256(path.read_bytes()).hexdigest():
+        try:
+            payloads[path] = path.read_bytes()
+        except OSError as exc:
+            raise CorpusIntegrityError("published report generation is unreadable") from exc
+        if expected_hashes.get(path.name) != hashlib.sha256(payloads[path]).hexdigest():
             raise CorpusIntegrityError("published report generation hash mismatch")
     selected_generation = _report_generation_id(
         report_name=report_path.name,
@@ -1648,12 +1798,15 @@ def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Di
     )
     if selected_generation != generation:
         raise CorpusIntegrityError("published report generation identifier mismatch")
-    report = json.loads(report_path.read_text(encoding="utf-8"))
-    failures = [
-        json.loads(line)
-        for line in failure_path.read_text(encoding="utf-8").splitlines()
-        if line
-    ]
+    try:
+        report = json.loads(payloads[report_path].decode("utf-8"))
+        failures = [
+            json.loads(line)
+            for line in payloads[failure_path].decode("utf-8").splitlines()
+            if line
+        ]
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise CorpusIntegrityError("published report generation payload is malformed") from exc
     return report, failures, generation_dir
 
 
@@ -1678,6 +1831,7 @@ def run_evaluation(
 ) -> Dict[str, Any]:
     """Run all three modes and return an aggregate-only, text-free report."""
 
+    manifest_path = selected_manifest_path(manifest_path)
     manifest = load_manifest(manifest_path)
     run_provenance = _capture_provenance(manifest)
     conversations = load_split(split, purpose="evaluation", manifest_path=manifest_path)
@@ -1783,17 +1937,12 @@ def run_evaluation(
         "failure_count": len(all_failures),
         "failure_counts": dict(sorted(Counter(item["category"] for item in all_failures).items())),
         "environment": {
-            "python": sys.version.split()[0],
-            "platform": platform.platform(),
-            "processor": platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER", "unknown"),
+            "python_version": [sys.version_info.major, sys.version_info.minor, sys.version_info.micro],
+            "implementation": platform.python_implementation().lower(),
+            "operating_system": platform.system().lower() or "unknown",
+            "machine": platform.machine().lower() or "unknown",
         },
-        "limitations": [
-            "Literary and archival next-state/outcome labels are weak supervision, not causal Clanker exposure.",
-            "ClankerLM.process accepts no speaker/addressee; participant-aware scores expose that interface limit.",
-            "Latency and resource measurements are observational and excluded from semantic_fingerprint.",
-            "Process max-RSS is a process-lifetime peak and is mode-order dependent, not a paired mode comparison.",
-            "No categorical outcome prediction API exists; outcomes stratify metrics but outcome accuracy is not claimed.",
-        ],
+        "limitations": list(REPORT_LIMITATIONS),
     }
     _validate_aggregate_artifacts(report, all_failures, conversations)
     _assert_provenance_unchanged(run_provenance, manifest)

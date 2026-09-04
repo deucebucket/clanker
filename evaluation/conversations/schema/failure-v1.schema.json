@@ -8,9 +8,9 @@
   "properties": {
     "conversation_id": {"type": "string", "minLength": 1},
     "turn_id": {"type": "string", "minLength": 1},
-    "domain": {"type": "string", "minLength": 1},
+    "domain": {"enum": ["public_domain_drama", "public_domain_novel", "public_domain_real_human", "synthetic_adversarial", "open_development"]},
     "mode": {"enum": ["sentence_only", "stateful", "transition_corrected"]},
-    "category": {"type": "string", "minLength": 1},
-    "exception": {"type": "string", "minLength": 1}
+    "category": {"enum": ["dialogue_act_correct", "response_act_correct", "answer_status_correct", "truth_correct", "semantic_parse_exact", "semantic_answer_exact", "entity_resolution_exact", "execution_error"]},
+    "exception": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_.]{0,127}$"}
   }
 }

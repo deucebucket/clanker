@@ -46,9 +46,10 @@ jobs:
           frozen_current="$(git show origin/main:evaluation/conversations/data/CURRENT 2>/dev/null || true)"
           if [ -n "$frozen_current" ]; then
             test "$frozen_current" = "$(cat evaluation/conversations/data/CURRENT)"
-            git diff --exit-code origin/main -- \
-              evaluation/conversations/data/CURRENT \
-              "evaluation/conversations/data/generations/$frozen_current"
+            git diff --exit-code origin/main -- evaluation/conversations/data/CURRENT
+            while IFS= read -r frozen_path; do
+              git diff --exit-code origin/main -- "$frozen_path"
+            done < <(git ls-tree -r --name-only origin/main -- evaluation/conversations/data/generations)
           fi
 
       - name: Run open development conversation evaluation
