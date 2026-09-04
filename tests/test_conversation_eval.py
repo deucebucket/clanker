@@ -10,6 +10,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import evaluation.conversations.corpus as conversation_corpus
 import evaluation.conversations.runner as conversation_runner
 
 from clanker_lm.database import LanguageStore
@@ -39,6 +40,7 @@ from evaluation.conversations.corpus import (
     load_manifest,
     load_split,
     production_tree_sha256,
+    selected_manifest_path,
     verify_corpus,
 )
 from evaluation.conversations.runner import (
@@ -58,6 +60,7 @@ from evaluation.conversations.runner import (
     _validate_aggregate_artifacts,
     _assert_provenance_unchanged,
     _whole_interaction_trajectory_metrics,
+    load_published_artifacts,
     run_evaluation,
 )
 
@@ -80,7 +83,7 @@ def test_manifest_has_frozen_whole_conversation_corpus():
     }
     assert heldout["training_eligible"] is False
     assert heldout["teacher_replay_eligible"] is False
-    assert DATA_DIR.joinpath("ROOT.sha256").read_text().strip() == manifest["corpus_root_sha256"]
+    assert selected_manifest_path().parent.joinpath("ROOT.sha256").read_text().strip() == manifest["corpus_root_sha256"]
 
 
 def test_all_conversations_are_content_addressed_and_whole():
@@ -270,11 +273,67 @@ def test_unused_source_document_provenance_changes_constituent_root(tmp_path):
     assert first["corpus_root_sha256"] != second["corpus_root_sha256"]
 
 
+def test_corpus_pointer_failure_keeps_prior_generation_selected(tmp_path, monkeypatch):
+    source_dir = tmp_path / "sources"
+    shutil.copytree(SOURCE_DIR, source_dir)
+    output_dir = tmp_path / "data"
+    first = compile_corpora(source_dir=source_dir, output_dir=output_dir)
+    old_manifest_path = selected_manifest_path(output_dir / "manifest_v1.json")
+    original = conversation_corpus._atomic_replace_path
+
+    document_path = source_dir / "development_v1.json"
+    document = json.loads(document_path.read_text())
+    document["sources"][0]["rights_note"] += " Atomic publication probe."
+    document_path.write_text(json.dumps(document, indent=2) + "\n")
+
+    def fail_before_select(source, target):
+        if target.name == "CURRENT":
+            raise OSError("simulated pointer failure")
+        original(source, target)
+
+    monkeypatch.setattr(conversation_corpus, "_atomic_replace_path", fail_before_select)
+    with pytest.raises(OSError, match="simulated pointer failure"):
+        compile_corpora(source_dir=source_dir, output_dir=output_dir)
+    selected = load_manifest(output_dir / "manifest_v1.json")
+    assert selected["corpus_root_sha256"] == first["corpus_root_sha256"]
+    assert selected_manifest_path(output_dir / "manifest_v1.json") == old_manifest_path
+
+
+def test_corpus_process_death_before_pointer_keeps_prior_generation(tmp_path):
+    source_dir = tmp_path / "sources"
+    shutil.copytree(SOURCE_DIR, source_dir)
+    output_dir = tmp_path / "data"
+    first = compile_corpora(source_dir=source_dir, output_dir=output_dir)
+
+    document_path = source_dir / "development_v1.json"
+    document = json.loads(document_path.read_text())
+    document["sources"][0]["rights_note"] += " Process-death publication probe."
+    document_path.write_text(json.dumps(document, indent=2) + "\n")
+    code = """
+import os
+from pathlib import Path
+import evaluation.conversations.corpus as corpus
+original = corpus._atomic_replace_path
+def kill_before_select(source, target):
+    if target.name == 'CURRENT':
+        os._exit(73)
+    original(source, target)
+corpus._atomic_replace_path = kill_before_select
+corpus.compile_corpora(source_dir=Path(__import__('sys').argv[1]), output_dir=Path(__import__('sys').argv[2]))
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(source_dir), str(output_dir)], cwd=ROOT
+    )
+    assert result.returncode == 73
+    selected = load_manifest(output_dir / "manifest_v1.json")
+    assert selected["corpus_root_sha256"] == first["corpus_root_sha256"]
+
+
 @pytest.mark.parametrize("field", ["allowed_uses", "training_eligible", "teacher_replay_eligible"])
 def test_manifest_policy_tampering_fails_even_when_split_bytes_do_not_change(tmp_path, field):
     data = tmp_path / "data"
     shutil.copytree(DATA_DIR, data)
-    manifest_path = data / "manifest_v1.json"
+    manifest_path = selected_manifest_path(data / "manifest_v1.json")
     manifest = json.loads(manifest_path.read_text())
     manifest["splits"]["heldout"][field] = (
         ["evaluation", "training"] if field == "allowed_uses" else True
@@ -287,7 +346,7 @@ def test_manifest_policy_tampering_fails_even_when_split_bytes_do_not_change(tmp
         _canonical_json(_manifest_constituents(manifest)).encode()
     ).hexdigest()
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
-    (data / "ROOT.sha256").write_text(manifest["corpus_root_sha256"] + "\n")
+    manifest_path.with_name("ROOT.sha256").write_text(manifest["corpus_root_sha256"] + "\n")
     with pytest.raises(CorpusIntegrityError, match="policy"):
         load_split("heldout", purpose="training", manifest_path=manifest_path)
 
@@ -461,6 +520,43 @@ def test_semantic_exactness_canonicalizes_atoms_selects_gold_event_and_requires_
     )
 
 
+def test_question_role_cannot_be_borrowed_by_another_same_predicate_event():
+    runtime = SimpleNamespace(memory=ConversationMemory())
+    conversation = {
+        "participant_bindings": {"user": "participant:user", "clanker": "participant:clanker"}
+    }
+    turn = {"speaker": "user", "addressee": "clanker"}
+    assertion = EventFrame(
+        "own", arguments={"theme": SemanticRef.entity("compass", "brass compass")}
+    )
+    queried = EventFrame(
+        "own",
+        arguments={
+            "theme": SemanticRef.entity("map", "paper map"),
+            "owner": SemanticRef.variable("owner"),
+        },
+    )
+    result = SimpleNamespace(parse=ParseResult(
+        speech_act=SpeechAct.ASK,
+        raw_text="",
+        events=[assertion, queried],
+        question=QuestionFrame(QuestionKind.WHO, queried, requested_role="owner"),
+    ))
+    contaminated = {
+        "predicate": "own",
+        "roles": {"theme": "brass_compass", "requested_role": "owner"},
+        "scored": True,
+    }
+    assert not _semantic_parse_exact(
+        contaminated, result, runtime=runtime, conversation=conversation, turn=turn
+    )
+    correct = copy.deepcopy(contaminated)
+    correct["roles"]["theme"] = "paper_map"
+    assert _semantic_parse_exact(
+        correct, result, runtime=runtime, conversation=conversation, turn=turn
+    )
+
+
 def test_entity_exactness_uses_turn_relative_local_ids_and_ambiguity_sets():
     memory = ConversationMemory()
     runtime = SimpleNamespace(memory=memory)
@@ -526,6 +622,27 @@ def test_entity_exactness_handles_theme_role_and_turn_relative_identity_without_
     assert not _entity_exact(
         {"roles": {"agent": "participant:user"}, "mentions": {}},
         result,
+        runtime=runtime,
+        conversation=conversation,
+        turn=clanker_turn,
+    )
+    addressed_human = SimpleNamespace(parse=ParseResult(
+        speech_act=SpeechAct.ASSERT,
+        raw_text="",
+        events=[EventFrame("tell", arguments={
+            "patient": SemanticRef.entity("assistant", "you"),
+        })],
+    ))
+    assert _entity_exact(
+        {"roles": {"patient": "participant:user"}, "mentions": {}},
+        addressed_human,
+        runtime=runtime,
+        conversation=conversation,
+        turn=clanker_turn,
+    )
+    assert not _entity_exact(
+        {"roles": {"patient": "participant:clanker"}, "mentions": {}},
+        addressed_human,
         runtime=runtime,
         conversation=conversation,
         turn=clanker_turn,
@@ -737,22 +854,21 @@ def test_artifact_publish_stages_every_file_before_replacing(tmp_path):
         assert path.read_text() == "sentinel\n"
 
 
-@pytest.mark.parametrize("fail_at", [2, 3])
-def test_artifact_publish_rolls_back_every_public_target_on_replace_failure(
-    tmp_path, monkeypatch, fail_at
-):
+def test_artifact_publish_pointer_failure_keeps_prior_generation_selected(tmp_path, monkeypatch):
     report_path = tmp_path / "report.json"
     failures_path = tmp_path / "report_failures.jsonl"
-    checksum_path = tmp_path / "report.sha256"
-    for path in (report_path, failures_path, checksum_path):
-        path.write_text("sentinel\n")
+    _publish_artifacts(
+        {"aggregate": 1},
+        [{"turn_id": "old", "category": "metric"}],
+        output_path=report_path,
+        failures_path=failures_path,
+        provenance_check=lambda: None,
+    )
+    old_report, old_failures, old_generation = load_published_artifacts(report_path)
     original = conversation_runner._atomic_replace
-    calls = 0
 
     def fail_once(source, target):
-        nonlocal calls
-        calls += 1
-        if calls == fail_at:
+        if target.suffix == ".current":
             raise OSError("simulated replace failure")
         original(source, target)
 
@@ -765,8 +881,66 @@ def test_artifact_publish_rolls_back_every_public_target_on_replace_failure(
             failures_path=failures_path,
             provenance_check=lambda: None,
         )
-    for path in (report_path, failures_path, checksum_path):
-        assert path.read_text() == "sentinel\n"
+    selected_report, selected_failures, selected_generation = load_published_artifacts(report_path)
+    assert selected_report == old_report
+    assert selected_failures == old_failures
+    assert selected_generation == old_generation
+
+
+def test_artifact_publish_process_death_before_pointer_keeps_prior_generation(tmp_path):
+    report_path = tmp_path / "report.json"
+    failure_path = tmp_path / "report_failures.jsonl"
+    _publish_artifacts(
+        {"aggregate": 1},
+        [{"turn_id": "old", "category": "metric"}],
+        output_path=report_path,
+        failures_path=failure_path,
+        provenance_check=lambda: None,
+    )
+    old_report, old_failures, old_generation = load_published_artifacts(report_path)
+    code = """
+import os
+from pathlib import Path
+import evaluation.conversations.runner as runner
+original = runner._atomic_replace
+def kill_before_select(source, target):
+    if target.suffix == '.current':
+        os._exit(73)
+    original(source, target)
+runner._atomic_replace = kill_before_select
+runner._publish_artifacts(
+    {'aggregate': 2},
+    [{'turn_id': 'new', 'category': 'metric'}],
+    output_path=Path(__import__('sys').argv[1]),
+    failures_path=Path(__import__('sys').argv[2]),
+    provenance_check=lambda: None,
+)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(report_path), str(failure_path)], cwd=ROOT
+    )
+    assert result.returncode == 73
+    selected_report, selected_failures, selected_generation = load_published_artifacts(report_path)
+    assert selected_report == old_report
+    assert selected_failures == old_failures
+    assert selected_generation == old_generation
+
+
+def test_artifact_generation_has_no_backup_basename_collision(tmp_path):
+    report_path = tmp_path / ".backup-0"
+    failure_path = tmp_path / ".backup-1"
+    expected_report = {"aggregate": 1}
+    expected_failures = [{"turn_id": "id", "category": "metric"}]
+    _publish_artifacts(
+        expected_report,
+        expected_failures,
+        output_path=report_path,
+        failures_path=failure_path,
+        provenance_check=lambda: None,
+    )
+    report, failures, _ = load_published_artifacts(report_path)
+    assert report == expected_report
+    assert failures == expected_failures
 
 
 @pytest.mark.parametrize("failure_name", ["report.json", "report.sha256"])
@@ -782,6 +956,20 @@ def test_artifact_publish_rejects_colliding_targets_before_mutation(tmp_path, fa
             provenance_check=lambda: None,
         )
     assert report_path.read_text() == "sentinel\n"
+
+
+@pytest.mark.parametrize("failure_name", ["report.current", "report.generations"])
+def test_artifact_publish_rejects_reserved_target_collisions(tmp_path, failure_name):
+    report_path = tmp_path / "report.json"
+    with pytest.raises(CorpusIntegrityError, match="publication metadata"):
+        _publish_artifacts(
+            {"aggregate": 1},
+            [],
+            output_path=report_path,
+            failures_path=tmp_path / failure_name,
+            provenance_check=lambda: None,
+        )
+    assert not report_path.with_suffix(".current").exists()
 
 
 def test_execution_errors_fail_the_release_runner():

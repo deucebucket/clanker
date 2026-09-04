@@ -239,7 +239,7 @@ def _semantic_parse_exact(
         )
     question = result.parse.question
     events = list(result.parse.events)
-    if question is not None and question.event not in events:
+    if question is not None and not any(event is question.event for event in events):
         events.append(question.event)
     for event in events:
         if _semantic_atom(event.predicate) != expected_predicate:
@@ -254,7 +254,7 @@ def _semantic_parse_exact(
             for role, reference in event.arguments.items()
             if not reference.is_variable
         }
-        if question is not None and _semantic_atom(question.event.predicate) == expected_predicate:
+        if question is not None and event is question.event:
             if question.requested_role:
                 actual_roles["requested_role"] = _semantic_atom(question.requested_role)
         if bool(expected.get("partial_roles")):
@@ -318,13 +318,15 @@ def _expected_local_id(
     turn: Mapping[str, Any],
 ) -> str:
     normalized = _norm(value)
-    if normalized in {"user", "speaker"}:
-        return str(conversation["participant_bindings"][turn["speaker"]])
-    if normalized in {"clanker", "assistant", "addressee"}:
-        return str(conversation["participant_bindings"][turn["addressee"]])
     for participant, local_id in conversation["participant_bindings"].items():
         if _norm(participant) == normalized:
             return str(local_id)
+    if normalized == "speaker":
+        return str(conversation["participant_bindings"][turn["speaker"]])
+    if normalized == "addressee":
+        return str(conversation["participant_bindings"][turn["addressee"]])
+    if normalized == "assistant":
+        return "participant:clanker"
     if normalized.startswith("participant:") or normalized.startswith("entity:"):
         return normalized
     return f"entity:{normalized.replace(' ', '_')}"
@@ -1072,6 +1074,350 @@ _FORBIDDEN_ARTIFACT_KEYS = {
 }
 
 
+def _require_artifact_keys(value: Any, expected: set[str], location: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping) or set(value) != expected:
+        raise CorpusIntegrityError(f"{location} schema is not exact")
+    return value
+
+
+def _is_artifact_number(value: Any) -> bool:
+    return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value)
+
+
+def _validate_metric_summary(value: Any, location: str) -> None:
+    metric = _require_artifact_keys(
+        value,
+        {"value", "n_turns", "n_conversations", "ci95_conversation_cluster_bootstrap"},
+        location,
+    )
+    if not _is_artifact_number(metric["value"]):
+        raise CorpusIntegrityError(f"{location}.value must be finite numeric")
+    if type(metric["n_turns"]) is not int or type(metric["n_conversations"]) is not int:
+        raise CorpusIntegrityError(f"{location} counts must be integers")
+    interval = metric["ci95_conversation_cluster_bootstrap"]
+    if interval is not None and (
+        not isinstance(interval, list)
+        or len(interval) != 2
+        or not all(_is_artifact_number(item) for item in interval)
+    ):
+        raise CorpusIntegrityError(f"{location} confidence interval is invalid")
+
+
+def _validate_classification(value: Any, location: str) -> None:
+    item = _require_artifact_keys(
+        value,
+        {
+            "tp", "fp", "fn", "precision", "recall", "f1", "bootstrap_valid_draws",
+            "ci95_conversation_cluster_bootstrap",
+        },
+        location,
+    )
+    if any(type(item[field]) is not int for field in ("tp", "fp", "fn")):
+        raise CorpusIntegrityError(f"{location} counts must be integers")
+    if any(
+        item[field] is not None and not _is_artifact_number(item[field])
+        for field in ("precision", "recall", "f1")
+    ):
+        raise CorpusIntegrityError(f"{location} point estimate is invalid")
+    valid = _require_artifact_keys(
+        item["bootstrap_valid_draws"], {"precision", "recall", "f1"}, f"{location}.valid_draws"
+    )
+    if any(type(count) is not int or count < 0 for count in valid.values()):
+        raise CorpusIntegrityError(f"{location} valid-draw count is invalid")
+    intervals = item["ci95_conversation_cluster_bootstrap"]
+    if not isinstance(intervals, Mapping) or set(intervals) - {"precision", "recall", "f1"}:
+        raise CorpusIntegrityError(f"{location} interval schema is invalid")
+    if any(
+        not isinstance(interval, list) or len(interval) != 2
+        or not all(_is_artifact_number(point) for point in interval)
+        for interval in intervals.values()
+    ):
+        raise CorpusIntegrityError(f"{location} interval is invalid")
+
+
+def _validate_summary(value: Any, location: str) -> None:
+    summary = _require_artifact_keys(
+        value,
+        {
+            "turn_count", "conversation_count", "ci_stability", "metrics",
+            "unknown_classification", "conflict_classification", "uncertainty_calibration",
+            "drift", "outcome_counts", "confidence_interval_method",
+        },
+        location,
+    )
+    if type(summary["turn_count"]) is not int or type(summary["conversation_count"]) is not int:
+        raise CorpusIntegrityError(f"{location} counts must be integers")
+    if not isinstance(summary["ci_stability"], str):
+        raise CorpusIntegrityError(f"{location}.ci_stability must be text")
+    if not isinstance(summary["metrics"], Mapping):
+        raise CorpusIntegrityError(f"{location}.metrics must be an object")
+    for metric_name, metric in summary["metrics"].items():
+        if not isinstance(metric_name, str):
+            raise CorpusIntegrityError(f"{location} metric name must be text")
+        _validate_metric_summary(metric, f"{location}.metrics.{metric_name}")
+    _validate_classification(summary["unknown_classification"], f"{location}.unknown")
+    _validate_classification(summary["conflict_classification"], f"{location}.conflict")
+    calibration = summary["uncertainty_calibration"]
+    if calibration is not None:
+        calibration = _require_artifact_keys(
+            calibration, {"ece_10_bin", "n", "bins"}, f"{location}.calibration"
+        )
+        if not _is_artifact_number(calibration["ece_10_bin"]) or type(calibration["n"]) is not int:
+            raise CorpusIntegrityError(f"{location}.calibration has invalid values")
+        if not isinstance(calibration["bins"], list):
+            raise CorpusIntegrityError(f"{location}.calibration bins must be an array")
+        for index, bin_item in enumerate(calibration["bins"]):
+            bin_item = _require_artifact_keys(
+                bin_item, {"lower", "upper", "n", "confidence", "accuracy"},
+                f"{location}.calibration.bins[{index}]",
+            )
+            if type(bin_item["n"]) is not int or not all(
+                _is_artifact_number(bin_item[field])
+                for field in ("lower", "upper", "confidence", "accuracy")
+            ):
+                raise CorpusIntegrityError(f"{location}.calibration bin is invalid")
+    drift = summary["drift"]
+    if drift is not None:
+        drift = _require_artifact_keys(
+            drift,
+            {
+                "terminal_distance_mean", "distance_slope_mean",
+                "terminal_signed_bias_by_axis", "absolute_residual_slope_by_axis",
+                "n_conversations",
+            },
+            f"{location}.drift",
+        )
+        if type(drift["n_conversations"]) is not int:
+            raise CorpusIntegrityError(f"{location}.drift count must be integer")
+        if any(
+            drift[field] is not None and not _is_artifact_number(drift[field])
+            for field in ("terminal_distance_mean", "distance_slope_mean")
+        ):
+            raise CorpusIntegrityError(f"{location}.drift estimate is invalid")
+        for field in ("terminal_signed_bias_by_axis", "absolute_residual_slope_by_axis"):
+            axes = _require_artifact_keys(drift[field], set(AXES), f"{location}.drift.{field}")
+            if any(value is not None and not _is_artifact_number(value) for value in axes.values()):
+                raise CorpusIntegrityError(f"{location}.drift axis value is invalid")
+    if not isinstance(summary["outcome_counts"], Mapping) or not all(
+        isinstance(key, str) and type(count) is int
+        for key, count in summary["outcome_counts"].items()
+    ):
+        raise CorpusIntegrityError(f"{location}.outcome_counts is invalid")
+    method = _require_artifact_keys(
+        summary["confidence_interval_method"],
+        {"method", "cluster", "overall_stratification", "draws", "fixed_seed_material"},
+        f"{location}.confidence_interval_method",
+    )
+    if type(method["draws"]) is not int or not all(
+        isinstance(method[field], str)
+        for field in ("method", "cluster", "overall_stratification", "fixed_seed_material")
+    ):
+        raise CorpusIntegrityError(f"{location}.confidence_interval_method is invalid")
+
+
+def _validate_report_schema(report: Mapping[str, Any], failures: Sequence[Mapping[str, Any]]) -> None:
+    expected_report_keys = {
+        "report_schema_version", "corpus_version", "split", "corpus_sha256",
+        "corpus_root_sha256", "compiler_sha256", "evaluator_sha256", "schema_sha256",
+        "production_code_commit", "production_code_sha256", "evaluation_commit",
+        "backend", "clock", "timezone", "modes", "development_correction_bundle",
+        "paired_mode_differences", "semantic_fingerprint", "metric_supervision",
+        "failure_count", "failure_counts", "environment", "limitations",
+    }
+    report = _require_artifact_keys(report, expected_report_keys, "aggregate report")
+    if type(report["report_schema_version"]) is not int or report["report_schema_version"] != 1:
+        raise CorpusIntegrityError("aggregate report schema version is invalid")
+    if report["corpus_version"] != "conversation-v1" or report["split"] not in {
+        "heldout", "development",
+    } or report["backend"] != "clanker-v8" or report["timezone"] != "UTC":
+        raise CorpusIntegrityError("aggregate report identity field is invalid")
+    hash_fields = {
+        "corpus_sha256", "corpus_root_sha256", "compiler_sha256", "evaluator_sha256",
+        "production_code_sha256", "semantic_fingerprint",
+    }
+    if any(
+        not isinstance(report[field], str) or not re.fullmatch(r"[0-9a-f]{64}", report[field])
+        for field in hash_fields
+    ):
+        raise CorpusIntegrityError("aggregate report digest field is invalid")
+    if any(
+        not isinstance(report[field], str) or not re.fullmatch(r"[0-9a-f]{40}", report[field])
+        for field in ("production_code_commit", "evaluation_commit")
+    ):
+        raise CorpusIntegrityError("aggregate report commit field is invalid")
+    if not isinstance(report["clock"], str) or not report["clock"]:
+        raise CorpusIntegrityError("aggregate report clock must be text")
+    if type(report["failure_count"]) is not int or report["failure_count"] != len(failures):
+        raise CorpusIntegrityError("aggregate report failure_count is invalid")
+    if not isinstance(report["failure_counts"], Mapping) or not all(
+        isinstance(key, str) and type(count) is int for key, count in report["failure_counts"].items()
+    ) or sum(report["failure_counts"].values()) != report["failure_count"]:
+        raise CorpusIntegrityError("aggregate report failure_counts is invalid")
+    if not isinstance(report["schema_sha256"], Mapping) or not report["schema_sha256"] or not all(
+        isinstance(name, str) and isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)
+        for name, digest in report["schema_sha256"].items()
+    ):
+        raise CorpusIntegrityError("schema hashes are invalid")
+    supervision = _require_artifact_keys(
+        report["metric_supervision"],
+        {"semantic_and_entity", "affect_and_trajectory", "outcome"},
+        "metric supervision",
+    )
+    if not all(isinstance(value, str) for value in supervision.values()):
+        raise CorpusIntegrityError("metric supervision values must be text")
+    environment = _require_artifact_keys(
+        report["environment"], {"python", "platform", "processor"}, "environment"
+    )
+    if not all(isinstance(value, str) for value in environment.values()):
+        raise CorpusIntegrityError("environment values must be text")
+    if not isinstance(report["limitations"], list) or not all(
+        isinstance(item, str) for item in report["limitations"]
+    ):
+        raise CorpusIntegrityError("limitations must be text array")
+    modes = _require_artifact_keys(report["modes"], set(MODES), "modes")
+    mode_keys = {
+        "overall", "by_domain", "by_outcome", "by_supervision_level",
+        "latency", "resource_growth", "execution_errors",
+    }
+    for mode in MODES:
+        mode_report = _require_artifact_keys(modes[mode], mode_keys, f"modes.{mode}")
+        if type(mode_report["execution_errors"]) is not int:
+            raise CorpusIntegrityError(f"modes.{mode}.execution_errors must be integer")
+        _validate_summary(mode_report["overall"], f"modes.{mode}.overall")
+        for stratum in ("by_domain", "by_outcome", "by_supervision_level"):
+            if not isinstance(mode_report[stratum], Mapping):
+                raise CorpusIntegrityError(f"modes.{mode}.{stratum} must be object")
+            for key, summary in mode_report[stratum].items():
+                _validate_summary(summary, f"modes.{mode}.{stratum}.{key}")
+        if not isinstance(mode_report["latency"], Mapping) or not isinstance(
+            mode_report["resource_growth"], Mapping
+        ):
+            raise CorpusIntegrityError(f"modes.{mode} observations must be objects")
+        latency = _require_artifact_keys(
+            mode_report["latency"],
+            {
+                "n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms",
+                "observational_nondeterministic", "turns_per_second",
+            },
+            f"modes.{mode}.latency",
+        )
+        if type(latency["n"]) is not int or type(latency["observational_nondeterministic"]) is not bool:
+            raise CorpusIntegrityError(f"modes.{mode}.latency types are invalid")
+        if not all(
+            _is_artifact_number(latency[field])
+            for field in ("mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "turns_per_second")
+        ):
+            raise CorpusIntegrityError(f"modes.{mode}.latency values are invalid")
+        resource_keys = {
+            "turn_samples", "sqlite_allocated_bytes_growth_mean",
+            "sqlite_allocated_bytes_growth_max", "sqlite_row_growth_maxima",
+            "growth_slopes_per_turn", "construction_latency_ms", "tracemalloc_peak_bytes",
+            "process_lifetime_maxrss_peak", "process_maxrss_units", "process_maxrss_comparability",
+        } | {
+            f"memory_{memory_key}_growth_{stat}"
+            for memory_key in ("entities", "events", "relations", "serialized_bytes")
+            for stat in ("mean", "max")
+        }
+        resources = _require_artifact_keys(
+            mode_report["resource_growth"], resource_keys, f"modes.{mode}.resource_growth"
+        )
+        if type(resources["turn_samples"]) is not int or type(resources["tracemalloc_peak_bytes"]) is not int:
+            raise CorpusIntegrityError(f"modes.{mode}.resource counts are invalid")
+        numeric_resources = resource_keys - {
+            "sqlite_row_growth_maxima", "growth_slopes_per_turn", "construction_latency_ms",
+            "process_maxrss_units", "process_maxrss_comparability",
+        }
+        if any(not _is_artifact_number(resources[field]) for field in numeric_resources):
+            raise CorpusIntegrityError(f"modes.{mode}.resource values are invalid")
+        if not isinstance(resources["process_maxrss_units"], str) or not isinstance(
+            resources["process_maxrss_comparability"], str
+        ):
+            raise CorpusIntegrityError(f"modes.{mode}.resource labels are invalid")
+        if not isinstance(resources["sqlite_row_growth_maxima"], Mapping) or not all(
+            isinstance(key, str) and type(count) is int
+            for key, count in resources["sqlite_row_growth_maxima"].items()
+        ):
+            raise CorpusIntegrityError(f"modes.{mode}.resource row counts are invalid")
+        slopes = _require_artifact_keys(
+            resources["growth_slopes_per_turn"],
+            {"memory_serialized_bytes", "sqlite_allocated_bytes"},
+            f"modes.{mode}.resource slopes",
+        )
+        if any(value is not None and not _is_artifact_number(value) for value in slopes.values()):
+            raise CorpusIntegrityError(f"modes.{mode}.resource slopes are invalid")
+        construction = _require_artifact_keys(
+            resources["construction_latency_ms"],
+            {"n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic"},
+            f"modes.{mode}.construction latency",
+        )
+        if type(construction["n"]) is not int or type(construction["observational_nondeterministic"]) is not bool:
+            raise CorpusIntegrityError(f"modes.{mode}.construction latency types are invalid")
+        if not all(
+            _is_artifact_number(construction[field])
+            for field in ("mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms")
+        ):
+            raise CorpusIntegrityError(f"modes.{mode}.construction latency values are invalid")
+    correction_keys = {
+        "source_split", "source_conversation_count", "context_count", "sample_count",
+        "expected_finalized_sample_count", "terminal_pending_turns_excluded",
+        "eligible_context_count", "sha256", "active_profile_id",
+        "heldout_observations_used_for_lookup", "source_corpus_sha256",
+        "production_runtime_commit", "sha256_after_evaluation", "lookup_store_unchanged",
+    }
+    correction = _require_artifact_keys(
+        report["development_correction_bundle"], correction_keys, "development correction bundle"
+    )
+    if any(
+        type(correction[field]) is not int
+        for field in (
+            "source_conversation_count", "context_count", "sample_count",
+            "expected_finalized_sample_count", "terminal_pending_turns_excluded",
+            "eligible_context_count", "heldout_observations_used_for_lookup",
+        )
+    ) or type(correction["lookup_store_unchanged"]) is not bool:
+        raise CorpusIntegrityError("development correction bundle types are invalid")
+    if correction["active_profile_id"] is not None or correction["source_split"] != "development" or not all(
+        isinstance(correction[field], str)
+        for field in (
+            "source_split", "sha256", "source_corpus_sha256", "production_runtime_commit",
+            "sha256_after_evaluation",
+        )
+    ):
+        raise CorpusIntegrityError("development correction bundle provenance is invalid")
+    if correction["heldout_observations_used_for_lookup"] != 0 or correction["lookup_store_unchanged"] is not True:
+        raise CorpusIntegrityError("development correction bundle violates held-out isolation")
+    if any(
+        not re.fullmatch(r"[0-9a-f]{64}", correction[field])
+        for field in ("sha256", "source_corpus_sha256", "sha256_after_evaluation")
+    ) or not re.fullmatch(r"[0-9a-f]{40}", correction["production_runtime_commit"]):
+        raise CorpusIntegrityError("development correction bundle digest is invalid")
+    paired = _require_artifact_keys(
+        report["paired_mode_differences"],
+        {"stateful_minus_sentence_only", "transition_corrected_minus_stateful"},
+        "paired mode differences",
+    )
+    for name, comparison in paired.items():
+        comparison = _require_artifact_keys(
+            comparison,
+            {"candidate_mode", "reference_mode", "paired_turn_count", "pairing", "metrics"},
+            f"paired mode differences.{name}",
+        )
+        if type(comparison["paired_turn_count"]) is not int or not isinstance(comparison["metrics"], Mapping):
+            raise CorpusIntegrityError(f"paired mode differences.{name} types are invalid")
+        if not all(isinstance(comparison[field], str) for field in ("candidate_mode", "reference_mode", "pairing")):
+            raise CorpusIntegrityError(f"paired mode differences.{name} labels are invalid")
+        for metric_name, metric in comparison["metrics"].items():
+            _validate_metric_summary(metric, f"paired.{name}.{metric_name}")
+    failure_keys = {"conversation_id", "turn_id", "domain", "mode", "category"}
+    for failure in failures:
+        if not isinstance(failure, Mapping) or not failure_keys <= set(failure):
+            raise CorpusIntegrityError("failure ledger row is malformed")
+        if set(failure) - failure_keys - {"exception"}:
+            raise CorpusIntegrityError("failure ledger row contains an unexpected field")
+        if not all(isinstance(value, str) for value in failure.values()):
+            raise CorpusIntegrityError("failure ledger values must be text")
+
+
 def _validate_aggregate_artifacts(
     report: Mapping[str, Any],
     failures: Sequence[Mapping[str, Any]],
@@ -1084,6 +1430,9 @@ def _validate_aggregate_artifacts(
         for conversation in conversations
         for turn in conversation["turns"]
     ]
+
+    if "report_schema_version" in report:
+        _validate_report_schema(report, failures)
 
     if "report_schema_version" in report:
         expected_report_keys = {
@@ -1159,6 +1508,22 @@ def _atomic_replace(source: Path, target: Path) -> None:
     source.replace(target)
 
 
+def _report_generation_id(
+    *,
+    report_name: str,
+    report_sha256: str,
+    failure_name: str,
+    failure_sha256: str,
+    checksum_name: str,
+    checksum_sha256: str,
+) -> str:
+    return hashlib.sha256(_canonical_json({
+        "report": {"name": report_name, "sha256": report_sha256},
+        "failures": {"name": failure_name, "sha256": failure_sha256},
+        "checksum": {"name": checksum_name, "sha256": checksum_sha256},
+    }).encode("utf-8")).hexdigest()
+
+
 def _publish_artifacts(
     report: Mapping[str, Any],
     failures: Sequence[Mapping[str, Any]],
@@ -1169,57 +1534,127 @@ def _publish_artifacts(
 ) -> None:
     failure_target = failures_path or output_path.with_name(f"{output_path.stem}_failures.jsonl")
     checksum_path = output_path.with_suffix(".sha256")
+    pointer_path = output_path.with_suffix(".current")
+    generations = output_path.parent / f"{output_path.stem}.generations"
     targets = [output_path.resolve(), failure_target.resolve(), checksum_path.resolve()]
     if len(set(targets)) != len(targets):
         raise CorpusIntegrityError("report, failures, and checksum targets must be distinct")
     if failure_target.parent.resolve() != output_path.parent.resolve():
         raise CorpusIntegrityError("report, failures, and checksum must share one publish directory")
+    reserved = {pointer_path.resolve(), generations.resolve()}
+    if reserved & set(targets) or pointer_path.resolve() == generations.resolve():
+        raise CorpusIntegrityError("report artifact targets collide with atomic publication metadata")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     report_bytes = (json.dumps(report, indent=2, sort_keys=True) + "\n").encode("utf-8")
     failure_bytes = "".join(_canonical_json(item) + "\n" for item in failures).encode("utf-8")
+    report_sha256 = hashlib.sha256(report_bytes).hexdigest()
+    failure_sha256 = hashlib.sha256(failure_bytes).hexdigest()
     checksum_bytes = (
-        f"{hashlib.sha256(report_bytes).hexdigest()}  {output_path.name}\n"
-        f"{hashlib.sha256(failure_bytes).hexdigest()}  {failure_target.name}\n"
+        f"{report_sha256}  {output_path.name}\n"
+        f"{failure_sha256}  {failure_target.name}\n"
     ).encode("ascii")
+    checksum_sha256 = hashlib.sha256(checksum_bytes).hexdigest()
+    generation_id = _report_generation_id(
+        report_name=output_path.name,
+        report_sha256=report_sha256,
+        failure_name=failure_target.name,
+        failure_sha256=failure_sha256,
+        checksum_name=checksum_path.name,
+        checksum_sha256=checksum_sha256,
+    )
+    generation_dir = generations / generation_id
+    pointer_bytes = (json.dumps({
+        "generation": generation_id,
+        "report": output_path.name,
+        "failures": failure_target.name,
+        "checksum": checksum_path.name,
+    }, sort_keys=True) + "\n").encode("ascii")
+    generations.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".conversation-report-", dir=output_path.parent) as staging_name:
-        staging = Path(staging_name)
-        staged = {
-            output_path: report_bytes,
-            failure_target: failure_bytes,
-            checksum_path: checksum_bytes,
-        }
-        for target, payload in staged.items():
-            (staging / target.name).write_bytes(payload)
-        backups: Dict[Path, Path | None] = {}
-        for index, target in enumerate(staged):
-            if target.exists():
-                backup = staging / f".backup-{index}"
-                backup.write_bytes(target.read_bytes())
-                backups[target] = backup
-            else:
-                backups[target] = None
+        staging_root = Path(staging_name)
+        staging = staging_root / "generation"
+        staging.mkdir()
+        for name, payload in (
+            (output_path.name, report_bytes),
+            (failure_target.name, failure_bytes),
+            (checksum_path.name, checksum_bytes),
+        ):
+            (staging / name).write_bytes(payload)
         provenance_check()
-        published: List[Path] = []
-        try:
-            for target in (output_path, failure_target, checksum_path):
-                _atomic_replace(staging / target.name, target)
-                published.append(target)
-        except Exception as publish_error:
-            rollback_errors: List[Exception] = []
-            for target in reversed(published):
-                try:
-                    backup = backups[target]
-                    if backup is None:
-                        target.unlink(missing_ok=True)
-                    else:
-                        backup.replace(target)
-                except Exception as rollback_error:
-                    rollback_errors.append(rollback_error)
-            if rollback_errors:
-                raise RuntimeError(
-                    f"artifact publication failed and {len(rollback_errors)} rollback action(s) failed"
-                ) from publish_error
-            raise
+        if generation_dir.exists():
+            expected = {
+                output_path.name: report_bytes,
+                failure_target.name: failure_bytes,
+                checksum_path.name: checksum_bytes,
+            }
+            if any(
+                not (generation_dir / name).is_file()
+                or (generation_dir / name).read_bytes() != payload
+                for name, payload in expected.items()
+            ):
+                raise CorpusIntegrityError("existing immutable report generation differs")
+        else:
+            _atomic_replace(staging, generation_dir)
+        pointer_stage = staging_root / pointer_path.name
+        pointer_stage.write_bytes(pointer_bytes)
+        provenance_check()
+        _atomic_replace(pointer_stage, pointer_path)
+
+
+def load_published_artifacts(output_path: Path) -> Tuple[Dict[str, Any], List[Dict[str, Any]], Path]:
+    """Resolve one atomically selected report generation and verify its hashes."""
+
+    pointer_path = output_path.with_suffix(".current")
+    try:
+        pointer = json.loads(pointer_path.read_text(encoding="ascii"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise CorpusIntegrityError("published report pointer is missing or malformed") from exc
+    if not isinstance(pointer, Mapping) or set(pointer) != {
+        "generation", "report", "failures", "checksum",
+    }:
+        raise CorpusIntegrityError("published report pointer schema is invalid")
+    generation = pointer["generation"]
+    if not isinstance(generation, str) or not re.fullmatch(r"[0-9a-f]{64}", generation):
+        raise CorpusIntegrityError("published report generation ID is invalid")
+    for field in ("report", "failures", "checksum"):
+        if not isinstance(pointer[field], str) or Path(pointer[field]).name != pointer[field]:
+            raise CorpusIntegrityError("published report filename is invalid")
+    if pointer["report"] != output_path.name or pointer["checksum"] != output_path.with_suffix(".sha256").name:
+        raise CorpusIntegrityError("published report pointer selects unexpected filenames")
+    generation_dir = output_path.parent / f"{output_path.stem}.generations" / generation
+    report_path = generation_dir / pointer["report"]
+    failure_path = generation_dir / pointer["failures"]
+    checksum_path = generation_dir / pointer["checksum"]
+    try:
+        checksum_bytes = checksum_path.read_bytes()
+        checksum_lines = [line.split() for line in checksum_bytes.decode("ascii").splitlines()]
+        if len(checksum_lines) != 2 or any(len(line) != 2 for line in checksum_lines):
+            raise ValueError("checksum must contain exactly two rows")
+        expected_hashes = {name: digest for digest, name in checksum_lines}
+    except (OSError, UnicodeError, ValueError) as exc:
+        raise CorpusIntegrityError("published report checksum is malformed") from exc
+    if set(expected_hashes) != {report_path.name, failure_path.name}:
+        raise CorpusIntegrityError("published report checksum names are invalid")
+    for path in (report_path, failure_path):
+        if expected_hashes.get(path.name) != hashlib.sha256(path.read_bytes()).hexdigest():
+            raise CorpusIntegrityError("published report generation hash mismatch")
+    selected_generation = _report_generation_id(
+        report_name=report_path.name,
+        report_sha256=expected_hashes[report_path.name],
+        failure_name=failure_path.name,
+        failure_sha256=expected_hashes[failure_path.name],
+        checksum_name=checksum_path.name,
+        checksum_sha256=hashlib.sha256(checksum_bytes).hexdigest(),
+    )
+    if selected_generation != generation:
+        raise CorpusIntegrityError("published report generation identifier mismatch")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    failures = [
+        json.loads(line)
+        for line in failure_path.read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    return report, failures, generation_dir
 
 
 def _enforce_zero_execution_errors(failures: Sequence[Mapping[str, Any]]) -> None:

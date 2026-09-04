@@ -26,6 +26,8 @@ ROOT = Path(__file__).resolve().parent
 SOURCE_DIR = ROOT / "sources"
 DATA_DIR = ROOT / "data"
 MANIFEST_PATH = DATA_DIR / "manifest_v1.json"
+CURRENT_POINTER = "CURRENT"
+GENERATIONS_DIRECTORY = "generations"
 REPO_ROOT = ROOT.parent.parent
 BASELINE_CODE_COMMIT = "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
 PRODUCTION_PATHS = ("clanker_lm", "engine", "clanker_engine.py")
@@ -108,6 +110,28 @@ def _sha256_bytes(payload: bytes) -> str:
 
 def _sha256_file(path: Path) -> str:
     return _sha256_bytes(path.read_bytes())
+
+
+def _atomic_replace_path(source: Path, target: Path) -> None:
+    source.replace(target)
+
+
+def _selected_data_dir(data_dir: Path) -> Path:
+    pointer = data_dir / CURRENT_POINTER
+    if not pointer.is_file():
+        return data_dir
+    generation = pointer.read_text(encoding="ascii").strip()
+    if not re.fullmatch(r"[0-9a-f]{64}", generation):
+        raise CorpusIntegrityError("corpus CURRENT pointer is malformed")
+    selected = data_dir / GENERATIONS_DIRECTORY / generation
+    if not selected.is_dir():
+        raise CorpusIntegrityError("corpus CURRENT pointer selects a missing generation")
+    return selected
+
+
+def selected_manifest_path(path: Path = MANIFEST_PATH) -> Path:
+    selected = _selected_data_dir(path.parent)
+    return selected / path.name
 
 
 def _require_exact_keys(
@@ -1000,16 +1024,29 @@ def compile_corpora(
         "manifest_v1.json": manifest_payload,
         "ROOT.sha256": (root_sha256 + "\n").encode("ascii"),
     }
+    generations = output_dir / GENERATIONS_DIRECTORY
+    generations.mkdir(parents=True, exist_ok=True)
+    generation_dir = generations / root_sha256
     with tempfile.TemporaryDirectory(prefix=".conversation-compile-", dir=output_dir) as staging_name:
-        staging = Path(staging_name)
+        staging_root = Path(staging_name)
+        staging = staging_root / "generation"
+        staging.mkdir()
         for filename, payload in publish_payloads.items():
             (staging / filename).write_bytes(payload)
-        for filename in sorted(publish_payloads):
-            (staging / filename).replace(output_dir / filename)
+        if generation_dir.exists():
+            for filename, payload in publish_payloads.items():
+                if not (generation_dir / filename).is_file() or (generation_dir / filename).read_bytes() != payload:
+                    raise CorpusIntegrityError("existing immutable corpus generation differs from compiled bytes")
+        else:
+            _atomic_replace_path(staging, generation_dir)
+        pointer_stage = staging_root / CURRENT_POINTER
+        pointer_stage.write_text(root_sha256 + "\n", encoding="ascii")
+        _atomic_replace_path(pointer_stage, output_dir / CURRENT_POINTER)
     return manifest
 
 
 def load_manifest(path: Path = MANIFEST_PATH) -> Dict[str, Any]:
+    path = selected_manifest_path(path)
     if not path.is_file():
         raise CorpusIntegrityError(f"missing corpus manifest: {path}")
     try:

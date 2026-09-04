@@ -9,16 +9,16 @@
     "report_schema_version": {"const": 1},
     "corpus_version": {"const": "conversation-v1"},
     "split": {"enum": ["heldout", "development"]},
-    "corpus_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "corpus_root_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "compiler_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "evaluator_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "schema_sha256": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
-    "production_code_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
-    "production_code_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "evaluation_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "corpus_sha256": {"$ref": "#/$defs/sha256"},
+    "corpus_root_sha256": {"$ref": "#/$defs/sha256"},
+    "compiler_sha256": {"$ref": "#/$defs/sha256"},
+    "evaluator_sha256": {"$ref": "#/$defs/sha256"},
+    "schema_sha256": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/sha256"}},
+    "production_code_commit": {"$ref": "#/$defs/commit"},
+    "production_code_sha256": {"$ref": "#/$defs/sha256"},
+    "evaluation_commit": {"$ref": "#/$defs/commit"},
     "backend": {"const": "clanker-v8"},
-    "clock": {"type": "string"},
+    "clock": {"type": "string", "minLength": 1},
     "timezone": {"const": "UTC"},
     "modes": {
       "type": "object",
@@ -30,39 +30,161 @@
         "transition_corrected": {"$ref": "#/$defs/mode"}
       }
     },
-    "development_correction_bundle": {"type": "object"},
-    "paired_mode_differences": {"type": "object"},
-    "semantic_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "metric_supervision": {"type": "object", "additionalProperties": false, "required": ["semantic_and_entity", "affect_and_trajectory", "outcome"], "properties": {"semantic_and_entity": {"type": "string"}, "affect_and_trajectory": {"type": "string"}, "outcome": {"type": "string"}}},
+    "development_correction_bundle": {"$ref": "#/$defs/correctionBundle"},
+    "paired_mode_differences": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stateful_minus_sentence_only", "transition_corrected_minus_stateful"],
+      "properties": {
+        "stateful_minus_sentence_only": {"$ref": "#/$defs/pairedComparison"},
+        "transition_corrected_minus_stateful": {"$ref": "#/$defs/pairedComparison"}
+      }
+    },
+    "semantic_fingerprint": {"$ref": "#/$defs/sha256"},
+    "metric_supervision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["semantic_and_entity", "affect_and_trajectory", "outcome"],
+      "properties": {
+        "semantic_and_entity": {"type": "string"},
+        "affect_and_trajectory": {"type": "string"},
+        "outcome": {"type": "string"}
+      }
+    },
     "failure_count": {"type": "integer", "minimum": 0},
     "failure_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
-    "environment": {"type": "object", "additionalProperties": false, "required": ["python", "platform", "processor"], "properties": {"python": {"type": "string"}, "platform": {"type": "string"}, "processor": {"type": "string"}}},
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["python", "platform", "processor"],
+      "properties": {"python": {"type": "string"}, "platform": {"type": "string"}, "processor": {"type": "string"}}
+    },
     "limitations": {"type": "array", "items": {"type": "string"}}
   },
   "$defs": {
-    "mode": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["overall", "by_domain", "by_outcome", "by_supervision_level", "latency", "resource_growth", "execution_errors"],
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "interval": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}},
+    "metric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["value", "n_turns", "n_conversations", "ci95_conversation_cluster_bootstrap"],
       "properties": {
-        "overall": {"$ref": "#/$defs/summary"},
-        "by_domain": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
-        "by_outcome": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
-        "by_supervision_level": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
-        "latency": {"type": "object"},
-        "resource_growth": {"type": "object"},
-        "execution_errors": {"type": "integer", "minimum": 0}
+        "value": {"type": "number"}, "n_turns": {"type": "integer", "minimum": 0},
+        "n_conversations": {"type": "integer", "minimum": 0},
+        "ci95_conversation_cluster_bootstrap": {"oneOf": [{"$ref": "#/$defs/interval"}, {"type": "null"}]}
       }
     },
+    "classification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["tp", "fp", "fn", "precision", "recall", "f1", "bootstrap_valid_draws", "ci95_conversation_cluster_bootstrap"],
+      "properties": {
+        "tp": {"type": "integer", "minimum": 0}, "fp": {"type": "integer", "minimum": 0}, "fn": {"type": "integer", "minimum": 0},
+        "precision": {"type": ["number", "null"]}, "recall": {"type": ["number", "null"]}, "f1": {"type": ["number", "null"]},
+        "bootstrap_valid_draws": {
+          "type": "object", "additionalProperties": false, "required": ["precision", "recall", "f1"],
+          "properties": {"precision": {"type": "integer", "minimum": 0}, "recall": {"type": "integer", "minimum": 0}, "f1": {"type": "integer", "minimum": 0}}
+        },
+        "ci95_conversation_cluster_bootstrap": {
+          "type": "object", "additionalProperties": false,
+          "properties": {"precision": {"$ref": "#/$defs/interval"}, "recall": {"$ref": "#/$defs/interval"}, "f1": {"$ref": "#/$defs/interval"}}
+        }
+      }
+    },
+    "calibration": {
+      "type": "object", "additionalProperties": false, "required": ["ece_10_bin", "n", "bins"],
+      "properties": {
+        "ece_10_bin": {"type": "number"}, "n": {"type": "integer", "minimum": 0},
+        "bins": {"type": "array", "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["lower", "upper", "n", "confidence", "accuracy"],
+          "properties": {"lower": {"type": "number"}, "upper": {"type": "number"}, "n": {"type": "integer", "minimum": 0}, "confidence": {"type": "number"}, "accuracy": {"type": "number"}}
+        }}
+      }
+    },
+    "axes": {
+      "type": "object", "additionalProperties": false, "required": ["v", "a", "d", "u", "g", "w", "i"],
+      "properties": {"v": {"type": ["number", "null"]}, "a": {"type": ["number", "null"]}, "d": {"type": ["number", "null"]}, "u": {"type": ["number", "null"]}, "g": {"type": ["number", "null"]}, "w": {"type": ["number", "null"]}, "i": {"type": ["number", "null"]}}
+    },
+    "drift": {
+      "type": "object", "additionalProperties": false,
+      "required": ["terminal_distance_mean", "distance_slope_mean", "terminal_signed_bias_by_axis", "absolute_residual_slope_by_axis", "n_conversations"],
+      "properties": {
+        "terminal_distance_mean": {"type": ["number", "null"]}, "distance_slope_mean": {"type": ["number", "null"]},
+        "terminal_signed_bias_by_axis": {"$ref": "#/$defs/axes"}, "absolute_residual_slope_by_axis": {"$ref": "#/$defs/axes"},
+        "n_conversations": {"type": "integer", "minimum": 0}
+      }
+    },
+    "confidenceMethod": {
+      "type": "object", "additionalProperties": false,
+      "required": ["method", "cluster", "overall_stratification", "draws", "fixed_seed_material"],
+      "properties": {"method": {"type": "string"}, "cluster": {"type": "string"}, "overall_stratification": {"type": "string"}, "draws": {"type": "integer", "minimum": 1}, "fixed_seed_material": {"type": "string"}}
+    },
     "summary": {
-      "type": "object",
-      "additionalProperties": false,
+      "type": "object", "additionalProperties": false,
       "required": ["turn_count", "conversation_count", "ci_stability", "metrics", "unknown_classification", "conflict_classification", "uncertainty_calibration", "drift", "outcome_counts", "confidence_interval_method"],
       "properties": {
-        "turn_count": {"type": "integer"}, "conversation_count": {"type": "integer"}, "ci_stability": {"type": "string"},
-        "metrics": {"type": "object"}, "unknown_classification": {"type": "object"}, "conflict_classification": {"type": "object"},
-        "uncertainty_calibration": {"type": ["object", "null"]}, "drift": {"type": ["object", "null"]},
-        "outcome_counts": {"type": "object", "additionalProperties": {"type": "integer"}}, "confidence_interval_method": {"type": "object"}
+        "turn_count": {"type": "integer", "minimum": 0}, "conversation_count": {"type": "integer", "minimum": 0}, "ci_stability": {"type": "string"},
+        "metrics": {"type": "object", "additionalProperties": {"$ref": "#/$defs/metric"}},
+        "unknown_classification": {"$ref": "#/$defs/classification"}, "conflict_classification": {"$ref": "#/$defs/classification"},
+        "uncertainty_calibration": {"oneOf": [{"$ref": "#/$defs/calibration"}, {"type": "null"}]},
+        "drift": {"oneOf": [{"$ref": "#/$defs/drift"}, {"type": "null"}]},
+        "outcome_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "confidence_interval_method": {"$ref": "#/$defs/confidenceMethod"}
+      }
+    },
+    "latency": {
+      "type": "object", "additionalProperties": false,
+      "required": ["n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic", "turns_per_second"],
+      "properties": {"n": {"type": "integer", "minimum": 0}, "mean_ms": {"type": "number"}, "p50_ms": {"type": "number"}, "p95_ms": {"type": "number"}, "p99_ms": {"type": "number"}, "max_ms": {"type": "number"}, "observational_nondeterministic": {"type": "boolean"}, "turns_per_second": {"type": "number"}}
+    },
+    "constructionLatency": {
+      "type": "object", "additionalProperties": false,
+      "required": ["n", "mean_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms", "observational_nondeterministic"],
+      "properties": {"n": {"type": "integer", "minimum": 0}, "mean_ms": {"type": "number"}, "p50_ms": {"type": "number"}, "p95_ms": {"type": "number"}, "p99_ms": {"type": "number"}, "max_ms": {"type": "number"}, "observational_nondeterministic": {"type": "boolean"}}
+    },
+    "resourceGrowth": {
+      "type": "object", "additionalProperties": false,
+      "required": ["turn_samples", "memory_entities_growth_mean", "memory_entities_growth_max", "memory_events_growth_mean", "memory_events_growth_max", "memory_relations_growth_mean", "memory_relations_growth_max", "memory_serialized_bytes_growth_mean", "memory_serialized_bytes_growth_max", "sqlite_allocated_bytes_growth_mean", "sqlite_allocated_bytes_growth_max", "sqlite_row_growth_maxima", "growth_slopes_per_turn", "construction_latency_ms", "tracemalloc_peak_bytes", "process_lifetime_maxrss_peak", "process_maxrss_units", "process_maxrss_comparability"],
+      "properties": {
+        "turn_samples": {"type": "integer", "minimum": 0},
+        "memory_entities_growth_mean": {"type": "number"}, "memory_entities_growth_max": {"type": "number"},
+        "memory_events_growth_mean": {"type": "number"}, "memory_events_growth_max": {"type": "number"},
+        "memory_relations_growth_mean": {"type": "number"}, "memory_relations_growth_max": {"type": "number"},
+        "memory_serialized_bytes_growth_mean": {"type": "number"}, "memory_serialized_bytes_growth_max": {"type": "number"},
+        "sqlite_allocated_bytes_growth_mean": {"type": "number"}, "sqlite_allocated_bytes_growth_max": {"type": "number"},
+        "sqlite_row_growth_maxima": {"type": "object", "additionalProperties": {"type": "integer"}},
+        "growth_slopes_per_turn": {"type": "object", "additionalProperties": false, "required": ["memory_serialized_bytes", "sqlite_allocated_bytes"], "properties": {"memory_serialized_bytes": {"type": ["number", "null"]}, "sqlite_allocated_bytes": {"type": ["number", "null"]}}},
+        "construction_latency_ms": {"$ref": "#/$defs/constructionLatency"},
+        "tracemalloc_peak_bytes": {"type": "integer", "minimum": 0}, "process_lifetime_maxrss_peak": {"type": "number", "minimum": 0},
+        "process_maxrss_units": {"type": "string"}, "process_maxrss_comparability": {"type": "string"}
+      }
+    },
+    "mode": {
+      "type": "object", "additionalProperties": false,
+      "required": ["overall", "by_domain", "by_outcome", "by_supervision_level", "latency", "resource_growth", "execution_errors"],
+      "properties": {
+        "overall": {"$ref": "#/$defs/summary"}, "by_domain": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
+        "by_outcome": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}}, "by_supervision_level": {"type": "object", "additionalProperties": {"$ref": "#/$defs/summary"}},
+        "latency": {"$ref": "#/$defs/latency"}, "resource_growth": {"$ref": "#/$defs/resourceGrowth"}, "execution_errors": {"type": "integer", "minimum": 0}
+      }
+    },
+    "correctionBundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_split", "source_conversation_count", "context_count", "sample_count", "expected_finalized_sample_count", "terminal_pending_turns_excluded", "eligible_context_count", "sha256", "active_profile_id", "heldout_observations_used_for_lookup", "source_corpus_sha256", "production_runtime_commit", "sha256_after_evaluation", "lookup_store_unchanged"],
+      "properties": {
+        "source_split": {"const": "development"}, "source_conversation_count": {"type": "integer", "minimum": 0},
+        "context_count": {"type": "integer", "minimum": 0}, "sample_count": {"type": "integer", "minimum": 0},
+        "expected_finalized_sample_count": {"type": "integer", "minimum": 0}, "terminal_pending_turns_excluded": {"type": "integer", "minimum": 0},
+        "eligible_context_count": {"type": "integer", "minimum": 0}, "sha256": {"$ref": "#/$defs/sha256"}, "active_profile_id": {"type": "null"},
+        "heldout_observations_used_for_lookup": {"const": 0}, "source_corpus_sha256": {"$ref": "#/$defs/sha256"},
+        "production_runtime_commit": {"$ref": "#/$defs/commit"}, "sha256_after_evaluation": {"$ref": "#/$defs/sha256"}, "lookup_store_unchanged": {"const": true}
+      }
+    },
+    "pairedComparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_mode", "reference_mode", "paired_turn_count", "pairing", "metrics"],
+      "properties": {
+        "candidate_mode": {"enum": ["stateful", "transition_corrected"]}, "reference_mode": {"enum": ["sentence_only", "stateful"]},
+        "paired_turn_count": {"type": "integer", "minimum": 0}, "pairing": {"type": "string"},
+        "metrics": {"type": "object", "additionalProperties": {"$ref": "#/$defs/metric"}}
       }
     }
   }
