@@ -13,7 +13,7 @@ authors = [{name = "Jerry Mares"}]
 dependencies = []
 
 [project.optional-dependencies]
-test = ["pytest>=7.0", "coverage>=7.0"]
+test = ["pytest>=7.0", "coverage>=7.0", "httpx>=0.27,<1"]
 web = ["starlette>=0.40,<1", "uvicorn>=0.30,<1"]
 
 [project.scripts]

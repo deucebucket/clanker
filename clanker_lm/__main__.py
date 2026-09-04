@@ -291,6 +291,8 @@ def cmd_web(args: argparse.Namespace) -> int:
         rate_limit=args.rate_limit,
         rate_window_seconds=args.rate_window_seconds,
         max_turns=args.max_turns,
+        max_chat_response_bytes=args.max_chat_response_bytes,
+        max_export_bytes=args.max_export_bytes,
     )
     try:
         run_server(config, log_level=args.log_level)
@@ -397,6 +399,8 @@ def build_parser() -> argparse.ArgumentParser:
     web.add_argument("--rate-limit", type=int, default=30)
     web.add_argument("--rate-window-seconds", type=float, default=60.0)
     web.add_argument("--max-turns", type=int, default=200)
+    web.add_argument("--max-chat-response-bytes", type=int, default=64 * 1024)
+    web.add_argument("--max-export-bytes", type=int, default=8 * 1024 * 1024)
     web.add_argument(
         "--log-level",
         choices=("critical", "error", "warning", "info"),

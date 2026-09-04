@@ -66,6 +66,8 @@ class WebConfig:
     max_turns: int = 200
     max_message_bytes: int = 4 * 1024
     max_body_bytes: int = 16 * 1024
+    max_chat_response_bytes: int = 64 * 1024
+    max_export_bytes: int = 8 * 1024 * 1024
 
     def __post_init__(self) -> None:
         if not isinstance(self.host, str) or not self.host:
@@ -77,6 +79,8 @@ class WebConfig:
         self._positive_integer("max_turns", self.max_turns)
         self._positive_integer("max_message_bytes", self.max_message_bytes)
         self._positive_integer("max_body_bytes", self.max_body_bytes)
+        self._positive_integer("max_chat_response_bytes", self.max_chat_response_bytes)
+        self._positive_integer("max_export_bytes", self.max_export_bytes)
         if self.max_body_bytes < self.max_message_bytes:
             raise ValueError("max_body_bytes must be at least max_message_bytes")
         for name, value in (
@@ -135,6 +139,22 @@ class WebConfig:
                 raise ValueError("deployed mode requires an explicit public_origin")
             if not self.allowed_users:
                 raise ValueError("deployed mode requires at least one allowed user")
+            assert parsed_origin is not None
+            hostname = parsed_origin.hostname
+            assert hostname is not None
+            rendered_host = f"[{hostname}]" if ":" in hostname else hostname
+            port = parsed_origin.port
+            rendered_authority = (
+                rendered_host
+                if port is None or port == 443
+                else f"{rendered_host}:{port}"
+            )
+            canonical_origin = f"https://{rendered_authority}"
+            if hostname.endswith(".") or self.public_origin != canonical_origin:
+                raise ValueError(
+                    "deployed public_origin must be canonical HTTPS with a lowercase "
+                    "host and no explicit default port"
+                )
 
     @staticmethod
     def _positive_integer(
@@ -169,8 +189,12 @@ class WebSession:
     requests: Deque[float] = field(default_factory=deque)
 
 
+class SessionCapacityError(RuntimeError):
+    """Raised when every bounded session slot belongs to an active browser."""
+
+
 class SessionRegistry:
-    """Event-loop-confined LRU registry with deterministic test seams."""
+    """Event-loop-confined bounded registry with deterministic test seams."""
 
     def __init__(
         self,
@@ -214,9 +238,8 @@ class SessionRegistry:
             return session, False
 
         now = self._clock()
-        while len(self._sessions) >= self.config.max_sessions:
-            _, oldest = self._sessions.popitem(last=False)
-            self._close_runtime(oldest.runtime)
+        if len(self._sessions) >= self.config.max_sessions:
+            raise SessionCapacityError("active session capacity reached")
 
         new_id = self._new_session_id()
         runtime = self._runtime_factory()
@@ -336,6 +359,37 @@ def _error(status_code: int, code: str, message: str) -> JSONResponse:
     )
 
 
+def _limited_json_response(
+    value: Any,
+    *,
+    max_bytes: int,
+    overflow_message: str,
+) -> Response:
+    """Serialize JSON incrementally and fail before emitting an oversized body."""
+
+    chunks: list[bytes] = []
+    size = 0
+    encoder = json.JSONEncoder(
+        ensure_ascii=False,
+        allow_nan=False,
+        separators=(",", ":"),
+    )
+    try:
+        for chunk in encoder.iterencode(value):
+            encoded = chunk.encode("utf-8")
+            size += len(encoded)
+            if size > max_bytes:
+                raise _WebError(507, "response_too_large", overflow_message)
+            chunks.append(encoded)
+    except (TypeError, ValueError) as exc:
+        raise _WebError(
+            500,
+            "serialization_error",
+            "The response could not be serialized.",
+        ) from exc
+    return Response(b"".join(chunks), media_type="application/json")
+
+
 def _load_assets() -> Mapping[str, bytes]:
     root = resources.files("clanker_lm.web_assets")
     return {name: root.joinpath(name).read_bytes() for name in _ASSET_NAMES}
@@ -436,10 +490,30 @@ def create_app(
                 403, "forbidden_origin", "The request origin is not allowed."
             )
 
+    def authorize_bootstrap(request: Request) -> None:
+        authorize(request)
+        if resolved.deployed and request.headers.get("sec-fetch-site") not in {
+            None,
+            "none",
+            "same-origin",
+        }:
+            raise _WebError(
+                403,
+                "forbidden_site",
+                "Cross-site session bootstrap is not allowed.",
+            )
+
     def lookup(request: Request, *, create: bool) -> tuple[Optional[WebSession], bool]:
         session_id = request.cookies.get(resolved.cookie_name)
         if create:
-            return registry.get_or_create(session_id)
+            try:
+                return registry.get_or_create(session_id)
+            except SessionCapacityError as exc:
+                raise _WebError(
+                    503,
+                    "session_capacity",
+                    "The service has no available session slots. Try again later.",
+                ) from exc
         return registry.get(session_id), False
 
     def attach_cookie(response: Response, session: WebSession) -> None:
@@ -460,7 +534,7 @@ def create_app(
             )
 
     async def index(request: Request) -> Response:
-        authorize(request)
+        authorize_bootstrap(request)
         session, _ = lookup(request, create=True)
         assert session is not None
         response = Response(assets["index.html"], media_type="text/html")
@@ -489,7 +563,7 @@ def create_app(
         if len(message.encode("utf-8")) > resolved.max_message_bytes:
             raise _WebError(413, "message_too_large", "The message is too large.")
 
-        session, _ = lookup(request, create=True)
+        session, created = lookup(request, create=True)
         assert session is not None
         admit(session)
         if session.turns >= resolved.max_turns:
@@ -507,19 +581,27 @@ def create_app(
                 500, "runtime_error", "The runtime could not process that message."
             ) from exc
 
-        response = JSONResponse(
-            {
-                "response": result.response,
-                "evidence": {
-                    "answer_status": result.contract.status.value,
-                    "source": result.contract.source.value,
-                    "memory_revision": result.memory_revision,
-                    "vadug": result.predicted_state.to_dict(),
-                    "truth": result.contract.truth.value,
-                    "certainty": result.contract.certainty,
-                },
-            }
-        )
+        payload = {
+            "response": result.response,
+            "evidence": {
+                "answer_status": result.contract.status.value,
+                "source": result.contract.source.value,
+                "memory_revision": result.memory_revision,
+                "vadug": result.predicted_state.to_dict(),
+                "truth": result.contract.truth.value,
+                "certainty": result.contract.certainty,
+            },
+        }
+        try:
+            response = _limited_json_response(
+                payload,
+                max_bytes=resolved.max_chat_response_bytes,
+                overflow_message="The generated response is too large.",
+            )
+        except _WebError:
+            if created:
+                registry.drop(session.session_id)
+            raise
         attach_cookie(response, session)
         return response
 
@@ -554,7 +636,11 @@ def create_app(
             raise _WebError(
                 500, "runtime_error", "The runtime could not export this session."
             ) from exc
-        response = JSONResponse(snapshot)
+        response = _limited_json_response(
+            snapshot,
+            max_bytes=resolved.max_export_bytes,
+            overflow_message="The session is too large to export.",
+        )
         response.headers["Content-Disposition"] = (
             'attachment; filename="clanker-lm-session.json"'
         )
