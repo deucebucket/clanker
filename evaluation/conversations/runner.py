@@ -96,6 +96,8 @@ SQLITE_ROW_TABLES = frozenset({
     "corpus_profiles", "trajectory_chunks", "template_tables",
 })
 _EXPECTED_CORRECTION_CACHE: Dict[Tuple[str, str], Dict[str, Any]] = {}
+_METRIC_REBUILD_CACHE: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+_CLASSIFICATION_REBUILD_CACHE: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
 
 
 class NoCorrectionTrajectory(TrajectoryController):
@@ -1331,7 +1333,16 @@ def _validate_metric_summary(
         record[statistic_field] not in allowed_discrete for record in records
     ):
         raise CorpusIntegrityError(f"{location} binary observations must be integral")
-    rebuilt = _metric_summary(records, statistic_field, seed_material=seed_material)
+    rebuild_key = (
+        statistic_field,
+        seed_material,
+        hashlib.sha256(_canonical_json(records).encode("utf-8")).hexdigest(),
+    )
+    rebuilt = _METRIC_REBUILD_CACHE.get(rebuild_key)
+    if rebuilt is None:
+        rebuilt = _metric_summary(records, statistic_field, seed_material=seed_material)
+        if rebuilt is not None:
+            _METRIC_REBUILD_CACHE[rebuild_key] = rebuilt
     if rebuilt is None or dict(metric) != rebuilt:
         raise CorpusIntegrityError(f"{location} disagrees with deterministic observations")
 
@@ -1420,7 +1431,15 @@ def _validate_classification(
             raise CorpusIntegrityError(f"{location} cluster counts disagree with observations")
     if len(cluster_rows) != max_turns:
         raise CorpusIntegrityError(f"{location} cluster population is inconsistent")
-    rebuilt = _classification(cluster_rows, label, seed_material=seed_material)
+    rebuild_key = (
+        label,
+        seed_material,
+        hashlib.sha256(_canonical_json(cluster_rows).encode("utf-8")).hexdigest(),
+    )
+    rebuilt = _CLASSIFICATION_REBUILD_CACHE.get(rebuild_key)
+    if rebuilt is None:
+        rebuilt = _classification(cluster_rows, label, seed_material=seed_material)
+        _CLASSIFICATION_REBUILD_CACHE[rebuild_key] = rebuilt
     if dict(item) != rebuilt:
         raise CorpusIntegrityError(
             f"{location} disagrees with deterministic cluster statistics"

@@ -1487,15 +1487,18 @@ def test_report_provenance_resources_and_failure_membership_fail_closed(
 
     if failures:
         forged_failures = copy.deepcopy(failures)
-        first = forged_failures[0]
-        metric = report["modes"][first["mode"]]["overall"]["metrics"][first["category"]]
-        passing = next(
-            (cluster["conversation_id"], cluster["domain"], observation["turn_id"])
-            for cluster in metric["clusters"]
+        replacement = next(
+            (failure, cluster["conversation_id"], cluster["domain"], observation["turn_id"])
+            for failure in forged_failures
+            for cluster in report["modes"][failure["mode"]]["overall"]["metrics"]
+            [failure["category"]]["clusters"]
             for observation in cluster["observations"]
             if observation["value"] == 1.0
         )
-        first["conversation_id"], first["domain"], first["turn_id"] = passing
+        failure, conversation_id, domain, turn_id = replacement
+        failure["conversation_id"] = conversation_id
+        failure["domain"] = domain
+        failure["turn_id"] = turn_id
         with pytest.raises(CorpusIntegrityError, match="membership|identity"):
             _validate_aggregate_artifacts(report, forged_failures, conversations)
 
