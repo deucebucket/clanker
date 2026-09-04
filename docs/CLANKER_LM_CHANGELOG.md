@@ -21,36 +21,50 @@ left `engine/` unchanged.
 **Issue:** [#90](https://github.com/deucebucket/clanker/issues/90)  
 **Base:** `ca992c32e22cdaaf5239a689f11fffa176a31698`
 
-This branch is the next bounded complement-clause delivery after finite content,
-infinitival control/raising, and embedded interrogative content.
+**Status:** **Proven:** local independent correctness, truth-boundary, and
+test/code review accepted with no blockers. **Unknown:** exact-head remote CI and
+automated PR review until push.
 
-Planned relation families:
+Implemented the five issue-scoped relation families:
 
-- gerund content: `Sarah enjoys reading`;
-- aspectual start: `Mary started working`;
-- aspectual stop: `John stopped smoking`;
-- aspectual continuation: `They kept talking`;
-- perception participial: `I saw Sarah leaving`;
-- avoidance/noncompletion: `Sarah avoided calling John`.
+- `gerund_content`: enjoyment and avoidance, with avoidance represented as
+  `GERUND_CONTENT` + `AVOIDED` rather than a sixth relation family;
+- `aspectual_start`, `aspectual_stop`, and `aspectual_continuation`;
+- `perception_participial` with an explicit embedded controller.
 
-Required invariants:
+Matrix and embedded events remain separate and preserve controller, polarity,
+source, provenance, specificity, and conflict boundaries. Gerund and perception
+content stays attributed/nonassertive. Only positive, nonmodal, nonfuture
+simple/perfect phase relations without forward-deictic time may support a
+qualified factual answer; progressive, nominal, and free-adjunct `-ing` forms
+fail closed.
 
-- matrix and embedded events remain separate;
-- progressive aspect is not confused with a gerund complement;
-- selected `-ing` complements are licensed by a reviewed matrix-predicate
-  class rather than accepted generically;
-- controller/experiencer binding remains explicit;
-- `avoid calling` does not establish that the call happened;
-- `saw Sarah leaving` remains attributed perception, not an unqualified global
-  assertion;
-- `stopped smoking` may support a derived prior-activity relation, but that
-  inference must remain marked as derived;
-- ambiguity fails closed;
-- all realization remains compositional and template-free.
+Also added:
 
-The branch was created from the latest merged parser head and contains no
-uncommitted remote work.  This documentation commit establishes the exact
-baseline before implementation begins.
+- version-6 snapshots with backward-compatible version 1–6 loading and corrupt
+  binding rejection;
+- direct and source-qualified Q&A over begun, stopped, continued, enjoyed,
+  avoided, and perceived relations;
+- compositional realization without completed-sentence templates;
+- ambiguity, truth-boundary, persistence, provenance, and conflict regressions.
+
+Local validation:
+
+```text
+285 dedicated tests passed
+160 generated conformance cases included
+2,606 full-suite tests passed, 2 pre-existing expected xfails
+29/29 deterministic acceptance turns
+7 benchmark cases / 29 turns
+compile and diff checks clean
+engine/ and clanker_engine.py unchanged
+```
+
+Independent review caught and drove fixes for modality/future leakage,
+specificity, provenance, conflict, snapshot, and atomicity defects. Final local
+correctness and truth-boundary reviewers returned **ACCEPT / no blockers**, and
+test/code acceptance was clean. Exact-head remote CI and automated PR review
+remain unknown until the branch is pushed; merge approval is not claimed here.
 
 ---
 

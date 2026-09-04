@@ -448,61 +448,116 @@ ca992c32e22cdaaf5239a689f11fffa176a31698
 
 ---
 
-## Current branch — Gerund, participial, and aspectual complements (#90)
+## 2026-09-04 — RR devlog: `-ing` complement implementation and local validation (#90)
 
-**Branch:** `feature/clanker-lm-gerund-participial-complements`  
-**Starting commit:** `ca992c32e22cdaaf5239a689f11fffa176a31698`
+- **Audience:** maintainers and reviewers of the deterministic language runtime
+- **Date/window:** 2026-09-04, pre-merge branch validation
+- **Scope:** issue #90 on `feature/clanker-lm-gerund-participial-complements`,
+  starting from `ca992c32e22cdaaf5239a689f11fffa176a31698`; the V8 affect
+  engine is explicitly excluded
+- **Goal and success condition:** model the five issue-scoped `-ing` relation
+  families without promoting attributed or noncompleted content to global fact;
+  pass at least 160 generated cases, the full suite, deterministic acceptance,
+  benchmark, compile, and repository-boundary checks before exact-head approval
 
-### Intended forms
+### Rundown
 
-```text
-Sarah enjoys reading.            gerund content
-John stopped smoking.            aspectual stop
-Mary started working.            aspectual start
-They kept talking.               aspectual continuation
-I saw Sarah leaving.             perception participial
-Sarah avoided calling John.      noncompletion/avoidance
-```
+**Proven:** the branch now implements `gerund_content`, `aspectual_start`,
+`aspectual_stop`, `aspectual_continuation`, and
+`perception_participial`. Matrix and complement events remain separate, with
+explicit source, controller, polarity, content status, and stable relation
+identity. Avoidance deliberately uses `GERUND_CONTENT` with `AVOIDED` status;
+it is a noncompletion status, not a sixth relation family.
 
-### Required distinctions
+In plain language, Clanker-LM can preserve the difference between “Sarah
+enjoys reading,” “Mary started working,” and “I saw Sarah leaving” instead of
+flattening every `-ing` phrase into one asserted event. It also refuses to treat
+ordinary nouns, progressive clauses, or free adjuncts as selected complements
+when the grammar does not license that attachment.
 
-1. **Gerund complement versus noun phrase**
-   - `Sarah enjoys reading` may select an event-like complement;
-   - an ordinary nominal use must not be forced into an event.
+The local acceptance evidence is green. **Proven:** independent correctness,
+truth-boundary, and test/code reviewers accepted the corrected implementation
+with no blockers. **Unknown:** exact-head remote CI and automated PR review are
+still pending, so this entry does not claim merge approval.
 
-2. **Complement versus progressive aspect**
-   - `Sarah is reading` is a progressive matrix predicate;
-   - `Sarah enjoys reading` contains a selected gerund complement.
+### Current state
 
-3. **Complement versus free adjunct**
-   - an `-ing` clause that is temporal, causal, manner, or discourse-adjacent
-     must not be attached as selected content without licensing evidence.
+| Class | Claim | Evidence |
+| --- | --- | --- |
+| Proven | All five issue-scoped relation families are represented, including avoidance as `GERUND_CONTENT` + `AVOIDED`. | Model/parser/memory/Q&A/realization coverage in `clanker_lm/`; dedicated issue suite passes. |
+| Proven | Factual phase answers are limited to positive, nonmodal, nonfuture simple/perfect clauses without forward-deictic time. | Truth-boundary regression cases in `tests/test_gerund_complements.py`. |
+| Proven | Progressive, nominal, and free-adjunct `-ing` forms fail closed rather than becoming selected complement relations. | Parser boundary and ambiguity tests in the dedicated suite. |
+| Proven | Version-6 snapshots load versions 1–6 and reject corrupt gerund bindings. | Snapshot round-trip, legacy-load, and corruption tests. |
+| Proven | The implementation passes its stated local test and repository-boundary gates. | 285 dedicated passes; 2,606 full-suite passes and two expected xfails; 29/29 acceptance turns; clean compile/diff checks. |
+| Proven | The corrected local implementation passed independent correctness, truth-boundary, and test/code review with no blockers. | Final local reviewer verdicts: ACCEPT / no blockers; full local evidence set rerun. |
+| Unknown | Whether the pushed exact branch head will pass remote CI and automated PR review and merge unchanged. | The exact-head remote gates cannot run until the branch is pushed. |
 
-4. **Entailment status**
-   - `avoided calling` does not establish a call;
-   - `started working` establishes an onset relation;
-   - `stopped smoking` may support prior activity only as a typed derived
-     inference;
-   - `saw Sarah leaving` remains perception-attributed.
+### Changes since the last entry
 
-5. **Controller binding**
-   - the matrix predicate catalog determines whether the matrix subject,
-     object, or an explicit embedded subject controls the `-ing` event.
+- Added separate matrix/complement event frames and typed relations for:
+  `Sarah enjoys reading`, `Mary started working`, `John stopped smoking`,
+  `They kept talking`, `I saw Sarah leaving`, and
+  `Sarah avoided calling John`.
+- Kept selected gerund content and perception participials attributed and
+  nonassertive. Only qualified phase relations may support a factual answer;
+  modal, future, negated, progressive, and forward-time contexts do not.
+- Added explicit controller binding and preserved matrix versus embedded
+  polarity, source, provenance, specificity, and conflict behavior through Q&A.
+- Advanced symbolic-memory snapshots to version 6 with backward loading for
+  versions 1–6 and validation that rejects inconsistent or corrupt bindings.
+- Added compositional realization for direct and source-qualified answers; no
+  completed response sentence or issue-specific whole-sentence template was
+  introduced.
+- Corrected modality/future leakage, specificity matching, provenance and
+  conflict handling, snapshot validation, and atomic-realization defects found
+  during independent review.
 
-6. **Polarity and source**
-   - matrix and embedded negation remain separate;
-   - perceived or reported embedded content remains source-qualified.
+### How it works, in plain language
 
-### Planned acceptance gate
+An `-ing` complement is stored as two linked facts: the matrix event (for
+example, “Mary started”) and a source-qualified complement event (“Mary
+working”). A typed relation records how they connect. The complement does not
+become an ordinary global fact merely because it was mentioned.
 
-- typed relation families and ambiguity diagnostics;
-- snapshot version update and migration;
-- at least 160 dedicated/generated cases as scoped in #90;
-- Q&A over begun, stopped, continued, avoided, enjoyed, and perceived events;
-- compositional realization with no sentence templates;
-- full regression and 29-turn acceptance harness;
-- exact-head review;
-- no `engine/` changes.
+Phase predicates are the narrow exception: a positive, nonmodal, nonfuture
+simple/perfect “started,” “stopped,” or “kept/continued” relation can license a
+qualified factual answer. This exception is shut off by negation, future or
+modal framing, progressive phase aspect, or forward-deictic time. Perception,
+enjoyment, and avoidance remain attributed/nonassertive, and avoidance never
+proves completion.
+
+### Evidence and conditions
+
+- **Environment/version:** issue #90 branch based on
+  `ca992c32e22cdaaf5239a689f11fffa176a31698`; memory/runtime snapshot version 6
+  with compatible loading for versions 1–6.
+- **Dedicated workload:** `python -m pytest -q tests/test_gerund_complements.py`
+  — **285 passed**, including exactly **160 generated conformance cases**.
+- **Full workload:** `python -m pytest -q` — **2,606 passed, 2 xfailed**. The
+  two xfails are the pre-existing V8 `CARETAKER_TRANSFER` and `BROADCAST` gaps.
+- **Acceptance and benchmark:** deterministic harness — **29/29 turns**;
+  `benchmarks/clanker_lm_eval.py` — **7 cases / 29 turns**.
+- **Static/repository checks:** package compilation and `git diff --check`
+  completed cleanly; `engine/` and `clanker_engine.py` have no branch changes.
+- **Review evidence:** independent review identified and drove fixes for
+  modality, future-time, specificity, provenance, conflict, snapshot, and
+  atomicity defects. Final local correctness and truth-boundary reviewers
+  returned **ACCEPT / no blockers**, and test/code acceptance was clean.
+- **Limitations:** local green evidence does not substitute for an exact-head
+  remote CI result or automated PR review.
+
+### Negative results and open questions
+
+- The full suite retains two expected V8 xfails. They predate issue #90 and do
+  not exercise Clanker-LM complement behavior.
+- Exact-head remote CI and automated PR review remain open; no remote approval
+  or merge result should be inferred from the local acceptance in this entry.
+
+### Next step / blocker
+
+Push the reviewed branch, run exact-head remote CI and automated PR review, and
+merge only if both gates accept that same head. There is no local implementation,
+test, or independent-review blocker.
 
 ---
 
@@ -556,12 +611,16 @@ support documentation are complete.
 ```text
 main head:        ca992c32e22cdaaf5239a689f11fffa176a31698
 active branch:    feature/clanker-lm-gerund-participial-complements
-active issue:     #90
-latest full test: 2,321 passed, 2 expected xfails
+active issue:     #90 — local independent review accepted
+latest full test: 2,606 passed, 2 expected xfails
+dedicated test:   285 passed; 160 generated conformance cases
 acceptance:       29/29 turns
 V8 engine files:  unchanged
 response mode:    atomic/compositional; no whole-sentence templates
 ```
 
-The next code change on this branch should implement the typed `-ing` complement
-schema and parser boundary tests before adding broad verb coverage.
+The current branch passed local independent correctness, truth-boundary, and
+test/code review with no blockers: **2,606 passed, 2 expected xfails**, **285
+dedicated passes** with **160 generated conformance cases**, and the deterministic
+acceptance harness remains **29/29**. Exact-head remote CI and automated PR
+review remain pending until push.

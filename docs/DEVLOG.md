@@ -251,10 +251,19 @@ Current state:
   conflict, probe, and safety responses;
 - finite content complements (#86), infinitival control/raising (#88), and
   embedded interrogative attribution (#89) are merged;
-- the latest verified baseline is 2,321 passed with the same two expected V8
-  failures and 29/29 deterministic acceptance turns;
-- the active branch is `feature/clanker-lm-gerund-participial-complements`,
-  implementing issue #90;
+- **Proven:** the issue #90 branch now implements typed gerund content,
+  aspectual start/stop/continuation, and perception-participial relations while
+  preserving separate matrix/complement events and attributed truth boundaries;
+- **Proven:** the local branch gate is 285 dedicated passes (including exactly
+  160 generated cases), 2,606 full-suite passes with the same two expected V8
+  xfails, 29/29 deterministic acceptance turns, and 7 benchmark cases / 29
+  turns; compile/diff checks are clean and `engine/`/`clanker_engine.py` are
+  unchanged;
+- **Proven:** local independent correctness and truth-boundary reviewers returned
+  ACCEPT with no blockers after modality/future, specificity, provenance,
+  conflict, snapshot, and atomicity fixes; test/code acceptance was clean;
+- **Unknown:** exact-head remote CI and automated PR review remain pending until
+  push, so this status does not claim remote approval or merge;
 - issues #84 and #90-#101 define the remaining modifier/complement closure
   program, including held-out evaluation, predicate licensing, realization
   reverse validation, migration, fuzzing, observability, compatibility,

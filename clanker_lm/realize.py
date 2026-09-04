@@ -26,6 +26,7 @@ from .model import (
     EventFrame,
     GateDecision,
     Gender,
+    GerundRelation,
     GrammaticalNumber,
     QuestionKind,
     RefKind,
@@ -178,6 +179,29 @@ class SurfaceRealizer:
             return self._social(contract, gates)
         if contract.proposition is None:
             return self._unsupported(contract, gates)
+        if contract.required_slots.get("gerund") == "true":
+            relation = self._gerund_relation_from_contract(contract)
+            if relation is None:
+                return self._unsupported(contract, gates)
+            clause = self.render_gerund_relation(
+                relation,
+                capitalize=True,
+            )
+            return [
+                self._candidate(
+                    [clause, self._atom("punct.period")],
+                    candidate_id="compose.answer.gerund_relation",
+                    semantic_plan=[
+                        *self._rule_plan("reply:answer"),
+                        f"GERUND_RELATION:{relation.relation_type.value}",
+                        f"CONTENT_STATUS:{relation.content_status.value}",
+                        f"MATRIX_PREDICATE:{relation.matrix_predicate}",
+                        f"CONTROLLER:{relation.controller_entity_id}",
+                        "TRUTH:SELECTED_CONTENT_QUALIFIED_BY_MATRIX",
+                    ],
+                    priority=119,
+                )
+            ]
         if contract.required_slots.get("embedded_interrogative") == "true":
             relations = self._embedded_interrogative_relations_from_contract(contract)
             if not relations:
@@ -351,20 +375,39 @@ class SurfaceRealizer:
                 "TRUTH:QUESTION_ATTRIBUTION_ONLY",
             ])
         else:
-            relation = (
-                self._infinitival_relation_from_contract(contract)
-                if contract.required_slots.get("infinitival") == "true"
+            gerund_relation = (
+                self._gerund_relation_from_contract(contract)
+                if contract.required_slots.get("gerund") == "true"
                 else None
             )
-            clause = (
-                self.render_infinitival_relation(relation, capitalize=True)
-                if relation is not None
-                else self.render_event(contract.proposition, capitalize=True)
-            )
-            if relation is not None:
-                semantic_plan_details.append(
-                    f"INFINITIVAL_RELATION:{relation.relation_type.value}"
+            if contract.required_slots.get("gerund") == "true":
+                if gerund_relation is None:
+                    return self._unknown(contract, gates)
+                clause = self.render_gerund_relation(
+                    gerund_relation,
+                    capitalize=True,
                 )
+                semantic_plan_details.append(
+                    f"GERUND_RELATION:{gerund_relation.relation_type.value}"
+                )
+                semantic_plan_details.append(
+                    f"CONTENT_STATUS:{gerund_relation.content_status.value}"
+                )
+            else:
+                relation = (
+                    self._infinitival_relation_from_contract(contract)
+                    if contract.required_slots.get("infinitival") == "true"
+                    else None
+                )
+                clause = (
+                    self.render_infinitival_relation(relation, capitalize=True)
+                    if relation is not None
+                    else self.render_event(contract.proposition, capitalize=True)
+                )
+                if relation is not None:
+                    semantic_plan_details.append(
+                        f"INFINITIVAL_RELATION:{relation.relation_type.value}"
+                    )
         candidates: List[CandidateResponse] = []
         for index, particle in enumerate(particles[:2]):
             candidates.append(
@@ -504,6 +547,75 @@ class SurfaceRealizer:
                     )
                 ]
 
+        if (
+            contract.required_slots.get("gerund_evidence") == "true"
+            and question is not None
+        ):
+            relation_ids = [
+                item
+                for item in contract.required_slots.get(
+                    "relation_ids",
+                    "",
+                ).split(",")
+                if item
+            ]
+            by_id = {
+                relation.relation_id: relation
+                for relation in self.memory.gerunds
+            }
+            relations = [
+                by_id[relation_id]
+                for relation_id in relation_ids[:3]
+                if relation_id in by_id
+            ]
+            if relations:
+                context_parts = []
+                for index, relation in enumerate(relations):
+                    if index:
+                        context_parts.append(self._atom("link.but"))
+                    context_parts.append(
+                        self.render_gerund_relation(
+                            relation,
+                            capitalize=(index == 0),
+                        )
+                    )
+                query_clause = self.render_event(
+                    question.event,
+                    capitalize=False,
+                )
+                context_parts.extend(
+                    [
+                        period,
+                        i_atom,
+                        dont,
+                        know,
+                        self._atom("question.whether"),
+                        query_clause,
+                        period,
+                    ]
+                )
+                return [
+                    self._candidate(
+                        context_parts,
+                        candidate_id="compose.unknown.gerund_boundary",
+                        semantic_plan=[
+                            *plan,
+                            *[
+                                f"GERUND_RELATION:{item.relation_type.value}"
+                                for item in relations
+                            ],
+                            *[
+                                f"CONTENT_STATUS:{item.content_status.value}"
+                                for item in relations
+                            ],
+                            "EVIDENCE:QUALIFIED_GERUND_CONTENT",
+                            "TRUTH:EMBEDDED_EVENT_UNKNOWN",
+                            f"QUERY_FRAME:{question.event.predicate}",
+                        ],
+                        priority=121,
+                    )
+                ]
+
         if contract.proposition is not None and question is not None and question.requested_role:
             omitted = self._reason_roles(question)
             known_clause = self.render_event(contract.proposition, omit_roles=omitted, capitalize=False)
@@ -615,6 +727,85 @@ class SurfaceRealizer:
         ]
 
     def _conflict(self, contract: AnswerContract, gates: GateDecision) -> List[CandidateResponse]:
+        if (
+            contract.required_slots.get("gerund") == "true"
+            or contract.required_slots.get("gerund_evidence") == "true"
+            or any(
+                evidence.event.discourse_role == "gerund"
+                for evidence in contract.evidence
+            )
+        ):
+            relation_ids = [
+                item
+                for item in contract.required_slots.get(
+                    "relation_ids",
+                    "",
+                ).split(",")
+                if item
+            ]
+            by_id = {
+                relation.relation_id: relation
+                for relation in self.memory.gerunds
+            }
+            relations: List[GerundRelation] = []
+            seen_ids: set[str] = set()
+            for relation_id in relation_ids[:4]:
+                relation = by_id.get(relation_id)
+                if relation is None or relation_id in seen_ids:
+                    continue
+                relations.append(relation)
+                seen_ids.add(relation_id)
+
+            clauses = [
+                clause
+                for relation in relations
+                for clause in [
+                    self.render_gerund_relation(
+                        relation,
+                        capitalize=False,
+                    )
+                ]
+                if clause
+            ]
+            summary = self.join_phrases(
+                clauses,
+                conjunction=self._atom("link.but").surface,
+            )
+            parts: List[Part] = [
+                self._atom("pronoun.i"),
+                self._atom("aux.have"),
+                self._atom("meta.conflicting"),
+                self._atom("meta.information"),
+            ]
+            if summary:
+                parts.extend([self._atom("punct.colon"), summary])
+            parts.append(self._atom("punct.period"))
+            return [
+                self._candidate(
+                    parts,
+                    candidate_id="compose.conflict.gerund_relations",
+                    semantic_plan=[
+                        *self._rule_plan("reply:unknown"),
+                        *[
+                            f"GERUND_RELATION:{item.relation_type.value}"
+                            for item in relations
+                        ],
+                        *[
+                            f"CONTENT_STATUS:{item.content_status.value}"
+                            for item in relations
+                        ],
+                        "EVIDENCE:CONTRADICTORY_QUALIFIED_GERUND_RELATIONS",
+                        "TRUTH:EMBEDDED_EVENTS_REMAIN_MATRIX_QUALIFIED",
+                        (
+                            "RELATION_LOOKUP:BOUND"
+                            if relations
+                            else "RELATION_LOOKUP:FAILED_CLOSED"
+                        ),
+                    ],
+                    priority=124,
+                )
+            ]
+
         if contract.required_slots.get("embedded_interrogative") == "true":
             relations = self._embedded_interrogative_relations_from_contract(contract)
             clauses = [
@@ -1447,6 +1638,148 @@ class SurfaceRealizer:
                 pieces.append(phrase)
         return " ".join(item for item in pieces if item).strip()
 
+    def _gerund_relation_from_contract(
+        self,
+        contract: AnswerContract,
+    ) -> Optional[GerundRelation]:
+        relation_id = contract.required_slots.get("relation_id", "")
+        if relation_id:
+            return next(
+                (
+                    item
+                    for item in self.memory.gerunds
+                    if item.relation_id == relation_id
+                ),
+                None,
+            )
+        matrix_event_id = contract.required_slots.get("matrix_event_id", "")
+        complement_event_id = contract.required_slots.get(
+            "complement_event_id",
+            "",
+        )
+        return next(
+            (
+                item
+                for item in self.memory.gerunds
+                if (
+                    not matrix_event_id
+                    or item.matrix_event_id == matrix_event_id
+                )
+                and (
+                    not complement_event_id
+                    or item.complement_event_id == complement_event_id
+                )
+            ),
+            None,
+        )
+
+    def render_gerund_relation(
+        self,
+        relation: GerundRelation,
+        *,
+        capitalize: bool = False,
+    ) -> str:
+        matrix = self.memory.get_event(relation.matrix_event_id)
+        complement = self.memory.get_event(relation.complement_event_id)
+        if matrix is None or complement is None:
+            return ""
+        matrix_clause = self.render_event(matrix, capitalize=False)
+        complement_clause = self._render_gerund_event(
+            complement,
+            relation.controller_entity_id,
+        )
+        text = " ".join(
+            item for item in (matrix_clause, complement_clause) if item
+        )
+        return self._finish_clause(text, capitalize)
+
+    def _render_gerund_event(
+        self,
+        event: EventFrame,
+        controller_entity_id: str,
+    ) -> str:
+        args = dict(event.arguments)
+        for role in ("agent", "subject", "experiencer", "possessor", "patient"):
+            value = args.get(role)
+            if (
+                value is not None
+                and value.kind == RefKind.ENTITY
+                and value.key == controller_entity_id
+            ):
+                args.pop(role, None)
+                break
+
+        prefix = "not " if not event.polarity else ""
+        gerund = lexicon.gerund_form(event.predicate)
+        if event.predicate == "be":
+            complement = self._render_copular_complement(args)
+            return f"{prefix}{gerund} {complement}".strip()
+
+        pieces = [f"{prefix}{gerund}".strip()]
+        patient = args.get("patient") or args.get("state")
+        if patient:
+            pieces.append(
+                self.render_ref(
+                    patient,
+                    case="object",
+                    # The selected complement already carries its licensed
+                    # nominal surface (``groceries`` versus ``the door``).
+                    # Discourse definiteness from the later question must not
+                    # rewrite that embedded object.
+                    definite=False,
+                )
+            )
+        recipient = args.get("recipient")
+        if recipient:
+            pieces.extend(
+                [
+                    "to",
+                    self.render_ref(
+                        recipient,
+                        case="object",
+                        definite=True,
+                    ),
+                ]
+            )
+        for role, preposition in (
+            ("destination", "to"),
+            ("source", "from"),
+            ("location", "at"),
+            ("time", ""),
+            ("method", "by"),
+            ("manner", ""),
+            ("purpose", "to"),
+            ("cause", "because"),
+            ("topic", "about"),
+        ):
+            value = args.get(role)
+            if value is None:
+                continue
+            phrase = self.render_ref(
+                value,
+                case="object",
+                definite=role in {"destination", "source", "location"},
+            )
+            stored_preposition = args.get(f"{role}_preposition")
+            if stored_preposition:
+                preposition = self.render_ref(stored_preposition)
+            if role == "time":
+                phrase = (
+                    phrase
+                    if stored_preposition
+                    else self._render_time_phrase(phrase)
+                )
+            if role == "purpose" and phrase.lower().startswith("to "):
+                pieces.append(phrase)
+            elif preposition:
+                pieces.extend([preposition, phrase])
+            else:
+                pieces.append(phrase)
+        quantity = args.get("quantity")
+        if quantity and not args.get("patient"):
+            pieces.append(self.render_ref(quantity))
+        return " ".join(item for item in pieces if item).strip()
+
     def render_event(
         self,
         event: EventFrame,
@@ -1482,7 +1815,11 @@ class SurfaceRealizer:
 
         if event.predicate == "be":
             complement = self._render_copular_complement(args)
-            verb = self._be_form(event, subject_ref, positive)
+            verb = (
+                self._verb_form("be", event, subject_ref, positive)
+                if event.aspect in {"progressive", "perfect_progressive"}
+                else self._be_form(event, subject_ref, positive)
+            )
             text = f"{subject_text} {verb} {complement}".strip()
             return self._finish_clause(text, capitalize)
 
@@ -1601,6 +1938,35 @@ class SurfaceRealizer:
         first_person = subject.kind == RefKind.ENTITY and subject.key == "assistant"
         second_person = subject.kind == RefKind.ENTITY and subject.key == "user"
         third_singular = not plural and not first_person and not second_person
+
+        if event.aspect == "perfect_progressive":
+            gerund = lexicon.gerund_form(predicate)
+            negation = "" if positive else " not"
+            if event.tense == "future":
+                modal = event.modality or "will"
+                auxiliary = f"{modal}{negation} have been"
+            elif event.modality:
+                auxiliary = f"{event.modality}{negation} have been"
+            elif event.tense == "past":
+                auxiliary = f"had{negation} been"
+            else:
+                have = "has" if third_singular else "have"
+                auxiliary = f"{have}{negation} been"
+            return f"{auxiliary} {gerund}"
+
+        if event.aspect == "progressive":
+            gerund = lexicon.gerund_form(predicate)
+            if event.modality:
+                auxiliary = f"{event.modality}{'' if positive else ' not'} be"
+            elif event.tense == "future":
+                auxiliary = f"will{'' if positive else ' not'} be"
+            else:
+                auxiliary = (
+                    self._be_form(event, subject, True)
+                    if positive
+                    else self._negative_be(event, subject)
+                )
+            return f"{auxiliary} {gerund}"
 
         if event.aspect == "perfect":
             participle = lexicon.participle_form(predicate)
@@ -1753,6 +2119,26 @@ class SurfaceRealizer:
             ref = contract.values[0]
             entity = self.memory.get_entity(ref.key) if ref.kind == RefKind.ENTITY else None
             aliases = [value]
+            if (
+                ref.kind == RefKind.EVENT
+                and contract.required_slots.get("gerund") == "true"
+            ):
+                relation = self._gerund_relation_from_contract(contract)
+                complement = (
+                    self.memory.get_event(relation.complement_event_id)
+                    if relation is not None
+                    else None
+                )
+                if complement is not None and ref.key == complement.event_id:
+                    aliases.extend(
+                        [
+                            lexicon.gerund_form(complement.predicate).lower(),
+                            self._render_gerund_event(
+                                complement,
+                                relation.controller_entity_id,
+                            ).lower(),
+                        ]
+                    )
             if entity:
                 aliases.extend([entity.canonical_name.lower(), *entity.aliases])
             if not any(alias and alias in lower for alias in aliases):

@@ -26,6 +26,9 @@ from .model import (
     EntityModifierRelation,
     EntityKind,
     EventFrame,
+    GerundContentStatus,
+    GerundRelation,
+    GerundRelationType,
     Gender,
     GrammaticalNumber,
     InfinitivalRelation,
@@ -60,9 +63,11 @@ class EventMatch:
 class ConversationMemory:
     """Entity/event store with deterministic salience and provenance."""
 
-    SNAPSHOT_VERSION = 5
-    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4, 5}
-    NONASSERTIVE_DISCOURSE_ROLES = {"content", "infinitive", "interrogative"}
+    SNAPSHOT_VERSION = 6
+    COMPATIBLE_SNAPSHOT_VERSIONS = {1, 2, 3, 4, 5, 6}
+    NONASSERTIVE_DISCOURSE_ROLES = {
+        "content", "infinitive", "interrogative", "gerund", "participle"
+    }
 
     def __init__(self) -> None:
         self.entities: Dict[str, Entity] = {}
@@ -73,6 +78,7 @@ class ConversationMemory:
         self.contents: List[ContentRelation] = []
         self.embedded_interrogatives: List[EmbeddedInterrogativeRelation] = []
         self.infinitivals: List[InfinitivalRelation] = []
+        self.gerunds: List[GerundRelation] = []
         self.turn_index: int = 0
         self.revision: int = 0
         self._entity_counter: int = 0
@@ -83,6 +89,7 @@ class ConversationMemory:
         self._content_counter: int = 0
         self._embedded_interrogative_counter: int = 0
         self._infinitival_counter: int = 0
+        self._gerund_counter: int = 0
         self._initialize_participants()
 
     def _initialize_participants(self) -> None:
@@ -546,7 +553,8 @@ class ConversationMemory:
         # multiplying identical facts indefinitely.
         for existing in self.events:
             if (
-                existing.proposition_signature() == stored.proposition_signature()
+                existing.signature() == stored.signature()
+                and existing.aspect == stored.aspect
                 and existing.discourse_role == stored.discourse_role
                 and existing.source == stored.source
             ):
@@ -1125,6 +1133,292 @@ class ConversationMemory:
             reverse=True,
         )
 
+    def _next_gerund_id(self) -> str:
+        self._gerund_counter += 1
+        return f"gerund_{self._gerund_counter}"
+
+    _GERUND_PREDICATE_CATALOG = {
+        "enjoy": (
+            GerundRelationType.GERUND_CONTENT,
+            GerundContentStatus.ENJOYED,
+            False,
+        ),
+        "avoid": (
+            GerundRelationType.GERUND_CONTENT,
+            GerundContentStatus.AVOIDED,
+            False,
+        ),
+        "start": (
+            GerundRelationType.ASPECTUAL_START,
+            GerundContentStatus.BEGUN,
+            True,
+        ),
+        "begin": (
+            GerundRelationType.ASPECTUAL_START,
+            GerundContentStatus.BEGUN,
+            True,
+        ),
+        "stop": (
+            GerundRelationType.ASPECTUAL_STOP,
+            GerundContentStatus.STOPPED,
+            True,
+        ),
+        "keep": (
+            GerundRelationType.ASPECTUAL_CONTINUATION,
+            GerundContentStatus.CONTINUED,
+            True,
+        ),
+        "continue": (
+            GerundRelationType.ASPECTUAL_CONTINUATION,
+            GerundContentStatus.CONTINUED,
+            True,
+        ),
+        "see": (
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            False,
+        ),
+        "watch": (
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            False,
+        ),
+        "hear": (
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            False,
+        ),
+        "notice": (
+            GerundRelationType.PERCEPTION_PARTICIPIAL,
+            GerundContentStatus.PERCEIVED,
+            False,
+        ),
+    }
+    _GERUND_PREDICATE_FAMILIES = {
+        "enjoy": "enjoyment",
+        "avoid": "avoidance",
+        "start": "aspectual_onset",
+        "begin": "aspectual_onset",
+        "stop": "aspectual_cessation",
+        "keep": "aspectual_continuation",
+        "continue": "aspectual_continuation",
+        "see": "visual_perception",
+        "watch": "visual_perception",
+        "hear": "auditory_perception",
+        "notice": "perception",
+    }
+
+    @staticmethod
+    def _has_forward_deictic_time(event: EventFrame) -> bool:
+        time_ref = event.arguments.get("time")
+        if time_ref is None:
+            return False
+        tokens = set(re.findall(r"[a-z0-9]+", time_ref.key.lower()))
+        return bool(tokens & {"tomorrow", "later", "next"})
+
+    def _validate_gerund_binding(
+        self,
+        relation: GerundRelation,
+        matrix_event: EventFrame,
+        complement_event: EventFrame,
+    ) -> None:
+        expected = self._GERUND_PREDICATE_CATALOG.get(matrix_event.predicate)
+        if expected is None:
+            raise ValueError("Gerund matrix predicate is outside the reviewed catalog")
+        relation_type, content_status, phase_entailing = expected
+        if (
+            relation.relation_type != relation_type
+            or relation.content_status != content_status
+        ):
+            raise ValueError("Gerund relation type/status does not match its matrix predicate")
+        if relation.marker != "-ing":
+            raise ValueError("Gerund relation must retain the -ing marker")
+        expected_role = (
+            "participle"
+            if relation_type == GerundRelationType.PERCEPTION_PARTICIPIAL
+            else "gerund"
+        )
+        if complement_event.discourse_role != expected_role:
+            raise ValueError(
+                "Gerund relation does not match its complement discourse role"
+            )
+        if complement_event.source != SourceKind.ATTRIBUTED:
+            raise ValueError("Gerund complement must retain attributed provenance")
+        if complement_event.tense != "nonfinite":
+            raise ValueError("Gerund complement must retain nonfinite tense")
+        if complement_event.aspect != expected_role:
+            raise ValueError("Gerund relation does not match its nonfinite aspect")
+        if matrix_event.predicate != relation.matrix_predicate:
+            raise ValueError("Gerund matrix predicate does not match its event")
+        if relation.predicate_family != self._GERUND_PREDICATE_FAMILIES.get(
+            matrix_event.predicate
+        ):
+            raise ValueError("Gerund predicate family does not match its matrix predicate")
+        if relation.matrix_event_index < 0 or relation.complement_event_index < 0:
+            raise ValueError("Gerund relation has invalid local event indices")
+        if relation.matrix_event_index == relation.complement_event_index:
+            raise ValueError("Gerund relation cannot bind an event to itself")
+        if relation.certainty > min(matrix_event.certainty, complement_event.certainty):
+            raise ValueError("Gerund relation certainty exceeds its supporting events")
+        for entity_id, label in (
+            (relation.source_entity_id, "source"),
+            (relation.controller_entity_id, "controller"),
+            (relation.embedded_subject_entity_id, "embedded subject"),
+        ):
+            if entity_id not in self.entities:
+                raise ValueError(
+                    f"Gerund relation references an unknown {label} entity"
+                )
+        source_refs = {
+            ref.key
+            for role, ref in matrix_event.arguments.items()
+            if role in {"agent", "experiencer", "subject", "possessor"}
+            and ref.kind == RefKind.ENTITY
+        }
+        if relation.source_entity_id not in source_refs:
+            raise ValueError("Gerund source is not licensed by the matrix event")
+        if relation_type == GerundRelationType.PERCEPTION_PARTICIPIAL:
+            controller_refs = {
+                ref.key
+                for role, ref in matrix_event.arguments.items()
+                if role in {"patient", "recipient"}
+                and ref.kind == RefKind.ENTITY
+            }
+        else:
+            controller_refs = source_refs
+        if relation.controller_entity_id not in controller_refs:
+            raise ValueError("Gerund controller is not licensed by the matrix event")
+        embedded_subjects = {
+            ref.key
+            for role, ref in complement_event.arguments.items()
+            if role in {"agent", "experiencer", "subject", "possessor", "patient"}
+            and ref.kind == RefKind.ENTITY
+        }
+        if relation.embedded_subject_entity_id not in embedded_subjects:
+            raise ValueError("Gerund embedded subject does not match its complement")
+        if relation.controller_entity_id != relation.embedded_subject_entity_id:
+            raise ValueError("Gerund controller must bind the embedded subject")
+        if relation.licensed != matrix_event.polarity:
+            raise ValueError("Gerund content license must match matrix polarity")
+        factual_matrix = (
+            matrix_event.modality is None
+            and matrix_event.tense != "future"
+            and matrix_event.aspect in {"simple", "perfect"}
+            and not self._has_forward_deictic_time(matrix_event)
+            and not self._has_forward_deictic_time(complement_event)
+        )
+        expected_entailment = bool(
+            relation.licensed and phase_entailing and factual_matrix
+        )
+        if relation.entailed != expected_entailment:
+            raise ValueError(
+                "Gerund phase entailment does not match matrix factuality"
+            )
+
+    def add_gerund_relations(
+        self,
+        relations: Sequence[GerundRelation],
+        stored_events: Sequence[EventFrame],
+    ) -> List[GerundRelation]:
+        """Bind selected ``-ing`` links while preserving truth boundaries."""
+
+        stored: List[GerundRelation] = []
+        for relation in relations:
+            if not (
+                0 <= relation.matrix_event_index < len(stored_events)
+                and 0 <= relation.complement_event_index < len(stored_events)
+            ):
+                raise ValueError("Gerund relation references an invalid event index")
+            matrix_event = stored_events[relation.matrix_event_index]
+            complement_event = stored_events[relation.complement_event_index]
+            candidate = relation.copy(
+                matrix_event_id=matrix_event.event_id,
+                complement_event_id=complement_event.event_id,
+                certainty=min(
+                    relation.certainty,
+                    matrix_event.certainty,
+                    complement_event.certainty,
+                ),
+            )
+            self._validate_gerund_binding(
+                candidate,
+                matrix_event,
+                complement_event,
+            )
+            existing = next(
+                (
+                    item
+                    for item in self.gerunds
+                    if item.signature() == candidate.signature()
+                ),
+                None,
+            )
+            if existing is not None:
+                existing.certainty = max(existing.certainty, candidate.certainty)
+                existing.diagnostics = list(
+                    dict.fromkeys(existing.diagnostics + candidate.diagnostics)
+                )
+                stored.append(existing)
+            else:
+                relation_id = candidate.relation_id
+                if relation_id:
+                    match = re.fullmatch(r"gerund_([1-9][0-9]*)", relation_id)
+                    if match is None:
+                        raise ValueError("Gerund relation has an invalid relation ID")
+                    if any(item.relation_id == relation_id for item in self.gerunds):
+                        raise ValueError("Gerund relation ID is already in use")
+                    self._gerund_counter = max(
+                        self._gerund_counter,
+                        int(match.group(1)),
+                    )
+                else:
+                    relation_id = self._next_gerund_id()
+                bound = candidate.copy(relation_id=relation_id)
+                self.gerunds.append(bound)
+                stored.append(bound)
+            stored_relation = stored[-1]
+            self.mention(stored_relation.source_entity_id, "source", 0.4)
+            self.mention(stored_relation.controller_entity_id, "controller", 0.5)
+            self.revision += 1
+        return stored
+
+    def gerund_relations_for_event(self, event_id: str) -> List[GerundRelation]:
+        return [
+            relation
+            for relation in self.gerunds
+            if event_id in {relation.matrix_event_id, relation.complement_event_id}
+        ]
+
+    def gerund_relations_for_source(
+        self,
+        source_entity_id: str,
+        *,
+        matrix_predicate: Optional[str] = None,
+        include_negated: bool = False,
+    ) -> List[GerundRelation]:
+        relations = [
+            relation
+            for relation in self.gerunds
+            if relation.source_entity_id == source_entity_id
+            and (include_negated or relation.licensed)
+        ]
+        if matrix_predicate is not None:
+            relations = [
+                relation
+                for relation in relations
+                if relation.matrix_predicate == matrix_predicate
+            ]
+        return sorted(
+            relations,
+            key=lambda item: (
+                self.get_event(item.matrix_event_id).turn_index
+                if self.get_event(item.matrix_event_id) is not None
+                else -1,
+                item.certainty,
+            ),
+            reverse=True,
+        )
+
     def get_event(self, event_id: str) -> Optional[EventFrame]:
         return next((event for event in self.events if event.event_id == event_id), None)
 
@@ -1185,6 +1479,7 @@ class ConversationMemory:
         include_attributed_content: bool = False,
         include_infinitival_content: bool = False,
         include_interrogative_content: bool = False,
+        include_gerund_content: bool = False,
     ) -> List[EventMatch]:
         ignored = set(ignore_roles)
         matches: List[EventMatch] = []
@@ -1205,7 +1500,20 @@ class ConversationMemory:
                 and not include_interrogative_content
             ):
                 continue
+            if (
+                event.discourse_role in {"gerund", "participle"}
+                and not include_gerund_content
+            ):
+                continue
             if event.predicate != query.predicate:
+                continue
+            # Aspect is proposition-bearing: a habitual/simple assertion is
+            # not evidence for an event currently in progress (or vice
+            # versa), and neither licenses perfect/perfect-progressive forms.
+            if (
+                event.aspect != query.aspect
+                and event.discourse_role not in self.NONASSERTIVE_DISCOURSE_ROLES
+            ):
                 continue
             if not allow_tense_variation and event.tense != query.tense:
                 continue
@@ -1270,6 +1578,7 @@ class ConversationMemory:
             "content_counter": self._content_counter,
             "embedded_interrogative_counter": self._embedded_interrogative_counter,
             "infinitival_counter": self._infinitival_counter,
+            "gerund_counter": self._gerund_counter,
             "entities": [entity.to_dict() for entity in self.entities.values()],
             "events": [event.to_dict() for event in self.events],
             "relations": [relation.to_dict() for relation in self.relations],
@@ -1283,6 +1592,7 @@ class ConversationMemory:
             "infinitivals": [
                 relation.to_dict() for relation in self.infinitivals
             ],
+            "gerunds": [relation.to_dict() for relation in self.gerunds],
         }
 
     @classmethod
@@ -1322,6 +1632,30 @@ class ConversationMemory:
             InfinitivalRelation.from_dict(item)
             for item in data.get("infinitivals", [])
         ]
+        memory.gerunds = [
+            GerundRelation.from_dict(item)
+            for item in data.get("gerunds", [])
+        ]
+        gerund_ids: set[str] = set()
+        max_gerund_index = 0
+        for relation in memory.gerunds:
+            match = re.fullmatch(r"gerund_([1-9][0-9]*)", relation.relation_id)
+            if match is None:
+                raise ValueError("Gerund snapshot relation has an invalid relation ID")
+            if relation.relation_id in gerund_ids:
+                raise ValueError("Gerund snapshot contains duplicate relation IDs")
+            gerund_ids.add(relation.relation_id)
+            max_gerund_index = max(max_gerund_index, int(match.group(1)))
+        for relation in memory.gerunds:
+            matrix_event = memory.get_event(relation.matrix_event_id)
+            complement_event = memory.get_event(relation.complement_event_id)
+            if matrix_event is None or complement_event is None:
+                raise ValueError("Gerund snapshot relation references an unknown event")
+            memory._validate_gerund_binding(
+                relation,
+                matrix_event,
+                complement_event,
+            )
         memory.turn_index = int(data.get("turn_index", 0))
         memory.revision = int(data.get("revision", 0))
         memory._entity_counter = int(data.get("entity_counter", len(memory.entities)))
@@ -1347,6 +1681,12 @@ class ConversationMemory:
         memory._infinitival_counter = int(
             data.get("infinitival_counter", len(memory.infinitivals))
         )
+        raw_gerund_counter = data.get("gerund_counter", len(memory.gerunds))
+        if isinstance(raw_gerund_counter, bool):
+            raise ValueError("Gerund snapshot counter must be an integer")
+        memory._gerund_counter = int(raw_gerund_counter)
+        if memory._gerund_counter < max_gerund_index:
+            raise ValueError("Gerund snapshot counter is below its relation IDs")
         return memory
 
     def dumps(self, *, indent: Optional[int] = 2) -> str:
