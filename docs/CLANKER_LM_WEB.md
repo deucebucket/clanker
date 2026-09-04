@@ -28,8 +28,10 @@ allowlisted Tailnet browser
 
 The process refuses a non-loopback bind. Deployed mode also requires an exact
 browser origin and at least one allowlisted Tailscale identity. The health route
-returns only `{"status":"ok"}`; every other request requires the allowlisted
-identity, and mutations must match the configured origin.
+returns only `{"status":"ok"}`; every implemented application resource and API
+operation requires the allowlisted identity, and mutations must match the
+configured origin. Unmatched paths and method mismatches may return framework
+`404`/`405` responses without allocating a session or exposing application data.
 
 ## Using the workbench
 
