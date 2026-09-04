@@ -4,7 +4,8 @@ This directory is the executable contract for GitHub issue
 [#41](https://github.com/deucebucket/clanker/issues/41). Corpus version
 `conversation-v1` is compiled as one canonical JSON object per complete
 conversation. It measures the exact production code at
-`9ae77f072f8afda0b1d2b757ab492757cabff0f8`, the merge result of #106.
+`66b85de66337789fa83292ecf683c6b23cc0af55`, the merge result of the reviewed
+post-#106 web release in #113.
 
 ## Truth and copyright boundaries
 
@@ -27,11 +28,14 @@ IDs and aggregates, not source text or generated responses.
 
 ## Immutable boundary
 
-`data/heldout_v1.jsonl` and its labels are frozen. `manifest_v1.json` records
-the full split policy and counts, every whole-conversation digest, raw-source
-digests, compiler/evaluator digests, and a digest of the exact production
-module bytes at the named post-#106 commit. `ROOT.sha256` anchors all of those
-constituents. The compiler and runner fail if local production bytes differ.
+`data/CURRENT` atomically selects one immutable directory under
+`data/generations/<corpus-root>/`. That directory contains `heldout_v1.jsonl`,
+`development_v1.jsonl`, `manifest_v1.json`, and `ROOT.sha256` as one complete
+generation. The manifest records the full split policy and counts, every
+whole-conversation digest, raw-source digests, compiler/evaluator digests, and
+a digest of the exact production code and runtime-data bytes at the named
+post-#113 commit. `ROOT.sha256` anchors all of those constituents. The compiler
+and runner fail if local production bytes differ.
 A correction requires `conversation-v2`; changing v1 in
 place is forbidden. The release tag for the merge commit is the external,
 immutable anchor; a digest stored beside its payload is not sufficient alone.
@@ -49,8 +53,8 @@ python -m evaluation.conversations compile
 python -m evaluation.conversations verify
 python -m evaluation.conversations run --split development
 python -m evaluation.conversations run --split heldout \
-  --output evaluation/conversations/baselines/post_106_heldout_v1.json \
-  --failures evaluation/conversations/baselines/post_106_heldout_v1_failures.jsonl
+  --output evaluation/conversations/baselines/post_113_heldout_v1.json \
+  --failures evaluation/conversations/baselines/post_113_heldout_v1_failures.jsonl
 ```
 
 The three modes are:
@@ -81,10 +85,13 @@ target-distance improvement use the declared whole-interaction estimand:
 `g1 = observed_next_state` (after the following response/reaction). This is not
 a response-only `vadugwi_after -> observed_next_state` estimand.
 
-Reports and ID-only failure ledgers are validated against every held-out turn
-and staged with their SHA-256 sidecar before publication. The runner captures
-HEAD and all compiler/evaluator/production digests at startup and fails if they
-or the measured worktree change during the run.
+Reports and ID-only failure ledgers are validated against every held-out turn.
+The runner writes each report, ledger, and checksum as one immutable generation
+and then atomically switches a `.current` pointer, so an exception or abrupt
+process death cannot select a mixed generation. Resolve and verify the selected
+files with `load_published_artifacts`. The runner captures HEAD and all
+compiler/evaluator/production digests at startup and fails if they or the
+measured worktree change during the run.
 
-The first baseline sets no accuracy threshold: it records the honest post-#106
+The first baseline sets no accuracy threshold: it records the honest post-#113
 result. Later thresholds must name both the corpus root and baseline fingerprint.

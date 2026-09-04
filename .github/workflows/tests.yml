@@ -43,9 +43,12 @@ jobs:
       - name: Enforce additive-only held-out versions
         run: |
           git fetch --no-tags --depth=1 origin main
-          frozen_root="$(git show origin/main:evaluation/conversations/data/ROOT.sha256 2>/dev/null || true)"
-          if [ -n "$frozen_root" ]; then
-            test "$frozen_root" = "$(cat evaluation/conversations/data/ROOT.sha256)"
+          frozen_current="$(git show origin/main:evaluation/conversations/data/CURRENT 2>/dev/null || true)"
+          if [ -n "$frozen_current" ]; then
+            test "$frozen_current" = "$(cat evaluation/conversations/data/CURRENT)"
+            git diff --exit-code origin/main -- \
+              evaluation/conversations/data/CURRENT \
+              "evaluation/conversations/data/generations/$frozen_current"
           fi
 
       - name: Run open development conversation evaluation

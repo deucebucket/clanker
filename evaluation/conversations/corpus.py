@@ -29,7 +29,7 @@ MANIFEST_PATH = DATA_DIR / "manifest_v1.json"
 CURRENT_POINTER = "CURRENT"
 GENERATIONS_DIRECTORY = "generations"
 REPO_ROOT = ROOT.parent.parent
-BASELINE_CODE_COMMIT = "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+BASELINE_CODE_COMMIT = "66b85de66337789fa83292ecf683c6b23cc0af55"
 PRODUCTION_PATHS = ("clanker_lm", "engine", "clanker_engine.py")
 SPLIT_POLICIES = {
     "heldout": {
@@ -224,7 +224,7 @@ def assert_production_tree(
     actual = production_tree_sha256(repo_root)
     if actual != expected_sha256:
         raise CorpusIntegrityError(
-            "local production module bytes do not match the manifest-bound post-#106 baseline"
+            "local production module bytes do not match the manifest-bound post-#113 baseline"
         )
 
 

@@ -201,7 +201,7 @@ The historical V8 sentence-holdout protocol is distinct from the versioned,
 whole-conversation evaluation for Clanker-LM. See
 [`evaluation/conversations/README.md`](evaluation/conversations/README.md) for
 the immutable corpus, licensing manifest, integrity gate, three evaluation
-modes, and post-#106 baseline. Neither held-out corpus is training evidence.
+modes, and post-#113 baseline. Neither held-out corpus is training evidence.
 
 ## Links
 

@@ -72,7 +72,7 @@ def test_manifest_has_frozen_whole_conversation_corpus():
     manifest = load_manifest()
     heldout = manifest["splits"]["heldout"]
     development = manifest["splits"]["development"]
-    assert manifest["baseline_code_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+    assert manifest["baseline_code_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
     assert heldout["turn_count"] >= 500
     assert development["turn_count"] >= 60
     assert heldout["domain_turns"] == {
@@ -749,15 +749,61 @@ def test_classification_preserves_undefined_draws_and_defined_zero_f1():
         assert one_sided["ci95_conversation_cluster_bootstrap"]["f1"] == [0.0, 0.0]
 
 
-def test_development_semantic_report_is_reproducible():
+@pytest.fixture(scope="module")
+def development_reports():
     first = run_evaluation(split="development")
     second = run_evaluation(split="development")
+    return first, second
+
+
+def test_development_semantic_report_is_reproducible(development_reports):
+    first, second = development_reports
     assert first["semantic_fingerprint"] == second["semantic_fingerprint"]
     assert first["paired_mode_differences"] == second["paired_mode_differences"]
     for mode in ("sentence_only", "stateful", "transition_corrected"):
         assert "mae_v" not in first["modes"][mode]["overall"]["metrics"]
         for section in ("overall", "by_domain", "by_outcome", "by_supervision_level"):
             assert first["modes"][mode][section] == second["modes"][mode][section]
+
+
+def test_aggregate_report_schema_rejects_generated_payload_aliases_and_bad_types(
+    development_reports,
+):
+    report = development_reports[0]
+    failures = [
+        {
+            "conversation_id": f"schema-probe-{index}",
+            "turn_id": "id-only",
+            "domain": "open_development",
+            "mode": "sentence_only",
+            "category": category,
+        }
+        for category, count in report["failure_counts"].items()
+        for index in range(count)
+    ]
+    conversations = load_split("development", purpose="development")
+    _validate_aggregate_artifacts(report, failures, conversations)
+
+    mutations = []
+    item = copy.deepcopy(report)
+    item["development_correction_bundle"]["answer"] = "invented generated reply"
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["paired_mode_differences"]["stateful_minus_sentence_only"]["result"] = {
+        "content": "invented generated reply"
+    }
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    first_metric = next(iter(item["modes"]["sentence_only"]["overall"]["metrics"].values()))
+    first_metric["value"] = {"answer": "invented generated reply"}
+    mutations.append(item)
+    item = copy.deepcopy(report)
+    item["failure_count"] = str(item["failure_count"])
+    mutations.append(item)
+
+    for corrupt in mutations:
+        with pytest.raises(CorpusIntegrityError):
+            _validate_aggregate_artifacts(corrupt, failures, conversations)
 
 
 def test_drift_reports_terminal_bias_and_axis_slopes():
@@ -985,11 +1031,10 @@ def test_execution_errors_fail_the_release_runner():
     _enforce_zero_execution_errors([{"category": "semantic_parse_exact"}])
 
 
-def test_baseline_is_aggregate_only_and_exact_post_106():
-    report_path = ROOT / "evaluation/conversations/baselines/post_106_heldout_v1.json"
-    failure_path = ROOT / "evaluation/conversations/baselines/post_106_heldout_v1_failures.jsonl"
-    report = json.loads(report_path.read_text())
-    assert report["production_code_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+def test_baseline_is_aggregate_only_and_exact_post_113():
+    report_path = ROOT / "evaluation/conversations/baselines/post_113_heldout_v1.json"
+    report, failures, generation_dir = load_published_artifacts(report_path)
+    assert report["production_code_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
     assert set(report["modes"]) == {"sentence_only", "stateful", "transition_corrected"}
     assert report["development_correction_bundle"]["lookup_store_unchanged"] is True
     subprocess.run(
@@ -998,14 +1043,15 @@ def test_baseline_is_aggregate_only_and_exact_post_106():
         check=True,
     )
     assert report["corpus_root_sha256"] == load_manifest()["corpus_root_sha256"]
+    selected_report_path = generation_dir / report_path.name
+    failure_path = generation_dir / "post_113_heldout_v1_failures.jsonl"
     expected_hashes = {}
-    for line in report_path.with_suffix(".sha256").read_text().splitlines():
+    for line in generation_dir.joinpath("post_113_heldout_v1.sha256").read_text().splitlines():
         digest, filename = line.split()
         expected_hashes[filename] = digest
-    assert hashlib.sha256(report_path.read_bytes()).hexdigest() == expected_hashes[report_path.name]
+    assert hashlib.sha256(selected_report_path.read_bytes()).hexdigest() == expected_hashes[report_path.name]
     assert hashlib.sha256(failure_path.read_bytes()).hexdigest() == expected_hashes[failure_path.name]
     conversations = load_split("heldout", purpose="evaluation")
-    failures = [json.loads(line) for line in failure_path.read_text().splitlines() if line]
     _validate_aggregate_artifacts(report, failures, conversations)
 
 
