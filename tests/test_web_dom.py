@@ -43,8 +43,8 @@ def test_changelog_wiring_executes_in_a_real_browser_dom() -> None:
             page.get_by_role("heading", name=marker).wait_for()
 
             assert page.locator("#deployed-build-commit").text_content() == build_commit
-            assert page.locator(".release-identity code").text_content() == (
-                "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+            assert page.locator(".release-identity code").first.text_content() == (
+                "66b85de66337789fa83292ecf683c6b23cc0af55"
             )
             assert page.locator("#release-list img").count() == 0
             assert page.locator("#release-list").evaluate("node => node.scrollWidth") <= 360

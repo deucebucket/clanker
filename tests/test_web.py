@@ -968,23 +968,26 @@ def test_release_feed_separates_runtime_build_from_exact_shipped_milestone() -> 
         "package_version": current["package_version"],
         "milestone_commit": current["milestone_commit"],
     }
-    assert current["release_id"] == "pr-106"
+    assert current["release_id"] == "pr-113"
     assert current["package_version"] == feed["running_package_version"]
-    assert current["milestone_commit"] == "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+    assert current["milestone_commit"] == "66b85de66337789fa83292ecf683c6b23cc0af55"
     assert feed["deployed_build_commit"] != current["milestone_commit"]
     assert current["date"] == "2026-09-04"
     assert current["deployment"] == {
         "state": "live",
         "label": "Live · private Tailnet",
-        "detail": "Reviewed PR #106 is the deployed baseline. No later roadmap milestone is claimed as shipped.",
+        "detail": "Reviewed PR #113 adds the shipped-changes reader; the deployed runtime build is reported separately.",
         "url": "https://bazzite.tail85f65f.ts.net:8444/",
     }
     assert current["capabilities"]
     assert current["limitations"]
     assert {link["url"] for link in current["evidence"]} >= {
-        "https://github.com/deucebucket/clanker/pull/106",
-        "https://github.com/deucebucket/clanker/commit/9ae77f072f8afda0b1d2b757ab492757cabff0f8",
+        "https://github.com/deucebucket/clanker/pull/113",
+        "https://github.com/deucebucket/clanker/commit/66b85de66337789fa83292ecf683c6b23cc0af55",
     }
+    previous = feed["releases"][1]
+    assert previous["release_id"] == "pr-106"
+    assert previous["deployment"]["state"] == "retired"
     assert "pr-107" not in response.text.lower()
     _assert_hardened(response)
 

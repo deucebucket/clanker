@@ -14,6 +14,8 @@ from clanker_lm.web_release_verify import verify_merged_releases
 
 
 MERGE_COMMIT = "9ae77f072f8afda0b1d2b757ab492757cabff0f8"
+CURRENT_MERGE_COMMIT = "66b85de66337789fa83292ecf683c6b23cc0af55"
+MERGE_COMMITS = {106: MERGE_COMMIT, 113: CURRENT_MERGE_COMMIT}
 
 
 class FakeResponse:
@@ -49,14 +51,17 @@ def test_release_verifier_accepts_pr_merged_at_the_recorded_commit() -> None:
 
     def opener(request: Any, *, timeout: int) -> FakeResponse:
         requests.append((request, timeout))
-        return FakeResponse(_merged_payload())
+        number = int(request.full_url.rsplit("/", 1)[-1])
+        return FakeResponse(_merged_payload(number=number, commit=MERGE_COMMITS[number]))
 
     verify_merged_releases(_feed(), opener=opener, token="test-token")
-    assert len(requests) == 1
-    request, timeout = requests[0]
-    assert request.full_url.endswith("/pulls/106")
-    assert request.headers["Authorization"] == "Bearer test-token"
-    assert timeout == 15
+    assert len(requests) == 2
+    assert [request.full_url.rsplit("/", 1)[-1] for request, _ in requests] == [
+        "113",
+        "106",
+    ]
+    assert all(request.headers["Authorization"] == "Bearer test-token" for request, _ in requests)
+    assert all(timeout == 15 for _, timeout in requests)
 
 
 def test_coherent_but_unmerged_pr_identity_fails_external_release_verification() -> None:
@@ -91,7 +96,9 @@ def test_coherent_arbitrary_commit_fails_github_merge_commit_agreement() -> None
     with pytest.raises(ValueError, match="milestone commit disagrees"):
         verify_merged_releases(
             feed,
-            opener=lambda *_args, **_kwargs: FakeResponse(_merged_payload()),
+            opener=lambda *_args, **_kwargs: FakeResponse(
+                _merged_payload(number=113, commit=CURRENT_MERGE_COMMIT)
+            ),
         )
 
 

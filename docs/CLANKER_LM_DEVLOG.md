@@ -824,3 +824,53 @@ issue #112 merges, use that PR's actual number `N` and actual squash/merge SHA
 follow-up reviewed metadata artifact before any production deployment. Close
 #112 only after runtime-build equality, milestone verification, and live UI
 probes pass.
+
+---
+
+## 2026-09-04 — RR devlog: PR #113 release artifact
+
+- **Audience:** workbench operator and Clanker-LM maintainers
+- **Scope:** post-merge release metadata for issue #112; no language-runtime or
+  V8 engine behavior change
+- **Success condition:** the packaged ledger names the real implementation PR
+  and merge commit, a separately identified artifact is deployed, and the live
+  API and dialog agree on both identities
+
+### Rundown
+
+**Proven:** two independent reviewers accepted implementation head
+`e4c25ae330d917132e496e700b1c2839e652a911`; both Python CI matrices passed;
+GitHub merged the implementation as PR #113 at
+`66b85de66337789fa83292ecf683c6b23cc0af55`.
+
+**Proven:** this follow-up replaces the pre-merge PR #106-only ledger head with
+an exact `pr-113` row. Its evidence URLs name PR #113, merge commit `66b85de`,
+and exact-head CI run `33861328696`. PR #106 remains as the superseded baseline
+record rather than disappearing from history.
+
+**Inference:** the metadata is ready for release review because its identifiers
+come from GitHub's completed merge and CI records, not a predicted PR number or
+self-referential commit placeholder.
+
+**Unknown:** this follow-up artifact is not live until its own exact head passes
+local tests, independent review, remote CI, merge, service restart, and live
+API/browser verification. Until then the existing service remains healthy on
+the PR #106 build and issue #112 stays open.
+
+### Evidence
+
+```text
+implementation PR:    113
+implementation merge: 66b85de66337789fa83292ecf683c6b23cc0af55
+accepted head:         e4c25ae330d917132e496e700b1c2839e652a911
+PR CI run:             33861328696 (Python 3.10 and 3.12 passed)
+live URL:              https://bazzite.tail85f65f.ts.net:8444/
+runtime build:         supplied only after this follow-up artifact merges
+```
+
+### Next / blocker
+
+Validate the two-entry ledger and documentation, obtain independent exact-head
+review, merge the metadata-only follow-up, deploy with that follow-up merge SHA
+as `CLANKER_LM_BUILD_COMMIT`, and close #112 only after the live endpoint,
+dialog, identity boundary, health checks, and mobile/desktop probes all pass.
