@@ -54,4 +54,22 @@ jobs:
           git add experiments/lexical_decoder tests/test_dialogue_learning_repairs.py
           git diff --cached --check
           git commit -m 'fix: connect dialogue corrections and scoped usage learning'
-          git push origin HEAD:feature/clanker-lm-dialogue-learning-repairs
+          git log -1 --format='VALIDATED_COMMIT=%H%nVALIDATED_TREE=%T'
+          git branch validated-dialogue-repairs HEAD
+          git bundle create /tmp/validated-dialogue-repairs.bundle validated-dialogue-repairs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validated-dialogue-repairs
+          path: /tmp/validated-dialogue-repairs.bundle
+          retention-days: 1
+      - name: Publish validated commit without force
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if git push origin HEAD:feature/clanker-lm-dialogue-learning-repairs; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
