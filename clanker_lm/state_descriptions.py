@@ -13,6 +13,7 @@ from typing import Iterable
 
 from . import lexicon
 from .cessation import CESSATION_ROLE, marker_of, withdrawal_matches
+from .recurrence import RECURRENCE_ROLE, recurrence_of
 from .model import (AnswerContract, AnswerStatus, EntityKind, Evidence, EventFrame,
                     HowKind, QuestionKind, RefKind, SemanticRef, SourceKind)
 from .state_scope import ScopedStateReport, state_report
@@ -26,7 +27,7 @@ STATE_TERMS = frozenset({
 DEICTICS = frozenset({"now", "today", "yesterday", "tomorrow", "tonight"})
 MODIFIERS = frozenset({"very", "really", "quite", "so", "extremely"})
 MAX_COMPONENTS = 4
-SCHEMA = "qualified-state-components-v2"
+SCHEMA = "qualified-state-components-v3-recurrence"
 
 
 def stable_json(value: object) -> str:
@@ -56,13 +57,14 @@ def state_components(event: EventFrame) -> tuple[StateComponent, ...]:
     args = event.arguments
     try:
         marker_of(event)
+        recurrence = recurrence_of(event)
     except ValueError:
         return ()
     subject_roles = [r for r in ("subject", "experiencer", "agent") if r in args]
     value_roles = [r for r in ("state", "value") if r in args]
     if (event.predicate not in {"be", "feel"} or event.aspect != "simple"
             or len(subject_roles) != 1 or len(value_roles) != 1
-            or set(args) - {subject_roles[0], value_roles[0], "attribute", "time", CESSATION_ROLE}
+            or set(args) - {subject_roles[0], value_roles[0], "attribute", "time", CESSATION_ROLE, RECURRENCE_ROLE}
             or args[subject_roles[0]].kind != RefKind.ENTITY):
         return ()
     if "attribute" in args and (args["attribute"].kind != RefKind.LITERAL
@@ -106,7 +108,7 @@ def state_components(event: EventFrame) -> tuple[StateComponent, ...]:
             parts.append([])
         else:
             parts[-1].append(token)
-    if len(parts) > 1 and (not event.polarity or event.modality):
+    if len(parts) > 1 and (not event.polarity or event.modality or recurrence):
         return ()
     labels = []
     for part in parts:
@@ -394,7 +396,8 @@ def _validated_appraisal_rows(rows, memory, person=None, temporal="current"):
                     or row.get("polarity") is not s.polarity or row.get("tense") != s.tense
                     or row.get("temporal_cue") != p.temporal_cue
                     or row.get("source_kind") != e.source.value or row.get("reporter_ids") != ["user"]
-                    or row.get("state_change") != marker_of(e) or expected_id in seen):
+                    or row.get("state_change") != marker_of(e)
+                    or row.get("state_recurrence") != recurrence_of(e) or expected_id in seen):
                 continue
             seen.add(expected_id)
             candidates.append((row,p,e))
@@ -454,6 +457,12 @@ def select_current_claim(question, memory, rows):
         if matches:
             latest[p.report.entity_id]=(row,p,e)
     selected=[v for v in latest.values() if not is_who or v[1].report.polarity==q.event.polarity]
+    requested_recurrence = recurrence_of(query_event)
+    if requested_recurrence:
+        # An unqualified positive report does not prove renewed occurrence.
+        # A current denial of the state is sufficient to deny its recurrence.
+        selected = [v for v in selected if not v[1].report.polarity
+                    or recurrence_of(v[1].event) == requested_recurrence]
     if len(selected)!=1:
         return AnswerContract(status=AnswerStatus.UNKNOWN,question=q,source=SourceKind.UNKNOWN,
                               certainty=0,reason="no single complete current-state answer is established",
@@ -524,7 +533,8 @@ def original_state_rows(memory):
                          "experiencer_id":s.entity_id,"turn":e.turn_index,"label":s.state_term,
                          "component_index":p.index,"polarity":s.polarity,"tense":s.tense,
                          "temporal_cue":p.temporal_cue,"source_kind":e.source.value,
-                         "reporter_ids":["user"],"state_change":marker_of(e)})
+                         "reporter_ids":["user"],"state_change":marker_of(e),
+                         "state_recurrence":recurrence_of(e)})
     return rows
 
 
@@ -547,7 +557,7 @@ def unresolved_current_changes(memory, person: str | None, label: str | None = N
             for p in parts:
                 if p.report.temporal_scope=='current':
                     pending.pop((subject.key,p.report.state_term),None)
-        elif CESSATION_ROLE in e.arguments:
+        elif CESSATION_ROLE in e.arguments or RECURRENCE_ROLE in e.arguments:
             value=e.arguments.get('state') or e.arguments.get('value')
             if not value:continue
             words=[t.norm for t in lexicon.tokenize(value.surface or value.key)]

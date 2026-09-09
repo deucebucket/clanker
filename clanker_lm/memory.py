@@ -549,14 +549,23 @@ class ConversationMemory:
             "coordinate": 0.85,
             "subordinate": 0.15,
         }.get(stored.discourse_role, 1.0)
+        # State reports are time-ordered observations: merging a later report
+        # into an earlier row would rewrite the positive/ceased/renewed sequence.
+        # Ordinary durable facts still use the existing duplicate policy.
+        from .recurrence import preserve_state_occurrence
+        retain_observation = preserve_state_occurrence(stored)
         # Exact repeated assertions update certainty/provenance rather than
         # multiplying identical facts indefinitely.
         for existing in self.events:
+            if (retain_observation and existing.event_id == stored.event_id
+                    and existing.turn_index != stored.turn_index):
+                raise ValueError("state observation identity cannot be reused across turns")
             if (
                 existing.signature() == stored.signature()
                 and existing.aspect == stored.aspect
                 and existing.discourse_role == stored.discourse_role
                 and existing.source == stored.source
+                and not (retain_observation and existing.turn_index != stored.turn_index)
             ):
                 existing.certainty = max(existing.certainty, stored.certainty)
                 existing.turn_index = max(existing.turn_index, stored.turn_index)
