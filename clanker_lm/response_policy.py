@@ -245,6 +245,15 @@ class ResponseActPlanner:
             word_sequence[index : index + 2] == ("not", "safe")
             for index in range(max(0, len(word_sequence) - 1))
         )
+        # A parsed current self-report of lost safety is not a generic denied
+        # emotion. This reads the same typed scope as state revision instead
+        # of relying on the adjacent string 'not safe'. No opposite state or
+        # clinical assessment is inferred.
+        safety_denial = isolated_negated_state(parse, {"safe"})
+        if (safety_denial and safety_denial.entity_id == "user"
+                and safety_denial.temporal_scope == "current"
+                and not any(mark in parse.raw_text for mark in ('"', '“', '”'))):
+            not_safe = True
         loss = bool(words & self.LOSS_WORDS) or bool(predicates & self.LOSS_PREDICATES)
         active_danger = not_safe or bool(words & self.ACTIVE_DANGER_WORDS) or bool(
             predicates & self.SERIOUS_PREDICATES
