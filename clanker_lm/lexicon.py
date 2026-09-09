@@ -479,7 +479,17 @@ def lemma(word: str) -> str:
 def detect_tense(surface_verb: str, auxiliary: Optional[str] = None) -> str:
     aux = (auxiliary or "").lower()
     word = surface_verb.lower()
-    if aux == "did" or word in IRREGULAR_LEMMAS and IRREGULAR_LEMMAS[word] != word and word not in COPULAS:
+    # A finite auxiliary determines tense; an irregular lemma mapping is
+    # not itself evidence of past tense (HAS/DOES/GOES are present forms).
+    if aux in {"will", "shall"}:
+        return "future"
+    if aux in {"do", "does"}:
+        return "present"
+    if aux == "did":
+        return "past"
+    if word in {"has", "does", "goes", "am", "is", "are"}:
+        return "present"
+    if word in IRREGULAR_LEMMAS and IRREGULAR_LEMMAS[word] != word and word not in COPULAS:
         return "past"
     if word in {"was", "were", "had"} or word.endswith("ed"):
         return "past"
