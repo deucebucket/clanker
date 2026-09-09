@@ -21,8 +21,9 @@ jobs:
           set -euo pipefail
           cat .cessation-stage/part* | base64 --decode | gzip --decompress > /tmp/native.patch
           echo '40965ac1a8101306c4bd63969a38c6d1749eb4902ec68f1e3151a21ada383605  /tmp/native.patch' | sha256sum --check --strict
-          git apply --check /tmp/native.patch
-          git apply /tmp/native.patch
+          git apply --check --exclude=clanker_lm/parser.py /tmp/native.patch
+          git apply --exclude=clanker_lm/parser.py /tmp/native.patch
+          python .cessation-stage/adapt_parser.py
           git diff --check
       - name: Run native semantic and engine regressions
         run: |
