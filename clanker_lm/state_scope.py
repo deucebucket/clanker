@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass
 from typing import AbstractSet, Optional
 
 from . import lexicon
+from .cessation import marker_of
 from .model import EventFrame, ParseResult, RefKind, SourceKind, SpeechAct
 
 
@@ -52,6 +53,10 @@ def state_report(event: EventFrame, state_terms: AbstractSet[str]) -> Optional[S
     not a new sentiment parser or automatic seven-axis observer.
     """
     if event.predicate not in {"be", "feel"}:
+        return None
+    try:
+        marker_of(event)
+    except ValueError:
         return None
     subject = next((event.arguments[k] for k in ("experiencer", "subject", "agent")
                     if k in event.arguments), None)

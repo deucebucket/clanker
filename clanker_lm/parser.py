@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from . import lexicon
+from .cessation import scan_cessation, CESSATION_KIND, CESSATION_ROLE
 from .memory import ConversationMemory, Resolution
 from .model import (
     AppositiveAttachmentAmbiguity,
@@ -4837,11 +4838,18 @@ class SemanticParser:
 
         main_token = main_items[verb_idx]
         predicate = lexicon.lemma(main_token.norm)
+        phase = scan_cessation(main_items, predicate, verb_idx)
+        if phase.error:
+            return ClauseResult(None, diagnostics=["unresolved state change: " + phase.error])
+        if phase.marker:
+            main_items = list(phase.tokens)
+            verb_idx = next(i for i,t in enumerate(main_items) if t is main_token)
+            diagnostics.append("typed state cessation: " + phase.marker)
         auxiliary_tokens = [token.norm for token in main_items[:verb_idx] if token.norm in lexicon.AUXILIARIES]
         modality = next((word for word in auxiliary_tokens if word in lexicon.MODALS), None)
-        polarity = not any(
+        polarity = not (phase.marker or any(
             token.norm in lexicon.NEGATORS for token in main_items
-        )
+        ))
         tense = lexicon.detect_tense(main_token.norm, auxiliary_tokens[0] if auxiliary_tokens else None)
         if "will" in auxiliary_tokens or "shall" in auxiliary_tokens:
             tense = "future"
@@ -4891,6 +4899,8 @@ class SemanticParser:
         entities.extend(subject.entity_ids)
 
         args: Dict[str, SemanticRef] = {}
+        if phase.marker:
+            args[CESSATION_ROLE] = SemanticRef.literal(CESSATION_KIND, phase.marker, EntityKind.ABSTRACT)
         subject_role = self._subject_role(predicate, passive)
         if subject.ref:
             args[subject_role] = subject.ref
