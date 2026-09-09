@@ -1,0 +1,41 @@
+name: Validate native state recurrence
+on:
+  push:
+    branches: [build/clanker-state-recurrence]
+    paths: [.recurrence-stage/apply_native.py]
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: build/clanker-state-recurrence
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify and apply exact native seams
+        run: |
+          set -euo pipefail
+          test "$(git hash-object .recurrence-stage/apply_native.py)" = 110eb0d3f00e0cda46128177947348eb16db526a
+          test "$(git hash-object clanker_lm/recurrence.py)" = 60a06d9bbdc439d373092ab1fce9b1f95e3910be
+          test "$(git hash-object tests/test_recurrence_semantics.py)" = 594da054573269e82e3762c56af0968e7c4ffea3
+          python .recurrence-stage/apply_native.py
+          git diff --check
+      - name: Execute semantic, memory and existing engine regressions
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+          python -m compileall -q clanker_lm
+          python -m pytest tests/test_recurrence_semantics.py tests/test_memory.py tests/test_state_description_core.py tests/test_cessation_semantics.py tests/test_scoped_state_evidence.py engine/tests -q
+      - name: Commit only validated native changes on staging branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add clanker_lm/recurrence.py clanker_lm/parser.py clanker_lm/memory.py clanker_lm/state_scope.py clanker_lm/state_descriptions.py tests/test_recurrence_semantics.py
+          git diff --cached --check
+          git commit -m 'fix: stage tested recurrence and observation-history semantics'
+          git push origin HEAD:build/clanker-state-recurrence
