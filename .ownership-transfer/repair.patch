@@ -1,0 +1,124 @@
+diff --git a/clanker_lm/lexicon.py b/clanker_lm/lexicon.py
+index 6d18b6b..c8b5262 100644
+--- a/clanker_lm/lexicon.py
++++ b/clanker_lm/lexicon.py
+@@ -481,7 +481,17 @@ def lemma(word: str) -> str:
+ def detect_tense(surface_verb: str, auxiliary: Optional[str] = None) -> str:
+     aux = (auxiliary or "").lower()
+     word = surface_verb.lower()
+-    if aux == "did" or word in IRREGULAR_LEMMAS and IRREGULAR_LEMMAS[word] != word and word not in COPULAS:
++    # A finite auxiliary determines tense; an irregular lemma mapping is
++    # not itself evidence of past tense (HAS/DOES/GOES are present forms).
++    if aux in {"will", "shall"}:
++        return "future"
++    if aux in {"do", "does"}:
++        return "present"
++    if aux == "did":
++        return "past"
++    if word in {"has", "does", "goes", "am", "is", "are"}:
++        return "present"
++    if word in IRREGULAR_LEMMAS and IRREGULAR_LEMMAS[word] != word and word not in COPULAS:
+         return "past"
+     if word in {"was", "were", "had"} or word.endswith("ed"):
+         return "past"
+diff --git a/clanker_lm/parser.py b/clanker_lm/parser.py
+index 3befa71..875d99e 100644
+--- a/clanker_lm/parser.py
++++ b/clanker_lm/parser.py
+@@ -186,6 +186,27 @@ class SemanticParser:
+     """Conservative deterministic parser for the Clanker-LM vertical slice."""
+ 
+     def parse(self, text: str, memory: ConversationMemory) -> ParseResult:
++        result = self._parse_input(text, memory)
++        # Possession asserted by an outer, unqualified present clause can bind
++        # an entity association. The same predicate inside a question, denial,
++        # report or conditional cannot. This runs only after scope is known.
++        if result.speech_act == SpeechAct.ASSERT and not result.unresolved and not result.relations:
++            for event in result.events:
++                if (event.predicate != "own" or not event.polarity or event.modality
++                        or event.tense != "present" or event.aspect != "simple"
++                        or event.discourse_role not in {"main", "coordinate"}):
++                    continue
++                owner = event.arguments.get("possessor")
++                item = event.arguments.get("patient")
++                if owner is None or item is None or owner.kind != RefKind.ENTITY or item.kind != RefKind.ENTITY:
++                    continue
++                entity = memory.get_entity(item.key)
++                if entity is not None and entity.owner_id in {None, owner.key}:
++                    entity.owner_id = owner.key
++                    entity.add_alias(f"{owner.key}:{entity.canonical_name}")
++        return result
++
++    def _parse_input(self, text: str, memory: ConversationMemory) -> ParseResult:
+         raw = text.strip()
+         if not raw:
+             return ParseResult(SpeechAct.UNKNOWN, raw, diagnostics=["empty input"])
+@@ -5208,12 +5229,10 @@ class SemanticParser:
+         if object_result.ref:
+             role = "state" if predicate == "feel" else "patient"
+             args[role] = object_result.ref
+-            if predicate in lexicon.POSSESSION_VERBS and object_result.ref.kind == RefKind.ENTITY:
+-                owner = args.get("possessor") or args.get("agent")
+-                entity = memory.get_entity(object_result.ref.key)
+-                if owner and owner.kind == RefKind.ENTITY and entity:
+-                    entity.owner_id = owner.key
+-                    entity.add_alias(f"{owner.key}:{entity.canonical_name}")
++            # Predicate parsing also runs for questions, negation and reported
++            # content. It must not promote a proposed possessor into entity truth.
++            # Positive ownership remains a provenance-bearing OWN event; explicit
++            # possessive noun phrases retain their separately bound associations.
+         if object_result.quantity:
+             args["quantity"] = object_result.quantity
+ 
+diff --git a/clanker_lm/qa.py b/clanker_lm/qa.py
+index cf8c81b..dfac9f2 100644
+--- a/clanker_lm/qa.py
++++ b/clanker_lm/qa.py
+@@ -1713,6 +1713,11 @@ class QuestionAnswerer:
+         patient = question.event.arguments.get("patient")
+         if patient is None or patient.kind != RefKind.ENTITY:
+             return None
++        # Explicit ownership events (including opposing/qualified claims)
++        # must go through evidence matching rather than a cached association.
++        if any(e.predicate == "own" and e.arguments.get("patient") is not None
++               and memory.refs_equal(e.arguments["patient"], patient) for e in memory.events):
++            return None
+         entity = memory.get_entity(patient.key)
+         if entity is None or not entity.owner_id:
+             return None
+@@ -2222,8 +2227,19 @@ class QuestionAnswerer:
+                 response_goal="warn",
+             )
+ 
++        # WH requests are also polarity-qualified. Absence of positive
++        # evidence must not make a negative statement supply a positive answer.
++        eligible_matches = [m for m in matches if m.event.polarity == query.polarity]
++        if not eligible_matches:
++            return AnswerContract(
++                status=AnswerStatus.UNKNOWN, question=question,
++                evidence=[self._to_evidence(m) for m in matches], certainty=0,
++                source=self._combine_sources([m.event for m in matches]),
++                reason="only opposite-polarity evidence is available for the requested slot",
++                response_goal="answer", forbidden_claims=["invent_missing_fact"],
++            )
+         usable: List[Tuple[EventMatch, str, SemanticRef]] = []
+-        for match in positive_matches or matches:
++        for match in eligible_matches:
+             for role in role_candidates:
+                 value = match.event.arguments.get(role)
+                 if value is not None and not value.is_variable:
+@@ -2387,8 +2403,12 @@ class QuestionAnswerer:
+         negative: Sequence[EventMatch],
+         requested_role: str,
+     ) -> bool:
+-        pos = {item.event.signature(exclude_roles={requested_role}) for item in positive}
+-        neg = {item.event.signature(exclude_roles={requested_role}) for item in negative}
++        # Compare the same closed proposition after normalizing polarity.
++        # Retain the requested value: A owns it / B does not own it is not a
++        # contradiction. The old signature retained polarity, so opposite
++        # statements could never intersect at all.
++        pos = {(item.event.copy(polarity=True).signature(), item.event.aspect) for item in positive}
++        neg = {(item.event.copy(polarity=True).signature(), item.event.aspect) for item in negative}
+         return bool(pos & neg)
+ 
+     @staticmethod

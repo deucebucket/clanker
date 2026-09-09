@@ -1,0 +1,37 @@
+name: Validate native ownership repair source
+on:
+  push:
+    branches: ['build/clanker-ownership-round2']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify and apply exact patch
+        run: |
+          set -euo pipefail
+          echo '906de0a30029449b6bb253b76ea3fc3f4aab6c3befad8b81b94235404a537e38  .ownership-transfer/repair.patch' | sha256sum --check --strict
+          git apply --check .ownership-transfer/repair.patch
+          git apply .ownership-transfer/repair.patch
+          git diff --check
+      - name: Execute native regression checks
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pytest tests/test_ownership_evidence_boundaries.py tests/test_parser.py tests/test_qa_runtime.py engine/tests -q
+          python -m compileall -q clanker_lm
+      - name: Commit validated native files on staging branch only
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add clanker_lm/parser.py clanker_lm/qa.py clanker_lm/lexicon.py
+          git diff --cached --check
+          git commit -m 'fix: stage tested native ownership and polarity boundaries'
+          git push origin HEAD:build/clanker-ownership-round2
