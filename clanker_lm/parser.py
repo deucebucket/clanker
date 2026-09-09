@@ -186,6 +186,27 @@ class SemanticParser:
     """Conservative deterministic parser for the Clanker-LM vertical slice."""
 
     def parse(self, text: str, memory: ConversationMemory) -> ParseResult:
+        result = self._parse_input(text, memory)
+        # Possession asserted by an outer, unqualified present clause can bind
+        # an entity association. The same predicate inside a question, denial,
+        # report or conditional cannot. This runs only after scope is known.
+        if result.speech_act == SpeechAct.ASSERT and not result.unresolved and not result.relations:
+            for event in result.events:
+                if (event.predicate != "own" or not event.polarity or event.modality
+                        or event.tense != "present" or event.aspect != "simple"
+                        or event.discourse_role not in {"main", "coordinate"}):
+                    continue
+                owner = event.arguments.get("possessor")
+                item = event.arguments.get("patient")
+                if owner is None or item is None or owner.kind != RefKind.ENTITY or item.kind != RefKind.ENTITY:
+                    continue
+                entity = memory.get_entity(item.key)
+                if entity is not None and entity.owner_id in {None, owner.key}:
+                    entity.owner_id = owner.key
+                    entity.add_alias(f"{owner.key}:{entity.canonical_name}")
+        return result
+
+    def _parse_input(self, text: str, memory: ConversationMemory) -> ParseResult:
         raw = text.strip()
         if not raw:
             return ParseResult(SpeechAct.UNKNOWN, raw, diagnostics=["empty input"])
@@ -5188,12 +5209,10 @@ class SemanticParser:
         if object_result.ref:
             role = "state" if predicate == "feel" else "patient"
             args[role] = object_result.ref
-            if predicate in lexicon.POSSESSION_VERBS and object_result.ref.kind == RefKind.ENTITY:
-                owner = args.get("possessor") or args.get("agent")
-                entity = memory.get_entity(object_result.ref.key)
-                if owner and owner.kind == RefKind.ENTITY and entity:
-                    entity.owner_id = owner.key
-                    entity.add_alias(f"{owner.key}:{entity.canonical_name}")
+            # Predicate parsing also runs for questions, negation and reported
+            # content. It must not promote a proposed possessor into entity truth.
+            # Positive ownership remains a provenance-bearing OWN event; explicit
+            # possessive noun phrases retain their separately bound associations.
         if object_result.quantity:
             args["quantity"] = object_result.quantity
 
