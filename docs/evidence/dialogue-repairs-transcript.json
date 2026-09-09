@@ -1,0 +1,960 @@
+{
+  "kind": "original development scenarios, not held-out or human-outcome evaluation",
+  "base_commit": "c58ed145f08c41b230d88b958ebb0110c692a16c",
+  "before": [
+    {
+      "input": "Hi.",
+      "response": "Hello.",
+      "status": "acknowledged",
+      "act": "social",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 128,
+        "a": 130,
+        "d": 128,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 128
+      },
+      "elapsed_ms": 3.1578449999187796
+    },
+    {
+      "input": "My sister pissed me off again.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged",
+      "act": "empathic_followup",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 118,
+        "a": 135,
+        "d": 125,
+        "u": 1,
+        "g": 136,
+        "w": 114,
+        "i": 108
+      },
+      "elapsed_ms": 6.617903999995178
+    },
+    {
+      "input": "She borrowed my car yesterday.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 120,
+        "a": 136,
+        "d": 120,
+        "u": 13,
+        "g": 132,
+        "w": 124,
+        "i": 140
+      },
+      "elapsed_ms": 4.243961000042873
+    },
+    {
+      "input": "She returned it late.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 125,
+        "a": 134,
+        "d": 125,
+        "u": 8,
+        "g": 133,
+        "w": 127,
+        "i": 132
+      },
+      "elapsed_ms": 3.280329999938658
+    },
+    {
+      "input": "I was angry.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged",
+      "act": "empathic_followup",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 94,
+        "a": 155,
+        "d": 137,
+        "u": 12,
+        "g": 138,
+        "w": 105,
+        "i": 92
+      },
+      "elapsed_ms": 3.704126999991786
+    },
+    {
+      "input": "I wanted it back before work.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 112,
+        "a": 144,
+        "d": 124,
+        "u": 13,
+        "g": 128,
+        "w": 121,
+        "i": 134
+      },
+      "elapsed_ms": 3.979892999950607
+    },
+    {
+      "input": "What did my sister borrow?",
+      "response": "Your sister borrowed my car yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 122,
+        "a": 138,
+        "d": 127,
+        "u": 5,
+        "g": 145,
+        "w": 126,
+        "i": 130
+      },
+      "elapsed_ms": 3.47045600005913
+    },
+    {
+      "input": "When did she borrow it?",
+      "response": "I do not know the answer.",
+      "status": "unknown",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 126,
+        "a": 132,
+        "d": 127,
+        "u": 4,
+        "g": 139,
+        "w": 127,
+        "i": 129
+      },
+      "elapsed_ms": 2.9993260000082955
+    },
+    {
+      "input": "She called me today.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 100,
+        "a": 129,
+        "d": 109,
+        "u": 21,
+        "g": 154,
+        "w": 105,
+        "i": 107
+      },
+      "elapsed_ms": 3.4336100000018632
+    },
+    {
+      "input": "She said she was sorry.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 78,
+        "a": 146,
+        "d": 77,
+        "u": 20,
+        "g": 123,
+        "w": 103,
+        "i": 98
+      },
+      "elapsed_ms": 4.065782999987277
+    },
+    {
+      "input": "I feel better now.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 109,
+        "a": 138,
+        "d": 109,
+        "u": 8,
+        "g": 124,
+        "w": 119,
+        "i": 117
+      },
+      "elapsed_ms": 4.6485289999509405
+    },
+    {
+      "input": "Who called me?",
+      "response": "Your sister called you today.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 121,
+        "a": 132,
+        "d": 121,
+        "u": 3,
+        "g": 130,
+        "w": 125,
+        "i": 124
+      },
+      "elapsed_ms": 3.4735599999748956
+    },
+    {
+      "input": "What did she borrow yesterday?",
+      "response": "Your sister borrowed my car yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 126,
+        "a": 130,
+        "d": 126,
+        "u": 4,
+        "g": 131,
+        "w": 127,
+        "i": 127
+      },
+      "elapsed_ms": 3.2762929999989865
+    },
+    {
+      "input": "Actually, she borrowed my bike, not my car.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged",
+      "act": "empathic_followup",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 115,
+        "a": 134,
+        "d": 125,
+        "u": 5,
+        "g": 122,
+        "w": 116,
+        "i": 91
+      },
+      "elapsed_ms": 4.903983999952288
+    },
+    {
+      "input": "What did she borrow?",
+      "response": "Your sister borrowed my car yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 118,
+        "a": 135,
+        "d": 120,
+        "u": 11,
+        "g": 123,
+        "w": 124,
+        "i": 133
+      },
+      "elapsed_ms": 3.14231100003326
+    },
+    {
+      "input": "I'm still a little annoyed, but I'm not angry anymore.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged",
+      "act": "empathic_followup",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 83,
+        "a": 115,
+        "d": 97,
+        "u": 27,
+        "g": 143,
+        "w": 108,
+        "i": 130
+      },
+      "elapsed_ms": 4.596932000026754
+    },
+    {
+      "input": "Can you stop asking what happened?",
+      "response": "I do not know the answer.",
+      "status": "unknown",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 98,
+        "a": 135,
+        "d": 104,
+        "u": 24,
+        "g": 133,
+        "w": 119,
+        "i": 148
+      },
+      "elapsed_ms": 3.804717999969398
+    },
+    {
+      "input": "My brother visited today.",
+      "response": "I hear you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 92,
+        "a": 134,
+        "d": 103,
+        "u": 31,
+        "g": 164,
+        "w": 103,
+        "i": 114
+      },
+      "elapsed_ms": 3.4154420000049868
+    },
+    {
+      "input": "He brought lunch.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 117,
+        "a": 132,
+        "d": 121,
+        "u": 11,
+        "g": 150,
+        "w": 119,
+        "i": 123
+      },
+      "elapsed_ms": 4.0926130000116245
+    },
+    {
+      "input": "Who brought lunch?",
+      "response": "Your brother brought lunch.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 126,
+        "a": 132,
+        "d": 128,
+        "u": 4,
+        "g": 147,
+        "w": 125,
+        "i": 126
+      },
+      "elapsed_ms": 3.036733000044478
+    },
+    {
+      "input": "The lunch was glorp.",
+      "response": "What does glorp mean?",
+      "status": "lexical_probe",
+      "act": "probe",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 129,
+        "a": 130,
+        "d": 129,
+        "u": 1,
+        "g": 146,
+        "w": 127,
+        "i": 127
+      },
+      "elapsed_ms": 4.2645510000056674
+    },
+    {
+      "input": "Glorp means great and comforting.",
+      "response": "Glorp means positive evaluation.",
+      "status": "lexical_learned",
+      "act": "positive_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 146,
+        "a": 129,
+        "d": 136,
+        "u": 1,
+        "g": 141,
+        "w": 136,
+        "i": 143
+      },
+      "elapsed_ms": 3.6326089999647593
+    },
+    {
+      "input": "What does glorp mean?",
+      "response": "Glorp may mean positive evaluation.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 150,
+        "a": 129,
+        "d": 136,
+        "u": 1,
+        "g": 141,
+        "w": 135,
+        "i": 147
+      },
+      "elapsed_ms": 2.929782000023806
+    },
+    {
+      "input": "I feel calm now.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 143,
+        "a": 128,
+        "d": 134,
+        "u": 1,
+        "g": 136,
+        "w": 134,
+        "i": 140
+      },
+      "elapsed_ms": 3.9227960000971507
+    },
+    {
+      "input": "My sister returned my car.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 133,
+        "a": 131,
+        "d": 130,
+        "u": 1,
+        "g": 149,
+        "w": 130,
+        "i": 132
+      },
+      "elapsed_ms": 3.6169260000633585
+    },
+    {
+      "input": "Is my sister still using my car?",
+      "response": "I do not know the answer.",
+      "status": "unknown",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 117,
+        "a": 132,
+        "d": 113,
+        "u": 1,
+        "g": 143,
+        "w": 119,
+        "i": 129
+      },
+      "elapsed_ms": 3.691569000011441
+    },
+    {
+      "input": "Thanks for listening.",
+      "response": "What do you mean?",
+      "status": "unsupported",
+      "act": "neutral_acknowledge",
+      "coverage": "declined:unsupported answer status",
+      "vadugwi": {
+        "v": 121,
+        "a": 134,
+        "d": 106,
+        "u": 22,
+        "g": 162,
+        "w": 113,
+        "i": 123
+      },
+      "elapsed_ms": 3.093699000032757
+    },
+    {
+      "input": "Bye.",
+      "response": "Goodbye.",
+      "status": "acknowledged",
+      "act": "social",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 118,
+        "a": 131,
+        "d": 115,
+        "u": 15,
+        "g": 151,
+        "w": 115,
+        "i": 107
+      },
+      "elapsed_ms": 2.407664999964254
+    }
+  ],
+  "after": [
+    {
+      "input": "Hi.",
+      "response": "Hello.",
+      "status": "acknowledged",
+      "act": "social",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 128,
+        "a": 130,
+        "d": 128,
+        "u": 0,
+        "g": 130,
+        "w": 128,
+        "i": 128
+      },
+      "elapsed_ms": 3.251166999916677
+    },
+    {
+      "input": "My sister pissed me off again.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged",
+      "act": "empathic_followup",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 118,
+        "a": 135,
+        "d": 125,
+        "u": 1,
+        "g": 136,
+        "w": 114,
+        "i": 108
+      },
+      "elapsed_ms": 6.459650999886435
+    },
+    {
+      "input": "She borrowed my car yesterday.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 120,
+        "a": 136,
+        "d": 120,
+        "u": 13,
+        "g": 132,
+        "w": 124,
+        "i": 140
+      },
+      "elapsed_ms": 5.154174000153944
+    },
+    {
+      "input": "She returned it late.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 125,
+        "a": 134,
+        "d": 125,
+        "u": 8,
+        "g": 133,
+        "w": 127,
+        "i": 132
+      },
+      "elapsed_ms": 4.324454999959926
+    },
+    {
+      "input": "I was angry.",
+      "response": "I am sorry.",
+      "status": "acknowledged",
+      "act": "empathic_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 94,
+        "a": 155,
+        "d": 137,
+        "u": 12,
+        "g": 138,
+        "w": 105,
+        "i": 92
+      },
+      "elapsed_ms": 3.013920000057624
+    },
+    {
+      "input": "I wanted it back before work.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 94,
+        "a": 148,
+        "d": 100,
+        "u": 12,
+        "g": 120,
+        "w": 99,
+        "i": 127
+      },
+      "elapsed_ms": 4.394699999920704
+    },
+    {
+      "input": "What did my sister borrow?",
+      "response": "Your sister borrowed your car yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 116,
+        "a": 139,
+        "d": 118,
+        "u": 4,
+        "g": 143,
+        "w": 118,
+        "i": 127
+      },
+      "elapsed_ms": 3.3066610001242225
+    },
+    {
+      "input": "When did she borrow it?",
+      "response": "Your sister borrowed your car yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 124,
+        "a": 132,
+        "d": 124,
+        "u": 4,
+        "g": 136,
+        "w": 124,
+        "i": 127
+      },
+      "elapsed_ms": 3.0207100001007348
+    },
+    {
+      "input": "She called me today.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 127,
+        "a": 130,
+        "d": 127,
+        "u": 4,
+        "g": 134,
+        "w": 127,
+        "i": 127
+      },
+      "elapsed_ms": 3.2792199999676086
+    },
+    {
+      "input": "She said she was sorry.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 87,
+        "a": 146,
+        "d": 83,
+        "u": 13,
+        "g": 116,
+        "w": 111,
+        "i": 105
+      },
+      "elapsed_ms": 3.354122999780884
+    },
+    {
+      "input": "I feel better now.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 112,
+        "a": 138,
+        "d": 111,
+        "u": 6,
+        "g": 122,
+        "w": 122,
+        "i": 120
+      },
+      "elapsed_ms": 4.983647000017299
+    },
+    {
+      "input": "Who called me?",
+      "response": "Your sister called you today.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 122,
+        "a": 132,
+        "d": 122,
+        "u": 2,
+        "g": 129,
+        "w": 126,
+        "i": 125
+      },
+      "elapsed_ms": 2.8476400000272406
+    },
+    {
+      "input": "What did she borrow yesterday?",
+      "response": "Your sister borrowed your car yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 126,
+        "a": 130,
+        "d": 126,
+        "u": 4,
+        "g": 131,
+        "w": 127,
+        "i": 127
+      },
+      "elapsed_ms": 2.909823999971195
+    },
+    {
+      "input": "Actually, she borrowed my bike, not my car.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 115,
+        "a": 134,
+        "d": 125,
+        "u": 5,
+        "g": 119,
+        "w": 116,
+        "i": 91
+      },
+      "elapsed_ms": 4.738178000025073
+    },
+    {
+      "input": "What did she borrow?",
+      "response": "Your sister borrowed your bike yesterday.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 123,
+        "a": 131,
+        "d": 127,
+        "u": 2,
+        "g": 125,
+        "w": 124,
+        "i": 115
+      },
+      "elapsed_ms": 3.7569490000350925
+    },
+    {
+      "input": "I'm still a little annoyed, but I'm not angry anymore.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged",
+      "act": "empathic_followup",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 85,
+        "a": 113,
+        "d": 100,
+        "u": 23,
+        "g": 140,
+        "w": 108,
+        "i": 123
+      },
+      "elapsed_ms": 4.870085999982621
+    },
+    {
+      "input": "Can you stop asking what happened?",
+      "response": "I will not ask that again.",
+      "status": "acknowledged",
+      "act": "social",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 99,
+        "a": 134,
+        "d": 105,
+        "u": 23,
+        "g": 133,
+        "w": 119,
+        "i": 145
+      },
+      "elapsed_ms": 3.067440999984683
+    },
+    {
+      "input": "My brother visited today.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 107,
+        "a": 135,
+        "d": 126,
+        "u": 13,
+        "g": 139,
+        "w": 121,
+        "i": 112
+      },
+      "elapsed_ms": 4.553178999913143
+    },
+    {
+      "input": "He brought lunch.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 123,
+        "a": 132,
+        "d": 130,
+        "u": 5,
+        "g": 142,
+        "w": 126,
+        "i": 122
+      },
+      "elapsed_ms": 4.11522900003547
+    },
+    {
+      "input": "Who brought lunch?",
+      "response": "Your brother brought lunch.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 129,
+        "a": 132,
+        "d": 131,
+        "u": 2,
+        "g": 144,
+        "w": 127,
+        "i": 126
+      },
+      "elapsed_ms": 4.678508000097281
+    },
+    {
+      "input": "The lunch was glorp.",
+      "response": "What does glorp mean?",
+      "status": "lexical_probe",
+      "act": "probe",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 130,
+        "a": 130,
+        "d": 130,
+        "u": 1,
+        "g": 144,
+        "w": 127,
+        "i": 127
+      },
+      "elapsed_ms": 4.479326999899058
+    },
+    {
+      "input": "Glorp means great and comforting.",
+      "response": "Glorp means positive evaluation.",
+      "status": "lexical_learned",
+      "act": "positive_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 146,
+        "a": 129,
+        "d": 136,
+        "u": 1,
+        "g": 141,
+        "w": 136,
+        "i": 143
+      },
+      "elapsed_ms": 3.413712000110536
+    },
+    {
+      "input": "What does glorp mean?",
+      "response": "Glorp may mean positive evaluation.",
+      "status": "answered",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 150,
+        "a": 129,
+        "d": 136,
+        "u": 1,
+        "g": 141,
+        "w": 135,
+        "i": 147
+      },
+      "elapsed_ms": 3.236605999973108
+    },
+    {
+      "input": "I feel calm now.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 143,
+        "a": 128,
+        "d": 134,
+        "u": 1,
+        "g": 136,
+        "w": 134,
+        "i": 140
+      },
+      "elapsed_ms": 3.543526999919777
+    },
+    {
+      "input": "My sister returned my car.",
+      "response": "I understand you.",
+      "status": "acknowledged",
+      "act": "neutral_acknowledge",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 133,
+        "a": 131,
+        "d": 130,
+        "u": 1,
+        "g": 149,
+        "w": 130,
+        "i": 132
+      },
+      "elapsed_ms": 4.250423000030423
+    },
+    {
+      "input": "Is my sister still using my car?",
+      "response": "I do not know the answer.",
+      "status": "unknown",
+      "act": "answer",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 117,
+        "a": 132,
+        "d": 113,
+        "u": 1,
+        "g": 143,
+        "w": 119,
+        "i": 129
+      },
+      "elapsed_ms": 4.630054000017481
+    },
+    {
+      "input": "Thanks for listening.",
+      "response": "You are welcome.",
+      "status": "acknowledged",
+      "act": "social",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 121,
+        "a": 134,
+        "d": 106,
+        "u": 22,
+        "g": 162,
+        "w": 113,
+        "i": 123
+      },
+      "elapsed_ms": 3.9603760001227784
+    },
+    {
+      "input": "Bye.",
+      "response": "Goodbye.",
+      "status": "acknowledged",
+      "act": "social",
+      "coverage": "supported",
+      "vadugwi": {
+        "v": 119,
+        "a": 138,
+        "d": 131,
+        "u": 16,
+        "g": 158,
+        "w": 115,
+        "i": 116
+      },
+      "elapsed_ms": 2.8925070000695996
+    }
+  ]
+}

@@ -1346,3 +1346,20 @@ provenance and semantic/default-runtime integration, not a blanket claim that
 all original audit findings are solved.
 
 Detailed native measurement: `docs/evidence/lexical-decoder-development-2026-09-09.json`.
+
+## 2026-09-09 — Experimental dialogue repair and usage-learning delivery
+
+Based on PR #124, issues #126/#127 add actual ownership-aware NPs,
+negation-aware explanatory fragments, pending-probe/fact separation,
+episode obligations, no-probe preferences, explicit object correction history,
+and opt-in scoped usage counts consumed by the decoder. Frozen engine,
+production and evaluation bytes remain unchanged. The memory-web prototype
+under #125 is a separate lineage, not silently considered integrated.
+
+The fixed-state real-V8 ablation changes difficult -> frustrating after five
+permitted examples; retraction restores the earlier preference. Unknown new
+word/context edges acquire counts without becoming facts. Full specifications,
+local measurements and remaining gates are in
+`experiments/lexical_decoder/REPAIRS.md`. The 28-turn before/after record is
+`docs/evidence/dialogue-repairs-transcript.md`; it preserves remaining weak
+responses rather than editing them into an idealized demonstration.
