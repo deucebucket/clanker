@@ -1,0 +1,43 @@
+name: Experimental lexical decoder
+on:
+  push:
+    branches: [feature/clanker-lm-lexical-affinity-receipts]
+  pull_request:
+    paths:
+      - experiments/lexical_decoder/**
+      - tests/test_lexical_affinity_decoder.py
+      - .github/workflows/lexical-decoder.yml
+permissions:
+  contents: read
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install test runner
+        run: python -m pip install pytest
+      - name: Run native integration and replay tests
+        run: python -m pytest tests/test_lexical_affinity_decoder.py -q
+      - name: Benchmark one CPU under a 64 MiB virtual-address-space cap
+        shell: bash
+        run: |
+          set -euo pipefail
+          cpu=$(python -S -c 'import os; print(min(os.sched_getaffinity(0)))')
+          (ulimit -v 65536; taskset -c "$cpu" python -S -m experiments.lexical_decoder.benchmark)
+      - name: Emit cross-version receipt fingerprint
+        run: |
+          python -S - <<'PY'
+          from datetime import datetime, timezone
+          from experiments.lexical_decoder import ReceiptChat
+          with ReceiptChat(clock=lambda: datetime(2026, 9, 9, tzinfo=timezone.utc)) as chat:
+              chat.process('I am sad.')
+              assert chat.replay_last()
+              print('RECEIPT_FINGERPRINT=' + chat.receipt['receipt_sha256'])
+          PY

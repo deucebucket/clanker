@@ -1286,3 +1286,63 @@ visual evidence:      not applicable; this is a non-UI evaluator correction
 - The exact clean documentation successor must receive renewed metric review.
   The prior storage acceptance covers the unchanged publication mechanisms;
   the release owner decides whether to repeat storage review at the successor.
+
+## 2026-09-09 — Executed word-selection receipts, opt-in native responder
+
+The user clarified that lexical continuation statistics and VADUGWI must narrow
+each next-word choice together, with receipts, rather than letting an n-gram
+model decide facts or merely emotionally reranking prewritten sentences.
+
+Created bounded issues #120 (executable decoder), #121 (licensed count packs),
+#122 (conversational delivery/CPU measurement), and #123 (default enforcement
+and candidate-runtime evaluation integration), linked to #109/#111. The existing
+frozen evaluator and open baseline PR are not rewritten or merged by this work.
+
+The new research adapter runs `ClankerLM.process` with an unlexicalized-frontier
+realizer and a decoding controller at its existing target-aware ranking seam.
+General clause operations perform agreement, tense, polarity, do-support and
+question ordering. Lexical choices remain open until bounded word search.
+Hard semantic/pool/register exclusions precede scoring; all-invalid or exhausted
+search returns a typed error instead of selecting a penalized invalid output.
+
+The live score combines declared integerized log-probability costs with real V8
+state-distance estimates. Every expansion records its actual prefix context,
+count, denominator, smoothing/backoff, legal-completion estimate, predicted
+vector, signed axis errors and weighted cost. Lookahead is an estimate, NOT a
+reachability proof; beam pruning is distinct from semantic rejection. Replay
+reconstructs the whole trace and rejects mismatches even when a corrupted trace
+has been rehashed. Hashes are not signed approvals or ground-truth certificates.
+
+A tiny original MIT development fixture compiles into 309 local count records.
+The generator loads aggregate counts only, never completed response sentences
+from that fixture. The fixture validates integration, not language quality. No
+held-out/private material is read into the new learner or count pack; there is
+no automatic self-output reinforcement or global promotion.
+
+The adapter's checkpoint boundary restores both symbolic and SQL state after
+failure. Its own snapshot explicitly preserves whether a post-response prior
+exists, avoiding the v6 default continuation discrepancy without editing V8.
+Unsupported complex contracts are visibly downgraded to coverage probes; they
+are not reported as successful answers or routed silently through legacy text
+assembly. Broader parser, learned-definition and independent semantic-validation
+gaps remain open.
+
+Validation includes count/pack integrity, actual lexical and VADUGWI ablations
+(including the real V8 backend), exhaustive tiny-oracle search, pool exclusions,
+all-invalid/extreme-priority cases, budget failures, receipt tampering/replay,
+end-to-end conversation and resolver/learning paths, save/resume equivalence,
+failed-turn rollback, CLI receipts, and hash-seed stability.
+
+Resource measurement uses a single allowed CPU and a 64-MiB virtual-address-space
+cap with Python `-S`. The normal sandbox Python startup includes unrelated site
+hooks and could not initialize this workload under a 256-MiB address cap; that
+environmental failure is not concealed. The site-independent run works under
+the smaller cap and needs no third-party runtime dependency. Measurements are
+for a bounded development workload, not unrestricted conversation or web latency.
+
+No production package, base engine, held-out generation, evaluator or default
+web deployment is modified. The next release gate is reviewed count-pack
+provenance and semantic/default-runtime integration, not a blanket claim that
+all original audit findings are solved.
+
+Detailed native measurement: `docs/evidence/lexical-decoder-development-2026-09-09.json`.

@@ -1,5 +1,23 @@
 # Clanker-LM Changelog
 
+## Unreleased — 2026-09-09 lexical-affinity response experiment (#120–#123)
+
+- Added opt-in `experiments/lexical_decoder`: a real ClankerLM adapter whose
+  grammar frontier is expanded word by word using hard eligibility, SQLite
+  count probabilities, VADUGWI lookahead estimates and bounded deterministic
+  search. No production engine module or frozen evaluation data is changed.
+- Receipts expose executed exclusions, counts/denominators/backoff, per-axis
+  effects, component costs, beam pruning, winning derivations and replay hashes.
+- Added conversational acknowledgment/follow-up, greeting, gratitude/closure,
+  supported factual/lexical/live-resolver responses and explicit coverage probes.
+- Added session checkpoint rollback, resumed-prior preservation, a CLI without
+  artificial typing delay, and an OS-capped CPU benchmark. Delivery starts only
+  after complete validation; it is not speculative token streaming.
+- The original 24-sentence MIT development fixture proves wiring only. Larger
+  licensed packs, public streaming and default promotion remain #121/#122/#123.
+- See `experiments/lexical_decoder/README.md` for support limits and reproduction.
+
+
 This file records the deterministic language-runtime line separately from the
 original V8 affect engine changelog.  The two systems remain intentionally
 isolated:
