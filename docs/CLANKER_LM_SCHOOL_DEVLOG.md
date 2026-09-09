@@ -35,3 +35,23 @@ sentences or a finished general tutor.
 Review the candidate exception/rollback limitations, conservative time scope,
 parameter-freeze seams, and distinction between metadata integrity and truth.
 See experiments/school/README.md for commands and evidence boundaries.
+
+## CI follow-up: full Git ancestry, issue #136
+
+Exact-head school CI passed on Python 3.10 and 3.12. Full repository CI then
+failed the pre-existing provenance test while resolving the evaluator commit's
+parent. The workflow checked out full history but subsequently performed a
+`git fetch --depth=1`, marking main shallow and hiding its parent.
+
+A separate two-commit local repository reproduced this: depth-one refetch
+makes HEAD^ fail with status 128, while full refetch preserves ancestry. The
+workflow now fetches without a depth limit and asserts non-shallow history.
+Two regression tests preserve this behavior and the original provenance gates.
+No integrity assertion, corpus entry, baseline result, or evaluator code was
+removed or weakened. The combined school/history test selection is now
+49 passed locally. The new exact-head full CI run remains the release gate.
+
+The local unfiltered run before the CI repair reported 2944 passes, two skips,
+two known xfails, and one packaging failure because the local build module is
+not installed. GitHub installs build; its observed failure was instead the
+history issue above. These are different environments and different failures.
