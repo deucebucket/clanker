@@ -15,6 +15,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from . import lexicon
 from .cessation import scan_cessation, CESSATION_KIND, CESSATION_ROLE
+from .recurrence import scan_recurrence, RECURRENCE_ROLE, RECURRENCE_KIND
 from .memory import ConversationMemory, Resolution
 from .model import (
     AppositiveAttachmentAmbiguity,
@@ -4845,6 +4846,13 @@ class SemanticParser:
             main_items = list(phase.tokens)
             verb_idx = next(i for i,t in enumerate(main_items) if t is main_token)
             diagnostics.append("typed state cessation: " + phase.marker)
+        recurrence = scan_recurrence(main_items, predicate, verb_idx, cessation=bool(phase.marker))
+        if recurrence.error:
+            return ClauseResult(None, diagnostics=["unresolved state recurrence: " + recurrence.error])
+        if recurrence.marker:
+            main_items = list(recurrence.tokens)
+            verb_idx = next(i for i,t in enumerate(main_items) if t is main_token)
+            diagnostics.append("typed state recurrence: " + recurrence.marker)
         auxiliary_tokens = [token.norm for token in main_items[:verb_idx] if token.norm in lexicon.AUXILIARIES]
         modality = next((word for word in auxiliary_tokens if word in lexicon.MODALS), None)
         polarity = not (phase.marker or any(
@@ -4901,6 +4909,8 @@ class SemanticParser:
         args: Dict[str, SemanticRef] = {}
         if phase.marker:
             args[CESSATION_ROLE] = SemanticRef.literal(CESSATION_KIND, phase.marker, EntityKind.ABSTRACT)
+        if recurrence.marker:
+            args[RECURRENCE_ROLE] = SemanticRef.literal(RECURRENCE_KIND, recurrence.marker, EntityKind.ABSTRACT)
         subject_role = self._subject_role(predicate, passive)
         if subject.ref:
             args[subject_role] = subject.ref
