@@ -1,0 +1,57 @@
+name: Apply and validate dialogue-learning repairs
+on:
+  push:
+    branches: [feature/clanker-lm-dialogue-learning-repairs]
+    paths: [.github/workflows/apply-dialogue-repairs.yml]
+permissions:
+  contents: write
+concurrency:
+  group: clanker-dialogue-repair-materialize
+  cancel-in-progress: false
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify transferred patch and exact base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor c58ed145f08c41b230d88b958ebb0110c692a16c HEAD
+          python - <<'PY'
+          import base64, gzip, hashlib
+          from pathlib import Path
+          paths = sorted(Path('.dialogue-repair-transfer').glob('chunk*.txt'))
+          assert len(paths) == 17, len(paths)
+          encoded = ''.join(path.read_text(encoding='ascii') for path in paths)
+          patch = gzip.decompress(base64.b64decode(encoded, validate=True))
+          assert hashlib.sha256(patch).hexdigest() == '21f9b88ed4c3d9d245b132656413cbf9106d51aa5a1c803b2a6eb51b3506ec2e'
+          Path('/tmp/dialogue-repairs.patch').write_bytes(patch)
+          PY
+          git apply --check /tmp/dialogue-repairs.patch
+          git apply /tmp/dialogue-repairs.patch
+          git diff --exit-code -- engine clanker_lm evaluation clanker_engine.py
+          git diff --check
+      - name: Validate repairs against real runtime
+        run: |
+          python -m pip install -r requirements.txt
+          python -m compileall -q experiments/lexical_decoder tests/test_dialogue_learning_repairs.py
+          python -m pytest tests/test_dialogue_learning_repairs.py tests/test_lexical_affinity_decoder.py -q
+          python benchmarks/clanker_lm_eval.py
+      - name: Commit validated source and evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add CHANGELOG.md docs/CLANKER_LM_CHANGELOG.md docs/CLANKER_LM_DEVLOG.md
+          git add docs/evidence/dialogue-repairs-benchmark.json docs/evidence/dialogue-repairs-transcript.json docs/evidence/dialogue-repairs-transcript.md docs/evidence/usage-learning-ablation.json
+          git add experiments/lexical_decoder tests/test_dialogue_learning_repairs.py
+          git diff --cached --check
+          git commit -m 'fix: connect dialogue corrections and scoped usage learning'
+          git push origin HEAD:feature/clanker-lm-dialogue-learning-repairs
