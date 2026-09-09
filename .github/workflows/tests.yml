@@ -48,11 +48,12 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
             additive_base="${{ github.event.before }}"
-            git fetch --no-tags --depth=1 origin "$additive_base"
+            git fetch --no-tags origin "$additive_base"
           else
             additive_base="origin/main"
-            git fetch --no-tags --depth=1 origin main
+            git fetch --no-tags origin main
           fi
+          test "$(git rev-parse --is-shallow-repository)" = false
           python -m evaluation.conversations verify-additive --base "$additive_base"
 
       - name: Run open development conversation evaluation
