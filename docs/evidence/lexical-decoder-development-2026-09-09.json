@@ -1,0 +1,79 @@
+{
+  "address_space_limit_bytes": [
+    67108864,
+    67108864
+  ],
+  "backend": "clanker-v8",
+  "construction_ms": {
+    "mean": 5.185917208333334,
+    "p50": 4.988334,
+    "p95": 7.488836,
+    "p99": 7.934763
+  },
+  "cpu_affinity": [
+    0
+  ],
+  "delivery": "all tokens held until complete validation; no network measurement or sleeps",
+  "first_validated_chunk_ms": {
+    "mean": 5.192927558333333,
+    "p50": 4.9947055,
+    "p95": 7.495384,
+    "p99": 7.941701
+  },
+  "initialization_ms": {
+    "mean": 23.975616449999997,
+    "p50": 23.014673,
+    "p95": 30.072186,
+    "p99": 30.072186
+  },
+  "max_nodes": 12,
+  "max_rss_bytes": 31203328,
+  "pack_sha256": "7ce4409cb63ef7a6dab7b06d14a0fe3035589f5d822ec809dbcf86fb50431fb4",
+  "pack_sqlite_bytes": 20480,
+  "platform": "Linux-6.18.35-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "receipt_bytes": {
+    "mean": 9939.166666666666,
+    "p50": 9666.0,
+    "p95": 16672,
+    "p99": 16672
+  },
+  "runtime_sha256": "2a1a1427849feee882e4e203d323754a40ad26c4d1f1ed0816a2823d5073afde",
+  "sample": [
+    {
+      "input": "Hello.",
+      "response": "Hello.",
+      "status": "acknowledged"
+    },
+    {
+      "input": "My brother opened a blue box yesterday.",
+      "response": "I understand you.",
+      "status": "acknowledged"
+    },
+    {
+      "input": "Who opened the box?",
+      "response": "Your brother opened a blue box yesterday.",
+      "status": "answered"
+    },
+    {
+      "input": "I am disappointed.",
+      "response": "That sounds difficult. What happened?",
+      "status": "acknowledged"
+    },
+    {
+      "input": "Thanks.",
+      "response": "You are welcome.",
+      "status": "acknowledged"
+    },
+    {
+      "input": "What is 11 * 7?",
+      "response": "11 * 7 is 77.",
+      "status": "answered"
+    }
+  ],
+  "scope": "original development smoke workload; no quality/generalization claim",
+  "sessions": 20,
+  "tokens_per_construction_second": 996.2879195919803,
+  "total_tokens": 620,
+  "turns": 120
+}
