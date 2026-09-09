@@ -420,3 +420,12 @@ The current parser and complement program is tracked through these issues:
 - Every new relation type must round-trip through snapshots.
 - Every bounded slice receives dedicated tests, generated conformance coverage,
   exact-head CI, automated review, and squash-merge discipline.
+
+## Unreleased experiment — 2026-09-09 — Dialogue and usage repairs
+
+Issues #126/#127, stacked on PR #124; not shipped default behavior. Adds
+ownership-correct wording, bounded correction/episode state, negation-aware
+lexical explanations, unrelated-fact preservation during pending probes, and
+opt-in reversible usage-count learning. No engine, production runtime or
+frozen evaluation changes. See `experiments/lexical_decoder/REPAIRS.md` for
+executed integration evidence, measurements, known limits and review gates.

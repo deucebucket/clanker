@@ -1,0 +1,419 @@
+{
+  "kind": "fixed-state, fixed-target, fixed-plan real-V8 development ablation",
+  "default_affect_weight": 24,
+  "before": "That sounds difficult. What happened?",
+  "after": "That sounds frustrating. What happened?",
+  "before_probability": {
+    "requested_context": [
+      "that",
+      "sounds"
+    ],
+    "used_context": [
+      "that",
+      "sounds"
+    ],
+    "backoff_steps": 0,
+    "count": 1,
+    "context_total": 2,
+    "vocabulary_size": 83,
+    "smoothing": "add-half-with-unknown-class",
+    "probability_kind": "word",
+    "numerator": 3,
+    "denominator": 88,
+    "probability": 0.03409090909090909,
+    "cost_micros": 3378725,
+    "pack_sha256": "f5c90d10361d79c6c40bcf0ebf11d3e1a28c3666caaea0c15d0d5eca7a55131c"
+  },
+  "after_probability": {
+    "requested_context": [
+      "that",
+      "sounds"
+    ],
+    "used_context": [
+      "that",
+      "sounds"
+    ],
+    "backoff_steps": 0,
+    "count": 6,
+    "context_total": 7,
+    "vocabulary_size": 88,
+    "smoothing": "add-half-with-unknown-class",
+    "probability_kind": "word",
+    "numerator": 13,
+    "denominator": 103,
+    "probability": 0.1262135922330097,
+    "cost_micros": 2069780,
+    "pack_sha256": "aa00b97474c926189933a558ae8710b5da914675bc2fb308edc7a17c21b4683f"
+  },
+  "runtime_sha256": "d3e39d02981b3eb88c327e37871c17bf8dc85595e9e02bf2df087859076670b1",
+  "plan_unchanged": true,
+  "target_unchanged": true,
+  "state_unchanged": true,
+  "active_ledger": {
+    "schema": "scoped-usage-v1",
+    "scope_id": "ablation",
+    "observations": [
+      {
+        "evidence_id": "e0",
+        "source_id": "speaker",
+        "source_role": "user",
+        "purpose": "session_usage",
+        "consent": true,
+        "quoted": false,
+        "content_sha256": "f8185cef879c891c28ade477004bdd3840f94f945b1e123fa8858be002c2defb",
+        "token_count": 5,
+        "rows": [
+          [
+            "[\"frustrating\",\"today\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\"]",
+            "today",
+            1
+          ],
+          [
+            "[\"sounds\",\"frustrating\"]",
+            "today",
+            1
+          ],
+          [
+            "[\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\",\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\"]",
+            "sounds",
+            1
+          ],
+          [
+            "[\"today\"]",
+            ".",
+            1
+          ],
+          [
+            "[]",
+            ".",
+            1
+          ],
+          [
+            "[]",
+            "frustrating",
+            1
+          ],
+          [
+            "[]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            "that",
+            1
+          ],
+          [
+            "[]",
+            "today",
+            1
+          ]
+        ]
+      },
+      {
+        "evidence_id": "e1",
+        "source_id": "speaker",
+        "source_role": "user",
+        "purpose": "session_usage",
+        "consent": true,
+        "quoted": false,
+        "content_sha256": "2700b6ba905040f18719e9279414b86fbe93f86f13f52150e1653927e8178261",
+        "token_count": 5,
+        "rows": [
+          [
+            "[\"frustrating\",\"sometimes\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\"]",
+            "sometimes",
+            1
+          ],
+          [
+            "[\"sometimes\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"sounds\",\"frustrating\"]",
+            "sometimes",
+            1
+          ],
+          [
+            "[\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\",\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\"]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            ".",
+            1
+          ],
+          [
+            "[]",
+            "frustrating",
+            1
+          ],
+          [
+            "[]",
+            "sometimes",
+            1
+          ],
+          [
+            "[]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            "that",
+            1
+          ]
+        ]
+      },
+      {
+        "evidence_id": "e2",
+        "source_id": "speaker",
+        "source_role": "user",
+        "purpose": "session_usage",
+        "consent": true,
+        "quoted": false,
+        "content_sha256": "7f218568c6d3017871886fc91c352d32abff474333af2afb0adbf8510dc1c30f",
+        "token_count": 5,
+        "rows": [
+          [
+            "[\"again\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\",\"again\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\"]",
+            "again",
+            1
+          ],
+          [
+            "[\"sounds\",\"frustrating\"]",
+            "again",
+            1
+          ],
+          [
+            "[\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\",\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\"]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            ".",
+            1
+          ],
+          [
+            "[]",
+            "again",
+            1
+          ],
+          [
+            "[]",
+            "frustrating",
+            1
+          ],
+          [
+            "[]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            "that",
+            1
+          ]
+        ]
+      },
+      {
+        "evidence_id": "e3",
+        "source_id": "speaker",
+        "source_role": "user",
+        "purpose": "session_usage",
+        "consent": true,
+        "quoted": false,
+        "content_sha256": "17d6fd6ea5dd522d7db1cb91ca4a4d40a5e32e689d5bed6e3caf626f048006a8",
+        "token_count": 5,
+        "rows": [
+          [
+            "[\"frustrating\",\"indeed\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\"]",
+            "indeed",
+            1
+          ],
+          [
+            "[\"indeed\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"sounds\",\"frustrating\"]",
+            "indeed",
+            1
+          ],
+          [
+            "[\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\",\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\"]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            ".",
+            1
+          ],
+          [
+            "[]",
+            "frustrating",
+            1
+          ],
+          [
+            "[]",
+            "indeed",
+            1
+          ],
+          [
+            "[]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            "that",
+            1
+          ]
+        ]
+      },
+      {
+        "evidence_id": "e4",
+        "source_id": "speaker",
+        "source_role": "user",
+        "purpose": "session_usage",
+        "consent": true,
+        "quoted": false,
+        "content_sha256": "dcf961753ed4e20b79016408d3df4c62f474c10200879c4ee31ab256040829fe",
+        "token_count": 5,
+        "rows": [
+          [
+            "[\"certainly\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\",\"certainly\"]",
+            ".",
+            1
+          ],
+          [
+            "[\"frustrating\"]",
+            "certainly",
+            1
+          ],
+          [
+            "[\"sounds\",\"frustrating\"]",
+            "certainly",
+            1
+          ],
+          [
+            "[\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\",\"sounds\"]",
+            "frustrating",
+            1
+          ],
+          [
+            "[\"that\"]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            ".",
+            1
+          ],
+          [
+            "[]",
+            "certainly",
+            1
+          ],
+          [
+            "[]",
+            "frustrating",
+            1
+          ],
+          [
+            "[]",
+            "sounds",
+            1
+          ],
+          [
+            "[]",
+            "that",
+            1
+          ]
+        ]
+      }
+    ],
+    "retractions": []
+  }
+}

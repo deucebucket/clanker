@@ -172,3 +172,8 @@ components are not fixed by this decoder. Its wrapper fixes its own failed-turn
 rollback and resumed post-response prior, but does not claim the underlying
 unwrapped default has those fixes. No universal safety, truth, learning-quality,
 or clinical-performance claim is made.
+
+### Dialogue repairs and scoped usage learning
+
+The follow-up experimental APIs, explicit `/hear` and `/retract` controls,
+continuous-chat changes and their limitations are documented in [REPAIRS.md](REPAIRS.md).

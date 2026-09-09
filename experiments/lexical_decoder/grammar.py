@@ -115,7 +115,8 @@ class Grammar:
     def __init__(self, memory: ConversationMemory, store: LanguageStore):
         self.memory = memory
         self.store = store
-        self.np = SurfaceRealizer(memory, store)
+        from .repairs import PerspectiveRealizer
+        self.np = PerspectiveRealizer(memory, store)
 
     def category(self, category: str, concept: str, *, evaluation: bool = False) -> Slot:
         options = []
@@ -288,7 +289,11 @@ class Grammar:
         elif status == AnswerStatus.ACKNOWLEDGED:
             if act == "social":
                 binding["social_convention"] = convention or "greeting"
-                if convention == "gratitude":
+                if convention == "stop_elaboration":
+                    clauses.append(Clause(fixed("I", "speaker"), (predicate("ask"),), "ask",
+                                          (atom("that", "prior-question"), atom("again", "repetition")),
+                                          polarity=False, agreement="first", modality="will"))
+                elif convention == "gratitude":
                     clauses.append(Clause(fixed("you", "addressee"), (predicate("be"),), "be",
                                           (Slot("social_complement", "welcome", (Word("social.welcome", "welcome", "welcome"),)),), agreement="plural"))
                 elif convention == "closure":

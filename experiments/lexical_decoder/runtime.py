@@ -13,12 +13,14 @@ from pathlib import Path
 from typing import Callable
 
 from clanker_lm.affect import AffectController
-from clanker_lm.model import AnswerStatus, ParseResult, SpeechAct
+from clanker_lm.model import AnswerStatus, ParseResult, SpeechAct, RefKind, SemanticRef, EntityKind
 from clanker_lm.parser import SemanticParser
 from clanker_lm.runtime import ClankerLM
 from .affinity import AffinityStore, canonical, digest, tokens
 from .decoder import DecoderConfig, Decoding, LexicalDecoder
 from .grammar import DecodeError, Grammar, ResponsePlan
+from .repairs import DefinitionLearner, DialogueState, DialogueGate, ActiveEvidenceAnswerer, explicit_replacement
+from .usage import UsageLedger
 
 
 def software_hash() -> str:
@@ -44,15 +46,42 @@ class DialogueParser(SemanticParser):
     """Two closed social acts; all content parsing delegates to the base parser."""
     convention: str | None = None
 
+    def __init__(self, dialogue):
+        self.dialogue = dialogue
+        self.correction = None
+
     def parse(self, text, memory):
         words = tuple(w for w in tokens(text) if w not in {".", "!", "?", ","})
         self.convention = None
-        if words in {("thanks",), ("thank", "you")}:
+        self.correction = None
+        replacement = explicit_replacement(text, memory, self.dialogue)
+        if replacement is not None:
+            parsed, self.correction = replacement
+            return parsed
+        if words in {("thanks",), ("thank", "you"), ("thanks", "for", "listening"), ("thank", "you", "for", "listening")}:
             self.convention = "gratitude"
         elif words in {("bye",), ("goodbye",)}:
             self.convention = "closure"
+        elif words in {("can", "you", "stop", "asking", "what", "happened"),
+                       ("please", "stop", "asking", "what", "happened"),
+                       ("stop", "asking", "what", "happened")}:
+            self.convention = "stop_elaboration"
         if self.convention:
             return ParseResult(SpeechAct.SOCIAL, text, diagnostics=["social_convention:" + self.convention])
+        # A narrow reviewed manner boundary prevents "it late" becoming a
+        # new object. Do not apply to quoted/embedded/multi-verb material.
+        if (len(words) in {4, 5} and words[-2:] in {("it", "late"), ("it", "early"), ("them", "late"), ("them", "early")}
+                and words[-3] in {"return", "returned", "returns"}
+                and not any(x in text for x in {'"', "“", "”", ";", "?"})):
+            import re
+            core = re.sub(r"\s+(?:late|early)[.!]*\s*$", "", text, flags=re.IGNORECASE)
+            parsed = super().parse(core, memory)
+            if len(parsed.events) == 1 and parsed.events[0].predicate == "return":
+                parsed.raw_text = text
+                parsed.events[0].raw_text = text
+                parsed.events[0].arguments["manner"] = SemanticRef.literal(words[-1], words[-1], EntityKind.ABSTRACT)
+                parsed.diagnostics.append("licensed_return_pronoun_manner")
+            return parsed
         return super().parse(text, memory)
 
 
@@ -68,6 +97,15 @@ class PlanningRealizer:
         self.runtime = runtime
 
     def realize(self, contract, gates) -> Frontier:
+        if self.runtime.parser.correction is not None:
+            change = dict(self.runtime.parser.correction)
+            if contract.proposition is None or not contract.proposition.event_id:
+                raise DecodeError("replacement fact was not committed to semantic memory")
+            change["new_event"] = contract.proposition.event_id
+            self.runtime.dialogue.corrections.append(change)
+        if self.runtime.parser.convention == "stop_elaboration":
+            self.runtime.dialogue.suppress_elaboration = True
+            self.runtime.dialogue.pending_elaboration = False
         grammar = Grammar(self.runtime.memory, self.runtime.store)
         plan = grammar.plan(contract, gates, convention=self.runtime.parser.convention)
         if plan.coverage.startswith("declined"):
@@ -78,7 +116,7 @@ class PlanningRealizer:
             plan = replace(plan, contract_hash=digest(contract.to_dict()))
         senses = [{"normalized": t["normalized"], "senses": t["senses"]}
                   for t in self.runtime.learned_lexicon()]
-        context = {"memory": self.runtime.memory.to_dict(), "senses": sorted(senses, key=lambda x: x["normalized"])}
+        context = {"memory": self.runtime.memory.to_dict(), "dialogue": self.runtime.dialogue.to_dict(), "senses": sorted(senses, key=lambda x: x["normalized"])}
         return Frontier(plan, gates, digest(context))
 
 
@@ -120,7 +158,8 @@ class ReceiptChat:
     """
 
     def __init__(self, *, pack: AffinityStore | None = None, config: DecoderConfig | None = None,
-                 affect_backend=None, clock: Callable | None = None):
+                 affect_backend=None, clock: Callable | None = None,
+                 usage_scope: str | None = None):
         self._owns_pack = pack is None
         self.pack = pack or development_pack()
         self.config = config or DecoderConfig()
@@ -128,20 +167,55 @@ class ReceiptChat:
         self.clock = clock
         self.runtime = ClankerLM(affect_backend=affect_backend, clock=clock)
         self._has_response = False
+        self.dialogue = DialogueState()
+        self.usage = UsageLedger(usage_scope) if usage_scope is not None else None
+        self._usage_pack = None
+        self._usage_hash = None
         self._attach()
 
     def _attach(self):
-        self.controller = FrontierController(self.runtime, LexicalDecoder(self.pack, self.config), self.code_hash)
+        previous_learner = self.runtime.learner.to_dict()
+        self.runtime.learner = DefinitionLearner(self.runtime.store, self.runtime.affect, self.runtime.memory)
+        self.runtime.learner.restore(previous_learner)
+        self.runtime.dialogue = self.dialogue
+        self.runtime.gate = DialogueGate(self.runtime.store, self.dialogue)
+        self.controller = FrontierController(self.runtime, LexicalDecoder(self._current_pack(), self.config), self.code_hash)
         self.runtime.affect = self.controller
         self.runtime.realizer = PlanningRealizer(self.runtime)
-        self.runtime.parser = DialogueParser()
+        self.runtime.parser = DialogueParser(self.dialogue)
+        self.runtime.answerer = ActiveEvidenceAnswerer(self.dialogue)
+
+    def _current_pack(self):
+        if self.usage is None:
+            return self.pack
+        if self._usage_hash != self.usage.hash:
+            if self._usage_pack is not None:
+                self._usage_pack.close()
+            self._usage_pack = self.usage.compile(self.pack)
+            self._usage_hash = self.usage.hash
+        return self._usage_pack
+
+    def observe_usage(self, text, *, evidence_id, source_id, consent, purpose="session_usage", source_role="user", quoted=False):
+        if self.usage is None:
+            raise DecodeError("usage learning is opt-in; supply a usage_scope")
+        return self.usage.observe(text, evidence_id=evidence_id, source_id=source_id,
+                                  consent=consent, purpose=purpose, source_role=source_role, quoted=quoted)
+
+    def retract_usage(self, evidence_id, *, reason):
+        if self.usage is None:
+            raise DecodeError("usage learning is not enabled")
+        return self.usage.retract(evidence_id, reason=reason)
 
     def process(self, text: str):
         if not isinstance(text, str) or not text.strip() or len(text.encode("utf-8")) > 4096:
             raise DecodeError("input must be nonempty text of at most 4096 bytes")
         if self.runtime.memory.turn_index >= 200:
             raise DecodeError("session turn budget exceeded; start a new session")
+        current_pack = self._current_pack()
+        if self.controller.decoder.pack is not current_pack:
+            self.controller.decoder = LexicalDecoder(current_pack, self.config)
         before = self.runtime.to_dict()
+        before_dialogue = self.dialogue.to_dict()
         before_flag = self._has_response
         backend = self.runtime.affect.backend
         try:
@@ -154,6 +228,18 @@ class ReceiptChat:
             result = self.runtime.process(text)
             if self.controller.last is None:
                 raise DecodeError("decoder integration did not execute")
+            self.dialogue.completed(self.controller.last.receipt["act"])
+            # Successfully spoken bindings become discourse referents without
+            # adding a new factual assertion or learning from generated words.
+            if result.contract.status == AnswerStatus.ANSWERED:
+                for ref in result.contract.values:
+                    if ref.kind == RefKind.ENTITY:
+                        self.runtime.memory.mention(ref.key, role="patient")
+            for event in self.runtime.memory.events:
+                if event.turn_index == self.runtime.memory.turn_index and event.discourse_role == "main":
+                    if event.event_id not in self.dialogue.episode_events:
+                        self.dialogue.episode_events.append(event.event_id)
+            self.dialogue.episode_events = self.dialogue.episode_events[-200:]
             self._has_response = True
             return result
         except Exception:
@@ -162,6 +248,7 @@ class ReceiptChat:
             self.runtime.close()
             self.runtime = ClankerLM.from_dict(before, affect_backend=backend, clock=self.clock)
             self._has_response = before_flag
+            self.dialogue = DialogueState.from_dict(before_dialogue)
             self._attach()
             raise
 
@@ -184,25 +271,35 @@ class ReceiptChat:
         return self.controller.last.committed_chunks()
 
     def snapshot(self) -> dict:
-        return {"schema": "lexical-chat-v1", "runtime": self.runtime.to_dict(),
+        return {"schema": "lexical-chat-v2", "runtime": self.runtime.to_dict(),
+                "dialogue": self.dialogue.to_dict(), "usage": self.usage.to_dict() if self.usage else None,
                 "pack_sha256": self.pack.pack_hash, "config": self.config.__dict__,
                 "has_response": self._has_response, "runtime_sha256": self.code_hash}
 
     def restore(self, data: dict) -> None:
-        if set(data) != {"schema", "runtime", "pack_sha256", "config", "has_response", "runtime_sha256"}:
+        if set(data) != {"schema", "runtime", "dialogue", "usage", "pack_sha256", "config", "has_response", "runtime_sha256"}:
             raise DecodeError("invalid chat snapshot fields")
-        if data["schema"] != "lexical-chat-v1" or data["pack_sha256"] != self.pack.pack_hash or data["runtime_sha256"] != self.code_hash:
+        if data["schema"] != "lexical-chat-v2" or data["pack_sha256"] != self.pack.pack_hash or data["runtime_sha256"] != self.code_hash:
             raise DecodeError("snapshot pack/runtime/schema mismatch")
         if data["config"] != self.config.__dict__ or type(data["has_response"]) is not bool:
             raise DecodeError("snapshot decoding policy mismatch")
+        dialogue = DialogueState.from_dict(data["dialogue"])
+        usage = UsageLedger.from_dict(data["usage"]) if data["usage"] is not None else None
+        if (usage is None) != (self.usage is None) or (usage is not None and usage.scope_id != self.usage.scope_id):
+            raise DecodeError("snapshot usage scope mismatch")
         new = ClankerLM.from_dict(data["runtime"], affect_backend=self.runtime.affect.backend, clock=self.clock)
         self.runtime.close()
         self.runtime = new
+        self.dialogue = dialogue
+        self.usage = usage
         self._has_response = data["has_response"]
         self._attach()
 
     def close(self):
         self.runtime.close()
+        if self._usage_pack is not None:
+            self._usage_pack.close()
+            self._usage_pack = None
         if self._owns_pack:
             self.pack.close()
 

@@ -35,11 +35,12 @@ def main(argv=None):
     parser.add_argument("--trace", action="store_true")
     parser.add_argument("--beam", type=int, default=4)
     parser.add_argument("--affect-weight", type=int, default=24)
+    parser.add_argument("--usage-scope", help="enable explicitly submitted /hear examples in a private scope")
     args = parser.parse_args(argv)
     pack = None
     try:
         pack = AffinityStore.load(args.pack) if args.pack else None
-        with ReceiptChat(pack=pack, config=DecoderConfig(beam_width=args.beam, affect_weight=args.affect_weight)) as chat:
+        with ReceiptChat(pack=pack, config=DecoderConfig(beam_width=args.beam, affect_weight=args.affect_weight), usage_scope=args.usage_scope) as chat:
             if args.snapshot and args.snapshot.exists():
                 if args.snapshot.stat().st_size > 8 * 1024 * 1024:
                     raise DecodeError("snapshot exceeds 8 MiB limit")
@@ -54,6 +55,20 @@ def main(argv=None):
                 if message == "/quit":
                     break
                 if not message:
+                    continue
+                if message.startswith("/hear ") or message.startswith("/retract "):
+                    fields = message.split(maxsplit=2)
+                    if len(fields) != 3:
+                        raise DecodeError("use /hear ID text or /retract ID reason")
+                    if fields[0] == "/hear":
+                        changed = chat.observe_usage(fields[2], evidence_id=fields[1],
+                                                     source_id=args.usage_scope or "", consent=True)
+                    else:
+                        changed = chat.retract_usage(fields[1], reason=fields[2])
+                    print(canonical({"control": fields[0], "changed": changed,
+                                     "ledger_sha256": chat.usage.hash}), file=sys.stderr)
+                    if args.snapshot:
+                        atomic_json(args.snapshot, chat.snapshot())
                     continue
                 if message == "/receipt":
                     print(canonical(chat.receipt)); continue

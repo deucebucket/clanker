@@ -354,3 +354,13 @@ All numbers below re-measured 2026-06-11 against the shipped engine.
 - 90% sarcasm detection via structural inversion
 - 156 engine tests passing
 - Clean repo (clean history)
+
+## Unreleased Clanker-LM experiment — dialogue/usage repairs (2026-09-09)
+
+- Fix identity-based possession and repeated answered follow-ups in the
+  experimental receipted chat; retain explicit correction history.
+- Preserve unrelated facts during lexical clarification; stop learning negated
+  descriptors as positive evidence for those descriptors.
+- Add opt-in scoped occurrence weights and reversible evidence retraction.
+- Record before/after dialogue, fixed-state real-V8 usage ablation and measured
+  limits. No default runtime/engine/evaluator activation is implied.
