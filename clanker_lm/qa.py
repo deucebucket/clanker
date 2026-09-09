@@ -1713,6 +1713,11 @@ class QuestionAnswerer:
         patient = question.event.arguments.get("patient")
         if patient is None or patient.kind != RefKind.ENTITY:
             return None
+        # Explicit ownership events (including opposing/qualified claims)
+        # must go through evidence matching rather than a cached association.
+        if any(e.predicate == "own" and e.arguments.get("patient") is not None
+               and memory.refs_equal(e.arguments["patient"], patient) for e in memory.events):
+            return None
         entity = memory.get_entity(patient.key)
         if entity is None or not entity.owner_id:
             return None
@@ -2222,8 +2227,19 @@ class QuestionAnswerer:
                 response_goal="warn",
             )
 
+        # WH requests are also polarity-qualified. Absence of positive
+        # evidence must not make a negative statement supply a positive answer.
+        eligible_matches = [m for m in matches if m.event.polarity == query.polarity]
+        if not eligible_matches:
+            return AnswerContract(
+                status=AnswerStatus.UNKNOWN, question=question,
+                evidence=[self._to_evidence(m) for m in matches], certainty=0,
+                source=self._combine_sources([m.event for m in matches]),
+                reason="only opposite-polarity evidence is available for the requested slot",
+                response_goal="answer", forbidden_claims=["invent_missing_fact"],
+            )
         usable: List[Tuple[EventMatch, str, SemanticRef]] = []
-        for match in positive_matches or matches:
+        for match in eligible_matches:
             for role in role_candidates:
                 value = match.event.arguments.get(role)
                 if value is not None and not value.is_variable:
@@ -2387,8 +2403,12 @@ class QuestionAnswerer:
         negative: Sequence[EventMatch],
         requested_role: str,
     ) -> bool:
-        pos = {item.event.signature(exclude_roles={requested_role}) for item in positive}
-        neg = {item.event.signature(exclude_roles={requested_role}) for item in negative}
+        # Compare the same closed proposition after normalizing polarity.
+        # Retain the requested value: A owns it / B does not own it is not a
+        # contradiction. The old signature retained polarity, so opposite
+        # statements could never intersect at all.
+        pos = {(item.event.copy(polarity=True).signature(), item.event.aspect) for item in positive}
+        neg = {(item.event.copy(polarity=True).signature(), item.event.aspect) for item in negative}
         return bool(pos & neg)
 
     @staticmethod
