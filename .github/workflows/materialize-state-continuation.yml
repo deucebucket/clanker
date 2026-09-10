@@ -1,0 +1,52 @@
+name: Validate native state continuation
+on:
+  push:
+    branches: [build/clanker-state-continuation]
+    paths: [.continuation-stage/part0]
+permissions:
+  contents: write
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: build/clanker-state-continuation
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify payload and apply exact native seams
+        run: |
+          set -euo pipefail
+          cat .continuation-stage/part* | base64 --decode > /tmp/continuation.json.gz
+          echo '9cf7963cf4dbf00c61015b354f3af936f7d2919a0e63b134ce09863444c3f3f7  /tmp/continuation.json.gz' | sha256sum --check --strict
+          python - <<'PY'
+          import gzip,json
+          from pathlib import Path
+          data=json.loads(gzip.decompress(Path('/tmp/continuation.json.gz').read_bytes()))
+          for filename,content in data['new_files'].items():
+              path=Path(filename)
+              assert not path.exists(),filename
+              path.write_text(content,encoding='utf-8')
+          for filename,old,new in data['changes']:
+              path=Path(filename);text=path.read_text(encoding='utf-8')
+              assert text.count(old)==1,(filename,old[:100])
+              path.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
+          git diff --check
+      - name: Run native state and existing engine tests
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+          python -m compileall -q clanker_lm
+          python -m pytest tests/test_continuation_semantics.py tests/test_recurrence_semantics.py tests/test_state_description_core.py tests/test_cessation_semantics.py tests/test_scoped_state_evidence.py engine/tests -q
+      - name: Commit only validated native source to staging branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add clanker_lm/continuation.py clanker_lm/state_vocabulary.py clanker_lm/parser.py clanker_lm/recurrence.py clanker_lm/state_scope.py clanker_lm/state_descriptions.py tests/test_continuation_semantics.py
+          git diff --cached --check
+          git commit -m 'fix: stage verified continuation and fronted discourse semantics'
+          git push origin HEAD:build/clanker-state-continuation
