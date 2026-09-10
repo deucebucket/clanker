@@ -16,6 +16,8 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 from . import lexicon
 from .cessation import scan_cessation, CESSATION_KIND, CESSATION_ROLE
 from .recurrence import scan_recurrence, RECURRENCE_ROLE, RECURRENCE_KIND
+from .continuation import (fronted_operator, scan_continuation, CONTINUATION_ROLE,
+                           CONTINUATION_KIND, DISCOURSE_ROLE, FRONTED)
 from .memory import ConversationMemory, Resolution
 from .model import (
     AppositiveAttachmentAmbiguity,
@@ -200,6 +202,21 @@ class SemanticParser:
         clean = [token for token in tokens if token.norm not in {".", "!", "?"}]
         clean = self._rewrite_yoda(clean)
         clean = lexicon.strip_discourse_prefix(clean)
+        front = fronted_operator(clean)
+        if front.marker:
+            # A single finite top-level state is the supported discourse unit.
+            # Decline compound, reporting and question scopes rather than let
+            # a prefix apply arbitrarily to one segment or an inner proposition.
+            rest = [t for t in front.tokens if t.norm not in lexicon.PUNCTUATION]
+            vi = self._find_main_verb(rest)
+            if (vi <= 0 or lexicon.lemma(rest[vi].norm) not in {"be", "feel"}
+                    or raw.endswith("?")
+                    or any(t.norm in {"and", "or", "but", "if", "unless", "because", "when", "while"}
+                           for t in rest)
+                    or any(t.text in {'"', "“", "”"} for t in clean)
+                    or any(t.norm in {",", ";", ":"} for t in front.tokens)):
+                return ParseResult(SpeechAct.UNKNOWN, raw, normalized_text=normalized,
+                    diagnostics=["unresolved fronted state operator scope"])
         # A final casual vocative (``my tummy hurts, bruh``) controls register
         # but is not a semantic patient.  Keep it in raw text for Clanker's
         # affect/gating pass and remove it only from the proposition parser.
@@ -4821,7 +4838,8 @@ class SemanticParser:
         raw: str,
         memory: ConversationMemory,
     ) -> ClauseResult:
-        items = [token for token in tokens if token.norm not in lexicon.PUNCTUATION]
+        front = fronted_operator(tokens)
+        items = [token for token in front.tokens if token.norm not in lexicon.PUNCTUATION]
         if not items:
             return ClauseResult(None, diagnostics=["empty clause"])
 
@@ -4853,6 +4871,18 @@ class SemanticParser:
             main_items = list(recurrence.tokens)
             verb_idx = next(i for i,t in enumerate(main_items) if t is main_token)
             diagnostics.append("typed state recurrence: " + recurrence.marker)
+        ongoing = scan_continuation(main_items, predicate, verb_idx,
+                                    phase=bool(phase.marker or recurrence.marker or front.marker))
+        if ongoing.error:
+            return ClauseResult(None, diagnostics=["unresolved state continuation: " + ongoing.error])
+        if ongoing.marker:
+            main_items = list(ongoing.tokens)
+            verb_idx = next(i for i,t in enumerate(main_items) if t is main_token)
+            diagnostics.append("typed state continuation: " + ongoing.marker)
+        if front.marker:
+            if predicate not in {"be", "feel"} or phase.marker or recurrence.marker:
+                return ClauseResult(None, diagnostics=["unresolved fronted state operator scope"])
+            diagnostics.append("preserved fronted discourse operator: " + FRONTED[front.marker])
         auxiliary_tokens = [token.norm for token in main_items[:verb_idx] if token.norm in lexicon.AUXILIARIES]
         modality = next((word for word in auxiliary_tokens if word in lexicon.MODALS), None)
         polarity = not (phase.marker or any(
@@ -4911,6 +4941,10 @@ class SemanticParser:
             args[CESSATION_ROLE] = SemanticRef.literal(CESSATION_KIND, phase.marker, EntityKind.ABSTRACT)
         if recurrence.marker:
             args[RECURRENCE_ROLE] = SemanticRef.literal(RECURRENCE_KIND, recurrence.marker, EntityKind.ABSTRACT)
+        if ongoing.marker:
+            args[CONTINUATION_ROLE] = SemanticRef.literal(CONTINUATION_KIND, ongoing.marker, EntityKind.ABSTRACT)
+        if front.marker:
+            args[DISCOURSE_ROLE] = SemanticRef.literal(FRONTED[front.marker], front.marker, EntityKind.ABSTRACT)
         subject_role = self._subject_role(predicate, passive)
         if subject.ref:
             args[subject_role] = subject.ref
@@ -4995,6 +5029,12 @@ class SemanticParser:
             previous = words[idx - 1] if idx > 0 else None
             following = words[idx + 1] if idx + 1 < len(words) else None
             if word in lexicon.NEGATORS:
+                continue
+            if (word == "still" and tokens[idx].text == "still" and following
+                    and lexicon.lemma(following) in {"be", "feel"}
+                    and any(w in lexicon.AUXILIARIES for w in words[:idx])):
+                # An auxiliary licenses the following state predicate, not an
+                # invented verb STILL. Preserve the token for operator parsing.
                 continue
             if word in lexicon.AUXILIARIES:
                 next_idx = idx + 1
