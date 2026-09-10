@@ -150,6 +150,7 @@ def test_ci_guards_every_preexisting_corpus_generation_path():
     assert 'python -m evaluation.conversations verify-additive --base "$additive_base"' in workflow
     assert "python -m evaluation.conversations verify-history --ref HEAD" in workflow
     assert "fetch-depth: 0" in workflow
+    assert "--depth=" not in workflow
 
 
 def _write_history_ledger(data: Path) -> None:
@@ -2251,12 +2252,23 @@ def test_execution_errors_fail_the_release_runner():
     _enforce_zero_execution_errors([{"category": "semantic_parse_exact"}])
 
 
-def test_baseline_is_aggregate_only_and_exact_post_113():
+def test_baseline_is_text_free_id_only_and_exact_post_113():
     report_path = ROOT / "evaluation/conversations/baselines/post_113_heldout_v1.json"
     if not report_path.with_suffix(".current").exists():
         pytest.skip("baseline is published only after the immutable core is accepted")
-    report, failures, generation_dir = load_published_artifacts(report_path)
+    # Python 3.12 changed built-in float summation. The frozen evaluator and
+    # report were produced on the new algorithm; older supported interpreters
+    # still authenticate every immutable byte below, while the 3.12+ CI lane
+    # performs exact sufficient-statistic reconstruction.
+    exact_reconstruction = sys.version_info >= (3, 12)
+    report, failures, generation_dir = load_published_artifacts(
+        report_path, validate=exact_reconstruction
+    )
     assert report["production_code_commit"] == "c8c0bf4ccd5e73b1bd6bbe99762c87c4a549665e"
+    assert report["evaluation_commit"] == "29e2c5f5900279aced9f58111e64be7c07602802"
+    assert report["semantic_fingerprint"] == "1aca23a6f02f880b6c094410bc7d9716490a08684bb1c253dcad58576065f5f6"
+    assert report["failure_count"] == len(failures) == 4189
+    assert generation_dir.name == "6f01c10a443a5cf1a73cab39399af4a94b94a9f45dfc4041b53df8a74ea4d82f"
     assert set(report["modes"]) == {"sentence_only", "stateful", "transition_corrected"}
     assert report["development_correction_bundle"]["lookup_store_unchanged"] is True
     subprocess.run(
@@ -2273,8 +2285,12 @@ def test_baseline_is_aggregate_only_and_exact_post_113():
         expected_hashes[filename] = digest
     assert hashlib.sha256(selected_report_path.read_bytes()).hexdigest() == expected_hashes[report_path.name]
     assert hashlib.sha256(failure_path.read_bytes()).hexdigest() == expected_hashes[failure_path.name]
-    conversations = load_split("heldout", purpose="evaluation")
-    _validate_aggregate_artifacts(report, failures, conversations)
+    if exact_reconstruction:
+        conversations = load_split("heldout", purpose="evaluation")
+        _validate_aggregate_artifacts(report, failures, conversations)
+    else:
+        assert sys.version_info[:2] in {(3, 10), (3, 11)}
+        assert report["environment"]["python_version"] >= [3, 12]
 
 
 def test_distribution_artifacts_exclude_evaluation_corpus(tmp_path):

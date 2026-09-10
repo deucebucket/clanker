@@ -162,3 +162,48 @@ measured worktree change during the run.
 The first baseline sets no accuracy threshold: it records the honest result at
 the exact manifest-bound release commit. Later thresholds must name both the
 corpus root and baseline fingerprint.
+
+## First held-out baseline
+
+The first immutable baseline was produced by integrated evaluator commit
+`29e2c5f5900279aced9f58111e64be7c07602802` from corpus root
+`770bb78c9011cf0918c952b0f4a56a1ad321d38f6719ef9c51263b2ae10c5e4c`.
+Its semantic fingerprint is
+`1aca23a6f02f880b6c094410bc7d9716490a08684bb1c253dcad58576065f5f6`.
+The selected report generation is
+`6f01c10a443a5cf1a73cab39399af4a94b94a9f45dfc4041b53df8a74ea4d82f`.
+It contains 520 turns in 56 conversations, zero execution errors, and 4,189
+ID-only failure rows across the three modes.
+
+| Aggregate | Sentence only | Stateful | Transition corrected | Scored turns per mode |
+| --- | ---: | ---: | ---: | ---: |
+| Dialogue-act accuracy | 0.4538 | 0.4308 | 0.4308 | 520 |
+| Response-act accuracy | 0.2635 | 0.2692 | 0.2692 | 520 |
+| Answer-status accuracy | 0.3135 | 0.2808 | 0.2808 | 520 |
+| Truth accuracy | 0.7385 | 0.7385 | 0.7385 | 520 |
+| Semantic parse exact | 0.0063 | 0.0063 | 0.0063 | 160 |
+| Semantic answer exact | 0.0882 | 0.0882 | 0.0882 | 34 |
+| Entity resolution exact | 0.0000 | 0.0000 | 0.0000 | 29 |
+| UNKNOWN F1 | 0.3497 | 0.3662 | 0.3662 | 520 |
+| CONFLICT F1 | 0.0000 | 0.0000 | 0.0000 | 520 |
+| Brier score (lower is better) | 0.2647 | 0.2831 | 0.2831 | 34 |
+| Next-state distance (lower is better) | 16.3949 | 17.1346 | 17.1346 | 324 |
+| Target attainment | 0.8534 | 0.8502 | 0.8502 | 324 |
+
+This baseline does not pass an accuracy gate because no first-baseline accuracy
+threshold exists. It establishes an authenticated reference, not a quality
+claim. In the paired comparison, stateful mode reduced answer-status accuracy
+by 0.0327 (95% cluster interval -0.0615 to -0.0019), increased next-state
+distance by 0.7397 (0.0904 to 1.4354), and reduced target attainment by 0.0032
+(-0.0048 to -0.0016) relative to sentence-only mode. Other selected semantic
+and truth measurements were unchanged. Transition correction was never
+applied on the held-out population and its deterministic metrics are identical
+to stateful mode, so this baseline provides no evidence of correction benefit.
+
+The weak literary and archival labels are not causal exposure evidence;
+participant-aware results remain limited by the runtime's lack of a
+speaker/addressee interface; CONFLICT has only five positive cases and none was
+detected; semantic-answer, entity, and Brier estimates have small scored
+supports; and timing/resource values are observational and excluded from the
+semantic fingerprint. These constraints should accompany every use of the
+baseline.
