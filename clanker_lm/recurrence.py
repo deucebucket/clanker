@@ -74,7 +74,7 @@ def recurrence_of(event) -> str | None:
     if (ref.kind != RefKind.LITERAL or ref.key != RECURRENCE_KIND
             or ref.surface != RECURRENCE_MARKER or event.predicate not in {"be", "feel"}
             or not event.polarity or event.aspect != "simple"
-            or CESSATION_ROLE in event.arguments):
+            or any(k in event.arguments for k in (CESSATION_ROLE, "state_continuation", "state_discourse"))):
         raise ValueError("invalid or unsupported state recurrence operator")
     return RECURRENCE_MARKER
 
