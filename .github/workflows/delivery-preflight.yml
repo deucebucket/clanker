@@ -1,0 +1,31 @@
+name: Delivery publication preflight
+on:
+  push:
+    branches: [build/clanker-delivery-publish-20260910]
+    paths: [.github/workflows/delivery-preflight.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Export pinned main and available Git object identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          test "$(git rev-parse origin/main)" = 9cf8690cb88c7e9662b6bd2b2e9dd96f06e95e1d
+          mkdir -p /tmp/delivery-reference
+          git bundle create /tmp/delivery-reference/main.bundle refs/remotes/origin/main
+          git cat-file --batch-all-objects --batch-check='%(objectname) %(objecttype)' > /tmp/delivery-reference/objects.txt
+          git for-each-ref --format='%(objectname) %(refname)' refs/remotes/origin > /tmp/delivery-reference/refs.txt
+          git rev-parse origin/main > /tmp/delivery-reference/MAIN.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: delivery-publication-reference
+          path: /tmp/delivery-reference/*
+          if-no-files-found: error
+          retention-days: 3
