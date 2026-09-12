@@ -1,0 +1,31 @@
+name: typed equation composition
+
+on:
+  pull_request:
+    paths:
+      - 'clanker_lm/composition/**'
+      - 'tests/test_ground_composition.py'
+      - '.github/workflows/typed-composition.yml'
+  push:
+    branches: ['feature/clanker-lm-typed-composition-core']
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install -e .
+      - run: python -m compileall -q clanker_lm/composition
+      - run: python -m pytest tests/test_ground_composition.py engine/tests -q
