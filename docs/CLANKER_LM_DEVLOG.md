@@ -1286,3 +1286,8 @@ visual evidence:      not applicable; this is a non-UI evaluator correction
 - The exact clean documentation successor must receive renewed metric review.
   The prior storage acceptance covers the unchanged publication mechanisms;
   the release owner decides whether to repeat storage review at the successor.
+
+
+## 2026-09-12 — modular semantic/parser/answer/realizer boundaries (#161)
+
+Decompose existing native source into explicit responsibility modules with public compatibility facades. Ordered parsing stages retain a per-call typed context; architecture checks reject new monoliths, cycles and dependency inversions and ratchet remaining named legacy debt. No engine or sealed evaluation changes. This entry records source restructuring, not new reasoning capability or completed default integration. See docs/CLANKER_LM_MODULARITY.md for measured scope and limitations.
