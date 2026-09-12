@@ -1,0 +1,29 @@
+name: Integrated source inventory
+on:
+  push:
+    branches: [review/clanker-lm-integrated-76bee92]
+    paths: ['.github/workflows/integration-inventory.yml']
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Record available source objects and branch heads
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/integration-inventory
+          git fetch --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+          git cat-file --batch-all-objects --batch-check='%(objectname) %(objecttype) %(objectsize)' > /tmp/integration-inventory/objects.txt
+          git for-each-ref --format='%(objectname) %(refname)' refs/remotes/origin > /tmp/integration-inventory/branches.txt
+          git log --all --format='%H %s' > /tmp/integration-inventory/commits.txt
+          wc -l /tmp/integration-inventory/*.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: integrated-source-inventory
+          path: /tmp/integration-inventory/
+          retention-days: 7
