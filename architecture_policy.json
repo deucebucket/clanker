@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "roots": [
+    "clanker_lm",
+    "tools/architecture"
+  ],
+  "defaults": {
+    "lines": 600,
+    "bytes": 32000,
+    "max_function_lines": 320
+  },
+  "legacy": {
+    "clanker_lm/database.py": {
+      "limits": {
+        "lines": 1201,
+        "bytes": 48220,
+        "max_function_lines": 320
+      },
+      "issue": 161,
+      "reason": "Existing native module; freeze its ceiling until responsibility-level extraction."
+    },
+    "clanker_lm/learning.py": {
+      "limits": {
+        "lines": 975,
+        "bytes": 39230,
+        "max_function_lines": 320
+      },
+      "issue": 161,
+      "reason": "Existing native module; freeze its ceiling until responsibility-level extraction."
+    },
+    "clanker_lm/lexicon.py": {
+      "limits": {
+        "lines": 688,
+        "bytes": 32000,
+        "max_function_lines": 320
+      },
+      "issue": 161,
+      "reason": "Existing native module; freeze its ceiling until responsibility-level extraction."
+    },
+    "clanker_lm/memory.py": {
+      "limits": {
+        "lines": 1733,
+        "bytes": 70526,
+        "max_function_lines": 320
+      },
+      "issue": 161,
+      "reason": "Existing native module; freeze its ceiling until responsibility-level extraction."
+    },
+    "clanker_lm/runtime.py": {
+      "limits": {
+        "lines": 636,
+        "bytes": 32000,
+        "max_function_lines": 320
+      },
+      "issue": 161,
+      "reason": "Existing native module; freeze its ceiling until responsibility-level extraction."
+    },
+    "clanker_lm/web.py": {
+      "limits": {
+        "lines": 1029,
+        "bytes": 38747,
+        "max_function_lines": 320
+      },
+      "issue": 161,
+      "reason": "Existing native module; freeze its ceiling until responsibility-level extraction."
+    }
+  },
+  "layers": {
+    "clanker_lm.semantic_types": [
+      "clanker_lm.semantic_types"
+    ],
+    "clanker_lm.parsing": [
+      "clanker_lm.parsing",
+      "clanker_lm.model",
+      "clanker_lm.memory",
+      "clanker_lm.lexicon",
+      "clanker_lm.cessation",
+      "clanker_lm.recurrence",
+      "clanker_lm.continuation"
+    ],
+    "clanker_lm.answering": [
+      "clanker_lm.answering",
+      "clanker_lm.model",
+      "clanker_lm.memory",
+      "clanker_lm.lexicon"
+    ],
+    "clanker_lm.realization": [
+      "clanker_lm.realization",
+      "clanker_lm.model",
+      "clanker_lm.memory",
+      "clanker_lm.lexicon",
+      "clanker_lm.database",
+      "clanker_lm.gates",
+      "clanker_lm.qa"
+    ],
+    "tools.architecture": [
+      "tools.architecture"
+    ]
+  }
+}

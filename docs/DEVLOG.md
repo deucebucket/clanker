@@ -301,3 +301,8 @@ The compile, JavaScript syntax, diff, and no-engine checks are clean. An
 independent web reviewer returned ACCEPT before the rebase and before `6f3c1bf`;
 final exact-head independent review is not yet claimed. Run, verification, and
 rollback commands are documented in `docs/CLANKER_LM_WEB.md`.
+
+
+## 2026-09-12 — modular semantic/parser/answer/realizer boundaries (#161)
+
+Decompose existing native source into explicit responsibility modules with public compatibility facades. Ordered parsing stages retain a per-call typed context; architecture checks reject new monoliths, cycles and dependency inversions and ratchet remaining named legacy debt. No engine or sealed evaluation changes. This entry records source restructuring, not new reasoning capability or completed default integration. See docs/CLANKER_LM_MODULARITY.md for measured scope and limitations.
