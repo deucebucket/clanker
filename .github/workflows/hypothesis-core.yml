@@ -1,0 +1,35 @@
+name: hypothesis lifecycle core
+
+on:
+  pull_request:
+    paths:
+      - 'clanker_lm/hypotheses/**'
+      - 'clanker_lm/activation.py'
+      - 'tests/test_hypothesis_core.py'
+      - '.github/workflows/hypothesis-core.yml'
+  push:
+    branches:
+      - 'feature/clanker-lm-hypothesis-core'
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e '.[test]'
+      - run: python -m compileall -q clanker_lm/hypotheses
+      - run: python -m pytest tests/test_hypothesis_core.py tests/test_activation_core.py engine/tests -q
