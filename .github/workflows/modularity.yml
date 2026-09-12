@@ -1,0 +1,42 @@
+name: modular architecture
+
+on:
+  pull_request:
+    paths:
+      - 'clanker_lm/**'
+      - 'tools/architecture/**'
+      - 'architecture_policy.json'
+      - 'tests/test_modular_architecture.py'
+      - '.github/workflows/modularity.yml'
+  push:
+    branches:
+      - 'refactor/clanker-lm-modular-foundation'
+
+permissions:
+  contents: read
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install runtime and test dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e ".[test,web]"
+      - name: Enforce source boundaries and non-growth ceilings
+        run: python -m tools.architecture --output /tmp/architecture.json
+      - name: Test module seams, composition and unchanged engine
+        run: python -m pytest tests/test_modular_architecture.py tests/test_parser.py tests/test_qa_runtime.py tests/test_content_complements.py tests/test_gerund_complements.py tests/test_infinitival_complements.py tests/test_embedded_interrogatives.py engine/tests -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: architecture-${{ matrix.python-version }}
+          path: /tmp/architecture.json
