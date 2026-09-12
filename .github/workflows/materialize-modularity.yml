@@ -67,7 +67,10 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .gitignore architecture_policy.json .github/workflows/modularity.yml clanker_lm/model.py clanker_lm/parser.py clanker_lm/qa.py clanker_lm/realize.py clanker_lm/semantic_types clanker_lm/parsing clanker_lm/answering clanker_lm/realization tools/architecture tests/test_modular_architecture.py docs/CLANKER_LM_MODULARITY.md CHANGELOG.md docs/DEVLOG.md docs/CLANKER_LM_CHANGELOG.md docs/CLANKER_LM_DEVLOG.md
+          # The bot has contents permission, not workflow-authoring permission.
+          # The permanent CI file is published separately by the authorized connector.
+          git add .gitignore architecture_policy.json clanker_lm/model.py clanker_lm/parser.py clanker_lm/qa.py clanker_lm/realize.py clanker_lm/semantic_types clanker_lm/parsing clanker_lm/answering clanker_lm/realization tools/architecture tests/test_modular_architecture.py docs/CLANKER_LM_MODULARITY.md CHANGELOG.md docs/DEVLOG.md docs/CLANKER_LM_CHANGELOG.md docs/CLANKER_LM_DEVLOG.md
           git diff --cached --check
+          test -z "$(git diff --cached --name-only -- .github/workflows)"
           git commit -m 'refactor: stage verified native modular decomposition and architecture checks'
           git push origin HEAD:build/clanker-modular-foundation
