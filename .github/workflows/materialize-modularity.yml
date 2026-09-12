@@ -2,7 +2,7 @@ name: Validate native modular decomposition
 on:
   push:
     branches: [build/clanker-modular-foundation]
-    paths: ['.modularity-stage/**']
+    paths: ['.modularity-stage/**', '.github/workflows/materialize-modularity.yml']
 permissions:
   contents: write
 jobs:
@@ -35,6 +35,9 @@ jobs:
               path = pathlib.Path('/tmp') / name
               path.write_text(data['generators'][name], encoding='utf-8')
               subprocess.run([sys.executable, str(path), str(root)], check=True)
+          for folder in ('semantic_types', 'parsing', 'answering', 'realization'):
+              for path in (root / 'clanker_lm' / folder).rglob('*.py'):
+                  path.write_text(path.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
           for name, text in data['files'].items():
               path = root / name
               assert path.resolve().is_relative_to(root) and not path.exists(), name
