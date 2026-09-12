@@ -163,7 +163,7 @@ class ActivationIndex:
             "nodes": [asdict(ns[k]) for k in sorted(ns)],
             "links": [asdict(es[k]) for k in sorted(es)]})
 
-    def _allowed(self, source: str, edge: Link, task: Task) -> tuple[str | None, str]:
+    def edge_policy(self, source: str, edge: Link, task: Task) -> tuple[str | None, str]:
         target = edge.target if source == edge.source else edge.source
         a, b = self.nodes[source].plane, self.nodes[target].plane
         if edge.kind == LinkKind.CONTEXT_REFERENCE:
@@ -183,7 +183,10 @@ class ActivationIndex:
             return None, "plane_outside_task"
         return "active", "same_plane_association"
 
-    def select(self, request: Request, policy: Policy) -> dict:
+    # Preserve the older private seam while exposing the shared policy gate.
+    _allowed = edge_policy
+
+    def validate_request(self, request: Request, policy: Policy) -> None:
         if not isinstance(request, Request) or not isinstance(policy, Policy):
             raise TypeError("typed request and policy required")
         # Validate access configuration before even looking up root existence.
@@ -194,6 +197,9 @@ class ActivationIndex:
                          {Plane.PERSONAL, Plane.SEMANTIC})
         if any(r not in self.nodes or self.nodes[r].plane not in allowed_roots for r in request.roots):
             raise ValueError("root unavailable for this task")
+
+    def select(self, request: Request, policy: Policy) -> dict:
+        self.validate_request(request, policy)
         active = {r: 0 for r in sorted(request.roots)}
         references: dict[str, int] = {}
         queue = deque((r, 0) for r in sorted(request.roots))
@@ -212,7 +218,7 @@ class ActivationIndex:
                     queue.clear()
                     break
                 target = edge.target if source == edge.source else edge.source
-                mode, reason = self._allowed(source, edge, request.task)
+                mode, reason = self.edge_policy(source, edge, request.task)
                 step = {"source": source, "edge": edge.key, "target": target,
                         "depth": depth + 1, "decision": "withheld", "reason": reason}
                 steps.append(step)
