@@ -30,7 +30,8 @@ space/
 rules/
 engine_v9/
 scripts/
-tools/
+tools/*
+!tools/architecture/
 clanker_engine.py
 MODEL_CARD.md
 shape_traces.json

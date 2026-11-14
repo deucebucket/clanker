@@ -336,3 +336,8 @@ All numbers below re-measured 2026-06-11 against the shipped engine.
 - 90% sarcasm detection via structural inversion
 - 156 engine tests passing
 - Clean repo (clean history)
+
+
+## 2026-09-12 — modular semantic/parser/answer/realizer boundaries (#161)
+
+Decompose existing native source into explicit responsibility modules with public compatibility facades. Ordered parsing stages retain a per-call typed context; architecture checks reject new monoliths, cycles and dependency inversions and ratchet remaining named legacy debt. No engine or sealed evaluation changes. This entry records source restructuring, not new reasoning capability or completed default integration. See docs/CLANKER_LM_MODULARITY.md for measured scope and limitations.
