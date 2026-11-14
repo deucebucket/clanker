@@ -1,0 +1,32 @@
+name: ownership boundaries
+on:
+  pull_request:
+    paths:
+      - 'clanker_lm/parser.py'
+      - 'clanker_lm/lexicon.py'
+      - 'clanker_lm/qa.py'
+      - 'tests/test_ownership_evidence_boundaries.py'
+      - '.github/workflows/ownership-boundaries.yml'
+  push:
+    branches: ['fix/clanker-lm-ownership-evidence']
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pip install -e .
+      - run: python -m compileall -q clanker_lm
+      - run: python -m pytest tests/test_ownership_evidence_boundaries.py tests/test_parser.py tests/test_qa_runtime.py engine/tests -q
+# This focused matrix supplements, never replaces, tests.yml. Candidate-runtime
+# evaluation identity remains a draft/release gate; no frozen check is skipped.
