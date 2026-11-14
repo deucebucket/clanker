@@ -1,0 +1,35 @@
+name: bounded goal workspace
+
+on:
+  pull_request:
+    paths:
+      - 'clanker_lm/reasoning_core.py'
+      - 'tests/test_goal_workspace_kernel.py'
+      - '.github/workflows/goal-workspace.yml'
+  push:
+    branches:
+      - 'feature/clanker-lm-goal-workspace-core'
+
+permissions:
+  contents: read
+
+jobs:
+  kernel:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package and native test requirements
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+      - run: python -m compileall -q clanker_lm/reasoning_core.py
+      - name: Exercise replayable goals and existing engine
+        run: python -m pytest tests/test_goal_workspace_kernel.py engine/tests -q
