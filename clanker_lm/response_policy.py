@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import Iterable, List, Optional, Sequence, Set
 
 from . import lexicon
+from .state_scope import isolated_negated_state
 from .model import AffectReading, AnswerStatus, ParseResult, SpeechAct
 
 
@@ -283,6 +284,22 @@ class ResponseActPlanner:
                 initial_register,
                 2,
                 rationale,
+            )
+
+        # Scope takes precedence over a bag of emotional words. This narrow
+        # rule follows severe/loss/critical handling, so it cannot weaken those
+        # gates. A denied feeling does not assert the opposite feeling either.
+        denied_state = isolated_negated_state(
+            parse, self.NEGATIVE_WORDS | self.POSITIVE_WORDS
+        )
+        if denied_state is not None and severity_level <= 1:
+            rationale.append(
+                "negated state is not an asserted affective outcome: "
+                + denied_state.state_term
+            )
+            return self._decision(
+                "neutral_acknowledge", severity_level,
+                initial_register, 1, rationale,
             )
 
         if explicit_negative and not explicit_positive:
