@@ -23,17 +23,40 @@ PROXIMITY_DECAY = 0.90   # champion v2: wide influence range
 INFLUENCE_CUTOFF = 0.1   # ignore influence below this
 COEFFICIENT_CAP = 2.63   # champion v2: tighter cap prevents runaway
 
+# ── Negation scope (V8.6) ────────────────────────────────────────
+# A negator acts FORWARD on the next few words and fades fast. Until V8.5
+# negation used the symmetric 0.90^d field with strength -2.464, so a
+# negator reached 21 words in both directions and its effect passed
+# through zero about 7 words away. On the open training pool that was
+# worse than having no negation at all (see docs/vadug-calculation.md).
+# These three values were not searched to a decimal: every setting in
+# window 2-5, flip -0.5 to -1.0, decay 0.6-1.0 scored the same within noise.
+NEGATION_WINDOW = 3      # words after the negator that it can reach
+NEGATION_FLIP = -0.75    # coefficient factor on the word right after it
+NEGATION_DECAY = 0.5     # the flip fades by this factor per extra word
+
 
 # ── Role modifier strengths (champion v2, genetically tuned 2026-04-03) ──
 
 ROLE_MODIFIERS = {
     "AMPLIFIER": 0.965,   # champion v2: amplifiers hit hard
-    "NEGATOR": -2.464,    # champion v2: strong negation flip
+    "NEGATOR": -2.464,    # legacy value; unused since V8.6 (see NEGATION_* above)
     "SELF_REF": 0.466,    # champion v2: self-reference personalizes
     "HEDGE": -0.416,      # champion v2: hedges dampen more than v1
     "COMPRESSOR": -0.301, # champion v2: compression
     "REGISTER_CASUAL": 0.0,  # SOLVENT: phase-dependent handling in modifier block
 }
+
+
+# Some words resist negation:
+# EXPLETIVES: "no fuck you" stays negative
+# DECEPTION verbs: "pretended not to" = the "not" belongs to the next verb
+#   "not pretended" doesn't make sense. The deception is real.
+_NEGATION_RESISTANT = frozenset({
+    "fuck", "shit", "damn", "hell", "ass", "bitch",
+    "bastard", "crap", "dick", "piss",
+    "pretended", "pretending", "faked", "faking", "lied", "lying",
+})
 
 
 # ── Core functions ───────────────────────────────────────────────
@@ -115,6 +138,19 @@ def proximity_coefficient(
 
         role = roles[i].role
         distance = abs(i - target_idx)
+
+        # V8.6: negation is directional and local, not part of the
+        # symmetric field. factor = 1 + (FLIP - 1) * DECAY^(gap - 1):
+        # -0.75 on the next word, +0.125 two words on, +0.56 three words on.
+        if role == "NEGATOR":
+            gap = target_idx - i
+            if 0 < gap <= NEGATION_WINDOW and roles[target_idx].force:
+                strength = (NEGATION_FLIP - 1.0) * NEGATION_DECAY ** (gap - 1)
+                if roles[target_idx].word in _NEGATION_RESISTANT:
+                    strength *= 0.15  # barely any negation
+                coeff *= (1.0 + strength)
+            continue
+
         influence = PROXIMITY_DECAY ** distance
         if influence < INFLUENCE_CUTOFF:
             continue
@@ -122,18 +158,6 @@ def proximity_coefficient(
         # Operator modifiers (amplifier, negator, self-ref, hedge)
         if role in ROLE_MODIFIERS:
             modifier = ROLE_MODIFIERS[role]
-            # Some words resist negation:
-            # EXPLETIVES: "no fuck you" stays negative
-            # DECEPTION verbs: "pretended not to" = the "not" belongs to the next verb
-            #   "not pretended" doesn't make sense. The deception is real.
-            _NEGATION_RESISTANT = {
-                "fuck", "shit", "damn", "hell", "ass", "bitch",
-                "bastard", "crap", "dick", "piss",
-                "pretended", "pretending", "faked", "faking", "lied", "lying",
-            }
-            if role == "NEGATOR" and roles[target_idx].force:
-                if roles[target_idx].word in _NEGATION_RESISTANT:
-                    modifier *= 0.15  # barely any negation
             # Compressor dome doesn't touch people — only values/emotions.
             # "only" + self = neutral isolation. The rest of the sentence
             # decides if that isolation is proud or lonely.
