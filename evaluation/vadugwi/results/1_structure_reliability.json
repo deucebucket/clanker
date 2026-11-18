@@ -3,7 +3,7 @@
   "draws": 2000,
   "seed": 20261118
  },
- "engine_commit": "7937d9e9471a04dfc37996041bef4e68e1d53f6f+dirty-engine",
+ "engine_commit": "7e6458254b65fd2cbcef1fe0954133b0a29825fb",
  "label": "1_structure_reliability",
  "sets": {
   "council_heldout": {
