@@ -11,7 +11,7 @@ checkout:
 
 ```bash
 export CLANKER_VADUGWI_DATA=/path/to/private/clanker   # has benchmarks/, datasets/, training/data/
-export CLANKER_VADUGWI_SST2=/path/to/sst2_validation.json   # optional; [{"text", "label": "pos"|"neg"}]
+export CLANKER_VADUGWI_SST2=/path/to/datasets/sst2_validation.json   # optional; [{"text", "label": "pos"|"neg"}]
 ```
 
 | Set | Role | n | What it is |

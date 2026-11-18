@@ -76,7 +76,7 @@ def _emobank(half: int) -> Callable[[Path], Tuple[List[dict], Path]]:
 
 
 def _sst2(root: Path) -> Tuple[List[dict], Path]:
-    path = Path(os.environ.get("CLANKER_VADUGWI_SST2", root / "sst2_validation.json"))
+    path = Path(os.environ.get("CLANKER_VADUGWI_SST2", root / "datasets" / "sst2_validation.json"))
     return json.loads(path.read_text()), path
 
 
