@@ -39,7 +39,7 @@ VADUGWI is a 7-dimensional emotional coordinate system where each dimension rang
 
 ## How does Clanker differ from sentiment analysis?
 
-Clanker is a conversation state resolver, not a sentiment classifier. Sentiment analysis maps text to positive/negative/neutral. Clanker computes 7-dimensional emotional coordinates that capture stance, agency, urgency, and communicative intent. The sentence "I'm fine" gets V=83 (below neutral, uneasy), not "positive." The sentence "whatever makes you happy" gets V=30, I=161 (passive-aggressive), not "neutral." Clanker reads structure the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
+Clanker is a conversation state resolver, not a sentiment classifier. Sentiment analysis maps text to positive/negative/neutral. Clanker computes 7-dimensional emotional coordinates that capture stance, agency, urgency, and communicative intent. The sentence "I'm fine" gets V=83 (below neutral, uneasy), not "positive." The sentence "whatever makes you happy" gets V=28, I=161 (passive-aggressive), not "neutral." Clanker reads structure the way a chess player reads a board -- recognizing patterns from piece positions, not memorizing specific games.
 
 ## How does the engine process a sentence?
 

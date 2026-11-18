@@ -5,7 +5,7 @@
 
 A conversation state resolver that detects emotional stance through structural pattern recognition. Computes 7-dimensional emotional coordinates (VADUGWI) from text using deterministic, explainable transformations. Every output can be traced through explicit math. You can ask WHY and get a real answer.
 
-"Whatever" alone reads as resignation (V=93, D=97). "Whatever makes you happy" reads as passive-aggressive (V=30, D=113). "Do whatever" reads as dismissive permission (V=93, D=97). Same word -- context changes the coordinates. A sentiment classifier says "neutral" for all three.
+"Whatever" alone reads as resignation (V=93, D=97). "Whatever makes you happy" reads as passive-aggressive (V=28, D=110). "Do whatever" reads as dismissive permission (V=93, D=97). Same word -- context changes the coordinates. A sentiment classifier says "neutral" for all three.
 
 ## Live demo
 
@@ -78,7 +78,7 @@ from engine.pendulum import compute_vadug
 
 result, context = compute_vadug("whatever makes you happy")
 print(f"V={result.v}, A={result.a}, D={result.d}, U={result.u}, G={result.g}, W={result.w}, I={result.i}")
-# V=30, A=141, D=113, U=5, G=143, W=102, I=161
+# V=28, A=137, D=110, U=5, G=140, W=102, I=161
 ```
 
 ## Current Numbers
@@ -118,6 +118,25 @@ numbers are reported: 98.5% in-repo, 62.2% held-out v1, 41.3% held-out v2.
 The biggest gap is the honest one. v2 is the canonical generalization
 number going forward — at 373 probes, a 1% delta is real signal, not one
 lucky sentence.
+
+### V8.6 (measured 2026-11-18)
+
+The table above is the V8.5 engine. V8.6 changed three rules, each chosen
+on open training data and then measured on held-out data
+(`evaluation/vadugwi/`, details in `docs/vadug-calculation.md`):
+
+| Metric | V8.5 | V8.6 | Paired 95% interval of the change |
+|--------|------|------|-----------------------------------|
+| Held-out probes v2 (373, sealed) | 154 (41.3%) | 172 (46.1%) | +1.9 to +7.8 points |
+| Held-out v2 balanced accuracy | 0.443 | 0.472 | +0.001 to +0.056 |
+| EmoBank test half, Pearson r with human valence (5,010) | 0.298 | 0.364 | +0.045 to +0.085 |
+| SST-2 validation AUC (872) | 0.649 | 0.691 | +0.017 to +0.069 |
+| Stress test (275, in-repo) | 271 | 266 | |
+| Crisis recall | 49/51 | 49/51 | |
+| Crisis false positive | 0/75 | 3/75 | |
+
+Held-out v2 is 62.2% negative, so always answering "negative" would score
+62.2%; the engine is still below that line.
 
 ## Known Weaknesses
 

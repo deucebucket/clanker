@@ -29,8 +29,9 @@ COEFFICIENT_CAP = 2.63   # champion v2: tighter cap prevents runaway
 # negator reached 21 words in both directions and its effect passed
 # through zero about 7 words away. On the open training pool that was
 # worse than having no negation at all (see docs/vadug-calculation.md).
-# These three values were not searched to a decimal: every setting in
-# window 2-5, flip -0.5 to -1.0, decay 0.6-1.0 scored the same within noise.
+# These three values were not searched to a decimal: on the whole pool
+# every forward setting tried (window 2-5, flip -0.5 to -1.0, decay 0.6-1.0)
+# scored the same within noise.
 NEGATION_WINDOW = 3      # words after the negator that it can reach
 NEGATION_FLIP = -0.75    # coefficient factor on the word right after it
 NEGATION_DECAY = 0.5     # the flip fades by this factor per extra word
