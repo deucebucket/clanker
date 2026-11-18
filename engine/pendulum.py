@@ -1036,11 +1036,20 @@ def accumulate_forces(context: dict) -> dict:
         inv_m_v = 1.0 - m_v
         inv_m = 1.0 - m_eff
         inv_m_base = 1.0 - M_BASE
-        state_v = state_v * m_v + target_v * inv_m_v + push_v
-        state_a = state_a * m_eff + target_a * inv_m + push_a
-        state_d = state_d * m_eff + target_d * inv_m + push_d
-        state_u = state_u * M_BASE + target_u * inv_m_base + push_u
-        state_g = state_g * M_BASE + target_g * inv_m_base + push_g
+        # V8.6 axis inertness: a zero component exerts no force on its axis.
+        # Before, a word charged on any one axis pulled every other axis
+        # back toward its rest value, so trailing words with dV == 0 erased
+        # the valence of the words before them. (W already worked this way.)
+        if dv != 0:
+            state_v = state_v * m_v + target_v * inv_m_v + push_v
+        if da != 0:
+            state_a = state_a * m_eff + target_a * inv_m + push_a
+        if dd != 0:
+            state_d = state_d * m_eff + target_d * inv_m + push_d
+        if du != 0:
+            state_u = state_u * M_BASE + target_u * inv_m_base + push_u
+        if dg != 0:
+            state_g = state_g * M_BASE + target_g * inv_m_base + push_g
 
         # W (self-worth): valence routed through attribution (Board 2).
         # R answers "how much of this force's valence is about MY worth?"
