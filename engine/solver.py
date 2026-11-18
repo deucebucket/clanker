@@ -28,12 +28,37 @@ def forward(text: str) -> VADUG:
     return result
 
 
+# ── The A+B=C blend ────────────────────────────────────────────────
+
+A_WEIGHT = 0.6   # how much of A persists when B arrives
+
+
+def blend_axes(a_vadug: VADUG, b_vadug: VADUG,
+               a_weight: float = A_WEIGHT) -> Tuple[float, ...]:
+    """C = A * a_weight + B * (1 - a_weight) on all seven axes, unrounded.
+
+    This is the one combine rule shared by the rungs above the sentence:
+    state_transition() starts from it for a turn, and engine.ladder folds
+    it over the beats of a longer text.
+    """
+    b_weight = 1.0 - a_weight
+    return (
+        a_vadug.v * a_weight + b_vadug.v * b_weight,
+        a_vadug.a * a_weight + b_vadug.a * b_weight,
+        a_vadug.d * a_weight + b_vadug.d * b_weight,
+        a_vadug.u * a_weight + b_vadug.u * b_weight,
+        a_vadug.g * a_weight + b_vadug.g * b_weight,
+        a_vadug.w * a_weight + b_vadug.w * b_weight,
+        a_vadug.i * a_weight + b_vadug.i * b_weight,
+    )
+
+
 # ── State transition ───────────────────────────────────────────────
 
 def state_transition(
     a_vadug: VADUG,
     b_vadug: VADUG,
-    a_weight: float = 0.6,
+    a_weight: float = A_WEIGHT,
 ) -> VADUG:
     """Compute resulting state C from A (receiver state) + B (the force/message).
 
@@ -52,13 +77,7 @@ def state_transition(
     CENTER = 128.0
 
     # Base blend
-    c_v = a_vadug.v * a_weight + b_vadug.v * b_weight
-    c_a = a_vadug.a * a_weight + b_vadug.a * b_weight
-    c_d = a_vadug.d * a_weight + b_vadug.d * b_weight
-    c_u = a_vadug.u * a_weight + b_vadug.u * b_weight
-    c_g = a_vadug.g * a_weight + b_vadug.g * b_weight
-    c_w = a_vadug.w * a_weight + b_vadug.w * b_weight
-    c_i = a_vadug.i * a_weight + b_vadug.i * b_weight
+    c_v, c_a, c_d, c_u, c_g, c_w, c_i = blend_axes(a_vadug, b_vadug, a_weight)
 
     # Force direction adjustments on the RECEIVER
     b_v = b_vadug.v

@@ -1,8 +1,10 @@
-# How VADUGWI is Calculated - V8.4 Formula Reference
+# How VADUGWI is Calculated - V8.6 Formula Reference
 
-All constants and worked values below verified against the shipped engine
-(`engine/pendulum.py`, `engine/proximity.py`, `engine/force_flow.py`) on
-2026-06-11.
+All constants and worked values below were checked against the shipped
+engine (`engine/pendulum.py`, `engine/proximity.py`, `engine/force_flow.py`)
+on 2026-11-18. What V8.6 changed, with the held-out numbers behind each
+change, is in [V8.6: what changed and why](#v86-what-changed-and-why) at
+the end.
 
 ## The Sentence Equation
 
@@ -13,7 +15,7 @@ VADUGWI = Physics( Structures( Proximity( Roles(words) ) ) )
 Four layers, bottom-up:
 
 1. **Roles**: Each word gets a structural role (27 types)
-2. **Proximity**: Distance-based influence fields between words (decay 0.90x/word)
+2. **Proximity**: Distance-based influence fields between words (decay 0.90x/word; negation is forward-only over 3 words)
 3. **Structures**: Pattern recognition on role sequences (66 patterns)
 4. **Physics**: Momentum-based force application, produces final VADUGWI
 
@@ -89,13 +91,33 @@ For each EMOTIONAL word, nearby modifiers change the coefficient
 coeff = 1.0
 for each nearby word:
     if AMPLIFIER:   coeff *= (1.0 + 0.965 * influence)   # boost
-    if NEGATOR:     coeff *= (1.0 - 2.464 * influence)   # flip (can go negative)
     if SELF_REF:    coeff *= (1.0 + 0.466 * influence)   # personalize
     if HEDGE:       coeff *= (1.0 - 0.416 * influence)   # dampen
     if COMPRESSOR:  coeff *= (1.0 - 0.301 * influence)   # compress
 ```
 
 Cap: [-2.63, +2.63] (`COEFFICIENT_CAP`)
+
+### Negation (V8.6)
+
+Negation is not part of the symmetric field. A negator acts forward, on
+the next `NEGATION_WINDOW = 3` words, and fades by `NEGATION_DECAY = 0.5`
+per extra word:
+
+```python
+gap = target_position - negator_position          # 1, 2 or 3; otherwise no effect
+coeff *= 1.0 + (NEGATION_FLIP - 1.0) * NEGATION_DECAY ** (gap - 1)   # NEGATION_FLIP = -0.75
+
+gap=1: x -0.75      ("not happy": flipped and damped)
+gap=2: x +0.125     ("not very happy": nearly cancelled)
+gap=3: x +0.5625
+```
+
+A negator after the word, or more than three words before it, does
+nothing. Expletives and deception verbs still resist (strength x 0.15).
+Until V8.5 negation was `coeff *= (1.0 - 2.464 * influence)` inside the
+field above: symmetric, reaching 21 words, crossing zero about 7 words out.
+`ROLE_MODIFIERS["NEGATOR"]` is still defined but no longer read.
 
 ### Example
 
@@ -135,6 +157,25 @@ See the `detectors` list in `engine/structures.py:detect_all` for the
 complete set of 66. Each match carries a confidence and a weight vector
 (v, a, d, u, g, w).
 
+### Structure reliability (V8.6)
+
+Each structure's **valence** push is multiplied by
+`STRUCTURE_RELIABILITY.get(pattern, 1.0)` (`engine/structure_reliability.py`).
+The table is generated, not hand-edited: `python -m evaluation.vadugwi
+fit-reliability` replays the open training pool with each pattern's push
+switched off and counts how often the push had moved V toward the label
+versus away from it. A pattern is set to 0.0 only if it changed V on at
+least 20 training sentences and its toward-rate is below one half with
+posterior probability above 0.95 (uniform prior). Currently gated:
+
+| Pattern | toward | away | note |
+|---|---|---|---|
+| MUNDANE_HYPERBOLE | 87 | 224 | fired on 21% of the pool, +V push |
+| AMBIGUITY_HOLD | 38 | 54 | borderline (posterior 0.952) |
+
+Detection is unchanged: a gated pattern still appears in the trace and
+still moves A, D, U, G and W, so pattern-based crisis checks see it.
+
 ## Layer 4: Physics (Pendulum)
 
 ### Constants (champion v2, genetically optimized 2026-04-03)
@@ -156,18 +197,25 @@ Momentum is adaptive, not fixed: `m_eff = M_BASE + (A - 128)/255 * 0.25`,
 scaled by the negativity bias when moving toward negative V, clamped to
 [0.30, 0.95].
 
-### Per-Word Force Application (EMOTIONAL words only)
+### Per-Word Force Application
 
 ```python
 target_V = 128 + dV * coeff * FORCE_SCALE
 
 # Direct push for strong forces
-total_force = sum of |d* x coeff| across dimensions
+total_force = sum of |d*| across dimensions
 push = min(1.0, total_force / 86.2) * 1.0 * sign * |dV| * FORCE_SCALE
 
-# Adaptive momentum blend
-V = V_prev * m_eff + target_V * (1 - m_eff) + push
+# Adaptive momentum blend -- only on an axis the word is charged on (V8.6)
+if dV != 0:
+    V = V_prev * m_eff + target_V * (1 - m_eff) + push
 ```
+
+**Axis inertness (V8.6).** The same `if d != 0` guard applies to A, D, U
+and G. A zero component exerts no force on its axis. Until V8.5 any word
+with a charge on one axis pulled every other axis back toward its rest
+value, so trailing vocabulary words with `dV == 0` drained the valence of
+the words before them (W already had this guard).
 
 ### Structure Adjustments (after word loop)
 
@@ -180,6 +228,8 @@ for each detected structure:
     G += structure.g_weight * confidence * FORCE_SCALE
     W += structure.w_weight * confidence * FORCE_SCALE
 ```
+
+The V line is scaled by the structure's reliability (see Layer 3).
 
 (Special-cased patterns -- RECOVERY_MILESTONE, SARCASM_INVERSION,
 AMBIGUITY_HOLD -- have their own application rules in `apply_structures`.)
@@ -264,10 +314,12 @@ DIVESTITURE detected, confidence=0.65
 ### Layer 4: Physics
 ```
 Structure adjustment: V += -35 * 0.65 * 1.405 = -32
-Final (engine output): V=83 A=133 D=113 U=31 G=177 W=101 I=128
+Final (engine output): V=93 A=135 D=120 U=31 G=177 W=101 I=128
 ```
 
-Result: V=83 (negative), U elevated, W depressed -- giving away a loved
+(V8.5 gave V=83 A=133 D=113; the difference is axis inertness.)
+
+Result: V=93 (negative), U elevated, W depressed -- giving away a loved
 being reads as divestiture, a crisis-adjacent act. The engine read the
 STRUCTURE, not the words. It doesn't know "dog" or "neighbor." It knows
 TRANSFER + possession-of-relation = giving away what you love.
@@ -281,12 +333,25 @@ Run the 4-layer pipeline.
 ```python
 for b_v in range(256):
     B = VADUGWI(v=b_v, a=128, d=128, u=0, g=128, w=128, i=128)
-    C = A * 0.6 + B * 0.4
-    if C.v in target_zone:
+    C = state_transition(A, B)      # 0.6/0.4 blend, then the directional pushes
+    if C in target_zone:            # a zone is a box on V, D and G
         valid_range.append(b_v)
 ```
 
 Valid B is a RANGE, not a point. Like landing a plane, anywhere on the runway works.
+
+### The blend, and the beat rung (V8.6)
+
+`solver.blend_axes(A, B, a_weight=A_WEIGHT)` is the one convex blend,
+`C = 0.6 * A + 0.4 * B` on all seven axes. `state_transition` starts from
+it for a turn and then adds its intent-conditioned pushes.
+
+`engine.ladder.compose_beats(text)` applies the same blend one rung down.
+It splits a longer text into beats (sentences, or clauses with
+`clauses=True`), scores each beat with a fresh pendulum, and folds left to
+right: `C = 0.6 * (so far) + 0.4 * (this beat)`. It is **opt-in**;
+`compute_vadug` still runs one pendulum over the whole input. See the
+results below for why.
 
 ## Connector Operators
 
@@ -300,3 +365,106 @@ because = <-   (causal, this is WHY)
 so      = ->   (consequential, this is WHAT HAPPENED)
 also    = +=   (additive with emphasis)
 ```
+
+## V8.6: what changed and why
+
+### Version history
+
+| Version | Date | What |
+|---|---|---|
+| V8.4 | 2026-04 to 2026-06 | champion-v2 constants (fitted 2026-04-03), 66 structures, W and I channels. The previous edition of this document. |
+| V8.5 | 2026-06-11 to 2026-06-15 | slang register overhaul, vocabulary neutralizer, bravado fix, orthographic arousal. No constant in this document changed, so the V8.4 title stayed. This is what `origin/main` 92bd354 ships. |
+| V8.6 | 2026-11-18 | structure reliability table, axis inertness, forward negation, shared blend and opt-in beat rung. No fitted constant was re-tuned. |
+
+### How it was measured
+
+`evaluation/vadugwi/` (see its README). Rules and constants were chosen on
+the open training pool only (`council_v2_train`, 1,492 sentences, plus half
+of EmoBank). Held-out sets were measured after the choices were fixed:
+
+- **Sealed holdout v2**: 373 sentences, sealed 2026-06-11, 3 classes at the
+  repo thresholds (neg < 110, pos >= 145). 62.2% of it is negative, so
+  "always negative" scores 62.2%. Accuracy alone is a weak yardstick here;
+  balanced accuracy and the threshold-free AUC (pos vs neg) are reported
+  with it.
+- **EmoBank test half**: 5,010 sentences with human valence ratings, other
+  genres (news, letters, fiction). Pearson r.
+- **SST-2 validation**: 872 movie-review sentences, pos/neg. AUC.
+
+Intervals are 95% paired bootstrap over items (2,000 draws, fixed seed).
+
+### What V8.5 measured as
+
+| | in-repo stress (275) | holdout v2 accuracy | balanced acc. | AUC | EmoBank r | SST-2 AUC |
+|---|---|---|---|---|---|---|
+| V8.5 | 271 (98.5%) | 154/373 (41.3%) | 0.443 | 0.678 | 0.298 | 0.649 |
+
+### What the diagnosis found (training pool)
+
+- **The fitted physics constants do not carry held-out signal.** Sweeping
+  `PROXIMITY_DECAY` from 0.0001 to 0.95, zeroing each role modifier,
+  changing `SATURATION` or `COEFFICIENT_CAP`: accuracy moves by under half
+  a point and AUC by under 0.01. Only overall gain (`FORCE_SCALE`, the push
+  trigger) moves accuracy, by shifting sentences across the fixed
+  thresholds.
+- **The ranking power is the lexicon's.** A bare sum of word charges has
+  AUC 0.690; the full engine has 0.705. Knowing only a sentence's category
+  gives 0.71.
+- **Structures mostly move the operating point.** Removing all of them
+  takes in-repo stress from 98% to 62% and training-pool accuracy from
+  0.49 to 0.40, but AUC only from 0.705 to 0.703, and it *raises* the
+  correlation with human ratings on EmoBank (0.30 to 0.35).
+- **Negation as fitted was worse than none** on the 185 training sentences
+  that contain a negator: AUC 0.59 with it, 0.63 without, 0.78 with the
+  forward rule that shipped (0.73-0.78 across the forward settings tried).
+
+### Held-out result of each change
+
+Each row is measured against the row above it.
+
+| Change | holdout v2 accuracy | EmoBank test r | SST-2 AUC | in-repo stress |
+|---|---|---|---|---|
+| V8.5 baseline | 0.413 | 0.298 | 0.649 | 271/275 |
+| + structure reliability | 0.429, +0.016 [0.000, +0.032] | 0.326, +0.028 [+0.013, +0.043] | 0.659, +0.010 [-0.012, +0.032] | 268 |
+| + axis inertness | 0.453, +0.024 [+0.003, +0.048] | 0.352, +0.026 [+0.015, +0.036] | 0.673, +0.015 [+0.002, +0.028] | 267 |
+| + forward negation | 0.461, +0.008 [-0.005, +0.021] | 0.364, +0.012 [+0.002, +0.023] | 0.691, +0.018 [+0.006, +0.031] | 266 |
+| **V8.6 vs V8.5** | **172/373 (46.1%), +0.048 [+0.019, +0.078]** | **+0.066 [+0.045, +0.085]** | **+0.042 [+0.017, +0.069]** | **-5** |
+
+Holdout v2 balanced accuracy went 0.443 to 0.472 (+0.029 [+0.001,
++0.056]); its AUC went 0.678 to 0.692 (+0.014 [-0.014, +0.042], not
+separable from zero). V8.6 is still below the 62.2% majority-class line on
+holdout v2. Holdout v1 (45 sentences) moved from 28 to 29 correct, which
+is noise at that size.
+
+### Costs
+
+- In-repo stress 271 to 266 of 275. Ground truth stays 40/41.
+- Crisis benchmark: recall unchanged at 49/51. Its binary rule now flags
+  **3 of 75 safe sentences (was 0)**: three mundane-negative sentences
+  that the old drain pulled back to neutral now read as plainly negative
+  (V 58-93) with low W. This came in with axis inertness.
+- Five engine tests that pinned a V band on a slang sense-split sentence
+  are `xfail(strict)`. Each band was held by zero-charge words draining V
+  toward centre. The fix they need is lexical (the literal sense of
+  "cooked", "fire", "sheesh" should carry less charge).
+- The worked values in this document moved by a few points, as noted.
+
+### Tried and not shipped
+
+| Candidate | Held-out result | Why not |
+|---|---|---|
+| `PROXIMITY_DECAY` 0.5 or 0.3 for the remaining operators | holdout v2 accuracy +0.003 / -0.003, EmoBank r -0.002 / -0.003 | No held-out effect either way; the decay of the non-negation operators is not identified by any data here. Left at 0.90. The locality question was real for negation, which now has its own short forward scope. |
+| Higher gain (`FORCE_SCALE` 2.2) | holdout v2 accuracy +0.032 [+0.008, +0.056], balanced accuracy +0.009 [-0.027, +0.044], AUC -0.004 | It moves neutral predictions to negative on a pool that is 62% negative. That fits the pool's class mix, not the engine. |
+| Refit word charges by ridge regression on the training pool (388 words) | holdout v2 accuracy +0.062 [+0.024, +0.102], AUC +0.045; EmoBank r **-0.023** [-0.034, -0.011]; SST-2 AUC **-0.022** [-0.038, -0.008]; in-repo stress -8.4 points | Helps the pool it was fitted on and hurts both other domains. The same refit on EmoBank did not transfer to the council pool either. |
+| Beat rung as the default (`compose_beats`) | EmoBank test, multi-clause items (n=2,389): r 0.318 to 0.340, +0.022 [-0.004, +0.046]; multi-sentence (n=326): +0.049 [-0.030, +0.125]; holdout v2 multi-clause (n=41): accuracy -0.073 [-0.195, +0.049] | Not separable from zero. On the EmoBank fitting half the blend weight peaked at 0.5-0.7, which is where the turn rule's 0.6 already sits, so the code is shipped opt-in with that weight and not wired into `compute_vadug`. |
+| Neutral-W coupling without the 1.5x negative amplification | training pool accuracy 0.520 to 0.499, crisis recall 49 to 46 | Costs crisis recall. |
+
+### What this does not fix
+
+- The lexicon is the ceiling. Agreement with human valence ratings is
+  r = 0.36; for arousal and dominance it is about 0.14 and 0.09 (EmoBank
+  fitting half).
+- Everything here is English. The role lists, the lexicon and the forward
+  direction of negation are English-specific.
+- The rungs above the turn (session, relationship) are still not wired.
+

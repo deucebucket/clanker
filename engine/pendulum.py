@@ -47,6 +47,15 @@ MUNDANE_EPSILON = 1.0     # floor: avoid division by zero (council suggested low
 MUNDANE_DV_THRESHOLD = 25 # only dampen high-charge atoms (crisis words)
 
 
+# ── Structure reliability (V8.6) ─────────────────────────────────
+# Multiplier on a structure's VALENCE push only; 1.0 (the default for any
+# pattern not listed) trusts the hand-set weight. The table is generated
+# from the open training pool by evaluation/vadugwi/fit_reliability.py and
+# is never fitted on a holdout set. Detection, the trace and the non-valence
+# channels are untouched, so crisis gating and intent still see the match.
+from .structure_reliability import STRUCTURE_RELIABILITY
+
+
 # ── Compound resolution tables ──────────────────────────────────
 
 _BOOKEND_COMPOUNDS = {
@@ -1027,11 +1036,20 @@ def accumulate_forces(context: dict) -> dict:
         inv_m_v = 1.0 - m_v
         inv_m = 1.0 - m_eff
         inv_m_base = 1.0 - M_BASE
-        state_v = state_v * m_v + target_v * inv_m_v + push_v
-        state_a = state_a * m_eff + target_a * inv_m + push_a
-        state_d = state_d * m_eff + target_d * inv_m + push_d
-        state_u = state_u * M_BASE + target_u * inv_m_base + push_u
-        state_g = state_g * M_BASE + target_g * inv_m_base + push_g
+        # V8.6 axis inertness: a zero component exerts no force on its axis.
+        # Before, a word charged on any one axis pulled every other axis
+        # back toward its rest value, so trailing words with dV == 0 erased
+        # the valence of the words before them. (W already worked this way.)
+        if dv != 0:
+            state_v = state_v * m_v + target_v * inv_m_v + push_v
+        if da != 0:
+            state_a = state_a * m_eff + target_a * inv_m + push_a
+        if dd != 0:
+            state_d = state_d * m_eff + target_d * inv_m + push_d
+        if du != 0:
+            state_u = state_u * M_BASE + target_u * inv_m_base + push_u
+        if dg != 0:
+            state_g = state_g * M_BASE + target_g * inv_m_base + push_g
 
         # W (self-worth): valence routed through attribution (Board 2).
         # R answers "how much of this force's valence is about MY worth?"
@@ -1146,6 +1164,7 @@ def apply_structures(context: dict) -> dict:
     state_w = context["state_w"]
 
     for sm in structures:
+        v_before = state_v
         if sm.pattern == "SLANG_DEATH_HUMOR":
             # Nullify death word's negative dV and add back a positive-scaled version.
             # The death word is NOT functioning as death -- it's an intensifier.
@@ -1227,6 +1246,10 @@ def apply_structures(context: dict) -> dict:
                 state_v += distance * 0.4 * sm.confidence
         else:
             state_v += sm.v_weight * sm.confidence * FORCE_SCALE
+        # V8.6: reliability scales this structure's valence push only.
+        reliability = STRUCTURE_RELIABILITY.get(sm.pattern, 1.0)
+        if reliability != 1.0:
+            state_v = v_before + (state_v - v_before) * reliability
         state_a += sm.a_weight * sm.confidence * FORCE_SCALE
         state_d += sm.d_weight * sm.confidence * FORCE_SCALE
         state_u += sm.u_weight * sm.confidence * FORCE_SCALE

@@ -1,5 +1,32 @@
 # Changelog
 
+## VADUGWI engine V8.6 (2026-11-18)
+
+- Added `evaluation/vadugwi/`: a held-out evaluation of the valence axis
+  with fail-closed fit/held-out roles, balanced accuracy and AUC next to
+  accuracy, and paired bootstrap intervals. Measured V8.5 baseline: sealed
+  holdout v2 154/373 (41.3%), in-repo stress 271/275.
+- Structure reliability table (`engine/structure_reliability.py`), fitted
+  on the open training pool only: the valence push of MUNDANE_HYPERBOLE and
+  AMBIGUITY_HOLD is gated; detection is unchanged.
+- Axis inertness: a word moves an axis only if it has a nonzero charge on
+  that axis.
+- Negation acts forward over three words (`NEGATION_WINDOW`,
+  `NEGATION_FLIP`, `NEGATION_DECAY`) and is no longer in the symmetric
+  proximity field.
+- `solver.blend_axes` is the shared A+B=C blend; `engine.ladder.compose_beats`
+  is an opt-in beat rung that is not wired into `compute_vadug`.
+- Held-out, V8.6 vs V8.5: holdout v2 172/373 (46.1%, +4.8 points, 95%
+  interval +1.9 to +7.8); EmoBank test r 0.298 to 0.364; SST-2 validation
+  AUC 0.649 to 0.691. In-repo stress 271 to 266. Crisis recall 49/51
+  unchanged; crisis false positives 0/75 to 3/75.
+- Five slang sense-split tests are `xfail(strict)`; see
+  `docs/vadug-calculation.md`.
+- The frozen conversation corpus is bound to the production tree at
+  c8c0bf4, so `evaluation.conversations verify` and ten tests in
+  `tests/test_conversation_eval.py` fail until it is re-baselined on the
+  merged commit.
+
 ## Clanker-LM 0.3-alpha development line (2026-09-03 to 2026-09-04)
 
 - Added an isolated deterministic language runtime under `clanker_lm/`; the tuned
