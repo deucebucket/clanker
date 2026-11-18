@@ -124,6 +124,9 @@ def main(argv=None) -> int:
     compare.add_argument("base")
     compare.add_argument("new")
     compare.set_defaults(func=cmd_compare)
+    fit = sub.add_parser("fit-reliability")
+    fit.set_defaults(func=lambda _args: __import__(
+        "evaluation.vadugwi.fit_reliability", fromlist=["main"]).main())
     args = parser.parse_args(argv)
     return args.func(args)
 
